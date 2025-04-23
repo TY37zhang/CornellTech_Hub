@@ -371,829 +371,1103 @@ export default function ForumPage() {
                         </h2>
                     </div>
 
-                    <Tabs
-                        defaultValue="all"
-                        value={activeTab}
-                        onValueChange={setActiveTab}
-                        className="w-full"
-                    >
-                        <div className="flex items-center justify-between">
-                            <TabsList>
-                                <TabsTrigger value="all">
-                                    All Discussions
-                                </TabsTrigger>
-                                <TabsTrigger value="Academics">
-                                    Academics
-                                </TabsTrigger>
-                                <TabsTrigger value="Career">Career</TabsTrigger>
-                                <TabsTrigger value="Campus Life">
-                                    Campus Life
-                                </TabsTrigger>
-                                <TabsTrigger value="Events">Events</TabsTrigger>
-                            </TabsList>
-                            <div className="flex items-center gap-2">
-                                <Button className="gap-1">
-                                    <PlusCircle className="h-4 w-4" />
-                                    <span>New Thread</span>
-                                </Button>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <Tabs
+                                defaultValue="all"
+                                value={activeTab}
+                                onValueChange={setActiveTab}
+                                className="w-full"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <TabsList>
+                                        <TabsTrigger value="all">
+                                            All Discussions
+                                        </TabsTrigger>
+                                        <TabsTrigger value="Academics">
+                                            Academics
+                                        </TabsTrigger>
+                                        <TabsTrigger value="Career">
+                                            Career
+                                        </TabsTrigger>
+                                        <TabsTrigger value="Campus Life">
+                                            Campus Life
+                                        </TabsTrigger>
+                                        <TabsTrigger value="Events">
+                                            Events
+                                        </TabsTrigger>
+                                        <TabsTrigger value="Technology">
+                                            Technology
+                                        </TabsTrigger>
+                                        <TabsTrigger value="General">
+                                            General
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <div className="flex items-center gap-2">
+                                        <Button className="gap-1">
+                                            <PlusCircle className="h-4 w-4" />
+                                            <span>New Thread</span>
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <TabsContent value="all" className="mt-6">
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found
+                                                    matching your search
+                                                    criteria.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="Academics" className="mt-6">
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="Career" className="mt-6">
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent
+                                    value="Campus Life"
+                                    className="mt-6"
+                                >
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="Events" className="mt-6">
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                                <TabsContent
+                                    value="Technology"
+                                    className="mt-6"
+                                >
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="General" className="mt-6">
+                                    <div className="grid gap-4">
+                                        {filteredThreads.length > 0 ? (
+                                            filteredThreads.map((thread) => (
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    key={thread.id}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all hover:border-primary">
+                                                        <CardHeader className="pb-3">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <CardTitle className="text-xl group-hover:text-primary">
+                                                                        {
+                                                                            thread.title
+                                                                        }
+                                                                    </CardTitle>
+                                                                    <CardDescription className="flex items-center gap-2 mt-1">
+                                                                        <Avatar className="h-5 w-5">
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    thread
+                                                                                        .author
+                                                                                        .avatar ||
+                                                                                    "/placeholder.svg"
+                                                                                }
+                                                                                alt={`@${thread.author.name}`}
+                                                                            />
+                                                                            <AvatarFallback>
+                                                                                {
+                                                                                    thread
+                                                                                        .author
+                                                                                        .initials
+                                                                                }
+                                                                            </AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span>
+                                                                            {
+                                                                                thread
+                                                                                    .author
+                                                                                    .name
+                                                                            }
+                                                                        </span>
+                                                                        <span>
+                                                                            •
+                                                                        </span>
+                                                                        <span>
+                                                                            {
+                                                                                thread.createdAt
+                                                                            }
+                                                                        </span>
+                                                                    </CardDescription>
+                                                                </div>
+                                                                <Badge
+                                                                    className={
+                                                                        thread.categoryColor
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        thread.category
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                        </CardHeader>
+                                                        <CardContent className="pb-3">
+                                                            <p className="line-clamp-2 text-muted-foreground">
+                                                                {thread.content}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {thread.tags.map(
+                                                                    (tag) => (
+                                                                        <Badge
+                                                                            key={
+                                                                                tag
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="text-xs font-normal"
+                                                                        >
+                                                                            {
+                                                                                tag
+                                                                            }
+                                                                        </Badge>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </CardContent>
+                                                        <CardFooter className="flex items-center justify-between pt-1">
+                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.replies
+                                                                        }{" "}
+                                                                        replies
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.likes
+                                                                        }{" "}
+                                                                        likes
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-4 w-4" />
+                                                                    <span>
+                                                                        {
+                                                                            thread.views
+                                                                        }{" "}
+                                                                        views
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {thread.badge && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={
+                                                                            thread
+                                                                                .badge
+                                                                                .color
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            thread
+                                                                                .badge
+                                                                                .text
+                                                                        }
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </CardFooter>
+                                                    </Card>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10">
+                                                <p className="text-muted-foreground">
+                                                    No discussions found in this
+                                                    category.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
                         </div>
 
-                        <TabsContent value="all" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found matching your
-                                            search criteria.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="Academics" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found in this
-                                            category.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="Career" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found in this
-                                            category.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="Campus Life" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found in this
-                                            category.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="Events" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found in this
-                                            category.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="Technology" className="mt-6">
-                            <div className="grid gap-4">
-                                {filteredThreads.length > 0 ? (
-                                    filteredThreads.map((thread) => (
-                                        <Link
-                                            href={`/forum/${thread.id}`}
-                                            key={thread.id}
-                                            className="group"
-                                        >
-                                            <Card className="transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl group-hover:text-primary">
-                                                                {thread.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="flex items-center gap-2 mt-1">
-                                                                <Avatar className="h-5 w-5">
-                                                                    <AvatarImage
-                                                                        src={
-                                                                            thread
-                                                                                .author
-                                                                                .avatar ||
-                                                                            "/placeholder.svg"
-                                                                        }
-                                                                        alt={`@${thread.author.name}`}
-                                                                    />
-                                                                    <AvatarFallback>
-                                                                        {
-                                                                            thread
-                                                                                .author
-                                                                                .initials
-                                                                        }
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <span>
-                                                                    {
-                                                                        thread
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                <span>•</span>
-                                                                <span>
-                                                                    {
-                                                                        thread.createdAt
-                                                                    }
-                                                                </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                thread.categoryColor
-                                                            }
-                                                        >
-                                                            {thread.category}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="line-clamp-2 text-muted-foreground">
-                                                        {thread.content}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {thread.tags.map(
-                                                            (tag) => (
-                                                                <Badge
-                                                                    key={tag}
-                                                                    variant="outline"
-                                                                    className="text-xs font-normal"
-                                                                >
-                                                                    {tag}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <MessageSquare className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.replies}{" "}
-                                                                replies
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.likes}{" "}
-                                                                likes
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4" />
-                                                            <span>
-                                                                {thread.views}{" "}
-                                                                views
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    {thread.badge && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={
-                                                                    thread.badge
-                                                                        .color
-                                                                }
-                                                            >
-                                                                {
-                                                                    thread.badge
-                                                                        .text
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No discussions found in this
-                                            category.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </TabsContent>
-                    </Tabs>
-                </section>
-
-                <section className="container px-4 py-6 md:px-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="md:col-span-2">
+                        <div className="space-y-6">
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Forum Categories</CardTitle>
@@ -1201,9 +1475,12 @@ export default function ForumPage() {
                                         Browse discussions by category
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid gap-4 sm:grid-cols-2">
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400">
+                                <CardContent className="grid gap-2">
+                                    <Link
+                                        href="/forum/categories/academics"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400">
                                             <BookOpen className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1216,9 +1493,12 @@ export default function ForumPage() {
                                                 resources
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400">
+                                    </Link>
+                                    <Link
+                                        href="/forum/categories/career"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400">
                                             <TrendingUp className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1231,9 +1511,12 @@ export default function ForumPage() {
                                                 development
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800/20 dark:text-purple-400">
+                                    </Link>
+                                    <Link
+                                        href="/forum/categories/campus-life"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800/20 dark:text-purple-400">
                                             <Users className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1245,9 +1528,12 @@ export default function ForumPage() {
                                                 life at Cornell Tech
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400">
+                                    </Link>
+                                    <Link
+                                        href="/forum/categories/technology"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400">
                                             <Tag className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1259,9 +1545,12 @@ export default function ForumPage() {
                                                 and technical discussions
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
+                                    </Link>
+                                    <Link
+                                        href="/forum/categories/events"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
                                             <MessageSquare className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1274,9 +1563,12 @@ export default function ForumPage() {
                                                 opportunities
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-orange-800 dark:bg-orange-800/20 dark:text-orange-400">
+                                    </Link>
+                                    <Link
+                                        href="/forum/categories/general"
+                                        className="flex items-start gap-4 hover:bg-muted/50 p-2 rounded-md transition-colors"
+                                    >
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-800 dark:bg-orange-800/20 dark:text-orange-400">
                                             <MessageSquare className="h-5 w-5" />
                                         </div>
                                         <div>
@@ -1288,11 +1580,10 @@ export default function ForumPage() {
                                                 that don't fit elsewhere
                                             </p>
                                         </div>
-                                    </div>
+                                    </Link>
                                 </CardContent>
                             </Card>
-                        </div>
-                        <div>
+
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Forum Stats</CardTitle>
@@ -1337,7 +1628,8 @@ export default function ForumPage() {
                                     </Button>
                                 </CardFooter>
                             </Card>
-                            <Card className="mt-4">
+
+                            <Card>
                                 <CardHeader>
                                     <CardTitle>Top Contributors</CardTitle>
                                     <CardDescription>
