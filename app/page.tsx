@@ -361,9 +361,9 @@ export default function Dashboard() {
                         </div>
                         <div className="flex flex-col gap-2 min-[400px]:flex-row">
                             <Button size="lg">Sign Up Now</Button>
-                            <Button variant="outline" size="lg">
+                            {/* <Button variant="outline" size="lg">
                                 Learn More
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
                 </section>
