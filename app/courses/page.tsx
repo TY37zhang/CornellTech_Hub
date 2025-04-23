@@ -29,7 +29,16 @@ interface Course {
     id: string;
     title: string;
     professor: string;
-    category: "core" | "technical" | "studio" | "business";
+    category:
+        | "ceee"
+        | "cs"
+        | "ece"
+        | "hadm"
+        | "info"
+        | "law"
+        | "orie"
+        | "tech"
+        | "techie";
     rating: number;
     reviewCount: number;
     difficulty: number;
@@ -45,7 +54,7 @@ const coursesData: Course[] = [
         id: "machine-learning",
         title: "Machine Learning",
         professor: "Prof. Serge Belongie",
-        category: "technical",
+        category: "cs",
         rating: 4.0,
         reviewCount: 24,
         difficulty: 7.5,
@@ -59,7 +68,7 @@ const coursesData: Course[] = [
         id: "product-studio",
         title: "Product Studio",
         professor: "Prof. David Tisch",
-        category: "studio",
+        category: "tech",
         rating: 4.9,
         reviewCount: 32,
         difficulty: 6.5,
@@ -73,7 +82,7 @@ const coursesData: Course[] = [
         id: "business-fundamentals",
         title: "Business Fundamentals",
         professor: "Prof. Michael Gruber",
-        category: "business",
+        category: "techie",
         rating: 4.2,
         reviewCount: 18,
         difficulty: 5.5,
@@ -87,7 +96,7 @@ const coursesData: Course[] = [
         id: "hci",
         title: "Human-Computer Interaction",
         professor: "Prof. Wendy Ju",
-        category: "technical",
+        category: "info",
         rating: 4.7,
         reviewCount: 15,
         difficulty: 6.0,
@@ -101,7 +110,7 @@ const coursesData: Course[] = [
         id: "startup-systems",
         title: "Startup Systems",
         professor: "Prof. Vitaly Shmatikov",
-        category: "technical",
+        category: "info",
         rating: 3.4,
         reviewCount: 22,
         difficulty: 8.5,
@@ -115,7 +124,7 @@ const coursesData: Course[] = [
         id: "leadership",
         title: "Leadership in Digital Transformation",
         professor: "Prof. Deborah Estrin",
-        category: "core",
+        category: "law",
         rating: 4.3,
         reviewCount: 19,
         difficulty: 5.0,
@@ -135,40 +144,32 @@ export default function CoursesPage() {
     const [sortBy, setSortBy] = useState("rating");
     const [activeTab, setActiveTab] = useState("all");
 
-    // Filtered and sorted courses
+    // Filtered courses state
     const [filteredCourses, setFilteredCourses] =
         useState<Course[]>(coursesData);
 
-    // Apply filters and sorting whenever dependencies change
+    // Apply search, tab filter, and sorting
     useEffect(() => {
         let result = [...coursesData];
 
-        // Apply search filter
+        // Search filter
         if (searchQuery) {
-            const query = searchQuery.toLowerCase();
+            const q = searchQuery.toLowerCase();
             result = result.filter(
                 (course) =>
-                    course.title.toLowerCase().includes(query) ||
-                    course.professor.toLowerCase().includes(query)
+                    course.title.toLowerCase().includes(q) ||
+                    course.professor.toLowerCase().includes(q)
             );
         }
 
-        // Apply category filter (tab)
+        // Tab (category) filter
         if (activeTab !== "all") {
             result = result.filter((course) => course.category === activeTab);
         }
 
-        // Apply program filter (not implemented in the data model, just for demonstration)
-        if (programFilter !== "all") {
-            // In a real app, you would filter by program here
-        }
+        // (Optional) program & semester filters…
 
-        // Apply semester filter (not implemented in the data model, just for demonstration)
-        if (semesterFilter !== "all") {
-            // In a real app, you would filter by semester here
-        }
-
-        // Apply sorting
+        // Sorting
         result.sort((a, b) => {
             switch (sortBy) {
                 case "rating":
@@ -176,7 +177,6 @@ export default function CoursesPage() {
                 case "reviews":
                     return b.reviewCount - a.reviewCount;
                 case "newest":
-                    // In a real app, you would sort by date here
                     return 0;
                 case "name":
                     return a.title.localeCompare(b.title);
@@ -186,27 +186,22 @@ export default function CoursesPage() {
         });
 
         setFilteredCourses(result);
-    }, [searchQuery, programFilter, semesterFilter, sortBy, activeTab]);
+    }, [searchQuery, activeTab, programFilter, semesterFilter, sortBy]);
 
-    // Render star rating
+    // Helper to render stars
     const renderStars = (rating: number) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
-            if (i <= Math.floor(rating)) {
-                stars.push(
-                    <Star
-                        key={i}
-                        className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                    />
-                );
-            } else {
-                stars.push(
-                    <Star
-                        key={i}
-                        className="h-4 w-4 fill-muted text-muted-foreground"
-                    />
-                );
-            }
+            stars.push(
+                <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                        i <= Math.floor(rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-muted text-muted-foreground"
+                    }`}
+                />
+            );
         }
         return stars;
     };
@@ -214,119 +209,34 @@ export default function CoursesPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
+                {/* Hero + Search */}
                 <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
                     <div className="container px-4 md:px-6">
-                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                            <div className="space-y-2">
-                                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                    Course Reviews
-                                </h1>
-                                <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                                    Find and share reviews for Cornell Tech
-                                    courses to help you make informed decisions.
-                                </p>
-                            </div>
-                            <div className="w-full max-w-2xl space-y-2">
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="search"
-                                        placeholder="Search courses by name, professor, or keyword..."
-                                        className="w-full bg-background pl-8 rounded-md border"
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                    />
-                                </div>
-                                {/* <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 gap-1"
-                                    >
-                                        <Filter className="h-3.5 w-3.5" />
-                                        <span>Filters</span>
-                                    </Button>
-                                    <Select
-                                        value={programFilter}
-                                        onValueChange={setProgramFilter}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Program" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">
-                                                All Programs
-                                            </SelectItem>
-                                            <SelectItem value="meng">
-                                                MEng
-                                            </SelectItem>
-                                            <SelectItem value="mba">
-                                                MBA
-                                            </SelectItem>
-                                            <SelectItem value="llm">
-                                                LLM
-                                            </SelectItem>
-                                            <SelectItem value="health">
-                                                Health Tech
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Select
-                                        value={semesterFilter}
-                                        onValueChange={setSemesterFilter}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Semester" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">
-                                                All Semesters
-                                            </SelectItem>
-                                            <SelectItem value="fall2023">
-                                                Fall 2023
-                                            </SelectItem>
-                                            <SelectItem value="spring2023">
-                                                Spring 2023
-                                            </SelectItem>
-                                            <SelectItem value="fall2022">
-                                                Fall 2022
-                                            </SelectItem>
-                                            <SelectItem value="spring2022">
-                                                Spring 2022
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={setSortBy}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="rating">
-                                                Highest Rated
-                                            </SelectItem>
-                                            <SelectItem value="reviews">
-                                                Most Reviews
-                                            </SelectItem>
-                                            <SelectItem value="newest">
-                                                Newest First
-                                            </SelectItem>
-                                            <SelectItem value="name">
-                                                Course Name
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div> */}
-                                {/* filter options */}
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
+                                Course Reviews
+                            </h1>
+                            <p className="max-w-[700px] text-muted-foreground md:text-xl">
+                                Find and share reviews for Cornell Tech courses
+                                to help you make informed decisions.
+                            </p>
+                            <div className="w-full max-w-2xl relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search courses by name, professor, or keyword..."
+                                    className="w-full pl-8 rounded-md border bg-background"
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                />
                             </div>
                         </div>
                     </div>
                 </section>
 
+                {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
                     <Tabs
                         defaultValue="all"
@@ -334,19 +244,20 @@ export default function CoursesPage() {
                         onValueChange={setActiveTab}
                         className="w-full"
                     >
-                        <div className="flex items-center justify-between">
+                        <div className="flex w-full items-center justify-between">
                             <TabsList>
                                 <TabsTrigger value="all">
                                     All Courses
                                 </TabsTrigger>
-                                <TabsTrigger value="core">Core</TabsTrigger>
-                                <TabsTrigger value="technical">
-                                    Technical
-                                </TabsTrigger>
-                                <TabsTrigger value="studio">Studio</TabsTrigger>
-                                <TabsTrigger value="business">
-                                    Business
-                                </TabsTrigger>
+                                <TabsTrigger value="ceee">CEEE</TabsTrigger>
+                                <TabsTrigger value="cs">CS</TabsTrigger>
+                                <TabsTrigger value="ece">ECE</TabsTrigger>
+                                <TabsTrigger value="hadm">HADM</TabsTrigger>
+                                <TabsTrigger value="info">INFO</TabsTrigger>
+                                <TabsTrigger value="law">LAW</TabsTrigger>
+                                <TabsTrigger value="orie">ORIE</TabsTrigger>
+                                <TabsTrigger value="tech">TECH</TabsTrigger>
+                                <TabsTrigger value="techie">TECHIE</TabsTrigger>
                             </TabsList>
                             <div className="flex items-center gap-2">
                                 <Button className="gap-1">
@@ -356,7 +267,8 @@ export default function CoursesPage() {
                             </div>
                         </div>
 
-                        <TabsContent value="all" className="mt-6">
+                        {/* Single dynamic content pane filtered by activeTab */}
+                        <TabsContent value={activeTab} className="mt-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredCourses.map((course) => (
                                     <Link
@@ -421,7 +333,7 @@ export default function CoursesPage() {
                                                                             10
                                                                         }%`,
                                                                     }}
-                                                                ></div>
+                                                                />
                                                             </div>
                                                             <span>
                                                                 {course.difficulty.toFixed(
@@ -445,7 +357,7 @@ export default function CoursesPage() {
                                                                             10
                                                                         }%`,
                                                                     }}
-                                                                ></div>
+                                                                />
                                                             </div>
                                                             <span>
                                                                 {course.workload.toFixed(
@@ -469,7 +381,7 @@ export default function CoursesPage() {
                                                                             10
                                                                         }%`,
                                                                     }}
-                                                                ></div>
+                                                                />
                                                             </div>
                                                             <span>
                                                                 {course.value.toFixed(
@@ -500,50 +412,23 @@ export default function CoursesPage() {
                                 )}
                             </div>
                         </TabsContent>
-
-                        <TabsContent value="core" className="mt-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {/* Core courses content is handled by the filtered courses in the "all" tab */}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="technical" className="mt-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {/* Technical courses content is handled by the filtered courses in the "all" tab */}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="studio" className="mt-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {/* Studio courses content is handled by the filtered courses in the "all" tab */}
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="business" className="mt-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {/* Business courses content is handled by the filtered courses in the "all" tab */}
-                            </div>
-                        </TabsContent>
                     </Tabs>
                 </section>
 
+                {/* Add Review CTA */}
                 <section className="container px-4 py-8 md:px-6">
-                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                Can't find what you're looking for?
-                            </h2>
-                            <p className="text-muted-foreground">
-                                Help your fellow students by adding a review for
-                                a course that's not listed yet.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button className="gap-1">
-                                <PlusCircle className="h-4 w-4" />
-                                <span>Add a New Course Review</span>
-                            </Button>
-                        </div>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Can't find what you're looking for?
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Help your fellow students by adding a review for a
+                            course that's not listed yet.
+                        </p>
+                        <Button className="gap-1">
+                            <PlusCircle className="h-4 w-4" />
+                            <span>Add a New Course Review</span>
+                        </Button>
                     </div>
                 </section>
             </div>

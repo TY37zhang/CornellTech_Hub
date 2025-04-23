@@ -57,75 +57,66 @@ export default function Dashboard() {
                 </section>
 
                 <section className="container px-4 py-12 md:px-6">
-                    <Tabs defaultValue="featured" className="w-full">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                Explore Resources
-                            </h2>
-                            <TabsList>
-                                <TabsTrigger value="featured">
-                                    Featured
-                                </TabsTrigger>
-                                <TabsTrigger value="popular">
-                                    Popular
-                                </TabsTrigger>
-                                <TabsTrigger value="recent">Recent</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        <TabsContent value="featured" className="mt-6">
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <BookOpen className="h-5 w-5 text-red-600" />
-                                            Course Reviews
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Find and share reviews for Cornell
-                                            Tech courses
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Machine Learning
-                                                </span>
-                                                <div className="flex items-center">
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 text-muted-foreground" />
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Product Studio
-                                                </span>
-                                                <div className="flex items-center">
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Business Fundamentals
-                                                </span>
-                                                <div className="flex items-center">
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                    <Star className="h-4 w-4 text-muted-foreground" />
-                                                </div>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Explore Resources
+                        </h2>
+                    </div>
+                    <div className="mt-6">
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <BookOpen className="h-5 w-5 text-red-600" />
+                                        Course Reviews
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Find and share reviews for Cornell Tech
+                                        courses
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pb-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Machine Learning
+                                            </span>
+                                            <div className="flex items-center">
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 text-muted-foreground" />
                                             </div>
                                         </div>
-                                    </CardContent>
-                                    <CardFooter>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Product Studio
+                                            </span>
+                                            <div className="flex items-center">
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Business Fundamentals
+                                            </span>
+                                            <div className="flex items-center">
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                <Star className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-center">
+                                    <Link href="/courses">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -133,48 +124,50 @@ export default function Dashboard() {
                                         >
                                             View All Courses
                                         </Button>
-                                    </CardFooter>
-                                </Card>
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5 text-red-600" />
-                                            Student Forum
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Connect with peers and discuss
-                                            academic topics
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Internship Tips
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    12 replies
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Housing in NYC
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    24 replies
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Startup Ideas
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    8 replies
-                                                </span>
-                                            </div>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <MessageSquare className="h-5 w-5 text-red-600" />
+                                        Student Forum
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Connect with peers and discuss academic
+                                        topics
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pb-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Internship Tips
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                12 replies
+                                            </span>
                                         </div>
-                                    </CardContent>
-                                    <CardFooter>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Housing in NYC
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                24 replies
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Startup Ideas
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                8 replies
+                                            </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-center">
+                                    <Link href="/forum">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -182,48 +175,50 @@ export default function Dashboard() {
                                         >
                                             Join Discussions
                                         </Button>
-                                    </CardFooter>
-                                </Card>
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <ShoppingBag className="h-5 w-5 text-red-600" />
-                                            Marketplace
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Buy and sell items within the
-                                            Cornell Tech community
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    MacBook Pro (2022)
-                                                </span>
-                                                <span className="text-xs font-medium">
-                                                    $1,200
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Textbooks Bundle
-                                                </span>
-                                                <span className="text-xs font-medium">
-                                                    $85
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Desk Chair
-                                                </span>
-                                                <span className="text-xs font-medium">
-                                                    $50
-                                                </span>
-                                            </div>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <ShoppingBag className="h-5 w-5 text-red-600" />
+                                        Marketplace
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Buy and sell items within the Cornell
+                                        Tech community
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pb-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                MacBook Pro (2022)
+                                            </span>
+                                            <span className="text-xs font-medium">
+                                                $1,200
+                                            </span>
                                         </div>
-                                    </CardContent>
-                                    <CardFooter>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Textbooks Bundle
+                                            </span>
+                                            <span className="text-xs font-medium">
+                                                $85
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">
+                                                Desk Chair
+                                            </span>
+                                            <span className="text-xs font-medium">
+                                                $50
+                                            </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-center">
+                                    <Link href="/marketplace">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -231,120 +226,11 @@ export default function Dashboard() {
                                         >
                                             Browse Marketplace
                                         </Button>
-                                    </CardFooter>
-                                </Card>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="popular" className="mt-6">
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                {/* Similar cards with popular content would go here */}
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <TrendingUp className="h-5 w-5 text-red-600" />
-                                            Popular Resources
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Most accessed resources this
-                                            semester
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Housing Guide
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    1.2k views
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Career Resources
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    950 views
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    NYC Student Guide
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    820 views
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full"
-                                        >
-                                            View All Resources
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                                {/* Additional popular cards would go here */}
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="recent" className="mt-6">
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                {/* Similar cards with recent content would go here */}
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Calendar className="h-5 w-5 text-red-600" />
-                                            Upcoming Events
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Don't miss these campus events
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Tech Career Fair
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    Tomorrow
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Startup Pitch Day
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    Next Week
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Alumni Networking
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    May 15
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full"
-                                        >
-                                            View Calendar
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                                {/* Additional recent cards would go here */}
-                            </div>
-                        </TabsContent>
-                    </Tabs>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </div>
                 </section>
 
                 <section className="container px-4 py-12 md:px-6">
