@@ -1620,12 +1620,12 @@ export default function ForumPage() {
                                     </div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Button
+                                    {/* <Button
                                         variant="outline"
                                         className="w-full"
                                     >
                                         View All Stats
-                                    </Button>
+                                    </Button> */}
                                 </CardFooter>
                             </Card>
 
