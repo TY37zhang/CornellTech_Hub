@@ -239,7 +239,7 @@ export default function CoursesPage() {
                                         }
                                     />
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
+                                {/* <div className="flex flex-wrap items-center gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -320,7 +320,8 @@ export default function CoursesPage() {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                </div>
+                                </div> */}
+                                {/* filter options */}
                             </div>
                         </div>
                     </div>
