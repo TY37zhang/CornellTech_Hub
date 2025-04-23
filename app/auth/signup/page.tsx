@@ -1,15 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { sql } from "@neondatabase/serverless";
-import bcrypt from "bcryptjs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
     Card,
     CardContent,
@@ -19,57 +13,17 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-const signUpSchema = z
-    .object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.string().email("Invalid email address"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        confirmPassword: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
-        path: ["confirmPassword"],
-    });
-
-type SignUpForm = z.infer<typeof signUpSchema>;
-
 export default function SignUp() {
-    const router = useRouter();
-    const [error, setError] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<SignUpForm>({
-        resolver: zodResolver(signUpSchema),
-    });
-
-    const onSubmit = async (data: SignUpForm) => {
+    const handleGoogleSignIn = async () => {
+        setIsLoading(true);
         try {
-            // Check if user already exists
-            const existingUser = await sql`
-        SELECT * FROM users WHERE email = ${data.email}
-      `;
-
-            if (existingUser.rows.length > 0) {
-                setError("User with this email already exists");
-                return;
-            }
-
-            // Hash password
-            const hashedPassword = await bcrypt.hash(data.password, 10);
-
-            // Create new user
-            await sql`
-        INSERT INTO users (name, email, password)
-        VALUES (${data.name}, ${data.email}, ${hashedPassword})
-      `;
-
-            // Redirect to sign in page
-            router.push("/auth/signin");
+            await signIn("google", { callbackUrl: "/" });
         } catch (error) {
-            setError("An error occurred during sign up");
+            console.error("Error signing in with Google:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -80,111 +34,44 @@ export default function SignUp() {
                     <CardTitle className="text-2xl font-bold text-center">
                         Create an account
                     </CardTitle>
-                    <CardDescription className="text-center">
-                        Enter your information to create your account
-                    </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="space-y-4"
-                    >
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="name"
-                                className="text-sm font-medium"
-                            >
-                                Full Name
-                            </label>
-                            <Input
-                                {...register("name")}
-                                id="name"
-                                type="text"
-                                placeholder="John Doe"
-                            />
-                            {errors.name && (
-                                <p className="text-sm text-red-500">
-                                    {errors.name.message}
-                                </p>
-                            )}
+                <CardContent className="space-y-6">
+                    <div className="space-y-4 text-center">
+                        <h3 className="text-lg font-medium">
+                            Sign up with your Cornell email address using Google
+                        </h3>
+
+                        <div className="space-y-2 text-muted-foreground">
+                            <p className="text-sm font-medium">
+                                You must use your Cornell email address
+                                (@cornell.edu)
+                            </p>
+                            <p className="text-sm">
+                                This ensures that only Cornell Tech students can
+                                access the platform
+                            </p>
                         </div>
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="email"
-                                className="text-sm font-medium"
-                            >
-                                Email
-                            </label>
-                            <Input
-                                {...register("email")}
-                                id="email"
-                                type="email"
-                                placeholder="name@example.com"
-                            />
-                            {errors.email && (
-                                <p className="text-sm text-red-500">
-                                    {errors.email.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="password"
-                                className="text-sm font-medium"
-                            >
-                                Password
-                            </label>
-                            <Input
-                                {...register("password")}
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                            />
-                            {errors.password && (
-                                <p className="text-sm text-red-500">
-                                    {errors.password.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="confirmPassword"
-                                className="text-sm font-medium"
-                            >
-                                Confirm Password
-                            </label>
-                            <Input
-                                {...register("confirmPassword")}
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="••••••••"
-                            />
-                            {errors.confirmPassword && (
-                                <p className="text-sm text-red-500">
-                                    {errors.confirmPassword.message}
-                                </p>
-                            )}
-                        </div>
-                        {error && (
-                            <div className="text-sm text-red-500 text-center">
-                                {error}
-                            </div>
-                        )}
+                    </div>
+
+                    <div className="pt-2">
                         <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={isSubmitting}
+                            onClick={handleGoogleSignIn}
+                            className="w-full font-medium"
+                            size="lg"
+                            disabled={isLoading}
                         >
-                            {isSubmitting ? "Creating account..." : "Sign up"}
+                            {isLoading
+                                ? "Signing up..."
+                                : "Sign up with Google"}
                         </Button>
-                    </form>
+                    </div>
                 </CardContent>
-                <CardFooter className="flex justify-center">
+                <CardFooter className="flex justify-center border-t pt-6">
                     <p className="text-sm text-muted-foreground">
                         Already have an account?{" "}
                         <Link
                             href="/auth/signin"
-                            className="text-primary hover:underline"
+                            className="text-primary hover:underline font-medium"
                         >
                             Sign in
                         </Link>

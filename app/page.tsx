@@ -7,6 +7,7 @@ import {
     ShoppingBag,
     Star,
     TrendingUp,
+    Link as LinkIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ export default function Dashboard() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="w-full"
+                                            className="w-full shadow-sm hover:shadow-md transition-shadow"
                                         >
                                             View All Courses
                                         </Button>
@@ -171,13 +172,78 @@ export default function Dashboard() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="w-full"
+                                            className="w-full shadow-sm hover:shadow-md transition-shadow"
                                         >
                                             Join Discussions
                                         </Button>
                                     </Link>
                                 </CardFooter>
                             </Card>
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <LinkIcon className="h-5 w-5 text-red-600" />
+                                        Useful Links
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Quick access to important Cornell Tech
+                                        resources
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pb-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Link
+                                                href="https://cornelltech.campusgroups.com/events"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-medium hover:underline"
+                                            >
+                                                Campus Events
+                                            </Link>
+                                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Link
+                                                href="https://cornell.joinhandshake.com/stu/postings"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-medium hover:underline"
+                                            >
+                                                Handshake
+                                            </Link>
+                                            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Link
+                                                href="https://thehouseatcornelltech.com/"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-medium hover:underline"
+                                            >
+                                                The House @ Cornell Tech
+                                            </Link>
+                                            <Star className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-center">
+                                    <Link
+                                        href="https://admissions.tech.cornell.edu/dnu-admitted/resources/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-full shadow-sm hover:shadow-md transition-shadow"
+                                        >
+                                            More Resources
+                                        </Button>
+                                    </Link>
+                                </CardFooter>
+                            </Card>
+                            {/* Marketplace Card - Temporarily Disabled
                             <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="flex items-center gap-2">
@@ -229,6 +295,7 @@ export default function Dashboard() {
                                     </Link>
                                 </CardFooter>
                             </Card>
+                            */}
                         </div>
                     </div>
                 </section>
@@ -246,7 +313,9 @@ export default function Dashboard() {
                             </p>
                         </div>
                         <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                            <Button size="lg">Sign Up Now</Button>
+                            <Link href="/auth/signup">
+                                <Button size="lg">Sign Up Now</Button>
+                            </Link>
                             {/* <Button variant="outline" size="lg">
                                 Learn More
                             </Button> */}
@@ -288,12 +357,14 @@ export default function Dashboard() {
                             >
                                 Forum
                             </Link>
+                            {/* Marketplace link temporarily disabled
                             <Link
                                 href="#"
                                 className="text-muted-foreground hover:text-foreground"
                             >
                                 Marketplace
                             </Link>
+                            */}
                         </div>
                         <div className="grid gap-3 text-sm">
                             <h3 className="font-semibold">Resources</h3>

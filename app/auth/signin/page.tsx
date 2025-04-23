@@ -28,6 +28,7 @@ type SignInForm = z.infer<typeof signInSchema>;
 export default function SignIn() {
     const router = useRouter();
     const [error, setError] = useState<string>("");
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const {
         register,
@@ -57,6 +58,17 @@ export default function SignIn() {
         }
     };
 
+    const handleGoogleSignIn = async () => {
+        setIsGoogleLoading(true);
+        try {
+            await signIn("google", { callbackUrl: "/" });
+        } catch (error) {
+            console.error("Error signing in with Google:", error);
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
+
     return (
         <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-10">
             <Card className="w-full max-w-md">
@@ -69,61 +81,85 @@ export default function SignIn() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="space-y-4"
-                    >
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="email"
-                                className="text-sm font-medium"
-                            >
-                                Email
-                            </label>
-                            <Input
-                                {...register("email")}
-                                id="email"
-                                type="email"
-                                placeholder="name@example.com"
-                            />
-                            {errors.email && (
-                                <p className="text-sm text-red-500">
-                                    {errors.email.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="password"
-                                className="text-sm font-medium"
-                            >
-                                Password
-                            </label>
-                            <Input
-                                {...register("password")}
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                            />
-                            {errors.password && (
-                                <p className="text-sm text-red-500">
-                                    {errors.password.message}
-                                </p>
-                            )}
-                        </div>
-                        {error && (
-                            <div className="text-sm text-red-500 text-center">
-                                {error}
-                            </div>
-                        )}
+                    <div className="space-y-4">
                         <Button
-                            type="submit"
+                            onClick={handleGoogleSignIn}
                             className="w-full"
-                            disabled={isSubmitting}
+                            disabled={isGoogleLoading}
+                            variant="outline"
                         >
-                            {isSubmitting ? "Signing in..." : "Sign in"}
+                            {isGoogleLoading
+                                ? "Signing in..."
+                                : "Sign in with Google"}
                         </Button>
-                    </form>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                    Or continue with
+                                </span>
+                            </div>
+                        </div>
+
+                        <form
+                            onSubmit={handleSubmit(onSubmit)}
+                            className="space-y-4"
+                        >
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor="email"
+                                    className="text-sm font-medium"
+                                >
+                                    Email
+                                </label>
+                                <Input
+                                    {...register("email")}
+                                    id="email"
+                                    type="email"
+                                    placeholder="name@example.com"
+                                />
+                                {errors.email && (
+                                    <p className="text-sm text-red-500">
+                                        {errors.email.message}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor="password"
+                                    className="text-sm font-medium"
+                                >
+                                    Password
+                                </label>
+                                <Input
+                                    {...register("password")}
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                />
+                                {errors.password && (
+                                    <p className="text-sm text-red-500">
+                                        {errors.password.message}
+                                    </p>
+                                )}
+                            </div>
+                            {error && (
+                                <div className="text-sm text-red-500 text-center">
+                                    {error}
+                                </div>
+                            )}
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Signing in..." : "Sign in"}
+                            </Button>
+                        </form>
+                    </div>
                 </CardContent>
                 <CardFooter className="flex justify-center">
                     <p className="text-sm text-muted-foreground">
