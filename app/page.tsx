@@ -369,19 +369,25 @@ export default function Dashboard() {
                         <div className="grid gap-3 text-sm">
                             <h3 className="font-semibold">Resources</h3>
                             <Link
-                                href="#"
+                                href="https://thehouseatcornelltech.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground"
                             >
                                 Housing
                             </Link>
                             <Link
-                                href="#"
+                                href="https://cornelltech.campusgroups.com/events"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground"
                             >
                                 Events
                             </Link>
                             <Link
-                                href="#"
+                                href="https://sites.coecis.cornell.edu/careermanagement/"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground"
                             >
                                 Career
