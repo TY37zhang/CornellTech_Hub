@@ -105,7 +105,7 @@ export default function MarketplacePage() {
             </div>
 
             <TabsContent value="all" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* MacBook Pro Listing */}
                 <Link href="/marketplace/macbook-pro" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -561,7 +561,7 @@ export default function MarketplacePage() {
             </TabsContent>
 
             <TabsContent value="electronics" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* MacBook Pro Listing */}
                 <Link href="/marketplace/macbook-pro" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -737,7 +737,7 @@ export default function MarketplacePage() {
             </TabsContent>
 
             <TabsContent value="textbooks" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* Textbooks Bundle Listing */}
                 <Link href="/marketplace/textbooks-bundle" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -799,7 +799,7 @@ export default function MarketplacePage() {
             </TabsContent>
 
             <TabsContent value="furniture" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* Desk Chair Listing */}
                 <Link href="/marketplace/desk-chair" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -858,7 +858,7 @@ export default function MarketplacePage() {
             </TabsContent>
 
             <TabsContent value="clothing" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* Winter Jacket Listing */}
                 <Link href="/marketplace/winter-jacket" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">

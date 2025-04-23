@@ -96,7 +96,7 @@ export default function CoursesPage() {
             </div>
 
             <TabsContent value="all" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Machine Learning Course Card */}
                 <Link href="/courses/machine-learning" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -488,7 +488,7 @@ export default function CoursesPage() {
             </TabsContent>
 
             <TabsContent value="core" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Core courses would go here */}
                 <Link href="/courses/leadership" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -557,7 +557,7 @@ export default function CoursesPage() {
             </TabsContent>
 
             <TabsContent value="technical" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Technical courses would go here */}
                 <Link href="/courses/machine-learning" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -625,7 +625,7 @@ export default function CoursesPage() {
             </TabsContent>
 
             <TabsContent value="studio" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Studio courses would go here */}
                 <Link href="/courses/product-studio" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
@@ -694,7 +694,7 @@ export default function CoursesPage() {
             </TabsContent>
 
             <TabsContent value="business" className="mt-6">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Business courses would go here */}
                 <Link href="/courses/business-fundamentals" className="group">
                   <Card className="h-full overflow-hidden transition-all hover:border-primary">
