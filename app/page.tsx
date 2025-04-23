@@ -38,12 +38,12 @@ export default function Dashboard() {
                                         campus resources.
                                     </p>
                                 </div>
-                                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                                {/* <div className="flex flex-col gap-2 min-[400px]:flex-row">
                                     <Button size="lg">Explore Resources</Button>
                                     <Button variant="outline" size="lg">
                                         Learn More
                                     </Button>
-                                </div>
+                                </div> */}
                             </div>
                             <Image
                                 src="/placeholder.svg?height=550&width=550"
