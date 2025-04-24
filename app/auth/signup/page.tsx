@@ -12,14 +12,23 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function SignUp() {
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
         try {
-            await signIn("google", { callbackUrl: "/" });
+            const result = await signIn("google", {
+                callbackUrl: "/",
+                redirect: true,
+            });
+
+            if (result?.error) {
+                console.error("Error signing in with Google:", result.error);
+            }
         } catch (error) {
             console.error("Error signing in with Google:", error);
         } finally {

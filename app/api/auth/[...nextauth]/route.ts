@@ -1,7 +1,5 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import bcrypt from "bcryptjs";
 import { neon } from "@neondatabase/serverless";
 
 // Extend the built-in session types
@@ -32,43 +30,6 @@ const handler = NextAuth({
                 },
             },
         }),
-        CredentialsProvider({
-            name: "Credentials",
-            credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
-            },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    throw new Error("Please enter an email and password");
-                }
-
-                const result = await sql`
-          SELECT * FROM users WHERE email = ${credentials.email}
-        `;
-
-                const user = result[0];
-
-                if (!user) {
-                    throw new Error("No user found with this email");
-                }
-
-                const passwordMatch = await bcrypt.compare(
-                    credentials.password,
-                    user.password
-                );
-
-                if (!passwordMatch) {
-                    throw new Error("Incorrect password");
-                }
-
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                };
-            },
-        }),
     ],
     session: {
         strategy: "jwt",
@@ -80,6 +41,10 @@ const handler = NextAuth({
         async signIn({ user, account, profile }) {
             // Only allow Cornell email addresses
             if (user.email && !user.email.endsWith("@cornell.edu")) {
+                console.log(
+                    "Access denied: Non-Cornell email attempted to sign in",
+                    user.email
+                );
                 return false;
             }
 
@@ -92,14 +57,27 @@ const handler = NextAuth({
 
                     // If user doesn't exist, create them
                     if (result.length === 0) {
-                        await sql`
-                            INSERT INTO users (name, email, google_id)
-                            VALUES (${user.name}, ${user.email}, ${profile?.sub})
+                        console.log(
+                            "Creating new user with Cornell email:",
+                            user.email
+                        );
+                        const newUser = await sql`
+                            INSERT INTO users (name, email, avatar_url)
+                            VALUES (${user.name}, ${user.email}, ${user.image})
+                            RETURNING id, name, email, avatar_url
                         `;
+
+                        // Update the user object with the new user's ID
+                        user.id = newUser[0].id;
+                    } else {
+                        // Update the user object with the existing user's ID
+                        user.id = result[0].id;
                     }
                 } catch (error) {
                     console.error("Error during Google sign in:", error);
-                    return false;
+                    throw new Error(
+                        "Failed to process Google sign in. Please try again."
+                    );
                 }
             }
 

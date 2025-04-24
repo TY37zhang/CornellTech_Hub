@@ -6,9 +6,18 @@ import { BookOpen, Home, MessageSquare, ShoppingBag } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useSession, signOut } from "next-auth/react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function SiteHeader() {
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -74,12 +83,41 @@ export function SiteHeader() {
           */}
                 </nav>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href="/auth/login">Sign In</Link>
-                    </Button>
-                    <Button size="sm" asChild>
-                        <Link href="/auth/signup">Sign Up</Link>
-                    </Button>
+                    {session ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="relative h-8 w-8 rounded-full"
+                                >
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage
+                                            src={session.user?.image || ""}
+                                            alt={session.user?.name || ""}
+                                        />
+                                        <AvatarFallback>
+                                            {session.user?.name?.charAt(0) ||
+                                                "U"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => signOut()}>
+                                    Sign out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href="/auth/signin">Sign In</Link>
+                            </Button>
+                            <Button size="sm" asChild>
+                                <Link href="/auth/signup">Sign Up</Link>
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </header>

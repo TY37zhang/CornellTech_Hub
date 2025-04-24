@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
     Card,
     CardContent,
@@ -18,45 +14,9 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-const signInSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type SignInForm = z.infer<typeof signInSchema>;
-
 export default function SignIn() {
     const router = useRouter();
-    const [error, setError] = useState<string>("");
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<SignInForm>({
-        resolver: zodResolver(signInSchema),
-    });
-
-    const onSubmit = async (data: SignInForm) => {
-        try {
-            const result = await signIn("credentials", {
-                email: data.email,
-                password: data.password,
-                redirect: false,
-            });
-
-            if (result?.error) {
-                setError(result.error);
-                return;
-            }
-
-            router.push("/dashboard");
-            router.refresh();
-        } catch (error) {
-            setError("An error occurred during sign in");
-        }
-    };
 
     const handleGoogleSignIn = async () => {
         setIsGoogleLoading(true);
@@ -74,99 +34,49 @@ export default function SignIn() {
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center">
-                        Sign in
+                        Sign in to Cornell Tech Hub
                     </CardTitle>
                     <CardDescription className="text-center">
-                        Enter your email and password to access your account
+                        Use your Cornell email address to access the platform
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
+                <CardContent className="space-y-6">
+                    <div className="space-y-4 text-center">
+                        <h3 className="text-lg font-medium">
+                            Sign in with your Cornell email address using Google
+                        </h3>
+
+                        <div className="space-y-2 text-muted-foreground">
+                            <p className="text-sm font-medium">
+                                You must use your Cornell email address
+                                (@cornell.edu)
+                            </p>
+                            <p className="text-sm">
+                                This ensures that only Cornell Tech students can
+                                access the platform
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
                         <Button
                             onClick={handleGoogleSignIn}
-                            className="w-full"
+                            className="w-full font-medium"
+                            size="lg"
                             disabled={isGoogleLoading}
-                            variant="outline"
                         >
                             {isGoogleLoading
                                 ? "Signing in..."
                                 : "Sign in with Google"}
                         </Button>
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">
-                                    Or continue with
-                                </span>
-                            </div>
-                        </div>
-
-                        <form
-                            onSubmit={handleSubmit(onSubmit)}
-                            className="space-y-4"
-                        >
-                            <div className="space-y-2">
-                                <label
-                                    htmlFor="email"
-                                    className="text-sm font-medium"
-                                >
-                                    Email
-                                </label>
-                                <Input
-                                    {...register("email")}
-                                    id="email"
-                                    type="email"
-                                    placeholder="name@example.com"
-                                />
-                                {errors.email && (
-                                    <p className="text-sm text-red-500">
-                                        {errors.email.message}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <label
-                                    htmlFor="password"
-                                    className="text-sm font-medium"
-                                >
-                                    Password
-                                </label>
-                                <Input
-                                    {...register("password")}
-                                    id="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                />
-                                {errors.password && (
-                                    <p className="text-sm text-red-500">
-                                        {errors.password.message}
-                                    </p>
-                                )}
-                            </div>
-                            {error && (
-                                <div className="text-sm text-red-500 text-center">
-                                    {error}
-                                </div>
-                            )}
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Signing in..." : "Sign in"}
-                            </Button>
-                        </form>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-center">
+                <CardFooter className="flex justify-center border-t pt-6">
                     <p className="text-sm text-muted-foreground">
                         Don't have an account?{" "}
                         <Link
                             href="/auth/signup"
-                            className="text-primary hover:underline"
+                            className="text-primary hover:underline font-medium"
                         >
                             Sign up
                         </Link>
