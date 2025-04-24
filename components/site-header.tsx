@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Home, MessageSquare, ShoppingBag } from "lucide-react";
+import {
+    BookOpen,
+    Home,
+    MessageSquare,
+    ShoppingBag,
+    Settings,
+    LogOut,
+    FileText,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,8 +20,10 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MobileNav } from "@/components/mobile-nav";
 
 export function SiteHeader() {
     const pathname = usePathname();
@@ -21,18 +31,25 @@ export function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Image
-                        src="/placeholder.svg?height=32&width=32"
-                        alt="Cornell Tech Logo"
-                        width={32}
-                        height={32}
-                        className="rounded-md"
-                    />
-                    <span className="text-xl font-bold">Cornell Tech Hub</span>
+            <div className="container flex h-16 items-center">
+                <div className="flex flex-1 items-center gap-2">
+                    <div className="md:hidden">
+                        <MobileNav />
+                    </div>
+                    <Link href="/" className="flex items-center gap-2">
+                        <Image
+                            src="/placeholder.svg?height=32&width=32"
+                            alt="Cornell Tech Logo"
+                            width={32}
+                            height={32}
+                            className="rounded-md"
+                        />
+                        <span className="text-xl font-bold">
+                            Cornell Tech Hub
+                        </span>
+                    </Link>
                 </div>
-                <nav className="hidden md:flex items-center gap-6 text-sm">
+                <nav className="hidden md:flex items-center justify-center flex-1 gap-6 text-sm">
                     <Link
                         href="/"
                         className={cn(
@@ -82,7 +99,7 @@ export function SiteHeader() {
           </Link>
           */}
                 </nav>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-1 items-center justify-end gap-2">
                     {session ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -102,9 +119,43 @@ export function SiteHeader() {
                                     </Avatar>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => signOut()}>
-                                    Sign out
+                            <DropdownMenuContent align="end" className="w-56">
+                                <div className="flex items-center justify-start gap-2 p-2">
+                                    <div className="flex flex-col space-y-1 leading-none">
+                                        <p className="font-medium">
+                                            {session.user?.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {session.user?.email}
+                                        </p>
+                                    </div>
+                                </div>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="/user/posts"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        <span>My Posts</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="/settings"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        <span>Settings</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => signOut()}
+                                    className="flex items-center cursor-pointer text-red-600 focus:text-red-600"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Sign out</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

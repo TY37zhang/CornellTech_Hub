@@ -1,0 +1,52 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+
+export async function GET() {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || !session.user) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const userEmail = session.user.email;
+
+        if (!userEmail) {
+            return NextResponse.json(
+                { error: "User email not found" },
+                { status: 400 }
+            );
+        }
+
+        // Fetch user's posts from the database
+        const posts = await prisma.post.findMany({
+            where: {
+                authorEmail: userEmail,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                createdAt: true,
+                category: true,
+                slug: true,
+            },
+        });
+
+        return NextResponse.json(posts);
+    } catch (error) {
+        console.error("Error fetching user posts:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch user posts" },
+            { status: 500 }
+        );
+    }
+}

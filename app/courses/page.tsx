@@ -260,10 +260,12 @@ export default function CoursesPage() {
                                 <TabsTrigger value="techie">TECHIE</TabsTrigger>
                             </TabsList>
                             <div className="flex items-center gap-2">
-                                <Button className="gap-1">
-                                    <PlusCircle className="h-4 w-4" />
-                                    <span>New Review</span>
-                                </Button>
+                                <Link href="/courses/new-review">
+                                    <Button className="gap-1">
+                                        <PlusCircle className="h-4 w-4" />
+                                        <span>New Review</span>
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
 
@@ -425,10 +427,12 @@ export default function CoursesPage() {
                             Help your fellow students by adding a review for a
                             course that's not listed yet.
                         </p>
-                        <Button className="gap-1">
-                            <PlusCircle className="h-4 w-4" />
-                            <span>Add a New Course Review</span>
-                        </Button>
+                        <Link href="/courses/new-review">
+                            <Button className="gap-1">
+                                <PlusCircle className="h-4 w-4" />
+                                <span>Add a New Course Review</span>
+                            </Button>
+                        </Link>
                     </div>
                 </section>
             </div>

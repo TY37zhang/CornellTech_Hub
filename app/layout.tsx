@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { MobileNav } from "@/components/mobile-nav";
 import AuthProvider from "@/components/providers/session-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -26,12 +27,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <body className={inter.className}>
                 <AuthProvider>
                     <div className="relative flex min-h-screen flex-col">
-                        <div className="flex items-center justify-between md:hidden">
-                            <MobileNav />
-                        </div>
                         <SiteHeader />
                         <div className="flex-1">{children}</div>
                     </div>
+                    <Toaster />
                 </AuthProvider>
             </body>
         </html>

@@ -14,10 +14,12 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useSession } from "next-auth/react";
 
 export function MobileNav() {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     const routes = [
         {
@@ -50,7 +52,7 @@ export function MobileNav() {
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild className="md:hidden">
+            <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10">
                     <Menu className="h-5 w-5" />
                     <span className="sr-only">Toggle menu</span>
@@ -94,24 +96,45 @@ export function MobileNav() {
                             </Link>
                         ))}
                     </nav>
-                    <div className="mt-8 flex flex-col gap-2">
-                        <Button variant="outline" asChild>
-                            <Link
-                                href="/auth/login"
-                                onClick={() => setOpen(false)}
-                            >
-                                Sign In
-                            </Link>
-                        </Button>
-                        <Button asChild>
-                            <Link
-                                href="/auth/signup"
-                                onClick={() => setOpen(false)}
-                            >
-                                Sign Up
-                            </Link>
-                        </Button>
-                    </div>
+                    {session ? (
+                        <div className="mt-8 flex flex-col gap-2">
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href="/user/posts"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    My Posts
+                                </Link>
+                            </Button>
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href="/settings"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Settings
+                                </Link>
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="mt-8 flex flex-col gap-2">
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href="/auth/signin"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Sign In
+                                </Link>
+                            </Button>
+                            <Button asChild>
+                                <Link
+                                    href="/auth/signup"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Sign Up
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </SheetContent>
         </Sheet>
