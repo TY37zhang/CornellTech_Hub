@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,22 +28,79 @@ import { Slider } from "@/components/ui/slider";
 
 export default function NewReviewPage() {
     const router = useRouter();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [formData, setFormData] = useState({
         title: "",
         professor: "",
         category: "",
+        credits: 3,
         difficulty: 5,
         workload: 5,
         value: 5,
         review: "",
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        if (formData.title.length < 2) {
+            newErrors.title = "Title must be at least 2 characters";
+        }
+
+        if (formData.professor.length < 2) {
+            newErrors.professor =
+                "Professor name must be at least 2 characters";
+        }
+
+        if (!formData.category) {
+            newErrors.category = "Please select a category";
+        }
+
+        if (formData.review.length < 10) {
+            newErrors.review = "Review must be at least 10 characters";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would typically send the data to your backend
-        console.log("Form submitted:", formData);
-        // Redirect back to courses page after submission
-        router.push("/courses");
+
+        if (!validateForm()) {
+            toast.error("Please fix the errors in the form");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const response = await fetch("/api/courses/reviews", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to submit review");
+            }
+
+            toast.success("Review submitted successfully!");
+            router.push("/courses");
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to submit review"
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -51,6 +109,7 @@ export default function NewReviewPage() {
                 variant="ghost"
                 className="mb-6"
                 onClick={() => router.back()}
+                disabled={isSubmitting}
             >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Courses
@@ -79,7 +138,13 @@ export default function NewReviewPage() {
                                     })
                                 }
                                 required
+                                className={errors.title ? "border-red-500" : ""}
                             />
+                            {errors.title && (
+                                <p className="text-sm text-red-500">
+                                    {errors.title}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -95,7 +160,15 @@ export default function NewReviewPage() {
                                     })
                                 }
                                 required
+                                className={
+                                    errors.professor ? "border-red-500" : ""
+                                }
                             />
+                            {errors.professor && (
+                                <p className="text-sm text-red-500">
+                                    {errors.professor}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -109,7 +182,11 @@ export default function NewReviewPage() {
                                     })
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger
+                                    className={
+                                        errors.category ? "border-red-500" : ""
+                                    }
+                                >
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -124,6 +201,36 @@ export default function NewReviewPage() {
                                     <SelectItem value="techie">
                                         TECHIE
                                     </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.category && (
+                                <p className="text-sm text-red-500">
+                                    {errors.category}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="credits">Credits</Label>
+                            <Select
+                                value={formData.credits.toString()}
+                                onValueChange={(value) =>
+                                    setFormData({
+                                        ...formData,
+                                        credits: parseInt(value),
+                                    })
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select credits" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1">1 Credit</SelectItem>
+                                    <SelectItem value="2">2 Credits</SelectItem>
+                                    <SelectItem value="3">3 Credits</SelectItem>
+                                    <SelectItem value="4">4 Credits</SelectItem>
+                                    <SelectItem value="5">5 Credits</SelectItem>
+                                    <SelectItem value="6">6 Credits</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -200,13 +307,24 @@ export default function NewReviewPage() {
                                     })
                                 }
                                 required
-                                className="min-h-[150px]"
+                                className={`min-h-[150px] ${
+                                    errors.review ? "border-red-500" : ""
+                                }`}
                             />
+                            {errors.review && (
+                                <p className="text-sm text-red-500">
+                                    {errors.review}
+                                </p>
+                            )}
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full">
-                            Submit Review
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? "Submitting..." : "Submit Review"}
                         </Button>
                     </CardFooter>
                 </form>
