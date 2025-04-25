@@ -34,10 +34,9 @@ export default function NewReviewPage() {
         title: "",
         professor: "",
         category: "",
-        credits: 3,
-        difficulty: 5,
-        workload: 5,
-        value: 5,
+        difficulty: 3,
+        workload: 3,
+        value: 3,
         review: "",
     });
 
@@ -210,34 +209,9 @@ export default function NewReviewPage() {
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="credits">Credits</Label>
-                            <Select
-                                value={formData.credits.toString()}
-                                onValueChange={(value) =>
-                                    setFormData({
-                                        ...formData,
-                                        credits: parseInt(value),
-                                    })
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select credits" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1">1 Credit</SelectItem>
-                                    <SelectItem value="2">2 Credits</SelectItem>
-                                    <SelectItem value="3">3 Credits</SelectItem>
-                                    <SelectItem value="4">4 Credits</SelectItem>
-                                    <SelectItem value="5">5 Credits</SelectItem>
-                                    <SelectItem value="6">6 Credits</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Difficulty (1-10)</Label>
+                                <Label>Difficulty (1-5)</Label>
                                 <Slider
                                     value={[formData.difficulty]}
                                     onValueChange={(value) =>
@@ -247,8 +221,8 @@ export default function NewReviewPage() {
                                         })
                                     }
                                     min={1}
-                                    max={10}
-                                    step={0.5}
+                                    max={5}
+                                    step={1}
                                 />
                                 <div className="text-sm text-muted-foreground">
                                     Current value: {formData.difficulty}
@@ -256,7 +230,7 @@ export default function NewReviewPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Workload (1-10)</Label>
+                                <Label>Workload (1-5)</Label>
                                 <Slider
                                     value={[formData.workload]}
                                     onValueChange={(value) =>
@@ -266,8 +240,8 @@ export default function NewReviewPage() {
                                         })
                                     }
                                     min={1}
-                                    max={10}
-                                    step={0.5}
+                                    max={5}
+                                    step={1}
                                 />
                                 <div className="text-sm text-muted-foreground">
                                     Current value: {formData.workload}
@@ -275,7 +249,7 @@ export default function NewReviewPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Value (1-10)</Label>
+                                <Label>Value (1-5)</Label>
                                 <Slider
                                     value={[formData.value]}
                                     onValueChange={(value) =>
@@ -285,8 +259,8 @@ export default function NewReviewPage() {
                                         })
                                     }
                                     min={1}
-                                    max={10}
-                                    step={0.5}
+                                    max={5}
+                                    step={1}
                                 />
                                 <div className="text-sm text-muted-foreground">
                                     Current value: {formData.value}
