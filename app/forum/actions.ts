@@ -266,3 +266,147 @@ export async function getForumPostsByCategory(
         throw error;
     }
 }
+
+export async function getForumPostById(
+    id: string
+): Promise<ForumPostResponse | null> {
+    try {
+        const post = await sql`
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count
+            FROM forum_posts fp
+            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN users u ON fp.author_id = u.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            WHERE fp.id = ${id}
+            AND fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+        `;
+
+        if (!post || post.length === 0) {
+            return null;
+        }
+
+        // Get tags for the post
+        const tags = await sql`
+            SELECT tag
+            FROM forum_post_tags
+            WHERE post_id = ${id}
+        `;
+
+        // For view count, we'll just return the current data without incrementing
+        // since we need a valid user ID for the foreign key constraint
+
+        return {
+            ...post[0],
+            tags: tags.map((t) => t.tag),
+        };
+    } catch (error) {
+        console.error("Error fetching forum post:", error);
+        throw error;
+    }
+}
+
+interface ForumCommentResponse {
+    id: string;
+    content: string;
+    created_at: string;
+    author_name: string;
+    author_avatar: string | null;
+    author_id: string;
+    like_count: number;
+}
+
+export async function getForumComments(
+    postId: string
+): Promise<ForumCommentResponse[]> {
+    try {
+        const comments = await sql`
+            SELECT 
+                fc.id,
+                fc.content,
+                fc.created_at,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                (
+                    SELECT COUNT(*)
+                    FROM forum_likes fl
+                    WHERE fl.post_id = fc.id
+                ) as like_count
+            FROM forum_comments fc
+            LEFT JOIN users u ON fc.author_id = u.id
+            WHERE fc.post_id = ${postId}
+            ORDER BY fc.created_at ASC
+        `;
+
+        return comments;
+    } catch (error) {
+        console.error("Error fetching forum comments:", error);
+        throw error;
+    }
+}
+
+export async function createForumComment({
+    content,
+    postId,
+    authorId,
+}: {
+    content: string;
+    postId: string;
+    authorId: string;
+}) {
+    try {
+        // Insert the comment into forum_comments table
+        const result = await sql`
+            INSERT INTO forum_comments (
+                content,
+                post_id,
+                author_id,
+                created_at,
+                updated_at
+            ) VALUES (
+                ${content},
+                ${postId},
+                ${authorId},
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
+            ) RETURNING id;
+        `;
+
+        // Revalidate the thread page to show the new comment
+        revalidatePath(`/forum/${postId}`);
+
+        return { success: true, commentId: result[0].id };
+    } catch (error) {
+        console.error("Error creating comment:", error);
+        if (error instanceof Error) {
+            console.error("Error details:", {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+            });
+        }
+        return {
+            success: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to create comment",
+        };
+    }
+}
