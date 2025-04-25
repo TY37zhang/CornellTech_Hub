@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -39,7 +39,28 @@ export default function NewReviewPage() {
         value: 3,
         overall_rating: 3,
         review: "",
+        courseId: "",
     });
+
+    useEffect(() => {
+        // Get URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get("courseId");
+        const courseName = params.get("courseName");
+        const courseCode = params.get("courseCode");
+        const professor = params.get("professor");
+        const category = params.get("category");
+
+        if (courseId && courseName) {
+            setFormData((prev) => ({
+                ...prev,
+                title: courseName,
+                courseId: courseId,
+                professor: professor || "",
+                category: category || "",
+            }));
+        }
+    }, []);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -80,7 +101,10 @@ export default function NewReviewPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    course_id: formData.courseId,
+                }),
             });
 
             const data = await response.json();
@@ -90,7 +114,7 @@ export default function NewReviewPage() {
             }
 
             toast.success("Review submitted successfully!");
-            router.push("/courses");
+            router.push(`/courses/${formData.courseId}`);
         } catch (error) {
             console.error("Error submitting review:", error);
             toast.error(
@@ -187,7 +211,10 @@ export default function NewReviewPage() {
                                         errors.category ? "border-red-500" : ""
                                     }
                                 >
-                                    <SelectValue placeholder="Select a category" />
+                                    <SelectValue
+                                        placeholder="Select a category"
+                                        defaultValue={formData.category}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ceee">CEEE</SelectItem>

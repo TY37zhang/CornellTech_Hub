@@ -18,6 +18,7 @@ const requestSchema = z.object({
     value: z.number().min(1).max(5),
     overall_rating: z.number().min(1).max(5),
     review: z.string().min(10, "Review must be at least 10 characters"),
+    course_id: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const validatedData = requestSchema.parse(body);
 
-        // First, create or update the course
+        // Create or update the course
         const courseResult = await sql`
             INSERT INTO courses (
                 code,
@@ -47,14 +48,16 @@ export async function POST(request: Request) {
             ) VALUES (
                 ${validatedData.title.toLowerCase().replace(/\s+/g, "-")},
                 ${validatedData.title},
-                (SELECT id FROM users WHERE email = ${session.user.email}),
+                ${validatedData.professor},
                 ${validatedData.category},
                 'Spring',
                 2024,
                 3
             )
             ON CONFLICT (code, semester, year) DO UPDATE
-            SET name = EXCLUDED.name
+            SET name = EXCLUDED.name,
+                professor_id = EXCLUDED.professor_id,
+                department = EXCLUDED.department
             RETURNING id
         `;
 

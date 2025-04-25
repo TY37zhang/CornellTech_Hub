@@ -9,7 +9,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const courseId = params.id;
+        const courseId = await params.id;
 
         // Fetch the specific course with its details
         const courseResult = await sql`
@@ -18,10 +18,10 @@ export async function GET(
                 c.code,
                 c.name as title,
                 c.department as category,
+                c.professor_id as professor,
                 c.semester,
                 c.year,
                 c.credits,
-                u.name as professor,
                 COUNT(cr.id) as review_count,
                 ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
                 ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
@@ -29,9 +29,8 @@ export async function GET(
                 ROUND(AVG(cr.rating)::numeric, 1) as value
             FROM courses c
             LEFT JOIN course_reviews cr ON c.id = cr.course_id
-            LEFT JOIN users u ON c.professor_id = u.id
             WHERE c.code = ${courseId}
-            GROUP BY c.id, c.code, c.name, c.department, c.semester, c.year, c.credits, u.name
+            GROUP BY c.id, c.code, c.name, c.department, c.professor_id, c.semester, c.year, c.credits
         `;
 
         if (courseResult.length === 0) {

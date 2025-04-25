@@ -13,7 +13,7 @@ export async function GET() {
                 c.code,
                 c.name as title,
                 c.department as category,
-                u.name as professor,
+                c.professor_id as professor,
                 COUNT(cr.id) as review_count,
                 ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
                 ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
@@ -28,8 +28,7 @@ export async function GET() {
                 ) as latest_review
             FROM courses c
             LEFT JOIN course_reviews cr ON c.id = cr.course_id
-            LEFT JOIN users u ON c.professor_id = u.id
-            GROUP BY c.id, c.code, c.name, c.department, u.name
+            GROUP BY c.id, c.code, c.name, c.department, c.professor_id
             ORDER BY rating DESC NULLS LAST
         `;
 

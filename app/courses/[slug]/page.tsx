@@ -332,9 +332,23 @@ export default function CourseDetailPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter>
-                                        <Button className="w-full">
-                                            Write a Review
-                                        </Button>
+                                        <Link
+                                            href={`/courses/new-review?courseId=${
+                                                course.id
+                                            }&courseName=${encodeURIComponent(
+                                                course.title
+                                            )}&courseCode=${encodeURIComponent(
+                                                course.id
+                                            )}&professor=${encodeURIComponent(
+                                                course.professor
+                                            )}&category=${encodeURIComponent(
+                                                course.category
+                                            )}`}
+                                        >
+                                            <Button className="w-full">
+                                                Write a Review
+                                            </Button>
+                                        </Link>
                                     </CardFooter>
                                 </Card>
                             </div>
@@ -537,7 +551,17 @@ export default function CourseDetailPage() {
                                         Course Reviews
                                     </h2>
                                     <Link
-                                        href={`/courses/${course.id}/new-review`}
+                                        href={`/courses/new-review?courseId=${
+                                            course.id
+                                        }&courseName=${encodeURIComponent(
+                                            course.title
+                                        )}&courseCode=${encodeURIComponent(
+                                            course.id
+                                        )}&professor=${encodeURIComponent(
+                                            course.professor
+                                        )}&category=${encodeURIComponent(
+                                            course.category
+                                        )}`}
                                     >
                                         <Button>Write a Review</Button>
                                     </Link>
