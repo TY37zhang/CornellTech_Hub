@@ -31,7 +31,7 @@ export function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center">
+            <div className="container flex h-14 items-center">
                 <div className="flex flex-1 items-center gap-2">
                     <div className="md:hidden">
                         <MobileNav />
@@ -105,9 +105,9 @@ export function SiteHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className="relative h-10 w-10 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
+                                    className="relative h-8 w-8 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
                                 >
-                                    <Avatar className="h-10 w-10 ring-0">
+                                    <Avatar className="h-8 w-8 ring-0">
                                         <AvatarImage
                                             src={session.user?.image || ""}
                                             alt={session.user?.name || ""}
@@ -139,6 +139,15 @@ export function SiteHeader() {
                                     >
                                         <FileText className="mr-2 h-4 w-4" />
                                         <span>My Posts</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="/my-reviews"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        <span>My Reviews</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
