@@ -3,16 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-    BookOpen,
-    Filter,
+    ArrowLeft,
     MessageSquare,
     PlusCircle,
     Search,
-    Tag,
     ThumbsUp,
-    TrendingUp,
     Users,
-    ArrowLeft,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,15 +23,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { getForumPostsByCategory } from "../../actions";
 
-// Define thread type
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    return "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400";
+}
+
+// Helper function to format date
+function formatDate(date: string): string {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+}
+
 interface Thread {
     id: string;
     title: string;
@@ -44,161 +61,85 @@ interface Thread {
         avatar: string;
         initials: string;
     };
-    category:
-        | "Academics"
-        | "Career"
-        | "Campus Life"
-        | "Technology"
-        | "Events"
-        | "General";
+    category: string;
     categoryColor: string;
     content: string;
     tags: string[];
     replies: number;
     likes: number;
     views: number;
-    badge?: {
-        text: string;
-        color: string;
-    };
     createdAt: string;
     isHot?: boolean;
     isNew?: boolean;
 }
 
-// Sample thread data for Academics category
-const academicsThreadsData: Thread[] = [
-    {
-        id: "ml-resources",
-        title: "Best resources for Machine Learning course",
-        author: {
-            name: "Sarah Chen",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U4",
-        },
-        category: "Academics",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        content:
-            "I'm taking the Machine Learning course this semester and looking for supplementary resources. The textbook is good but I'm looking for more practical tutorials and examples. Has anyone found good YouTube channels, online courses, or GitHub repositories that complement the class material?",
-        tags: ["machine-learning", "course-resources", "study-materials"],
-        replies: 18,
-        likes: 15,
-        views: 47,
-        createdAt: "5 days ago",
-    },
-    {
-        id: "startup-ideas",
-        title: "Startup ideas for Product Studio",
-        author: {
-            name: "David Kim",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U3",
-        },
-        category: "Academics",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        content:
-            "I'm brainstorming potential startup ideas for Product Studio this fall. Looking for feedback on a few concepts I've been developing, and also curious to hear what areas others are exploring. Anyone interested in forming a team around fintech or healthcare innovations?",
-        tags: ["product-studio", "startups", "team-formation"],
-        replies: 12,
-        likes: 9,
-        views: 31,
-        badge: {
-            text: "New",
-            color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400",
-        },
-        createdAt: "3 days ago",
-        isNew: true,
-    },
-    {
-        id: "data-science-project",
-        title: "Looking for teammates for Data Science project",
-        author: {
-            name: "Emily Rodriguez",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U6",
-        },
-        category: "Academics",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        content:
-            "I'm working on a data science project for the Applied Data Science class and looking for 2-3 teammates. The project will focus on analyzing public health data. I have experience with Python and pandas, but would love to collaborate with someone who knows visualization libraries like D3.js or Tableau.",
-        tags: ["data-science", "team-formation", "projects"],
-        replies: 8,
-        likes: 5,
-        views: 24,
-        createdAt: "1 week ago",
-    },
-    {
-        id: "cs-lecture-notes",
-        title: "Sharing CS lecture notes and study materials",
-        author: {
-            name: "Michael Chang",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U7",
-        },
-        category: "Academics",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        content:
-            "I've been taking detailed notes for the CS courses this semester and would be happy to share them with anyone who missed class or needs a refresher. I'm also looking to form a study group for the upcoming midterms. Anyone interested in collaborating?",
-        tags: ["study-group", "notes", "collaboration"],
-        replies: 15,
-        likes: 22,
-        views: 56,
-        badge: {
-            text: "Hot",
-            color: "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
-        },
-        createdAt: "2 days ago",
-        isHot: true,
-    },
-];
-
-export default function AcademicsCategoryPage() {
-    // State for search and filters
+export default function AcademicsPage() {
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState("activity");
-    const [filteredThreads, setFilteredThreads] =
-        useState<Thread[]>(academicsThreadsData);
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Apply filters and sorting whenever dependencies change
+    // Fetch threads on component mount
     useEffect(() => {
-        let result = [...academicsThreadsData];
-
-        // Apply search filter
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            result = result.filter(
-                (thread) =>
-                    thread.title.toLowerCase().includes(query) ||
-                    thread.content.toLowerCase().includes(query) ||
-                    thread.author.name.toLowerCase().includes(query) ||
-                    thread.tags.some((tag) => tag.toLowerCase().includes(query))
-            );
-        }
-
-        // Apply sorting
-        result.sort((a, b) => {
-            switch (sortBy) {
-                case "activity":
-                    // Sort by recency (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
-                case "newest":
-                    // Sort by creation date (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
-                case "popular":
-                    return b.likes - a.likes;
-                case "replies":
-                    return b.replies - a.replies;
-                default:
-                    return 0;
+        async function fetchThreads() {
+            try {
+                const posts = await getForumPostsByCategory("academics");
+                const formattedThreads: Thread[] = posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: {
+                        name: post.author_name,
+                        avatar:
+                            post.author_avatar ||
+                            "/placeholder.svg?height=32&width=32",
+                        initials: getInitials(post.author_name),
+                    },
+                    category: post.category_name,
+                    categoryColor: getCategoryColor(post.category_name),
+                    content: post.content,
+                    tags: post.tags,
+                    replies: post.reply_count,
+                    likes: post.like_count,
+                    views: post.view_count,
+                    createdAt: formatDate(post.created_at),
+                    isHot: post.like_count > 10 || post.reply_count > 20,
+                    isNew:
+                        new Date(post.created_at).getTime() >
+                        Date.now() - 7 * 24 * 60 * 60 * 1000,
+                }));
+                setThreads(formattedThreads);
+            } catch (error) {
+                console.error("Error fetching threads:", error);
+            } finally {
+                setLoading(false);
             }
-        });
+        }
+        fetchThreads();
+    }, []);
 
-        setFilteredThreads(result);
-    }, [searchQuery, sortBy]);
+    // Filter threads based on search query
+    const filteredThreads = threads.filter((thread) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            thread.title.toLowerCase().includes(query) ||
+            thread.content.toLowerCase().includes(query) ||
+            thread.author.name.toLowerCase().includes(query) ||
+            thread.tags.some((tag) => tag.toLowerCase().includes(query))
+        );
+    });
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-lg">
+                        Loading academic discussions...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -217,52 +158,30 @@ export default function AcademicsCategoryPage() {
                                     </Link>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                    Academics Discussions
-                                </h1>
-                                <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                                    Connect with fellow Cornell Tech students
-                                    about courses, professors, and academic
-                                    resources.
-                                </p>
-                            </div>
-                            <div className="w-full max-w-2xl mx-auto space-y-2">
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="search"
-                                        placeholder="Search discussions by topic, keyword, or author..."
-                                        className="w-full bg-background pl-8 rounded-md border"
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                    />
+                            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                                <div className="space-y-2">
+                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                        Academic Discussions
+                                    </h1>
+                                    <p className="max-w-[700px] text-muted-foreground md:text-xl">
+                                        Discuss courses, professors, research,
+                                        and academic resources with fellow
+                                        students.
+                                    </p>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={setSortBy}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="activity">
-                                                Recent Activity
-                                            </SelectItem>
-                                            <SelectItem value="newest">
-                                                Newest
-                                            </SelectItem>
-                                            <SelectItem value="popular">
-                                                Most Popular
-                                            </SelectItem>
-                                            <SelectItem value="replies">
-                                                Most Replies
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="w-full max-w-2xl space-y-2">
+                                    <div className="relative">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="search"
+                                            placeholder="Search academic discussions..."
+                                            className="w-full bg-background pl-8 rounded-md border"
+                                            value={searchQuery}
+                                            onChange={(e) =>
+                                                setSearchQuery(e.target.value)
+                                            }
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -272,58 +191,69 @@ export default function AcademicsCategoryPage() {
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold tracking-tight">
-                            Discussions
+                            Academic Discussions
                         </h2>
-                        <Button className="gap-1">
-                            <PlusCircle className="h-4 w-4" />
-                            <span>New Thread</span>
-                        </Button>
+                        <Link href="/forum/create">
+                            <Button className="gap-2">
+                                <PlusCircle className="h-4 w-4" />
+                                New Discussion
+                            </Button>
+                        </Link>
                     </div>
 
-                    <div className="grid gap-4">
+                    <div className="space-y-4">
                         {filteredThreads.length > 0 ? (
                             filteredThreads.map((thread) => (
                                 <Link
-                                    href={`/forum/${thread.id}`}
+                                    href={`/forum/posts/${thread.id}`}
                                     key={thread.id}
-                                    className="group"
+                                    className="block"
                                 >
-                                    <Card className="transition-all hover:border-primary">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <CardTitle className="text-xl group-hover:text-primary">
-                                                        {thread.title}
-                                                    </CardTitle>
-                                                    <CardDescription className="flex items-center gap-2 mt-1">
-                                                        <Avatar className="h-5 w-5">
-                                                            <AvatarImage
-                                                                src={
-                                                                    thread
-                                                                        .author
-                                                                        .avatar ||
-                                                                    "/placeholder.svg"
-                                                                }
-                                                                alt={`@${thread.author.name}`}
-                                                            />
-                                                            <AvatarFallback>
+                                    <Card className="hover:bg-muted/50 transition-colors">
+                                        <CardHeader className="p-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-start gap-4">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage
+                                                            src={
+                                                                thread.author
+                                                                    .avatar
+                                                            }
+                                                            alt={
+                                                                thread.author
+                                                                    .name
+                                                            }
+                                                        />
+                                                        <AvatarFallback>
+                                                            {
+                                                                thread.author
+                                                                    .initials
+                                                            }
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="space-y-1">
+                                                        <CardTitle className="text-lg font-semibold">
+                                                            {thread.title}
+                                                        </CardTitle>
+                                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                            <span>
                                                                 {
                                                                     thread
                                                                         .author
-                                                                        .initials
+                                                                        .name
                                                                 }
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <span>
-                                                            {thread.author.name}
-                                                        </span>
-                                                        <span>•</span>
-                                                        <span>
-                                                            {thread.createdAt}
-                                                        </span>
-                                                    </CardDescription>
+                                                            </span>
+                                                            <span>•</span>
+                                                            <span>
+                                                                {
+                                                                    thread.createdAt
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <Badge
+                                                    variant="secondary"
                                                     className={
                                                         thread.categoryColor
                                                     }
@@ -331,56 +261,57 @@ export default function AcademicsCategoryPage() {
                                                     {thread.category}
                                                 </Badge>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <p className="line-clamp-2 text-muted-foreground">
+                                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                                                 {thread.content}
                                             </p>
-                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                {thread.tags.map((tag) => (
-                                                    <Badge
-                                                        key={tag}
-                                                        variant="outline"
-                                                        className="text-xs font-normal"
-                                                    >
-                                                        {tag}
-                                                    </Badge>
-                                                ))}
+                                        </CardHeader>
+                                        <CardFooter className="p-4 pt-0">
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    {thread.tags.map((tag) => (
+                                                        <Badge
+                                                            key={tag}
+                                                            variant="outline"
+                                                            className="text-xs font-normal"
+                                                        >
+                                                            {tag}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                        <div className="flex items-center gap-1">
+                                                            <MessageSquare className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.replies}{" "}
+                                                                replies
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <ThumbsUp className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.likes}{" "}
+                                                                likes
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Users className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.views}{" "}
+                                                                views
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {thread.isNew && (
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="bg-yellow-100 text-yellow-800"
+                                                        >
+                                                            New
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </CardContent>
-                                        <CardFooter className="flex items-center justify-between pt-1">
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <MessageSquare className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.replies} replies
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <ThumbsUp className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.likes} likes
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Users className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.views} views
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {thread.badge && (
-                                                <div className="flex items-center gap-2">
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className={
-                                                            thread.badge.color
-                                                        }
-                                                    >
-                                                        {thread.badge.text}
-                                                    </Badge>
-                                                </div>
-                                            )}
                                         </CardFooter>
                                     </Card>
                                 </Link>
@@ -388,29 +319,11 @@ export default function AcademicsCategoryPage() {
                         ) : (
                             <div className="text-center py-10">
                                 <p className="text-muted-foreground">
-                                    No discussions found matching your search
-                                    criteria.
+                                    No academic discussions found matching your
+                                    search criteria.
                                 </p>
                             </div>
                         )}
-                    </div>
-                </section>
-
-                <section className="container px-4 py-8 md:px-6">
-                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                Join the Conversation
-                            </h2>
-                            <p className="text-muted-foreground">
-                                Have a question about academics or something to
-                                share? Start a new discussion thread.
-                            </p>
-                        </div>
-                        <Button className="gap-1">
-                            <PlusCircle className="h-4 w-4" />
-                            <span>Create New Thread</span>
-                        </Button>
                     </div>
                 </section>
             </div>

@@ -161,18 +161,16 @@ export default function CourseDetailPage() {
                 <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
                     <div className="container px-4 md:px-6">
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" asChild>
-                                    <Link href="/courses">
+                            <div className="w-full">
+                                <div className="flex items-center justify-start">
+                                    <Link
+                                        href="/courses"
+                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+                                    >
                                         <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">
-                                            Back to courses
-                                        </span>
+                                        <span>Back to courses</span>
                                     </Link>
-                                </Button>
-                                <p className="text-sm text-muted-foreground">
-                                    Back to courses
-                                </p>
+                                </div>
                             </div>
                             <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
                                 <div className="space-y-4">

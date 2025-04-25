@@ -146,3 +146,123 @@ export async function createThread({
         };
     }
 }
+
+interface ForumPostResponse {
+    id: string;
+    title: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    category_name: string;
+    category_slug: string;
+    author_name: string;
+    author_avatar: string | null;
+    author_id: string;
+    reply_count: number;
+    like_count: number;
+    view_count: number;
+    tags: string[];
+}
+
+export async function getForumPosts(): Promise<ForumPostResponse[]> {
+    try {
+        const posts = await sql`
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count
+            FROM forum_posts fp
+            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN users u ON fp.author_id = u.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            WHERE fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+            ORDER BY fp.created_at DESC
+        `;
+
+        // Get tags for each post
+        const postsWithTags = await Promise.all(
+            posts.map(async (post) => {
+                const tags = await sql`
+                    SELECT tag
+                    FROM forum_post_tags
+                    WHERE post_id = ${post.id}
+                `;
+                return {
+                    ...post,
+                    tags: tags.map((t) => t.tag),
+                };
+            })
+        );
+
+        return postsWithTags;
+    } catch (error) {
+        console.error("Error fetching forum posts:", error);
+        throw error;
+    }
+}
+
+export async function getForumPostsByCategory(
+    categorySlug: string
+): Promise<ForumPostResponse[]> {
+    try {
+        const posts = await sql`
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                NULL as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count
+            FROM forum_posts fp
+            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN users u ON fp.author_id = u.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            WHERE fc.slug = ${categorySlug}
+            AND fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.id
+            ORDER BY fp.created_at DESC
+        `;
+
+        // Get tags for each post
+        const postsWithTags = await Promise.all(
+            posts.map(async (post) => {
+                const tags = await sql`
+                    SELECT tag
+                    FROM forum_post_tags
+                    WHERE post_id = ${post.id}
+                `;
+                return {
+                    ...post,
+                    tags: tags.map((t) => t.tag),
+                };
+            })
+        );
+
+        return postsWithTags;
+    } catch (error) {
+        console.error("Error fetching category posts:", error);
+        throw error;
+    }
+}
