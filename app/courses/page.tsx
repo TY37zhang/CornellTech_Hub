@@ -48,94 +48,6 @@ interface Course {
     categoryColor: string;
 }
 
-// Sample course data
-const coursesData: Course[] = [
-    {
-        id: "machine-learning",
-        title: "Machine Learning",
-        professor: "Prof. Serge Belongie",
-        category: "cs",
-        rating: 4.0,
-        reviewCount: 24,
-        difficulty: 7.5,
-        workload: 8.0,
-        value: 8.5,
-        review: "Great course that covers both theory and practical applications. Challenging but rewarding.",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-    },
-    {
-        id: "product-studio",
-        title: "Product Studio",
-        professor: "Prof. David Tisch",
-        category: "tech",
-        rating: 4.9,
-        reviewCount: 32,
-        difficulty: 6.5,
-        workload: 9.0,
-        value: 9.5,
-        review: "The most valuable course at Cornell Tech. Real-world experience working with companies on actual problems.",
-        categoryColor:
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-    },
-    {
-        id: "business-fundamentals",
-        title: "Business Fundamentals",
-        professor: "Prof. Michael Gruber",
-        category: "techie",
-        rating: 4.2,
-        reviewCount: 18,
-        difficulty: 5.5,
-        workload: 6.0,
-        value: 8.0,
-        review: "Essential knowledge for tech entrepreneurs. Good balance of theory and practical case studies.",
-        categoryColor:
-            "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-    },
-    {
-        id: "hci",
-        title: "Human-Computer Interaction",
-        professor: "Prof. Wendy Ju",
-        category: "info",
-        rating: 4.7,
-        reviewCount: 15,
-        difficulty: 6.0,
-        workload: 7.0,
-        value: 9.0,
-        review: "Fascinating course that changes how you think about design. Highly recommended for all students.",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-    },
-    {
-        id: "startup-systems",
-        title: "Startup Systems",
-        professor: "Prof. Vitaly Shmatikov",
-        category: "info",
-        rating: 3.4,
-        reviewCount: 22,
-        difficulty: 8.5,
-        workload: 9.0,
-        value: 6.5,
-        review: "Very challenging course with a heavy workload. Good for those who want to dive deep into systems.",
-        categoryColor:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-    },
-    {
-        id: "leadership",
-        title: "Leadership in Digital Transformation",
-        professor: "Prof. Deborah Estrin",
-        category: "law",
-        rating: 4.3,
-        reviewCount: 19,
-        difficulty: 5.0,
-        workload: 5.5,
-        value: 8.5,
-        review: "Insightful discussions and great guest speakers. Helps develop important soft skills for tech leaders.",
-        categoryColor:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-    },
-];
-
 export default function CoursesPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
@@ -143,14 +55,40 @@ export default function CoursesPage() {
     const [semesterFilter, setSemesterFilter] = useState("all");
     const [sortBy, setSortBy] = useState("rating");
     const [activeTab, setActiveTab] = useState("all");
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Filtered courses state
-    const [filteredCourses, setFilteredCourses] =
-        useState<Course[]>(coursesData);
+    // Courses state
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+
+    // Fetch courses from API
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch("/api/courses");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch courses");
+                }
+                const data = await response.json();
+                setCourses(data);
+                setFilteredCourses(data);
+            } catch (err) {
+                setError(
+                    err instanceof Error ? err.message : "An error occurred"
+                );
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCourses();
+    }, []);
 
     // Apply search, tab filter, and sorting
     useEffect(() => {
-        let result = [...coursesData];
+        let result = [...courses];
 
         // Search filter
         if (searchQuery) {
@@ -166,8 +104,6 @@ export default function CoursesPage() {
         if (activeTab !== "all") {
             result = result.filter((course) => course.category === activeTab);
         }
-
-        // (Optional) program & semester filters…
 
         // Sorting
         result.sort((a, b) => {
@@ -186,7 +122,14 @@ export default function CoursesPage() {
         });
 
         setFilteredCourses(result);
-    }, [searchQuery, activeTab, programFilter, semesterFilter, sortBy]);
+    }, [
+        searchQuery,
+        activeTab,
+        programFilter,
+        semesterFilter,
+        sortBy,
+        courses,
+    ]);
 
     // Helper to render stars
     const renderStars = (rating: number) => {
@@ -271,148 +214,180 @@ export default function CoursesPage() {
 
                         {/* Single dynamic content pane filtered by activeTab */}
                         <TabsContent value={activeTab} className="mt-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredCourses.map((course) => (
-                                    <Link
-                                        href={`/courses/${course.id}`}
-                                        key={course.id}
-                                        className="group"
-                                    >
-                                        <Card className="h-full overflow-hidden transition-all hover:border-primary">
+                            {isLoading ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[...Array(6)].map((_, i) => (
+                                        <Card
+                                            key={i}
+                                            className="h-full overflow-hidden"
+                                        >
                                             <CardHeader className="pb-3">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <CardTitle className="text-xl">
-                                                            {course.title}
-                                                        </CardTitle>
-                                                        <CardDescription className="text-sm">
-                                                            {course.professor}
-                                                        </CardDescription>
-                                                    </div>
-                                                    <Badge
-                                                        className={
-                                                            course.categoryColor
-                                                        }
-                                                    >
-                                                        {course.category
-                                                            .charAt(0)
-                                                            .toUpperCase() +
-                                                            course.category.slice(
-                                                                1
-                                                            )}
-                                                    </Badge>
-                                                </div>
+                                                <div className="h-6 w-3/4 bg-muted rounded animate-pulse" />
+                                                <div className="h-4 w-1/2 bg-muted rounded animate-pulse mt-2" />
                                             </CardHeader>
                                             <CardContent className="pb-3">
-                                                <div className="flex items-center gap-1 text-sm">
-                                                    <div className="flex">
-                                                        {renderStars(
-                                                            course.rating
-                                                        )}
-                                                    </div>
-                                                    <span className="font-medium">
-                                                        {course.rating.toFixed(
-                                                            1
-                                                        )}
-                                                    </span>
-                                                    <span className="text-muted-foreground">
-                                                        ({course.reviewCount}{" "}
-                                                        reviews)
-                                                    </span>
-                                                </div>
-                                                <div className="mt-3 space-y-2">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
-                                                            Difficulty
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
-                                                                <div
-                                                                    className="h-2 w-[75%] rounded-full bg-yellow-400"
-                                                                    style={{
-                                                                        width: `${
-                                                                            course.difficulty *
-                                                                            10
-                                                                        }%`,
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <span>
-                                                                {course.difficulty.toFixed(
-                                                                    1
-                                                                )}
-                                                                /10
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
-                                                            Workload
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
-                                                                <div
-                                                                    className="h-2 w-[80%] rounded-full bg-yellow-400"
-                                                                    style={{
-                                                                        width: `${
-                                                                            course.workload *
-                                                                            10
-                                                                        }%`,
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <span>
-                                                                {course.workload.toFixed(
-                                                                    1
-                                                                )}
-                                                                /10
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
-                                                            Value
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
-                                                                <div
-                                                                    className="h-2 w-[85%] rounded-full bg-yellow-400"
-                                                                    style={{
-                                                                        width: `${
-                                                                            course.value *
-                                                                            10
-                                                                        }%`,
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <span>
-                                                                {course.value.toFixed(
-                                                                    1
-                                                                )}
-                                                                /10
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
+                                                    <div className="h-4 w-5/6 bg-muted rounded animate-pulse" />
+                                                    <div className="h-4 w-4/6 bg-muted rounded animate-pulse" />
                                                 </div>
                                             </CardContent>
-                                            <CardFooter className="pt-1">
-                                                <p className="line-clamp-2 text-sm text-muted-foreground">
-                                                    "{course.review}"
-                                                </p>
-                                            </CardFooter>
                                         </Card>
-                                    </Link>
-                                ))}
+                                    ))}
+                                </div>
+                            ) : error ? (
+                                <div className="text-center py-10">
+                                    <p className="text-red-500">{error}</p>
+                                    <Button
+                                        variant="outline"
+                                        className="mt-4"
+                                        onClick={() => window.location.reload()}
+                                    >
+                                        Try Again
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredCourses.map((course) => (
+                                        <Link
+                                            href={`/courses/${course.id}`}
+                                            key={course.id}
+                                            className="group"
+                                        >
+                                            <Card className="h-full overflow-hidden transition-all hover:border-primary">
+                                                <CardHeader className="pb-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <CardTitle className="text-xl">
+                                                                {course.title}
+                                                            </CardTitle>
+                                                            <CardDescription className="text-sm">
+                                                                {
+                                                                    course.professor
+                                                                }
+                                                            </CardDescription>
+                                                        </div>
+                                                        <Badge
+                                                            className={
+                                                                course.categoryColor
+                                                            }
+                                                        >
+                                                            {course.category.toUpperCase()}
+                                                        </Badge>
+                                                    </div>
+                                                </CardHeader>
+                                                <CardContent className="pb-3">
+                                                    <div className="flex items-center gap-1 text-sm">
+                                                        <div className="flex">
+                                                            {renderStars(
+                                                                course.rating
+                                                            )}
+                                                        </div>
+                                                        <span className="font-medium">
+                                                            {course.rating.toFixed(
+                                                                1
+                                                            )}
+                                                        </span>
+                                                        <span className="text-muted-foreground">
+                                                            (
+                                                            {course.reviewCount}{" "}
+                                                            reviews)
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-3 space-y-2">
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Difficulty
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                course.difficulty *
+                                                                                10
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {course.difficulty.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /10
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Workload
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                course.workload *
+                                                                                10
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {course.workload.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /10
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Value
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                course.value *
+                                                                                10
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {course.value.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /10
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                                <CardFooter className="pt-1">
+                                                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                                                        "{course.review}"
+                                                    </p>
+                                                </CardFooter>
+                                            </Card>
+                                        </Link>
+                                    ))}
 
-                                {filteredCourses.length === 0 && (
-                                    <div className="col-span-full text-center py-10">
-                                        <p className="text-muted-foreground">
-                                            No courses found matching your
-                                            search criteria.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                                    {filteredCourses.length === 0 && (
+                                        <div className="col-span-full text-center py-10">
+                                            <p className="text-muted-foreground">
+                                                No courses found matching your
+                                                search criteria.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </TabsContent>
                     </Tabs>
                 </section>

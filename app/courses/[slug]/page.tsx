@@ -1,4 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
     ArrowLeft,
     BookOpen,
@@ -24,68 +28,132 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 
-export default function CourseDetailPage({
-    params,
-}: {
-    params: { slug: string };
-}) {
-    // This would normally fetch data based on the slug
-    const courseData = {
-        title: "Machine Learning",
-        professor: "Prof. Serge Belongie",
-        category: "Technical",
-        rating: 4.0,
-        reviewCount: 24,
-        difficulty: 7.5,
-        workload: 8.0,
-        value: 8.5,
-        description:
-            "This course provides a broad introduction to machine learning and statistical pattern recognition. Topics include: supervised learning, unsupervised learning, learning theory, reinforcement learning and adaptive control.",
-        syllabus:
-            "The course covers fundamental concepts in machine learning including linear models, kernel methods, deep learning, clustering, dimensionality reduction, and more. Students will complete programming assignments and a final project.",
-        ratings: {
-            5: 10,
-            4: 8,
-            3: 4,
-            2: 1,
-            1: 1,
-        },
-        reviews: [
-            {
-                id: 1,
-                author: "Alex Johnson",
-                program: "MEng CS",
-                date: "Fall 2023",
-                rating: 5,
-                content:
-                    "Excellent course that provides a solid foundation in machine learning concepts. The programming assignments were challenging but very educational. Professor Belongie explains complex concepts clearly and is always willing to help during office hours.",
-                helpful: 15,
-                unhelpful: 2,
-            },
-            {
-                id: 2,
-                author: "Jamie Smith",
-                program: "MBA Tech",
-                date: "Spring 2023",
-                rating: 4,
-                content:
-                    "As someone with a business background, I found this course challenging but manageable. The professor does a good job explaining technical concepts to non-technical students. The workload is heavy, but worth it if you want to understand how ML works.",
-                helpful: 12,
-                unhelpful: 1,
-            },
-            {
-                id: 3,
-                author: "Taylor Wong",
-                program: "MEng CS",
-                date: "Fall 2022",
-                rating: 3,
-                content:
-                    "The course content is good, but the pacing can be quite fast if you don't have prior experience with machine learning concepts. The assignments take much longer than the estimated time. Curve is tough, so be prepared to put in extra hours.",
-                helpful: 8,
-                unhelpful: 3,
-            },
-        ],
+// Define course type
+interface Review {
+    id: string;
+    content: string;
+    rating: number;
+    difficulty: number;
+    workload: number;
+    createdAt: string;
+    author: string;
+    avatarUrl: string | null;
+}
+
+interface Course {
+    id: string;
+    title: string;
+    professor: string;
+    category: string;
+    semester: string;
+    year: number;
+    credits: number;
+    rating: number;
+    reviewCount: number;
+    difficulty: number;
+    workload: number;
+    value: number;
+    categoryColor: string;
+    reviews: Review[];
+    description?: string;
+    syllabus?: string;
+    ratings?: Record<string, number>;
+}
+
+export default function CourseDetailPage() {
+    const params = useParams();
+    const [course, setCourse] = useState<Course | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchCourse = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(`/api/courses/${params.slug}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch course");
+                }
+                const data = await response.json();
+
+                // Add default values for missing properties
+                const courseWithDefaults = {
+                    ...data,
+                    description:
+                        data.description ||
+                        "This course provides an introduction to key concepts and techniques in the field. Students will learn fundamental principles and practical applications through lectures, assignments, and projects.",
+                    syllabus:
+                        data.syllabus ||
+                        "The course syllabus will be available at the beginning of the semester.",
+                    ratings: data.ratings || {
+                        "5": Math.floor(data.reviewCount * 0.6),
+                        "4": Math.floor(data.reviewCount * 0.25),
+                        "3": Math.floor(data.reviewCount * 0.1),
+                        "2": Math.floor(data.reviewCount * 0.03),
+                        "1": Math.floor(data.reviewCount * 0.02),
+                    },
+                };
+
+                setCourse(courseWithDefaults);
+            } catch (err) {
+                setError(
+                    err instanceof Error ? err.message : "An error occurred"
+                );
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCourse();
+    }, [params.slug]);
+
+    // Helper to render stars
+    const renderStars = (rating: number) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                        i <= Math.floor(rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-muted text-muted-foreground"
+                    }`}
+                />
+            );
+        }
+        return stars;
     };
+
+    if (isLoading) {
+        return (
+            <div className="container px-4 py-8 md:px-6">
+                <div className="flex flex-col space-y-4">
+                    <div className="h-8 w-1/4 bg-muted rounded animate-pulse" />
+                    <div className="h-12 w-3/4 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !course) {
+        return (
+            <div className="container px-4 py-8 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4">
+                    <p className="text-red-500">
+                        {error || "Course not found"}
+                    </p>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.location.reload()}
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -111,60 +179,51 @@ export default function CourseDetailPage({
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
                                             <Badge
-                                                className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400"
+                                                className={course.categoryColor}
                                                 variant="secondary"
                                             >
-                                                {courseData.category}
+                                                {course.category.toUpperCase()}
                                             </Badge>
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                            {courseData.title}
+                                            {course.title}
                                         </h1>
                                         <p className="text-muted-foreground">
-                                            {courseData.professor}
+                                            {course.professor}
                                         </p>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-6">
                                         <div className="flex items-center gap-2">
                                             <div className="flex">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`h-5 w-5 ${
-                                                            i <
-                                                            Math.floor(
-                                                                courseData.rating
-                                                            )
-                                                                ? "fill-yellow-400 text-yellow-400"
-                                                                : "fill-muted text-muted-foreground"
-                                                        }`}
-                                                    />
-                                                ))}
+                                                {renderStars(course.rating)}
                                             </div>
                                             <span className="font-medium">
-                                                {courseData.rating.toFixed(1)}
+                                                {course.rating.toFixed(1)}
                                             </span>
                                             <span className="text-muted-foreground">
-                                                ({courseData.reviewCount}{" "}
-                                                reviews)
+                                                ({course.reviewCount} reviews)
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <BookOpen className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">
-                                                Technical Course
+                                                {course.credits} Credits
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Calendar className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">
-                                                Fall & Spring
+                                                {course.semester} {course.year}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">
-                                                ~10 hours/week
+                                                ~
+                                                {Math.round(
+                                                    course.workload * 2
+                                                )}{" "}
+                                                hours/week
                                             </span>
                                         </div>
                                     </div>
@@ -185,24 +244,12 @@ export default function CourseDetailPage({
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex">
-                                                        {[...Array(5)].map(
-                                                            (_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    className={`h-4 w-4 ${
-                                                                        i <
-                                                                        Math.floor(
-                                                                            courseData.rating
-                                                                        )
-                                                                            ? "fill-yellow-400 text-yellow-400"
-                                                                            : "fill-muted text-muted-foreground"
-                                                                    }`}
-                                                                />
-                                                            )
+                                                        {renderStars(
+                                                            course.rating
                                                         )}
                                                     </div>
                                                     <span className="font-medium">
-                                                        {courseData.rating.toFixed(
+                                                        {course.rating.toFixed(
                                                             1
                                                         )}
                                                     </span>
@@ -219,16 +266,16 @@ export default function CourseDetailPage({
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
                                                                     width: `${
-                                                                        courseData.difficulty *
+                                                                        course.difficulty *
                                                                         10
                                                                     }%`,
                                                                 }}
                                                             ></div>
                                                         </div>
                                                         <span>
-                                                            {
-                                                                courseData.difficulty
-                                                            }
+                                                            {course.difficulty.toFixed(
+                                                                1
+                                                            )}
                                                             /10
                                                         </span>
                                                     </div>
@@ -243,16 +290,16 @@ export default function CourseDetailPage({
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
                                                                     width: `${
-                                                                        courseData.workload *
+                                                                        course.workload *
                                                                         10
                                                                     }%`,
                                                                 }}
                                                             ></div>
                                                         </div>
                                                         <span>
-                                                            {
-                                                                courseData.workload
-                                                            }
+                                                            {course.workload.toFixed(
+                                                                1
+                                                            )}
                                                             /10
                                                         </span>
                                                     </div>
@@ -267,14 +314,16 @@ export default function CourseDetailPage({
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
                                                                     width: `${
-                                                                        courseData.value *
+                                                                        course.value *
                                                                         10
                                                                     }%`,
                                                                 }}
                                                             ></div>
                                                         </div>
                                                         <span>
-                                                            {courseData.value}
+                                                            {course.value.toFixed(
+                                                                1
+                                                            )}
                                                             /10
                                                         </span>
                                                     </div>
@@ -323,7 +372,7 @@ export default function CourseDetailPage({
                                             Course Description
                                         </h2>
                                         <p className="text-muted-foreground">
-                                            {courseData.description}
+                                            {course.description}
                                         </p>
                                     </div>
                                     <div className="space-y-2">
@@ -332,32 +381,31 @@ export default function CourseDetailPage({
                                         </h3>
                                         <ul className="list-disc pl-6 text-muted-foreground">
                                             <li>
-                                                Fundamental concepts in machine
-                                                learning and statistical pattern
-                                                recognition
+                                                Fundamental concepts in{" "}
+                                                {course.category.toLowerCase()}{" "}
+                                                and their applications
                                             </li>
                                             <li>
-                                                Supervised learning methods
-                                                including linear models, SVMs,
-                                                and neural networks
+                                                Practical skills and
+                                                methodologies relevant to the
+                                                field
                                             </li>
                                             <li>
-                                                Unsupervised learning techniques
-                                                such as clustering and
-                                                dimensionality reduction
+                                                Critical thinking and
+                                                problem-solving approaches
                                             </li>
                                             <li>
-                                                Practical implementation of
-                                                machine learning algorithms in
-                                                Python
+                                                Industry-standard tools and
+                                                technologies
                                             </li>
                                             <li>
-                                                How to evaluate and compare
-                                                machine learning models
+                                                How to evaluate and apply{" "}
+                                                {course.category.toLowerCase()}{" "}
+                                                principles
                                             </li>
                                             <li>
-                                                Real-world applications of
-                                                machine learning
+                                                Real-world applications and case
+                                                studies
                                             </li>
                                         </ul>
                                     </div>
@@ -366,10 +414,11 @@ export default function CourseDetailPage({
                                             Prerequisites
                                         </h3>
                                         <p className="text-muted-foreground">
-                                            Basic knowledge of linear algebra,
-                                            calculus, and probability theory.
-                                            Programming experience in Python is
-                                            recommended but not required.
+                                            Basic knowledge of{" "}
+                                            {course.category.toLowerCase()}{" "}
+                                            concepts is recommended. Programming
+                                            experience may be helpful but is not
+                                            required for all sections.
                                         </p>
                                     </div>
                                 </div>
@@ -382,39 +431,47 @@ export default function CourseDetailPage({
                                         </CardHeader>
                                         <CardContent className="pb-3">
                                             <div className="space-y-2">
-                                                {Object.entries(
-                                                    courseData.ratings
-                                                )
-                                                    .sort(
-                                                        (a, b) =>
-                                                            Number(b[0]) -
-                                                            Number(a[0])
-                                                    )
-                                                    .map(([rating, count]) => (
-                                                        <div
-                                                            key={rating}
-                                                            className="flex items-center gap-2"
-                                                        >
-                                                            <div className="flex w-12 items-center gap-1">
-                                                                <span>
-                                                                    {rating}
-                                                                </span>
-                                                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                {[5, 4, 3, 2, 1].map(
+                                                    (rating) => {
+                                                        const count =
+                                                            course.reviews.filter(
+                                                                (r) =>
+                                                                    Math.round(
+                                                                        r.rating
+                                                                    ) === rating
+                                                            ).length;
+                                                        return (
+                                                            <div
+                                                                key={rating}
+                                                                className="flex items-center gap-2"
+                                                            >
+                                                                <div className="flex w-8 items-center justify-end">
+                                                                    <span className="text-base">
+                                                                        {rating}
+                                                                    </span>
+                                                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 ml-1" />
+                                                                </div>
+                                                                <Progress
+                                                                    value={
+                                                                        course.reviewCount >
+                                                                        0
+                                                                            ? (count /
+                                                                                  course.reviewCount) *
+                                                                              100
+                                                                            : 0
+                                                                    }
+                                                                    className="h-2"
+                                                                    indicatorClassName="bg-yellow-400"
+                                                                />
+                                                                <div className="w-8 text-right">
+                                                                    <span className="text-base text-muted-foreground">
+                                                                        {count}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <Progress
-                                                                value={
-                                                                    (count /
-                                                                        courseData.reviewCount) *
-                                                                    100
-                                                                }
-                                                                className="h-2"
-                                                                indicatorClassName="bg-yellow-400"
-                                                            />
-                                                            <div className="w-12 text-right text-sm text-muted-foreground">
-                                                                {count}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    }
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -431,7 +488,7 @@ export default function CourseDetailPage({
                                                         Department
                                                     </span>
                                                     <span className="font-medium">
-                                                        Computer Science
+                                                        {course.category.toUpperCase()}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -439,7 +496,7 @@ export default function CourseDetailPage({
                                                         Course Code
                                                     </span>
                                                     <span className="font-medium">
-                                                        CS 5785
+                                                        {course.id}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -447,7 +504,7 @@ export default function CourseDetailPage({
                                                         Credits
                                                     </span>
                                                     <span className="font-medium">
-                                                        4
+                                                        {course.credits}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -455,7 +512,8 @@ export default function CourseDetailPage({
                                                         Semesters Offered
                                                     </span>
                                                     <span className="font-medium">
-                                                        Fall, Spring
+                                                        {course.semester}{" "}
+                                                        {course.year}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -473,25 +531,29 @@ export default function CourseDetailPage({
                             </div>
                         </TabsContent>
                         <TabsContent value="reviews" className="pt-6">
-                            <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-2xl font-bold tracking-tight">
-                                            Student Reviews
-                                        </h2>
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl font-bold tracking-tight">
+                                        Course Reviews
+                                    </h2>
+                                    <Link
+                                        href={`/courses/${course.id}/new-review`}
+                                    >
                                         <Button>Write a Review</Button>
-                                    </div>
-                                    <div className="space-y-6">
-                                        {courseData.reviews.map((review) => (
+                                    </Link>
+                                </div>
+                                <div className="space-y-4">
+                                    {course.reviews.length > 0 ? (
+                                        course.reviews.map((review) => (
                                             <Card key={review.id}>
                                                 <CardHeader className="pb-3">
                                                     <div className="flex items-start justify-between">
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-4">
                                                             <Avatar>
                                                                 <AvatarImage
-                                                                    src={`/placeholder.svg?height=40&width=40`}
-                                                                    alt={
-                                                                        review.author
+                                                                    src={
+                                                                        review.avatarUrl ||
+                                                                        undefined
                                                                     }
                                                                 />
                                                                 <AvatarFallback>
@@ -508,29 +570,15 @@ export default function CourseDetailPage({
                                                                     }
                                                                 </CardTitle>
                                                                 <CardDescription>
-                                                                    {
-                                                                        review.program
-                                                                    }{" "}
-                                                                    •{" "}
-                                                                    {
-                                                                        review.date
-                                                                    }
+                                                                    {new Date(
+                                                                        review.createdAt
+                                                                    ).toLocaleDateString()}
                                                                 </CardDescription>
                                                             </div>
                                                         </div>
-                                                        <div className="flex">
-                                                            {[...Array(5)].map(
-                                                                (_, i) => (
-                                                                    <Star
-                                                                        key={i}
-                                                                        className={`h-4 w-4 ${
-                                                                            i <
-                                                                            review.rating
-                                                                                ? "fill-yellow-400 text-yellow-400"
-                                                                                : "fill-muted text-muted-foreground"
-                                                                        }`}
-                                                                    />
-                                                                )
+                                                        <div className="flex items-center gap-1">
+                                                            {renderStars(
+                                                                review.rating
                                                             )}
                                                         </div>
                                                     </div>
@@ -540,169 +588,42 @@ export default function CourseDetailPage({
                                                         {review.content}
                                                     </p>
                                                 </CardContent>
-                                                <CardFooter className="flex items-center justify-between">
-                                                    <span className="text-sm text-muted-foreground">
-                                                        Was this review helpful?
-                                                    </span>
-                                                    <div className="flex items-center gap-4">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="gap-1"
-                                                        >
-                                                            <ThumbsUp className="h-4 w-4" />
+                                                <CardFooter className="pt-1">
+                                                    <div className="flex gap-4 text-sm text-muted-foreground">
+                                                        <div className="flex items-center gap-1">
                                                             <span>
-                                                                {review.helpful}
+                                                                Difficulty:
                                                             </span>
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="gap-1"
-                                                        >
-                                                            <ThumbsDown className="h-4 w-4" />
+                                                            <span className="font-medium">
+                                                                {review.difficulty.toFixed(
+                                                                    1
+                                                                )}
+                                                                /10
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
                                                             <span>
-                                                                {
-                                                                    review.unhelpful
-                                                                }
+                                                                Workload:
                                                             </span>
-                                                        </Button>
+                                                            <span className="font-medium">
+                                                                {review.workload.toFixed(
+                                                                    1
+                                                                )}
+                                                                /10
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </CardFooter>
                                             </Card>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="space-y-6">
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle>
-                                                Review Guidelines
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="space-y-4">
-                                                <p className="text-sm text-muted-foreground">
-                                                    When writing a review,
-                                                    please consider the
-                                                    following guidelines:
-                                                </p>
-                                                <ul className="list-disc pl-6 text-sm text-muted-foreground">
-                                                    <li>
-                                                        Be honest and specific
-                                                        about your experience
-                                                    </li>
-                                                    <li>
-                                                        Focus on the course
-                                                        content, teaching
-                                                        quality, and workload
-                                                    </li>
-                                                    <li>
-                                                        Avoid personal attacks
-                                                        on professors or
-                                                        students
-                                                    </li>
-                                                    <li>
-                                                        Provide constructive
-                                                        feedback that can help
-                                                        other students
-                                                    </li>
-                                                    <li>
-                                                        Include both positives
-                                                        and areas for
-                                                        improvement
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle>
-                                                Filter Reviews
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="space-y-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">
-                                                        Rating
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {[5, 4, 3, 2, 1].map(
-                                                            (rating) => (
-                                                                <Button
-                                                                    key={rating}
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 gap-1"
-                                                                >
-                                                                    {rating}{" "}
-                                                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                                </Button>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">
-                                                        Semester
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            Fall 2023
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            Spring 2023
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            Fall 2022
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">
-                                                        Program
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            MEng
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            MBA
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8"
-                                                        >
-                                                            LLM
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-10">
+                                            <p className="text-muted-foreground">
+                                                No reviews yet. Be the first to
+                                                review this course!
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </TabsContent>
@@ -713,7 +634,7 @@ export default function CourseDetailPage({
                                         Course Syllabus
                                     </h2>
                                     <p className="text-muted-foreground">
-                                        {courseData.syllabus}
+                                        {course.syllabus}
                                     </p>
                                 </div>
                                 <div className="space-y-4">
@@ -723,136 +644,84 @@ export default function CourseDetailPage({
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <h4 className="font-semibold">
-                                                Week 1: Introduction to Machine
-                                                Learning
+                                                Week 1: Introduction to{" "}
+                                                {course.title}
                                             </h4>
                                             <ul className="list-disc pl-6 text-muted-foreground">
                                                 <li>
-                                                    Overview of machine learning
-                                                    and its applications
+                                                    Overview of key concepts and
+                                                    applications
                                                 </li>
                                                 <li>
-                                                    Types of machine learning:
-                                                    supervised, unsupervised,
-                                                    reinforcement
+                                                    Course structure and
+                                                    expectations
                                                 </li>
                                                 <li>
-                                                    Python tools for machine
-                                                    learning: NumPy, Pandas,
-                                                    Scikit-learn
+                                                    Introduction to fundamental
+                                                    principles
                                                 </li>
                                             </ul>
                                         </div>
                                         <div className="space-y-2">
                                             <h4 className="font-semibold">
-                                                Week 2: Linear Regression
+                                                Week 2-3: Core Concepts
                                             </h4>
                                             <ul className="list-disc pl-6 text-muted-foreground">
                                                 <li>
-                                                    Linear regression models
+                                                    Detailed exploration of
+                                                    foundational theories
                                                 </li>
                                                 <li>
-                                                    Loss functions and
-                                                    optimization
+                                                    Practical applications and
+                                                    examples
                                                 </li>
                                                 <li>
-                                                    Regularization techniques
+                                                    Hands-on exercises and
+                                                    assignments
                                                 </li>
                                             </ul>
                                         </div>
                                         <div className="space-y-2">
                                             <h4 className="font-semibold">
-                                                Week 3: Classification
+                                                Week 4-5: Advanced Topics
                                             </h4>
                                             <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>Logistic regression</li>
-                                                <li>Decision boundaries</li>
                                                 <li>
-                                                    Multi-class classification
+                                                    Exploration of more complex
+                                                    concepts
+                                                </li>
+                                                <li>
+                                                    Case studies and real-world
+                                                    applications
+                                                </li>
+                                                <li>
+                                                    Group projects and
+                                                    presentations
                                                 </li>
                                             </ul>
                                         </div>
                                         <div className="space-y-2">
                                             <h4 className="font-semibold">
-                                                Week 4: Support Vector Machines
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Maximum margin classifiers
-                                                </li>
-                                                <li>Kernel methods</li>
-                                                <li>
-                                                    Soft margin classification
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 5: Neural Networks
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Perceptrons and multi-layer
-                                                    networks
-                                                </li>
-                                                <li>Backpropagation</li>
-                                                <li>
-                                                    Deep learning introduction
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 6: Midterm Exam
+                                                Week 6: Midterm
                                             </h4>
                                         </div>
                                         <div className="space-y-2">
                                             <h4 className="font-semibold">
-                                                Week 7: Clustering
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>K-means clustering</li>
-                                                <li>Hierarchical clustering</li>
-                                                <li>
-                                                    Density-based clustering
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 8: Dimensionality Reduction
+                                                Week 7-10: Specialized Topics
                                             </h4>
                                             <ul className="list-disc pl-6 text-muted-foreground">
                                                 <li>
-                                                    Principal Component Analysis
-                                                    (PCA)
+                                                    In-depth exploration of
+                                                    specialized areas
                                                 </li>
-                                                <li>t-SNE</li>
                                                 <li>
-                                                    Feature selection methods
+                                                    Guest lectures from industry
+                                                    experts
                                                 </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 9: Ensemble Methods
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>Bagging and boosting</li>
-                                                <li>Random forests</li>
                                                 <li>
-                                                    Gradient boosting machines
+                                                    Advanced projects and
+                                                    assignments
                                                 </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 10: Model Evaluation
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>Cross-validation</li>
-                                                <li>Performance metrics</li>
-                                                <li>Bias-variance tradeoff</li>
                                             </ul>
                                         </div>
                                         <div className="space-y-2">
@@ -861,14 +730,16 @@ export default function CourseDetailPage({
                                             </h4>
                                             <ul className="list-disc pl-6 text-muted-foreground">
                                                 <li>
-                                                    Project proposal and
-                                                    development
+                                                    Project development and
+                                                    implementation
                                                 </li>
                                                 <li>
-                                                    Implementation and
-                                                    experimentation
+                                                    Peer reviews and feedback
                                                 </li>
-                                                <li>Final presentations</li>
+                                                <li>
+                                                    Final presentations and
+                                                    demonstrations
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -904,21 +775,6 @@ export default function CourseDetailPage({
                             </div>
                         </TabsContent>
                     </Tabs>
-                </section>
-
-                <section className="container px-4 py-8 md:px-6">
-                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-bold tracking-tight">
-                                Share Your Experience
-                            </h2>
-                            <p className="text-muted-foreground">
-                                Help your fellow students by sharing your
-                                experience with this course.
-                            </p>
-                        </div>
-                        <Button>Write a Review</Button>
-                    </div>
                 </section>
             </div>
         </div>
