@@ -105,14 +105,15 @@ export function SiteHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className="relative h-8 w-8 rounded-full"
+                                    className="relative h-10 w-10 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
                                 >
-                                    <Avatar className="h-8 w-8">
+                                    <Avatar className="h-10 w-10 ring-0">
                                         <AvatarImage
                                             src={session.user?.image || ""}
                                             alt={session.user?.name || ""}
+                                            className="ring-0"
                                         />
-                                        <AvatarFallback>
+                                        <AvatarFallback className="ring-0">
                                             {session.user?.name?.charAt(0) ||
                                                 "U"}
                                         </AvatarFallback>

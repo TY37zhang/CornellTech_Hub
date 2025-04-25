@@ -19,11 +19,15 @@ export const metadata = {
     title: "Cornell Tech Hub",
     description: "A community for Cornell Tech students",
     generator: "v0.dev",
+    viewport: "width=device-width, initial-scale=1",
+    icons: {
+        icon: "/favicon.ico",
+    },
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
     return (
-        <html lang="en">
+        <html lang="en" className={inter.variable}>
             <body className={inter.className}>
                 <AuthProvider>
                     <div className="relative flex min-h-screen flex-col">

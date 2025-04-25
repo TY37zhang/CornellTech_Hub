@@ -115,13 +115,10 @@ export default function SettingsPage() {
             const updatedProfile = await response.json();
 
             // Update the session with the new name
-            await update({
-                ...session,
-                user: {
-                    ...session?.user,
-                    name: updatedProfile.name,
-                },
-            });
+            await update(); // This will trigger a full session refresh
+
+            // Refresh the page to ensure all components get the updated data
+            router.refresh();
 
             toast.success("Profile updated successfully");
         } catch (error) {
