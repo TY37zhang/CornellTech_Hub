@@ -57,7 +57,7 @@ export default function NewReviewPage() {
                 title: courseName,
                 courseId: courseId,
                 professor: professor || "",
-                category: category || "",
+                category: category || "", // The category should already be lowercase from the URL
             }));
         }
     }, []);
@@ -211,10 +211,7 @@ export default function NewReviewPage() {
                                         errors.category ? "border-red-500" : ""
                                     }
                                 >
-                                    <SelectValue
-                                        placeholder="Select a category"
-                                        defaultValue={formData.category}
-                                    />
+                                    <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ceee">CEEE</SelectItem>

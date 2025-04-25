@@ -37,8 +37,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     name="viewport"
                     content="width=device-width, initial-scale=1"
                 />
+                <link
+                    rel="icon"
+                    href="/favicon.ico"
+                    type="image/x-icon"
+                    sizes="16x16"
+                />
             </head>
-            <body className={inter.className}>
+            <body className={inter.className} suppressHydrationWarning={true}>
                 <AuthProvider>
                     <div className="relative flex min-h-screen flex-col">
                         <SiteHeader />

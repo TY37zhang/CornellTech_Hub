@@ -341,9 +341,7 @@ export default function CourseDetailPage() {
                                                 course.id
                                             )}&professor=${encodeURIComponent(
                                                 course.professor
-                                            )}&category=${encodeURIComponent(
-                                                course.category
-                                            )}`}
+                                            )}&category=${course.category.toLowerCase()}`}
                                         >
                                             <Button className="w-full">
                                                 Write a Review
@@ -559,9 +557,7 @@ export default function CourseDetailPage() {
                                             course.id
                                         )}&professor=${encodeURIComponent(
                                             course.professor
-                                        )}&category=${encodeURIComponent(
-                                            course.category
-                                        )}`}
+                                        )}&category=${course.category.toLowerCase()}`}
                                     >
                                         <Button>Write a Review</Button>
                                     </Link>

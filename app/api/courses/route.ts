@@ -29,6 +29,7 @@ export async function GET() {
             FROM courses c
             LEFT JOIN course_reviews cr ON c.id = cr.course_id
             GROUP BY c.id, c.code, c.name, c.department, c.professor_id
+            HAVING COUNT(cr.id) > 0
             ORDER BY rating DESC NULLS LAST
         `;
 
