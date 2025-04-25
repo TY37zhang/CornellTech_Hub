@@ -404,10 +404,12 @@ export default function ForumPage() {
                                         </TabsTrigger>
                                     </TabsList>
                                     <div className="flex items-center gap-2">
-                                        <Button className="gap-1">
-                                            <PlusCircle className="h-4 w-4" />
-                                            <span>New Thread</span>
-                                        </Button>
+                                        <Link href="/forum/create">
+                                            <Button className="gap-1">
+                                                <PlusCircle className="h-4 w-4" />
+                                                <span>New Thread</span>
+                                            </Button>
+                                        </Link>
                                     </div>
                                 </div>
 

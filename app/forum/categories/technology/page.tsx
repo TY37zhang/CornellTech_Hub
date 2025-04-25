@@ -275,10 +275,12 @@ export default function TechnologyCategoryPage() {
                         <h2 className="text-2xl font-bold tracking-tight">
                             Discussions
                         </h2>
-                        <Button className="gap-1">
-                            <PlusCircle className="h-4 w-4" />
-                            <span>New Thread</span>
-                        </Button>
+                        <Link href="/forum/create">
+                            <Button className="gap-1">
+                                <PlusCircle className="h-4 w-4" />
+                                <span>New Thread</span>
+                            </Button>
+                        </Link>
                     </div>
 
                     <div className="grid gap-4">

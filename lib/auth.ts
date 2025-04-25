@@ -27,6 +27,12 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
+            console.log("Sign in attempt:", {
+                email: user.email,
+                name: user.name,
+                provider: account?.provider,
+            });
+
             // Only allow Cornell email addresses
             if (user.email && !user.email.endsWith("@cornell.edu")) {
                 console.log(
@@ -39,9 +45,11 @@ export const authOptions: NextAuthOptions = {
             // If using Google provider, check if user exists in our database
             if (account?.provider === "google") {
                 try {
+                    console.log("Checking if user exists in database");
                     const result = await sql`
                         SELECT * FROM users WHERE email = ${user.email}
                     `;
+                    console.log("Database query result:", result);
 
                     // If user doesn't exist, create them
                     if (result.length === 0) {
@@ -54,11 +62,13 @@ export const authOptions: NextAuthOptions = {
                             VALUES (${user.name}, ${user.email}, ${user.image})
                             RETURNING id, name, email, avatar_url
                         `;
+                        console.log("New user created:", newUser[0]);
 
                         // Update the user object with the new user's ID
                         user.id = newUser[0].id;
                     } else {
                         // Update the user object with the existing user's ID
+                        console.log("Found existing user:", result[0]);
                         user.id = result[0].id;
                     }
                 } catch (error) {
