@@ -62,8 +62,10 @@ export default function CreateThreadPage() {
     }
 
     const addTag = () => {
-        if (tagInput && !tags.includes(tagInput) && tags.length < 5) {
-            setTags([...tags, tagInput]);
+        // Only allow single word tags with no special characters
+        const cleanTag = tagInput.trim().replace(/[^a-zA-Z0-9]/g, "");
+        if (cleanTag && !tags.includes(cleanTag) && tags.length < 5) {
+            setTags([...tags, cleanTag]);
             setTagInput("");
         }
     };
@@ -75,13 +77,57 @@ export default function CreateThreadPage() {
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" || e.key === ",") {
             e.preventDefault();
-            addTag();
+            // Only allow single word tags with no special characters
+            const cleanTag = tagInput.trim().replace(/[^a-zA-Z0-9]/g, "");
+            if (cleanTag) {
+                addTag();
+            } else {
+                toast({
+                    title: "Invalid Tag",
+                    description:
+                        "Tags must be single words with no special characters",
+                    variant: "destructive",
+                });
+            }
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
+        // Validate title is not empty
+        if (!formData.title.trim()) {
+            toast({
+                title: "Error",
+                description: "Title cannot be empty",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        // Validate category is selected
+        if (!formData.category) {
+            toast({
+                title: "Error",
+                description: "Please select a category",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        // Validate content length
+        if (formData.content.trim().length < 20) {
+            toast({
+                title: "Error",
+                description: "Content must be at least 20 characters long",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
 
         console.log("Session state:", {
             status,
@@ -93,20 +139,6 @@ export default function CreateThreadPage() {
             toast({
                 title: "Error",
                 description: "You must be logged in to create a thread",
-                variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-        }
-
-        if (
-            !formData.title.trim() ||
-            !formData.content.trim() ||
-            !formData.category
-        ) {
-            toast({
-                title: "Error",
-                description: "Please fill in all required fields",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -282,9 +314,15 @@ export default function CreateThreadPage() {
                                             id="tags"
                                             placeholder="Add up to 5 tags (press Enter or comma to add)"
                                             value={tagInput}
-                                            onChange={(e) =>
-                                                setTagInput(e.target.value)
-                                            }
+                                            onChange={(e) => {
+                                                // Only allow letters and numbers in the input
+                                                const value =
+                                                    e.target.value.replace(
+                                                        /[^a-zA-Z0-9]/g,
+                                                        ""
+                                                    );
+                                                setTagInput(value);
+                                            }}
                                             onKeyDown={handleKeyDown}
                                         />
                                         <Button
@@ -295,10 +333,21 @@ export default function CreateThreadPage() {
                                             Add
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Add up to 5 tags to help categorize your
-                                        thread
-                                    </p>
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">
+                                            Add up to 5 tags to help categorize
+                                            your thread
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                                                Note:
+                                            </span>{" "}
+                                            Tags must be single words containing
+                                            only letters and numbers (A-Z, a-z,
+                                            0-9). Special characters and spaces
+                                            are not allowed.
+                                        </p>
+                                    </div>
                                     {tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-2">
                                             {tags.map((tag) => (
