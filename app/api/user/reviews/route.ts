@@ -34,7 +34,7 @@ export async function GET() {
             select: {
                 id: true,
                 content: true,
-                rating: true,
+                rating: true, // This will map to overall_rating in the database
                 createdAt: true,
                 courseId: true,
                 courseName: true,

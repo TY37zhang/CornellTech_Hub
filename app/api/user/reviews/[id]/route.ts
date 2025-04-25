@@ -67,14 +67,15 @@ export async function PUT(
             );
         }
 
-        const reviewId = params.id;
+        const { id: reviewId } = params;
         const body = await req.json();
 
         // Validate the request body
         const requestSchema = z.object({
             difficulty: z.number().min(1).max(5),
             workload: z.number().min(1).max(5),
-            rating: z.number().min(1).max(5),
+            value: z.number().min(1).max(5),
+            overall_rating: z.number().min(1).max(5),
             content: z
                 .string()
                 .min(10, "Review must be at least 10 characters"),
@@ -103,7 +104,8 @@ export async function PUT(
             SET 
                 difficulty = ${validatedData.difficulty},
                 workload = ${validatedData.workload},
-                rating = ${validatedData.rating},
+                rating = ${validatedData.value},
+                overall_rating = ${validatedData.overall_rating},
                 content = ${validatedData.content},
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ${reviewId}
@@ -140,16 +142,17 @@ export async function GET(
             );
         }
 
-        const reviewId = params.id;
+        const { id: reviewId } = params;
 
         // Fetch the review with course details
         const reviewResult = await sql`
             SELECT 
                 cr.id,
                 cr.content,
-                cr.rating,
+                cr.overall_rating,
                 cr.difficulty,
                 cr.workload,
+                cr.rating as value,
                 c.name as course_name,
                 c.code as course_code
             FROM course_reviews cr
@@ -170,9 +173,10 @@ export async function GET(
         return NextResponse.json({
             id: review.id,
             content: review.content,
-            rating: Number(review.rating),
+            overall_rating: Number(review.overall_rating),
             difficulty: Number(review.difficulty),
             workload: Number(review.workload),
+            value: Number(review.value),
             courseName: review.course_name,
             courseCode: review.course_code,
         });

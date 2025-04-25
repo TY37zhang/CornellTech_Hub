@@ -37,6 +37,7 @@ export default function NewReviewPage() {
         difficulty: 3,
         workload: 3,
         value: 3,
+        overall_rating: 3,
         review: "",
     });
 
@@ -210,6 +211,25 @@ export default function NewReviewPage() {
                         </div>
 
                         <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Overall Rating (1-5)</Label>
+                                <Slider
+                                    value={[formData.overall_rating]}
+                                    onValueChange={(value) =>
+                                        setFormData({
+                                            ...formData,
+                                            overall_rating: value[0],
+                                        })
+                                    }
+                                    min={1}
+                                    max={5}
+                                    step={1}
+                                />
+                                <div className="text-sm text-muted-foreground">
+                                    Current value: {formData.overall_rating}
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label>Difficulty (1-5)</Label>
                                 <Slider

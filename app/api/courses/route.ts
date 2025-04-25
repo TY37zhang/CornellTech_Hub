@@ -15,7 +15,7 @@ export async function GET() {
                 c.department as category,
                 u.name as professor,
                 COUNT(cr.id) as review_count,
-                ROUND(AVG(cr.rating)::numeric, 1) as rating,
+                ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
                 ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
                 ROUND(AVG(cr.workload)::numeric, 1) as workload,
                 ROUND(AVG(cr.rating)::numeric, 1) as value,

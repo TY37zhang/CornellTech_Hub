@@ -16,6 +16,7 @@ const requestSchema = z.object({
     difficulty: z.number().min(1).max(5),
     workload: z.number().min(1).max(5),
     value: z.number().min(1).max(5),
+    overall_rating: z.number().min(1).max(5),
     review: z.string().min(10, "Review must be at least 10 characters"),
 });
 
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
                 difficulty,
                 workload,
                 rating,
+                overall_rating,
                 content
             )
             VALUES (
@@ -75,6 +77,7 @@ export async function POST(request: Request) {
                 ${validatedData.difficulty},
                 ${validatedData.workload},
                 ${validatedData.value},
+                ${validatedData.overall_rating},
                 ${validatedData.review}
             )
             RETURNING *

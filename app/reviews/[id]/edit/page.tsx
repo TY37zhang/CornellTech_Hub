@@ -21,9 +21,10 @@ import { Slider } from "@/components/ui/slider";
 interface Review {
     id: string;
     content: string;
-    rating: number;
+    overall_rating: number;
     difficulty: number;
     workload: number;
+    value: number;
     courseName: string;
     courseCode: string;
 }
@@ -92,7 +93,8 @@ export default function EditReviewPage({
                 body: JSON.stringify({
                     difficulty: formData.difficulty,
                     workload: formData.workload,
-                    rating: formData.rating,
+                    overall_rating: formData.overall_rating,
+                    value: formData.value,
                     content: formData.content,
                 }),
             });
@@ -157,6 +159,25 @@ export default function EditReviewPage({
                     <CardContent className="space-y-6">
                         <div className="space-y-4">
                             <div className="space-y-2">
+                                <Label>Overall Rating (1-5)</Label>
+                                <Slider
+                                    value={[formData.overall_rating]}
+                                    onValueChange={(value) =>
+                                        setFormData({
+                                            ...formData,
+                                            overall_rating: value[0],
+                                        })
+                                    }
+                                    min={1}
+                                    max={5}
+                                    step={1}
+                                />
+                                <div className="text-sm text-muted-foreground">
+                                    Current value: {formData.overall_rating}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
                                 <Label>Difficulty (1-5)</Label>
                                 <Slider
                                     value={[formData.difficulty]}
@@ -195,13 +216,13 @@ export default function EditReviewPage({
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Rating (1-5)</Label>
+                                <Label>Value (1-5)</Label>
                                 <Slider
-                                    value={[formData.rating]}
+                                    value={[formData.value]}
                                     onValueChange={(value) =>
                                         setFormData({
                                             ...formData,
-                                            rating: value[0],
+                                            value: value[0],
                                         })
                                     }
                                     min={1}
@@ -209,7 +230,7 @@ export default function EditReviewPage({
                                     step={1}
                                 />
                                 <div className="text-sm text-muted-foreground">
-                                    Current value: {formData.rating}
+                                    Current value: {formData.value}
                                 </div>
                             </div>
                         </div>

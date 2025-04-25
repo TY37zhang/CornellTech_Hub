@@ -114,7 +114,8 @@ const prisma = {
                 const fieldMapping: { [key: string]: string } = {
                     id: "r.id",
                     content: "r.content",
-                    rating: "r.rating",
+                    rating: "r.overall_rating",
+                    overall_rating: "r.overall_rating",
                     createdAt: "r.created_at",
                     courseId: "r.course_id",
                     courseName: "c.name as course_name",
@@ -176,6 +177,7 @@ const prisma = {
                     createdAt: row.created_at,
                     courseName: row.course_name,
                     courseCode: row.course_code,
+                    rating: Number(row.overall_rating), // Ensure rating is a number
                 }));
             } catch (error) {
                 console.error("Error in prisma.review.findMany:", error);

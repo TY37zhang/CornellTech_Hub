@@ -17,7 +17,7 @@ import { toast } from "sonner";
 interface Review {
     id: string;
     content: string;
-    rating: number;
+    rating: number; // This is actually overall_rating from the backend
     createdAt: string;
     courseId: string;
     courseName: string;
@@ -44,6 +44,7 @@ export default function MyReviewsPage() {
                     throw new Error("Failed to fetch reviews");
                 }
                 const data = await response.json();
+                console.log("Reviews data:", data); // Debug log
                 setReviews(data);
             } catch (err) {
                 setError("Failed to load reviews. Please try again later.");
@@ -123,7 +124,8 @@ export default function MyReviewsPage() {
                                             <Star
                                                 key={i}
                                                 className={`h-4 w-4 ${
-                                                    i < review.rating
+                                                    i <
+                                                    Math.round(review.rating)
                                                         ? "fill-yellow-400 text-yellow-400"
                                                         : "text-gray-300"
                                                 }`}
