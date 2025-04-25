@@ -306,7 +306,7 @@ export default function CoursesPage() {
                                                                         style={{
                                                                             width: `${
                                                                                 course.difficulty *
-                                                                                10
+                                                                                20
                                                                             }%`,
                                                                         }}
                                                                     />
@@ -315,7 +315,7 @@ export default function CoursesPage() {
                                                                     {course.difficulty.toFixed(
                                                                         1
                                                                     )}
-                                                                    /10
+                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -330,7 +330,7 @@ export default function CoursesPage() {
                                                                         style={{
                                                                             width: `${
                                                                                 course.workload *
-                                                                                10
+                                                                                20
                                                                             }%`,
                                                                         }}
                                                                     />
@@ -339,7 +339,7 @@ export default function CoursesPage() {
                                                                     {course.workload.toFixed(
                                                                         1
                                                                     )}
-                                                                    /10
+                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -354,7 +354,7 @@ export default function CoursesPage() {
                                                                         style={{
                                                                             width: `${
                                                                                 course.value *
-                                                                                10
+                                                                                20
                                                                             }%`,
                                                                         }}
                                                                     />
@@ -363,7 +363,7 @@ export default function CoursesPage() {
                                                                     {course.value.toFixed(
                                                                         1
                                                                     )}
-                                                                    /10
+                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>

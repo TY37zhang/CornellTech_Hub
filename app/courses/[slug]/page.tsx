@@ -267,7 +267,7 @@ export default function CourseDetailPage() {
                                                                 style={{
                                                                     width: `${
                                                                         course.difficulty *
-                                                                        10
+                                                                        20
                                                                     }%`,
                                                                 }}
                                                             ></div>
@@ -276,7 +276,7 @@ export default function CourseDetailPage() {
                                                             {course.difficulty.toFixed(
                                                                 1
                                                             )}
-                                                            /10
+                                                            /5
                                                         </span>
                                                     </div>
                                                 </div>
@@ -291,7 +291,7 @@ export default function CourseDetailPage() {
                                                                 style={{
                                                                     width: `${
                                                                         course.workload *
-                                                                        10
+                                                                        20
                                                                     }%`,
                                                                 }}
                                                             ></div>
@@ -300,7 +300,7 @@ export default function CourseDetailPage() {
                                                             {course.workload.toFixed(
                                                                 1
                                                             )}
-                                                            /10
+                                                            /5
                                                         </span>
                                                     </div>
                                                 </div>
@@ -315,7 +315,7 @@ export default function CourseDetailPage() {
                                                                 style={{
                                                                     width: `${
                                                                         course.value *
-                                                                        10
+                                                                        20
                                                                     }%`,
                                                                 }}
                                                             ></div>
@@ -324,7 +324,7 @@ export default function CourseDetailPage() {
                                                             {course.value.toFixed(
                                                                 1
                                                             )}
-                                                            /10
+                                                            /5
                                                         </span>
                                                     </div>
                                                 </div>
@@ -598,7 +598,7 @@ export default function CourseDetailPage() {
                                                                 {review.difficulty.toFixed(
                                                                     1
                                                                 )}
-                                                                /10
+                                                                /5
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
@@ -609,7 +609,7 @@ export default function CourseDetailPage() {
                                                                 {review.workload.toFixed(
                                                                     1
                                                                 )}
-                                                                /10
+                                                                /5
                                                             </span>
                                                         </div>
                                                     </div>
