@@ -1,6 +1,4 @@
 /** @type {import('next').NextConfig} */
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
-
 const nextConfig = {
     reactStrictMode: true,
     eslint: {
@@ -25,10 +23,6 @@ const nextConfig = {
     },
     serverExternalPackages: ["@neondatabase/serverless"],
     experimental: {},
-    webpack: (config, { isServer }) => {
-        config.plugins.push(new MiniCssExtractPlugin());
-        return config;
-    },
 };
 
 export default nextConfig;

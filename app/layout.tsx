@@ -15,11 +15,15 @@ interface RootLayoutProps {
     children: React.ReactNode;
 }
 
+export const viewport = {
+    width: "device-width",
+    initialScale: 1,
+};
+
 export const metadata = {
     title: "Cornell Tech Hub",
     description: "A community for Cornell Tech students",
     generator: "v0.dev",
-    viewport: "width=device-width, initial-scale=1",
     icons: {
         icon: "/favicon.ico",
     },
@@ -28,6 +32,12 @@ export const metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
     return (
         <html lang="en" className={inter.variable}>
+            <head>
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1"
+                />
+            </head>
             <body className={inter.className}>
                 <AuthProvider>
                     <div className="relative flex min-h-screen flex-col">
