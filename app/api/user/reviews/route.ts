@@ -34,11 +34,15 @@ export async function GET() {
             select: {
                 id: true,
                 content: true,
-                rating: true, // This will map to overall_rating in the database
+                rating: true,
+                difficulty: true,
+                workload: true,
+                value: true,
                 createdAt: true,
                 courseId: true,
                 courseName: true,
                 courseCode: true,
+                category: true,
             },
         });
 

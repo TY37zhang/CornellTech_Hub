@@ -116,10 +116,14 @@ const prisma = {
                     content: "r.content",
                     rating: "r.overall_rating",
                     overall_rating: "r.overall_rating",
+                    difficulty: "r.difficulty",
+                    workload: "r.workload",
+                    value: "r.rating",
                     createdAt: "r.created_at",
                     courseId: "r.course_id",
                     courseName: "c.name as course_name",
                     courseCode: "c.code as course_code",
+                    category: "c.department as category",
                 };
 
                 const selectedFields = Object.keys(select)
@@ -172,13 +176,21 @@ const prisma = {
                 const result = await sql(query, params);
 
                 // Transform the result to match the expected format
-                return result.map((row: any) => ({
-                    ...row,
+                const reviews = result.map((row: any) => ({
+                    id: row.id,
+                    content: row.content,
+                    rating: Number(row.overall_rating),
+                    value: Number(row.rating),
+                    difficulty: Number(row.difficulty),
+                    workload: Number(row.workload),
                     createdAt: row.created_at,
+                    courseId: row.course_id,
                     courseName: row.course_name,
                     courseCode: row.course_code,
-                    rating: Number(row.overall_rating), // Ensure rating is a number
+                    category: row.category,
                 }));
+
+                return reviews;
             } catch (error) {
                 console.error("Error in prisma.review.findMany:", error);
                 throw error;
