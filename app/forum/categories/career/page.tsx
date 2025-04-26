@@ -34,6 +34,35 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { getForumPostsByCategory } from "../../actions";
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    return "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400";
+}
+
+// Helper function to format date
+function formatDate(date: string): string {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+}
 
 // Define thread type
 interface Thread {
@@ -66,106 +95,57 @@ interface Thread {
     isNew?: boolean;
 }
 
-// Sample thread data for Career category
-const careerThreadsData: Thread[] = [
-    {
-        id: "tech-interview-prep",
-        title: "Tech Interview Preparation Group",
-        author: {
-            name: "Alex Patel",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U1",
-        },
-        category: "Career",
-        categoryColor:
-            "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        content:
-            "Looking to form a study group for technical interview preparation. We'll focus on data structures, algorithms, and system design. Planning to meet twice a week and do mock interviews. Anyone interested in joining? All experience levels welcome!",
-        tags: ["interview-prep", "study-group", "technical-skills"],
-        replies: 23,
-        likes: 18,
-        views: 67,
-        badge: {
-            text: "Hot",
-            color: "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
-        },
-        createdAt: "2 days ago",
-        isHot: true,
-    },
-    {
-        id: "startup-internship",
-        title: "Summer 2024 Startup Internship Opportunities",
-        author: {
-            name: "Rachel Wong",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U2",
-        },
-        category: "Career",
-        categoryColor:
-            "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        content:
-            "I've compiled a list of NYC-based startups that are actively recruiting for summer internships. Many are founded by Cornell Tech alumni. Would love to share resources and tips for applying. Anyone else targeting startup internships this summer?",
-        tags: ["internships", "startups", "summer-2024"],
-        replies: 15,
-        likes: 12,
-        views: 45,
-        createdAt: "4 days ago",
-    },
-    {
-        id: "resume-review",
-        title: "Resume Review Session - Tech Industry Focus",
-        author: {
-            name: "James Wilson",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U5",
-        },
-        category: "Career",
-        categoryColor:
-            "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        content:
-            "I'm a former tech recruiter and would be happy to review resumes for anyone targeting software engineering roles. I'll focus on tech industry best practices and ATS optimization. DM me if you'd like a review!",
-        tags: ["resume", "career-advice", "tech-industry"],
-        replies: 8,
-        likes: 6,
-        views: 29,
-        badge: {
-            text: "New",
-            color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400",
-        },
-        createdAt: "1 day ago",
-        isNew: true,
-    },
-    {
-        id: "networking-event",
-        title: "Tech Industry Networking Event - March 15th",
-        author: {
-            name: "Sophia Martinez",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U8",
-        },
-        category: "Career",
-        categoryColor:
-            "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        content:
-            "Organizing a networking event with tech industry professionals from various companies. Great opportunity to connect with potential employers and learn about different roles. Let me know if you'd like to attend!",
-        tags: ["networking", "events", "tech-industry"],
-        replies: 12,
-        likes: 9,
-        views: 38,
-        createdAt: "3 days ago",
-    },
-];
-
 export default function CareerCategoryPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("activity");
-    const [filteredThreads, setFilteredThreads] =
-        useState<Thread[]>(careerThreadsData);
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch threads on component mount
+    useEffect(() => {
+        async function fetchThreads() {
+            try {
+                const posts = await getForumPostsByCategory("career");
+                const formattedThreads: Thread[] = posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: {
+                        name: post.author_name,
+                        avatar:
+                            post.author_avatar ||
+                            "/placeholder.svg?height=32&width=32",
+                        initials: getInitials(post.author_name),
+                    },
+                    category: post.category_name,
+                    categoryColor: getCategoryColor(post.category_name),
+                    content: post.content,
+                    tags: post.tags,
+                    replies: post.reply_count,
+                    likes: post.like_count,
+                    views: post.view_count,
+                    createdAt: formatDate(post.created_at),
+                    isHot: post.like_count > 10 || post.reply_count > 20,
+                    isNew:
+                        new Date(post.created_at).getTime() >
+                        Date.now() - 7 * 24 * 60 * 60 * 1000,
+                }));
+                setThreads(formattedThreads);
+            } catch (error) {
+                console.error("Error fetching threads:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchThreads();
+    }, []);
+
+    // Filtered and sorted threads
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
-        let result = [...careerThreadsData];
+        let result = [...threads];
 
         // Apply search filter
         if (searchQuery) {
@@ -183,11 +163,15 @@ export default function CareerCategoryPage() {
         result.sort((a, b) => {
             switch (sortBy) {
                 case "activity":
-                    // Sort by recency (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "newest":
-                    // Sort by creation date (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "popular":
                     return b.likes - a.likes;
                 case "replies":
@@ -198,7 +182,20 @@ export default function CareerCategoryPage() {
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, sortBy]);
+    }, [searchQuery, sortBy, threads]);
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-lg">
+                        Loading career discussions...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">

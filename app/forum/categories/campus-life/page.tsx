@@ -34,6 +34,35 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { getForumPostsByCategory } from "../../actions";
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    return "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400";
+}
+
+// Helper function to format date
+function formatDate(date: string): string {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+}
 
 // Define thread type
 interface Thread {
@@ -66,107 +95,57 @@ interface Thread {
     isNew?: boolean;
 }
 
-// Sample thread data for Campus Life category
-const campusLifeThreadsData: Thread[] = [
-    {
-        id: "housing-tips",
-        title: "Housing Tips for New Students",
-        author: {
-            name: "Sarah Chen",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "SC",
-        },
-        category: "Campus Life",
-        categoryColor:
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        content:
-            "Looking for housing recommendations near campus? I've compiled a list of popular apartment buildings, average rent prices, and tips for finding roommates. Share your experiences and advice for finding the perfect place to live!",
-        tags: ["housing", "roommates", "nyc-living"],
-        replies: 34,
-        likes: 28,
-        views: 112,
-        badge: {
-            text: "Hot",
-            color: "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
-        },
-        createdAt: "2 days ago",
-        isHot: true,
-    },
-    {
-        id: "food-spots",
-        title: "Best Food Spots Around Campus",
-        author: {
-            name: "Mike Thompson",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "MT",
-        },
-        category: "Campus Life",
-        categoryColor:
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        content:
-            "Let's create a list of favorite restaurants, cafes, and food trucks near Cornell Tech. Looking for recommendations for quick lunches, group dinners, and coffee spots. What are your go-to places?",
-        tags: ["food", "restaurants", "recommendations"],
-        replies: 25,
-        likes: 20,
-        views: 89,
-        createdAt: "4 days ago",
-    },
-    {
-        id: "student-clubs",
-        title: "Student Clubs and Organizations",
-        author: {
-            name: "Lisa Patel",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "LP",
-        },
-        category: "Campus Life",
-        categoryColor:
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        content:
-            "Interested in joining student clubs? Share information about active clubs, upcoming events, and how to get involved. Looking for others interested in starting a new tech entrepreneurship club!",
-        tags: ["clubs", "activities", "community"],
-        replies: 18,
-        likes: 15,
-        views: 67,
-        badge: {
-            text: "New",
-            color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400",
-        },
-        createdAt: "1 day ago",
-        isNew: true,
-    },
-    {
-        id: "wellness-resources",
-        title: "Wellness and Recreation Resources",
-        author: {
-            name: "David Kim",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "DK",
-        },
-        category: "Campus Life",
-        categoryColor:
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        content:
-            "Looking for workout buddies and information about fitness classes, meditation groups, and wellness resources on campus. Anyone interested in forming a running group or weekend hiking trips?",
-        tags: ["wellness", "fitness", "recreation"],
-        replies: 12,
-        likes: 10,
-        views: 45,
-        createdAt: "3 days ago",
-    },
-];
-
 export default function CampusLifeCategoryPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("activity");
-    const [filteredThreads, setFilteredThreads] = useState<Thread[]>(
-        campusLifeThreadsData
-    );
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch threads on component mount
+    useEffect(() => {
+        async function fetchThreads() {
+            try {
+                const posts = await getForumPostsByCategory("campus-life");
+                const formattedThreads: Thread[] = posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: {
+                        name: post.author_name,
+                        avatar:
+                            post.author_avatar ||
+                            "/placeholder.svg?height=32&width=32",
+                        initials: getInitials(post.author_name),
+                    },
+                    category: post.category_name,
+                    categoryColor: getCategoryColor(post.category_name),
+                    content: post.content,
+                    tags: post.tags,
+                    replies: post.reply_count,
+                    likes: post.like_count,
+                    views: post.view_count,
+                    createdAt: formatDate(post.created_at),
+                    isHot: post.like_count > 10 || post.reply_count > 20,
+                    isNew:
+                        new Date(post.created_at).getTime() >
+                        Date.now() - 7 * 24 * 60 * 60 * 1000,
+                }));
+                setThreads(formattedThreads);
+            } catch (error) {
+                console.error("Error fetching threads:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchThreads();
+    }, []);
+
+    // Filtered and sorted threads
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
-        let result = [...campusLifeThreadsData];
+        let result = [...threads];
 
         // Apply search filter
         if (searchQuery) {
@@ -184,11 +163,15 @@ export default function CampusLifeCategoryPage() {
         result.sort((a, b) => {
             switch (sortBy) {
                 case "activity":
-                    // Sort by recency (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "newest":
-                    // Sort by creation date (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "popular":
                     return b.likes - a.likes;
                 case "replies":
@@ -199,7 +182,20 @@ export default function CampusLifeCategoryPage() {
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, sortBy]);
+    }, [searchQuery, sortBy, threads]);
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-lg">
+                        Loading campus life discussions...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">

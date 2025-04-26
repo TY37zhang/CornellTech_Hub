@@ -205,7 +205,7 @@ export default function AcademicsPage() {
                         {filteredThreads.length > 0 ? (
                             filteredThreads.map((thread) => (
                                 <Link
-                                    href={`/forum/posts/${thread.id}`}
+                                    href={`/forum/${thread.id}`}
                                     key={thread.id}
                                     className="block"
                                 >

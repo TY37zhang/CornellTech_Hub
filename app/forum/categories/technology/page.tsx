@@ -34,6 +34,35 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { getForumPostsByCategory } from "../../actions";
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    return "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400";
+}
+
+// Helper function to format date
+function formatDate(date: string): string {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+}
 
 // Define thread type
 interface Thread {
@@ -66,107 +95,57 @@ interface Thread {
     isNew?: boolean;
 }
 
-// Sample thread data for Technology category
-const technologyThreadsData: Thread[] = [
-    {
-        id: "ai-tools",
-        title: "Best AI Tools for Research and Development",
-        author: {
-            name: "Alex Patel",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U1",
-        },
-        category: "Technology",
-        categoryColor:
-            "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        content:
-            "I'm exploring various AI tools for my research project. Looking for recommendations on tools for data analysis, model training, and visualization. What AI platforms or libraries have you found most useful for academic research?",
-        tags: ["ai", "machine-learning", "research-tools"],
-        replies: 28,
-        likes: 22,
-        views: 95,
-        badge: {
-            text: "Hot",
-            color: "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
-        },
-        createdAt: "2 days ago",
-        isHot: true,
-    },
-    {
-        id: "web-dev-frameworks",
-        title: "Web Development Frameworks Comparison",
-        author: {
-            name: "Rachel Wong",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U2",
-        },
-        category: "Technology",
-        categoryColor:
-            "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        content:
-            "I'm starting a new web project and trying to decide between Next.js, React, and Vue. What are the pros and cons of each framework? I'm particularly interested in performance, developer experience, and community support.",
-        tags: ["web-development", "frameworks", "frontend"],
-        replies: 19,
-        likes: 15,
-        views: 78,
-        createdAt: "5 days ago",
-    },
-    {
-        id: "blockchain-project",
-        title: "Blockchain Project Collaboration",
-        author: {
-            name: "James Wilson",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U5",
-        },
-        category: "Technology",
-        categoryColor:
-            "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        content:
-            "I'm working on a blockchain-based supply chain tracking system and looking for collaborators. The project uses Solidity and React. Anyone interested in joining the team? Experience with smart contracts is a plus but not required.",
-        tags: ["blockchain", "solidity", "collaboration"],
-        replies: 12,
-        likes: 8,
-        views: 45,
-        badge: {
-            text: "New",
-            color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400",
-        },
-        createdAt: "1 day ago",
-        isNew: true,
-    },
-    {
-        id: "cloud-services",
-        title: "Cloud Services for Student Projects",
-        author: {
-            name: "Sophia Martinez",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U8",
-        },
-        category: "Technology",
-        categoryColor:
-            "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        content:
-            "What cloud services do you recommend for student projects? I'm looking for options with generous free tiers or student discounts. Currently considering AWS, Google Cloud, and Azure. Any tips on getting started with these platforms?",
-        tags: ["cloud-computing", "aws", "student-resources"],
-        replies: 15,
-        likes: 10,
-        views: 62,
-        createdAt: "3 days ago",
-    },
-];
-
 export default function TechnologyCategoryPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("activity");
-    const [filteredThreads, setFilteredThreads] = useState<Thread[]>(
-        technologyThreadsData
-    );
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch threads on component mount
+    useEffect(() => {
+        async function fetchThreads() {
+            try {
+                const posts = await getForumPostsByCategory("technology");
+                const formattedThreads: Thread[] = posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: {
+                        name: post.author_name,
+                        avatar:
+                            post.author_avatar ||
+                            "/placeholder.svg?height=32&width=32",
+                        initials: getInitials(post.author_name),
+                    },
+                    category: post.category_name,
+                    categoryColor: getCategoryColor(post.category_name),
+                    content: post.content,
+                    tags: post.tags,
+                    replies: post.reply_count,
+                    likes: post.like_count,
+                    views: post.view_count,
+                    createdAt: formatDate(post.created_at),
+                    isHot: post.like_count > 10 || post.reply_count > 20,
+                    isNew:
+                        new Date(post.created_at).getTime() >
+                        Date.now() - 7 * 24 * 60 * 60 * 1000,
+                }));
+                setThreads(formattedThreads);
+            } catch (error) {
+                console.error("Error fetching threads:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchThreads();
+    }, []);
+
+    // Filtered and sorted threads
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
-        let result = [...technologyThreadsData];
+        let result = [...threads];
 
         // Apply search filter
         if (searchQuery) {
@@ -184,11 +163,15 @@ export default function TechnologyCategoryPage() {
         result.sort((a, b) => {
             switch (sortBy) {
                 case "activity":
-                    // Sort by recency (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "newest":
-                    // Sort by creation date (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "popular":
                     return b.likes - a.likes;
                 case "replies":
@@ -199,7 +182,20 @@ export default function TechnologyCategoryPage() {
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, sortBy]);
+    }, [searchQuery, sortBy, threads]);
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-lg">
+                        Loading technology discussions...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">

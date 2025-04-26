@@ -34,6 +34,35 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { getForumPostsByCategory } from "../../actions";
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    return "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400";
+}
+
+// Helper function to format date
+function formatDate(date: string): string {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffTime = Math.abs(now.getTime() - postDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+}
 
 // Define thread type
 interface Thread {
@@ -66,106 +95,57 @@ interface Thread {
     isNew?: boolean;
 }
 
-// Sample thread data for Events category
-const eventsThreadsData: Thread[] = [
-    {
-        id: "hackathon-2024",
-        title: "Cornell Tech Hackathon 2024 - Registration Open",
-        author: {
-            name: "Michael Chen",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U1",
-        },
-        category: "Events",
-        categoryColor:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        content:
-            "Registration for the annual Cornell Tech Hackathon is now open! This year's theme is 'Sustainable Technology'. The event will take place from April 12-14, 2024. Looking for team members or have questions about the event? Join the discussion here!",
-        tags: ["hackathon", "sustainability", "team-formation"],
-        replies: 42,
-        likes: 35,
-        views: 128,
-        badge: {
-            text: "Hot",
-            color: "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
-        },
-        createdAt: "3 days ago",
-        isHot: true,
-    },
-    {
-        id: "career-fair",
-        title: "Spring Career Fair - Company List Released",
-        author: {
-            name: "Sarah Johnson",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U2",
-        },
-        category: "Events",
-        categoryColor:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        content:
-            "The list of companies attending the Spring Career Fair has been released! Over 50 companies will be present, including tech giants and startups. I've created a spreadsheet with company details and roles they're hiring for. Let's discuss strategies for making the most of this opportunity.",
-        tags: ["career-fair", "networking", "job-search"],
-        replies: 28,
-        likes: 22,
-        views: 95,
-        createdAt: "5 days ago",
-    },
-    {
-        id: "tech-talk-series",
-        title: "Tech Talk Series: AI in Healthcare",
-        author: {
-            name: "David Kim",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U3",
-        },
-        category: "Events",
-        categoryColor:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        content:
-            "Join us for the next Tech Talk in our series, featuring Dr. Emily Rodriguez from Mount Sinai Hospital discussing 'AI Applications in Healthcare'. The talk will be followed by a networking session. Who's planning to attend? Let's coordinate and maybe grab coffee afterward!",
-        tags: ["tech-talks", "ai", "healthcare", "networking"],
-        replies: 15,
-        likes: 12,
-        views: 48,
-        badge: {
-            text: "New",
-            color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400",
-        },
-        createdAt: "1 day ago",
-        isNew: true,
-    },
-    {
-        id: "startup-weekend",
-        title: "Startup Weekend - Looking for Team Members",
-        author: {
-            name: "Lisa Patel",
-            avatar: "/placeholder.svg?height=32&width=32",
-            initials: "U4",
-        },
-        category: "Events",
-        categoryColor:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        content:
-            "I'm participating in the upcoming Startup Weekend and looking for team members. I have a background in product management and UI/UX design. Looking for developers, business strategists, or anyone interested in building something innovative. Let's connect and discuss ideas!",
-        tags: ["startup-weekend", "team-formation", "entrepreneurship"],
-        replies: 18,
-        likes: 14,
-        views: 62,
-        createdAt: "2 days ago",
-    },
-];
-
 export default function EventsCategoryPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("activity");
-    const [filteredThreads, setFilteredThreads] =
-        useState<Thread[]>(eventsThreadsData);
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch threads on component mount
+    useEffect(() => {
+        async function fetchThreads() {
+            try {
+                const posts = await getForumPostsByCategory("events");
+                const formattedThreads: Thread[] = posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: {
+                        name: post.author_name,
+                        avatar:
+                            post.author_avatar ||
+                            "/placeholder.svg?height=32&width=32",
+                        initials: getInitials(post.author_name),
+                    },
+                    category: post.category_name,
+                    categoryColor: getCategoryColor(post.category_name),
+                    content: post.content,
+                    tags: post.tags,
+                    replies: post.reply_count,
+                    likes: post.like_count,
+                    views: post.view_count,
+                    createdAt: formatDate(post.created_at),
+                    isHot: post.like_count > 10 || post.reply_count > 20,
+                    isNew:
+                        new Date(post.created_at).getTime() >
+                        Date.now() - 7 * 24 * 60 * 60 * 1000,
+                }));
+                setThreads(formattedThreads);
+            } catch (error) {
+                console.error("Error fetching threads:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchThreads();
+    }, []);
+
+    // Filtered and sorted threads
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
-        let result = [...eventsThreadsData];
+        let result = [...threads];
 
         // Apply search filter
         if (searchQuery) {
@@ -183,11 +163,15 @@ export default function EventsCategoryPage() {
         result.sort((a, b) => {
             switch (sortBy) {
                 case "activity":
-                    // Sort by recency (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "newest":
-                    // Sort by creation date (in a real app, you would use actual timestamps)
-                    return a.createdAt.includes("day") ? -1 : 1;
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
                 case "popular":
                     return b.likes - a.likes;
                 case "replies":
@@ -198,7 +182,20 @@ export default function EventsCategoryPage() {
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, sortBy]);
+    }, [searchQuery, sortBy, threads]);
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-lg">
+                        Loading events discussions...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
