@@ -63,6 +63,7 @@ async function getThreadData(slug: string) {
             program: "Student",
             joinDate: formatDate(post.created_at),
             postCount: post.author_post_count || 0,
+            totalLikes: post.author_total_likes || 0,
         },
         tags: post.tags || [],
         stats: {

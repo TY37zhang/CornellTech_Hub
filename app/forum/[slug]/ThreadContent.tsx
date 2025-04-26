@@ -686,6 +686,15 @@ export default function ThreadContent({
                                                 {threadData.author.postCount}
                                             </span>
                                         </div>
+                                        <Separator />
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">
+                                                Total Likes
+                                            </span>
+                                            <span>
+                                                {threadData.author.totalLikes}
+                                            </span>
+                                        </div>
                                     </div>
                                 </CardContent>
                                 {/* <CardFooter>

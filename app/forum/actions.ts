@@ -292,7 +292,22 @@ export async function getForumPostById(
                     FROM forum_posts fp2
                     WHERE fp2.author_id = u.id
                     AND fp2.status = 'active'
-                ) as author_post_count
+                ) as author_post_count,
+                (
+                    SELECT COALESCE(SUM(total_likes), 0)
+                    FROM (
+                        SELECT COUNT(DISTINCT fl2.id) as total_likes
+                        FROM forum_posts fp2
+                        LEFT JOIN forum_likes fl2 ON fp2.id = fl2.post_id
+                        WHERE fp2.author_id = u.id
+                        AND fp2.status = 'active'
+                        GROUP BY fp2.id
+                        UNION ALL
+                        SELECT COALESCE(like_count, 0) as total_likes
+                        FROM forum_comments fc3
+                        WHERE fc3.author_id = u.id
+                    ) likes_count
+                ) as author_total_likes
             FROM forum_posts fp
             LEFT JOIN forum_categories fc ON fp.category_id = fc.id
             LEFT JOIN users u ON fp.author_id = u.id
