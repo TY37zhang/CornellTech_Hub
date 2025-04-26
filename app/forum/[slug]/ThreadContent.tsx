@@ -804,14 +804,6 @@ export default function ThreadContent({
                                             • Do not share personal or sensitive
                                             information
                                         </p>
-                                        <p>
-                                            • Cite sources when providing
-                                            factual information
-                                        </p>
-                                        <p>
-                                            • Report inappropriate content to
-                                            moderators
-                                        </p>
                                     </div>
                                 </CardContent>
                             </Card>
