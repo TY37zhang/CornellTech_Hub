@@ -330,6 +330,7 @@ interface ForumCommentResponse {
     author_avatar: string | null;
     author_id: string;
     like_count: number;
+    dislike_count: number;
 }
 
 export async function getForumComments(
@@ -344,11 +345,8 @@ export async function getForumComments(
                 u.name as author_name,
                 u.avatar_url as author_avatar,
                 u.id as author_id,
-                (
-                    SELECT COUNT(*)
-                    FROM forum_likes fl
-                    WHERE fl.post_id = fc.id
-                ) as like_count
+                COALESCE(fc.like_count, 0) as like_count,
+                COALESCE(fc.dislike_count, 0) as dislike_count
             FROM forum_comments fc
             LEFT JOIN users u ON fc.author_id = u.id
             WHERE fc.post_id = ${postId}
@@ -480,5 +478,117 @@ export async function checkUserLikeStatus(postId: string, userId: string) {
     } catch (error) {
         console.error("Error checking like status:", error);
         return { hasLiked: false };
+    }
+}
+
+export async function toggleCommentLike(
+    commentId: string,
+    userId: string,
+    action: "like" | "dislike"
+) {
+    try {
+        // First check if user has already voted on this comment
+        const existingVote = await sql`
+            SELECT action_type 
+            FROM comment_votes 
+            WHERE comment_id = ${commentId} 
+            AND user_id = ${userId}
+        `;
+
+        let result;
+
+        if (existingVote.length > 0) {
+            const currentAction = existingVote[0].action_type;
+
+            if (currentAction === action) {
+                // User is removing their vote
+                await sql`
+                    DELETE FROM comment_votes 
+                    WHERE comment_id = ${commentId} 
+                    AND user_id = ${userId}
+                `;
+
+                // Decrement the count
+                result = await sql`
+                    UPDATE forum_comments
+                    SET 
+                        like_count = CASE 
+                            WHEN ${action} = 'like' THEN GREATEST(like_count - 1, 0)
+                            ELSE like_count 
+                        END,
+                        dislike_count = CASE 
+                            WHEN ${action} = 'dislike' THEN GREATEST(dislike_count - 1, 0)
+                            ELSE dislike_count 
+                        END
+                    WHERE id = ${commentId}
+                    RETURNING like_count, dislike_count, post_id;
+                `;
+            } else {
+                // User is changing their vote from like to dislike or vice versa
+                await sql`
+                    UPDATE comment_votes 
+                    SET action_type = ${action}
+                    WHERE comment_id = ${commentId} 
+                    AND user_id = ${userId}
+                `;
+
+                // Update both counts
+                result = await sql`
+                    UPDATE forum_comments
+                    SET 
+                        like_count = CASE 
+                            WHEN ${action} = 'like' THEN like_count + 1
+                            WHEN ${currentAction} = 'like' THEN GREATEST(like_count - 1, 0)
+                            ELSE like_count 
+                        END,
+                        dislike_count = CASE 
+                            WHEN ${action} = 'dislike' THEN dislike_count + 1
+                            WHEN ${currentAction} = 'dislike' THEN GREATEST(dislike_count - 1, 0)
+                            ELSE dislike_count 
+                        END
+                    WHERE id = ${commentId}
+                    RETURNING like_count, dislike_count, post_id;
+                `;
+            }
+        } else {
+            // New vote
+            await sql`
+                INSERT INTO comment_votes (comment_id, user_id, action_type)
+                VALUES (${commentId}, ${userId}, ${action})
+            `;
+
+            // Increment the appropriate counter
+            result = await sql`
+                UPDATE forum_comments
+                SET 
+                    like_count = CASE 
+                        WHEN ${action} = 'like' THEN like_count + 1
+                        ELSE like_count 
+                    END,
+                    dislike_count = CASE 
+                        WHEN ${action} = 'dislike' THEN dislike_count + 1
+                        ELSE dislike_count 
+                    END
+                WHERE id = ${commentId}
+                RETURNING like_count, dislike_count, post_id;
+            `;
+        }
+
+        if (!result?.length) {
+            throw new Error("Comment not found");
+        }
+
+        // Revalidate the page
+        revalidatePath(`/forum/${result[0].post_id}`);
+
+        return {
+            success: true,
+            likeCount: result[0].like_count,
+            dislikeCount: result[0].dislike_count,
+            userAction: existingVote.length > 0 ? null : action, // Return the user's current action
+        };
+    } catch (error) {
+        console.error("Error toggling comment like:", error);
+        return { success: false, error: "Failed to update like status" };
     }
 }

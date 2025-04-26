@@ -11,31 +11,15 @@ import {
     SortAsc,
 } from "lucide-react";
 import { neon } from "@neondatabase/serverless";
-
-import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import {
-    getForumPostById,
-    getForumComments,
-    createForumComment,
-} from "../actions";
+import { getForumPostById, getForumComments } from "../actions";
 import ThreadContent from "./ThreadContent";
+import { notFound } from "next/navigation";
+import { getThreadData } from "./actions";
 
 // Helper function to format date
-function formatDate(date: string): string {
+function formatDate(dateStr: string): string {
     const now = new Date();
-    const postDate = new Date(date);
+    const postDate = new Date(dateStr);
     const diffTime = Math.abs(now.getTime() - postDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -55,68 +39,46 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export default async function ThreadPage({
-    params,
-}: {
-    params: { slug: string };
-}) {
-    if (!params?.slug) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+async function getThreadData(slug: string) {
+    const post = await getForumPostById(slug);
+    if (!post) {
         return null;
     }
 
-    const slug = params.slug;
-
-    // Since this is now a server component, we can await the data directly
-    const post = await getForumPostById(slug);
-    const threadComments = await getForumComments(slug);
-
-    if (!post) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-4">Error</h2>
-                    <p className="text-muted-foreground">Thread not found</p>
-                    <Button className="mt-4" asChild>
-                        <Link href="/forum">Back to Forum</Link>
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    // Get the author's total post count using neon
-    const sql = neon(process.env.DATABASE_URL);
-    const authorPostCount = await sql`
-        SELECT COUNT(*) as post_count 
-        FROM forum_posts 
-        WHERE author_id = ${post.author_id}
-    `;
+    const comments = await getForumComments(slug);
 
     // Format the thread data
     const threadData = {
         id: post.id,
         title: post.title,
+        content: post.content,
         category: post.category_name,
+        createdAt: formatDate(post.created_at),
         author: {
             name: post.author_name,
             avatar: post.author_avatar || "/placeholder.svg?height=40&width=40",
             program: "Student",
             joinDate: formatDate(post.created_at),
-            postCount: parseInt(authorPostCount[0].post_count, 10),
+            postCount: post.reply_count || 0,
         },
-        createdAt: formatDate(post.created_at),
-        content: post.content,
-        tags: post.tags,
+        tags: post.tags || [],
         stats: {
-            replies: post.reply_count,
-            likes: post.like_count,
-            views: post.view_count,
+            replies: comments.length,
+            likes: post.like_count || 0,
+            views: post.view_count || 0,
         },
     };
 
     // Format the comments
-    const formattedComments = threadComments.map((comment) => ({
+    const formattedComments = comments.map((comment) => ({
         id: comment.id,
+        content: comment.content,
+        createdAt: formatDate(comment.created_at),
+        like_count: comment.like_count || 0,
+        dislike_count: comment.dislike_count || 0,
         author: {
             name: comment.author_name,
             avatar:
@@ -124,27 +86,39 @@ export default async function ThreadPage({
             program: "Student",
             joinDate: formatDate(comment.created_at),
         },
-        createdAt: formatDate(comment.created_at),
-        content: comment.content,
-        likes: comment.like_count,
-        isAccepted: false,
     }));
 
+    return {
+        threadData,
+        comments: formattedComments,
+    };
+}
+
+interface PageProps {
+    params: Promise<{ slug: string }>;
+}
+
+export default async function ThreadPage({ params }: PageProps) {
+    // Await the params object
+    const resolvedParams = await params;
+
+    // Validate params first
+    if (!resolvedParams?.slug) {
+        notFound();
+    }
+
+    // Get the data
+    const data = await getThreadData(resolvedParams.slug);
+    if (!data) {
+        notFound();
+    }
+
     return (
-        <Suspense
-            fallback={
-                <div className="flex min-h-screen items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-                        <p className="mt-4 text-lg">Loading thread...</p>
-                    </div>
-                </div>
-            }
-        >
+        <Suspense fallback={<div>Loading...</div>}>
             <ThreadContent
-                threadData={threadData}
-                comments={formattedComments}
-                threadId={slug}
+                threadData={data.threadData}
+                comments={data.comments}
+                threadId={resolvedParams.slug}
             />
         </Suspense>
     );

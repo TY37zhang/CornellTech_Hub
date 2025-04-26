@@ -35,6 +35,7 @@ import {
     checkUserLikeStatus,
 } from "../actions";
 import { LikeButton } from "@/app/components/LikeButton";
+import { CommentActions } from "@/app/components/CommentActions";
 
 interface ThreadContentProps {
     threadData: any;
@@ -372,7 +373,7 @@ export default function ThreadContent({
                                                 threadData.stats.likes
                                             }
                                         />
-                                        <Button
+                                        {/* <Button
                                             variant="ghost"
                                             size="sm"
                                             className="gap-1"
@@ -380,7 +381,7 @@ export default function ThreadContent({
                                         >
                                             <Share2 className="h-4 w-4" />
                                             <span>Share</span>
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -394,7 +395,7 @@ export default function ThreadContent({
                                                 {isSaved ? "Saved" : "Save"}
                                             </span>
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             variant="ghost"
                                             size="sm"
                                             className="gap-1"
@@ -402,7 +403,7 @@ export default function ThreadContent({
                                         >
                                             <Flag className="h-4 w-4" />
                                             <span>Report</span>
-                                        </Button>
+                                        </Button> */}
                                     </div>
                                 </CardFooter>
                             </Card>
@@ -485,22 +486,16 @@ export default function ThreadContent({
                                         </CardContent>
                                         <CardFooter className="flex items-center justify-between pt-1">
                                             <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="gap-1"
-                                                >
-                                                    <ThumbsUp className="h-4 w-4" />
-                                                    <span>{reply.likes}</span>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="gap-1"
-                                                >
-                                                    <ThumbsDown className="h-4 w-4" />
-                                                </Button>
-                                                <Button
+                                                <CommentActions
+                                                    commentId={reply.id}
+                                                    initialLikeCount={
+                                                        reply.like_count || 0
+                                                    }
+                                                    initialDislikeCount={
+                                                        reply.dislike_count || 0
+                                                    }
+                                                />
+                                                {/* <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     className="gap-1"
@@ -515,7 +510,7 @@ export default function ThreadContent({
                                                 >
                                                     <Flag className="h-4 w-4" />
                                                     <span>Report</span>
-                                                </Button>
+                                                </Button> */}
                                             </div>
                                         </CardFooter>
                                     </Card>
