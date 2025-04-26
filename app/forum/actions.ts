@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { neon } from "@neondatabase/serverless";
 
 export async function createThread({
     title,
@@ -408,5 +409,76 @@ export async function createForumComment({
                     ? error.message
                     : "Failed to create comment",
         };
+    }
+}
+
+export async function toggleForumLike(postId: string, userId: string) {
+    try {
+        // Check if the user has already liked the post
+        const existingLike = await sql`
+            SELECT id FROM forum_likes 
+            WHERE post_id = ${postId} AND user_id = ${userId}
+        `;
+
+        if (existingLike.length > 0) {
+            // Unlike: Remove the like record
+            await sql`
+                DELETE FROM forum_likes 
+                WHERE post_id = ${postId} AND user_id = ${userId}
+            `;
+
+            revalidatePath(`/forum/${postId}`);
+
+            // Get the new like count
+            const likeCount = await sql`
+                SELECT COUNT(*) as count 
+                FROM forum_likes 
+                WHERE post_id = ${postId}
+            `;
+
+            return {
+                success: true,
+                action: "unliked",
+                newCount: parseInt(likeCount[0].count),
+            };
+        } else {
+            // Like: Create new like record
+            await sql`
+                INSERT INTO forum_likes (post_id, user_id) 
+                VALUES (${postId}, ${userId})
+            `;
+
+            revalidatePath(`/forum/${postId}`);
+
+            // Get the new like count
+            const likeCount = await sql`
+                SELECT COUNT(*) as count 
+                FROM forum_likes 
+                WHERE post_id = ${postId}
+            `;
+
+            return {
+                success: true,
+                action: "liked",
+                newCount: parseInt(likeCount[0].count),
+            };
+        }
+    } catch (error) {
+        console.error("Error toggling forum like:", error);
+        return { success: false, error: "Failed to update like status" };
+    }
+}
+
+export async function checkUserLikeStatus(postId: string, userId: string) {
+    try {
+        const existingLike = await sql`
+            SELECT id FROM forum_likes 
+            WHERE post_id = ${postId} AND user_id = ${userId}
+        `;
+
+        return { hasLiked: existingLike.length > 0 };
+    } catch (error) {
+        console.error("Error checking like status:", error);
+        return { hasLiked: false };
     }
 }

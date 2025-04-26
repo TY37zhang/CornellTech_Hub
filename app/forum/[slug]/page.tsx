@@ -10,6 +10,7 @@ import {
     ThumbsUp,
     SortAsc,
 } from "lucide-react";
+import { neon } from "@neondatabase/serverless";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -59,9 +60,15 @@ export default async function ThreadPage({
 }: {
     params: { slug: string };
 }) {
+    if (!params?.slug) {
+        return null;
+    }
+
+    const slug = params.slug;
+
     // Since this is now a server component, we can await the data directly
-    const post = await getForumPostById(params.slug);
-    const threadComments = await getForumComments(params.slug);
+    const post = await getForumPostById(slug);
+    const threadComments = await getForumComments(slug);
 
     if (!post) {
         return (
@@ -77,6 +84,14 @@ export default async function ThreadPage({
         );
     }
 
+    // Get the author's total post count using neon
+    const sql = neon(process.env.DATABASE_URL);
+    const authorPostCount = await sql`
+        SELECT COUNT(*) as post_count 
+        FROM forum_posts 
+        WHERE author_id = ${post.author_id}
+    `;
+
     // Format the thread data
     const threadData = {
         id: post.id,
@@ -87,6 +102,7 @@ export default async function ThreadPage({
             avatar: post.author_avatar || "/placeholder.svg?height=40&width=40",
             program: "Student",
             joinDate: formatDate(post.created_at),
+            postCount: parseInt(authorPostCount[0].post_count, 10),
         },
         createdAt: formatDate(post.created_at),
         content: post.content,
@@ -128,7 +144,7 @@ export default async function ThreadPage({
             <ThreadContent
                 threadData={threadData}
                 comments={formattedComments}
-                threadId={params.slug}
+                threadId={slug}
             />
         </Suspense>
     );

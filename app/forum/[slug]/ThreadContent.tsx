@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -27,7 +27,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { createForumComment, getForumComments } from "../actions";
+import {
+    createForumComment,
+    getForumComments,
+    getForumPostById,
+    toggleForumLike,
+    checkUserLikeStatus,
+} from "../actions";
+import { LikeButton } from "@/app/components/LikeButton";
 
 interface ThreadContentProps {
     threadData: any;
@@ -50,16 +57,47 @@ function formatDate(date: string | Date): string {
 }
 
 export default function ThreadContent({
-    threadData,
+    threadData: initialThreadData,
     comments: initialComments,
     threadId,
 }: ThreadContentProps) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [threadData, setThreadData] = useState(initialThreadData);
     const [comments, setComments] = useState(initialComments);
     const [newComment, setNewComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [commentError, setCommentError] = useState<string | null>(null);
+    const [isLikeLoading, setIsLikeLoading] = useState(false);
+    const [hasLiked, setHasLiked] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+
+    // Function to refresh thread data
+    const refreshThreadData = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/forum/posts/${threadId}`);
+            const data = await response.json();
+            if (data.success) {
+                setThreadData(data.post);
+            }
+        } catch (error) {
+            console.error("Error refreshing thread data:", error);
+        }
+    }, [threadId]);
+
+    // Check initial like status
+    useEffect(() => {
+        async function checkLikeStatus() {
+            if (session?.user?.id) {
+                const { hasLiked: liked } = await checkUserLikeStatus(
+                    threadId,
+                    session.user.id
+                );
+                setHasLiked(liked);
+            }
+        }
+        checkLikeStatus();
+    }, [session?.user?.id, threadId]);
 
     const handleAddComment = async () => {
         if (!session?.user) {
@@ -119,6 +157,55 @@ export default function ThreadContent({
         }
     };
 
+    const handleLike = async () => {
+        if (!session?.user) {
+            router.push("/auth/signin");
+            return;
+        }
+
+        try {
+            setIsLikeLoading(true);
+            const result = await toggleForumLike(threadId, session.user.id);
+
+            if (result.success) {
+                // Update local state
+                setHasLiked(result.action === "liked");
+                // Refresh the entire thread data
+                await refreshThreadData();
+            }
+        } catch (error) {
+            console.error("Error updating like:", error);
+        } finally {
+            setIsLikeLoading(false);
+        }
+    };
+
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            // You could add a toast notification here
+        } catch (err) {
+            console.error("Failed to copy link:", err);
+        }
+    };
+
+    const handleSave = () => {
+        if (!session?.user) {
+            router.push("/auth/signin");
+            return;
+        }
+        setIsSaved(!isSaved);
+        // TODO: Implement API call to save/unsave the thread
+    };
+
+    const handleReport = () => {
+        if (!session?.user) {
+            router.push("/auth/signin");
+            return;
+        }
+        // TODO: Implement report dialog/form
+    };
+
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
         <Card>
@@ -174,17 +261,16 @@ export default function ThreadContent({
                     <div className="container px-4 md:px-6">
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" asChild>
+                                <Button
+                                    variant="ghost"
+                                    asChild
+                                    className="gap-2 text-muted-foreground"
+                                >
                                     <Link href="/forum">
                                         <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">
-                                            Back to forum
-                                        </span>
+                                        Back to forum
                                     </Link>
                                 </Button>
-                                <p className="text-sm text-muted-foreground">
-                                    Back to forum
-                                </p>
                             </div>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
@@ -280,18 +366,17 @@ export default function ThreadContent({
                                 </CardContent>
                                 <CardFooter className="flex items-center justify-between pt-1">
                                     <div className="flex items-center gap-2">
+                                        <LikeButton
+                                            postId={threadId}
+                                            initialLikeCount={
+                                                threadData.stats.likes
+                                            }
+                                        />
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             className="gap-1"
-                                        >
-                                            <ThumbsUp className="h-4 w-4" />
-                                            <span>Like</span>
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="gap-1"
+                                            onClick={handleShare}
                                         >
                                             <Share2 className="h-4 w-4" />
                                             <span>Share</span>
@@ -299,15 +384,21 @@ export default function ThreadContent({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="gap-1"
+                                            className={`gap-1 ${
+                                                isSaved ? "text-primary" : ""
+                                            }`}
+                                            onClick={handleSave}
                                         >
                                             <BookmarkPlus className="h-4 w-4" />
-                                            <span>Save</span>
+                                            <span>
+                                                {isSaved ? "Saved" : "Save"}
+                                            </span>
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             className="gap-1"
+                                            onClick={handleReport}
                                         >
                                             <Flag className="h-4 w-4" />
                                             <span>Report</span>
@@ -478,25 +569,20 @@ export default function ThreadContent({
                                             <span className="text-muted-foreground">
                                                 Posts
                                             </span>
-                                            <span>42</span>
-                                        </div>
-                                        <Separator />
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-muted-foreground">
-                                                Reputation
+                                            <span>
+                                                {threadData.author.postCount}
                                             </span>
-                                            <span>156</span>
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter>
+                                {/* <CardFooter>
                                     <Button
                                         variant="outline"
                                         className="w-full"
                                     >
                                         View Profile
                                     </Button>
-                                </CardFooter>
+                                </CardFooter> */}
                             </Card>
 
                             {/* Related Threads */}
