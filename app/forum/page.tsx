@@ -34,7 +34,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { getForumPosts } from "./actions";
+import { getForumPosts, getForumStats, getTopContributors } from "./actions";
 
 // Define thread type
 interface Thread {
@@ -110,12 +110,31 @@ export default function ForumPage() {
     const [activeTab, setActiveTab] = useState("all");
     const [threads, setThreads] = useState<Thread[]>([]);
     const [loading, setLoading] = useState(true);
+    const [forumStats, setForumStats] = useState({
+        totalThreads: 0,
+        totalPosts: 0,
+        activeUsers: 0,
+        newToday: 0,
+    });
+    const [topContributors, setTopContributors] = useState<
+        Array<{
+            id: string;
+            name: string;
+            avatar_url: string | null;
+            post_count: number;
+        }>
+    >([]);
 
-    // Fetch threads on component mount
+    // Fetch threads, stats, and top contributors on component mount
     useEffect(() => {
-        async function fetchThreads() {
+        async function fetchData() {
             try {
-                const posts = await getForumPosts();
+                const [posts, stats, contributors] = await Promise.all([
+                    getForumPosts(),
+                    getForumStats(),
+                    getTopContributors(),
+                ]);
+
                 const formattedThreads: Thread[] = posts.map((post) => ({
                     id: post.id,
                     title: post.title,
@@ -139,14 +158,17 @@ export default function ForumPage() {
                         new Date(post.created_at).getTime() >
                         Date.now() - 7 * 24 * 60 * 60 * 1000,
                 }));
+
                 setThreads(formattedThreads);
+                setForumStats(stats);
+                setTopContributors(contributors);
             } catch (error) {
-                console.error("Error fetching threads:", error);
+                console.error("Error fetching data:", error);
             } finally {
                 setLoading(false);
             }
         }
-        fetchThreads();
+        fetchData();
     }, []);
 
     // Filtered and sorted threads
@@ -490,7 +512,7 @@ export default function ForumPage() {
                             </div>
 
                             <div className="lg:w-[300px] flex-none">
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     <Card>
                                         <CardHeader>
                                             <CardTitle>
@@ -613,19 +635,19 @@ export default function ForumPage() {
                                     </Card>
 
                                     <Card>
-                                        <CardHeader>
+                                        <CardHeader className="pb-2">
                                             <CardTitle>Forum Stats</CardTitle>
                                             <CardDescription>
                                                 Community activity at a glance
                                             </CardDescription>
                                         </CardHeader>
-                                        <CardContent className="space-y-4">
+                                        <CardContent className="space-y-2 pb-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm text-muted-foreground">
                                                     Total Threads
                                                 </span>
                                                 <span className="font-medium">
-                                                    248
+                                                    {forumStats.totalThreads}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
@@ -633,15 +655,7 @@ export default function ForumPage() {
                                                     Total Posts
                                                 </span>
                                                 <span className="font-medium">
-                                                    1,842
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm text-muted-foreground">
-                                                    Active Users
-                                                </span>
-                                                <span className="font-medium">
-                                                    127
+                                                    {forumStats.totalPosts}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
@@ -649,11 +663,10 @@ export default function ForumPage() {
                                                     New Today
                                                 </span>
                                                 <span className="font-medium">
-                                                    12
+                                                    {forumStats.newToday}
                                                 </span>
                                             </div>
                                         </CardContent>
-                                        <CardFooter></CardFooter>
                                     </Card>
 
                                     <Card>
@@ -666,63 +679,47 @@ export default function ForumPage() {
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage
-                                                        src="/placeholder.svg?height=40&width=40"
-                                                        alt="@user1"
-                                                    />
-                                                    <AvatarFallback>
-                                                        U1
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1">
-                                                    <p className="font-medium">
-                                                        Alex Johnson
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        42 posts
-                                                    </p>
+                                            {topContributors.map(
+                                                (contributor) => (
+                                                    <div
+                                                        key={contributor.id}
+                                                        className="flex items-center gap-3"
+                                                    >
+                                                        <Avatar>
+                                                            <AvatarImage
+                                                                src={
+                                                                    contributor.avatar_url ||
+                                                                    "/placeholder.svg?height=40&width=40"
+                                                                }
+                                                                alt={`@${contributor.name}`}
+                                                            />
+                                                            <AvatarFallback>
+                                                                {getInitials(
+                                                                    contributor.name
+                                                                )}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-1">
+                                                            <p className="font-medium">
+                                                                {
+                                                                    contributor.name
+                                                                }
+                                                            </p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {
+                                                                    contributor.post_count
+                                                                }{" "}
+                                                                posts
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            )}
+                                            {topContributors.length === 0 && (
+                                                <div className="text-center text-sm text-muted-foreground">
+                                                    No contributors yet
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage
-                                                        src="/placeholder.svg?height=40&width=40"
-                                                        alt="@user2"
-                                                    />
-                                                    <AvatarFallback>
-                                                        U2
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1">
-                                                    <p className="font-medium">
-                                                        Maya Patel
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        38 posts
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage
-                                                        src="/placeholder.svg?height=40&width=40"
-                                                        alt="@user3"
-                                                    />
-                                                    <AvatarFallback>
-                                                        U3
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1">
-                                                    <p className="font-medium">
-                                                        David Kim
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        31 posts
-                                                    </p>
-                                                </div>
-                                            </div>
+                                            )}
                                         </CardContent>
                                     </Card>
                                 </div>

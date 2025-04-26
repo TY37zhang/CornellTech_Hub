@@ -610,3 +610,96 @@ export async function toggleCommentLike(
         return { success: false, error: "Failed to update like status" };
     }
 }
+
+export async function getForumStats() {
+    try {
+        // Get total threads count
+        const totalThreadsResult = await sql`
+            SELECT COUNT(*) as count FROM forum_posts;
+        `;
+        const totalThreads = totalThreadsResult[0]?.count || 0;
+
+        // Get total posts count (threads + comments)
+        const totalPostsResult = await sql`
+            SELECT 
+                (SELECT COUNT(*) FROM forum_posts) + 
+                (SELECT COUNT(*) FROM forum_comments) as count;
+        `;
+        const totalPosts = totalPostsResult[0]?.count || 0;
+
+        // Get active users count (users who have posted or commented in the last 30 days)
+        const activeUsersResult = await sql`
+            SELECT COUNT(DISTINCT user_id) as count
+            FROM (
+                SELECT author_id as user_id FROM forum_posts 
+                WHERE created_at > NOW() - INTERVAL '30 days'
+                UNION
+                SELECT author_id as user_id FROM forum_comments 
+                WHERE created_at > NOW() - INTERVAL '30 days'
+            ) as active_users;
+        `;
+        const activeUsers = activeUsersResult[0]?.count || 0;
+
+        // Get new threads today
+        const newTodayResult = await sql`
+            SELECT COUNT(*) as count 
+            FROM forum_posts 
+            WHERE DATE(created_at) = CURRENT_DATE;
+        `;
+        const newToday = newTodayResult[0]?.count || 0;
+
+        return {
+            totalThreads,
+            totalPosts,
+            activeUsers,
+            newToday,
+        };
+    } catch (error) {
+        console.error("Error fetching forum stats:", error);
+        return {
+            totalThreads: 0,
+            totalPosts: 0,
+            activeUsers: 0,
+            newToday: 0,
+        };
+    }
+}
+
+interface TopContributor {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    post_count: number;
+}
+
+export async function getTopContributors(): Promise<TopContributor[]> {
+    try {
+        const contributors = await sql`
+            WITH user_activity AS (
+                SELECT 
+                    u.id,
+                    u.name,
+                    u.avatar_url,
+                    COUNT(DISTINCT fp.id) + COUNT(DISTINCT fc.id) as total_posts
+                FROM users u
+                LEFT JOIN forum_posts fp ON u.id = fp.author_id
+                LEFT JOIN forum_comments fc ON u.id = fc.author_id
+                GROUP BY u.id, u.name, u.avatar_url
+                HAVING COUNT(DISTINCT fp.id) + COUNT(DISTINCT fc.id) > 0
+                ORDER BY total_posts DESC
+                LIMIT 3
+            )
+            SELECT 
+                id,
+                name,
+                avatar_url,
+                total_posts as post_count
+            FROM user_activity;
+        `;
+
+        return contributors;
+    } catch (error) {
+        console.error("Error fetching top contributors:", error);
+        return [];
+    }
+}
