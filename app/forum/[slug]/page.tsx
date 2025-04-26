@@ -62,7 +62,7 @@ async function getThreadData(slug: string) {
             avatar: post.author_avatar || "/placeholder.svg?height=40&width=40",
             program: "Student",
             joinDate: formatDate(post.created_at),
-            postCount: post.reply_count || 0,
+            postCount: post.author_post_count || 0,
         },
         tags: post.tags || [],
         stats: {

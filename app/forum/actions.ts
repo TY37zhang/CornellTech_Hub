@@ -286,7 +286,13 @@ export async function getForumPostById(
                 u.id as author_id,
                 COUNT(DISTINCT fc2.id) as reply_count,
                 COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count
+                COUNT(DISTINCT fv.id) as view_count,
+                (
+                    SELECT COUNT(*)
+                    FROM forum_posts fp2
+                    WHERE fp2.author_id = u.id
+                    AND fp2.status = 'active'
+                ) as author_post_count
             FROM forum_posts fp
             LEFT JOIN forum_categories fc ON fp.category_id = fc.id
             LEFT JOIN users u ON fp.author_id = u.id
@@ -308,9 +314,6 @@ export async function getForumPostById(
             FROM forum_post_tags
             WHERE post_id = ${id}
         `;
-
-        // For view count, we'll just return the current data without incrementing
-        // since we need a valid user ID for the foreign key constraint
 
         return {
             ...post[0],
