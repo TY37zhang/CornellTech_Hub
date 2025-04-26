@@ -12,6 +12,7 @@ import {
     Share2,
     ThumbsDown,
     ThumbsUp,
+    SortAsc,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,13 @@ import {
 } from "../actions";
 import { LikeButton } from "@/app/components/LikeButton";
 import { CommentActions } from "@/app/components/CommentActions";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface ThreadContentProps {
     threadData: any;
@@ -57,6 +65,53 @@ function formatDate(date: string | Date): string {
     return `${Math.floor(diffDays / 365)} years ago`;
 }
 
+// Add this new function at the top level
+async function getSortedComments(postId: string, sortBy: string) {
+    try {
+        const comments = await getForumComments(postId);
+        let sortedComments = [...comments];
+
+        switch (sortBy) {
+            case "recent":
+                sortedComments.sort(
+                    (a, b) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime()
+                );
+                break;
+            case "most-liked":
+                sortedComments.sort(
+                    (a, b) => (b.like_count || 0) - (a.like_count || 0)
+                );
+                break;
+            case "most-disliked":
+                sortedComments.sort(
+                    (a, b) => (b.dislike_count || 0) - (a.dislike_count || 0)
+                );
+                break;
+        }
+
+        return sortedComments.map((comment) => ({
+            id: comment.id,
+            content: comment.content,
+            createdAt: formatDate(comment.created_at),
+            like_count: comment.like_count || 0,
+            dislike_count: comment.dislike_count || 0,
+            author: {
+                name: comment.author_name,
+                avatar:
+                    comment.author_avatar ||
+                    "/placeholder.svg?height=40&width=40",
+                program: "Student",
+                joinDate: formatDate(comment.created_at),
+            },
+        }));
+    } catch (error) {
+        console.error("Error sorting comments:", error);
+        return [];
+    }
+}
+
 export default function ThreadContent({
     threadData: initialThreadData,
     comments: initialComments,
@@ -72,6 +127,9 @@ export default function ThreadContent({
     const [isLikeLoading, setIsLikeLoading] = useState(false);
     const [hasLiked, setHasLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [sortBy, setSortBy] = useState<string>("recent");
+    const [sortedComments, setSortedComments] = useState(initialComments);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Function to refresh thread data
     const refreshThreadData = useCallback(async () => {
@@ -206,6 +264,25 @@ export default function ThreadContent({
         }
         // TODO: Implement report dialog/form
     };
+
+    // Handle sort change
+    const handleSort = async (value: string) => {
+        try {
+            setIsLoading(true);
+            setSortBy(value);
+            const sorted = await getSortedComments(threadId, value);
+            setSortedComments(sorted);
+        } catch (error) {
+            console.error("Error sorting comments:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Initial sort on component mount
+    useEffect(() => {
+        handleSort("recent");
+    }, []);
 
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
@@ -417,104 +494,145 @@ export default function ThreadContent({
                                             ? "Reply"
                                             : "Replies"}
                                     </h2>
+                                    <Select
+                                        value={sortBy}
+                                        onValueChange={handleSort}
+                                        disabled={isLoading}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Sort by..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="recent">
+                                                Most Recent
+                                            </SelectItem>
+                                            <SelectItem value="most-liked">
+                                                Most Liked
+                                            </SelectItem>
+                                            <SelectItem value="most-disliked">
+                                                Most Disliked
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
-                                {comments.map((reply) => (
-                                    <Card
-                                        key={reply.id}
-                                        className={
-                                            reply.isAccepted
-                                                ? "border-green-500 dark:border-green-700"
-                                                : ""
-                                        }
-                                    >
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-10 w-10">
-                                                        <AvatarImage
-                                                            src={
-                                                                reply.author
-                                                                    .avatar ||
-                                                                "/placeholder.svg"
+                                {isLoading ? (
+                                    <div className="flex justify-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {sortedComments.map((reply) => (
+                                            <Card
+                                                key={reply.id}
+                                                className={
+                                                    reply.isAccepted
+                                                        ? "border-green-500 dark:border-green-700"
+                                                        : ""
+                                                }
+                                            >
+                                                <CardHeader className="pb-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="h-10 w-10">
+                                                                <AvatarImage
+                                                                    src={
+                                                                        reply
+                                                                            .author
+                                                                            .avatar ||
+                                                                        "/placeholder.svg"
+                                                                    }
+                                                                    alt={
+                                                                        reply
+                                                                            .author
+                                                                            .name
+                                                                    }
+                                                                />
+                                                                <AvatarFallback>
+                                                                    {
+                                                                        reply
+                                                                            .author
+                                                                            .name[0]
+                                                                    }
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <CardTitle className="text-base">
+                                                                    {
+                                                                        reply
+                                                                            .author
+                                                                            .name
+                                                                    }
+                                                                </CardTitle>
+                                                                <CardDescription>
+                                                                    {
+                                                                        reply
+                                                                            .author
+                                                                            .program
+                                                                    }{" "}
+                                                                    • Joined{" "}
+                                                                    {
+                                                                        reply
+                                                                            .author
+                                                                            .joinDate
+                                                                    }
+                                                                </CardDescription>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {reply.isAccepted && (
+                                                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400">
+                                                                    Best Answer
+                                                                </Badge>
+                                                            )}
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {
+                                                                    reply.createdAt
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </CardHeader>
+                                                <CardContent className="pb-3">
+                                                    <div className="whitespace-pre-line text-muted-foreground">
+                                                        {reply.content}
+                                                    </div>
+                                                </CardContent>
+                                                <CardFooter className="flex items-center justify-between pt-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <CommentActions
+                                                            commentId={reply.id}
+                                                            initialLikeCount={
+                                                                reply.like_count ||
+                                                                0
                                                             }
-                                                            alt={
-                                                                reply.author
-                                                                    .name
+                                                            initialDislikeCount={
+                                                                reply.dislike_count ||
+                                                                0
                                                             }
                                                         />
-                                                        <AvatarFallback>
-                                                            {
-                                                                reply.author
-                                                                    .name[0]
-                                                            }
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <CardTitle className="text-base">
-                                                            {reply.author.name}
-                                                        </CardTitle>
-                                                        <CardDescription>
-                                                            {
-                                                                reply.author
-                                                                    .program
-                                                            }{" "}
-                                                            • Joined{" "}
-                                                            {
-                                                                reply.author
-                                                                    .joinDate
-                                                            }
-                                                        </CardDescription>
+                                                        {/* <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="gap-1"
+                                                        >
+                                                            <Share2 className="h-4 w-4" />
+                                                            <span>Share</span>
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="gap-1"
+                                                        >
+                                                            <Flag className="h-4 w-4" />
+                                                            <span>Report</span>
+                                                        </Button> */}
                                                     </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {reply.isAccepted && (
-                                                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400">
-                                                            Best Answer
-                                                        </Badge>
-                                                    )}
-                                                    <span className="text-sm text-muted-foreground">
-                                                        {reply.createdAt}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="whitespace-pre-line text-muted-foreground">
-                                                {reply.content}
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="flex items-center justify-between pt-1">
-                                            <div className="flex items-center gap-2">
-                                                <CommentActions
-                                                    commentId={reply.id}
-                                                    initialLikeCount={
-                                                        reply.like_count || 0
-                                                    }
-                                                    initialDislikeCount={
-                                                        reply.dislike_count || 0
-                                                    }
-                                                />
-                                                {/* <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="gap-1"
-                                                >
-                                                    <Share2 className="h-4 w-4" />
-                                                    <span>Share</span>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="gap-1"
-                                                >
-                                                    <Flag className="h-4 w-4" />
-                                                    <span>Report</span>
-                                                </Button> */}
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
-                                ))}
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Reply Form */}

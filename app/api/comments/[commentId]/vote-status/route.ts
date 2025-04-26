@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 // Initialize the Neon client
 const sql = neon(process.env.DATABASE_URL || "");
 
-export async function GET(
-    request: Request,
-    { params }: { params: { commentId: string } }
-) {
+interface RouteParams {
+    params: { commentId: string };
+}
+
+export async function GET(request: Request, { params }: RouteParams) {
     try {
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get("userId");
