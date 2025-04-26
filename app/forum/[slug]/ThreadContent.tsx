@@ -112,6 +112,20 @@ async function getSortedComments(postId: string, sortBy: string) {
     }
 }
 
+// Add this new function at the top level
+async function getRelatedThreads(postId: string, categorySlug: string) {
+    try {
+        const response = await fetch(
+            `/api/forum/related?postId=${postId}&category=${categorySlug}`
+        );
+        const data = await response.json();
+        return data.posts;
+    } catch (error) {
+        console.error("Error fetching related threads:", error);
+        return [];
+    }
+}
+
 export default function ThreadContent({
     threadData: initialThreadData,
     comments: initialComments,
@@ -130,6 +144,7 @@ export default function ThreadContent({
     const [sortBy, setSortBy] = useState<string>("recent");
     const [sortedComments, setSortedComments] = useState(initialComments);
     const [isLoading, setIsLoading] = useState(false);
+    const [relatedThreads, setRelatedThreads] = useState<any[]>([]);
 
     // Function to refresh thread data
     const refreshThreadData = useCallback(async () => {
@@ -157,6 +172,18 @@ export default function ThreadContent({
         }
         checkLikeStatus();
     }, [session?.user?.id, threadId]);
+
+    // Fetch related threads on component mount
+    useEffect(() => {
+        async function fetchRelatedThreads() {
+            const threads = await getRelatedThreads(
+                threadId,
+                threadData.category.toLowerCase()
+            );
+            setRelatedThreads(threads);
+        }
+        fetchRelatedThreads();
+    }, [threadId, threadData.category]);
 
     const handleAddComment = async () => {
         if (!session?.user) {
@@ -714,63 +741,48 @@ export default function ThreadContent({
                                 </CardHeader>
                                 <CardContent className="pb-3">
                                     <div className="space-y-4">
-                                        <div className="space-y-1">
-                                            <Link
-                                                href="#"
-                                                className="font-medium hover:text-primary"
+                                        {relatedThreads.map((thread) => (
+                                            <div
+                                                key={thread.id}
+                                                className="space-y-1"
                                             >
-                                                Resume review for tech
-                                                internships
-                                            </Link>
-                                            <p className="text-xs text-muted-foreground">
-                                                15 replies • 3 days ago
+                                                <Link
+                                                    href={`/forum/${thread.id}`}
+                                                    className="font-medium hover:text-primary"
+                                                >
+                                                    {thread.title}
+                                                </Link>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {thread.reply_count} replies
+                                                    •{" "}
+                                                    {formatDate(
+                                                        thread.created_at
+                                                    )}
+                                                </p>
+                                            </div>
+                                        ))}
+                                        {relatedThreads.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">
+                                                No related threads found
                                             </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Link
-                                                href="#"
-                                                className="font-medium hover:text-primary"
-                                            >
-                                                How to prepare for system design
-                                                interviews
-                                            </Link>
-                                            <p className="text-xs text-muted-foreground">
-                                                8 replies • 1 week ago
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Link
-                                                href="#"
-                                                className="font-medium hover:text-primary"
-                                            >
-                                                Negotiating internship offers
-                                            </Link>
-                                            <p className="text-xs text-muted-foreground">
-                                                12 replies • 2 weeks ago
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Link
-                                                href="#"
-                                                className="font-medium hover:text-primary"
-                                            >
-                                                Best companies for remote
-                                                internships
-                                            </Link>
-                                            <p className="text-xs text-muted-foreground">
-                                                19 replies • 3 weeks ago
-                                            </p>
-                                        </div>
+                                        )}
                                     </div>
                                 </CardContent>
-                                <CardFooter>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        View More
-                                    </Button>
-                                </CardFooter>
+                                {relatedThreads.length > 0 && (
+                                    <CardFooter>
+                                        <Link
+                                            href={`/forum/categories/${threadData.category.toLowerCase()}`}
+                                            className="w-full"
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                className="w-full"
+                                            >
+                                                View More
+                                            </Button>
+                                        </Link>
+                                    </CardFooter>
+                                )}
                             </Card>
 
                             {/* Forum Guidelines */}

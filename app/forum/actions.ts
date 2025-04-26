@@ -703,3 +703,60 @@ export async function getTopContributors(): Promise<TopContributor[]> {
         return [];
     }
 }
+
+export async function getRelatedPosts(
+    currentPostId: string,
+    categorySlug: string,
+    limit: number = 4
+): Promise<ForumPostResponse[]> {
+    try {
+        const posts = await sql`
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count
+            FROM forum_posts fp
+            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN users u ON fp.author_id = u.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            WHERE fc.slug = ${categorySlug}
+            AND fp.id != ${currentPostId}
+            AND fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+            ORDER BY fp.created_at DESC
+            LIMIT ${limit}
+        `;
+
+        // Get tags for each post
+        const postsWithTags = await Promise.all(
+            posts.map(async (post) => {
+                const tags = await sql`
+                    SELECT tag
+                    FROM forum_post_tags
+                    WHERE post_id = ${post.id}
+                `;
+                return {
+                    ...post,
+                    tags: tags.map((t) => t.tag),
+                };
+            })
+        );
+
+        return postsWithTags;
+    } catch (error) {
+        console.error("Error fetching related posts:", error);
+        throw error;
+    }
+}
