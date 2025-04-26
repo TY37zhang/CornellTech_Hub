@@ -9,7 +9,8 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const courseId = await params.id;
+        const resolvedParams = await Promise.resolve(params);
+        const courseId = resolvedParams.id;
 
         // Fetch the specific course with its details
         const courseResult = await sql`
