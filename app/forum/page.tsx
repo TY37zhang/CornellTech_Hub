@@ -12,6 +12,10 @@ import {
     ThumbsUp,
     TrendingUp,
     Users,
+    ChevronsLeft,
+    ChevronsRight,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -144,6 +148,23 @@ function calculateHotScore(thread: {
         score: totalScore,
     };
 }
+
+// Pagination logic for visible page numbers
+const getVisiblePages = (current: number, total: number): number[] => {
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+    // Always show 5 buttons if possible
+    if (current <= 3) {
+        end = Math.min(5, total);
+    } else if (current >= total - 2) {
+        start = Math.max(1, total - 4);
+    }
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+};
 
 export default function ForumPage() {
     // State for search and filters
@@ -827,20 +848,31 @@ export default function ForumPage() {
                             >
                                 <Button
                                     variant="outline"
+                                    onClick={() => setCurrentPage(1)}
+                                    disabled={currentPage === 1}
+                                    aria-label="First page"
+                                    className="w-10 h-10 p-0"
+                                >
+                                    <ChevronsLeft className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="outline"
                                     onClick={() =>
                                         setCurrentPage((prev) =>
                                             Math.max(1, prev - 1)
                                         )
                                     }
                                     disabled={currentPage === 1}
+                                    aria-label="Previous page"
+                                    className="w-10 h-10 p-0"
                                 >
-                                    Previous
+                                    <ChevronLeft className="w-5 h-5" />
                                 </Button>
                                 <div className="flex items-center gap-1">
-                                    {Array.from(
-                                        { length: totalPages },
-                                        (_, i) => i + 1
-                                    ).map((page) => (
+                                    {getVisiblePages(
+                                        currentPage,
+                                        totalPages
+                                    ).map((page: number) => (
                                         <Button
                                             key={page}
                                             variant={
@@ -863,8 +895,19 @@ export default function ForumPage() {
                                         )
                                     }
                                     disabled={currentPage === totalPages}
+                                    aria-label="Next page"
+                                    className="w-10 h-10 p-0"
                                 >
-                                    Next
+                                    <ChevronRight className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    disabled={currentPage === totalPages}
+                                    aria-label="Last page"
+                                    className="w-10 h-10 p-0"
+                                >
+                                    <ChevronsRight className="w-5 h-5" />
                                 </Button>
                             </nav>
                         </div>
