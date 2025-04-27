@@ -10,6 +10,7 @@ import {
     Settings,
     LogOut,
     FileText,
+    BookmarkPlus,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -31,12 +32,12 @@ export function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                <div className="flex flex-1 items-center gap-2">
+            <div className="flex h-14 items-center px-2 md:container">
+                <div className="flex items-center gap-1 md:gap-2 w-[200px]">
                     <div className="md:hidden">
                         <MobileNav />
                     </div>
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-1 md:gap-2">
                         <Image
                             src="/placeholder.svg?height=32&width=32"
                             alt="Cornell Tech Logo"
@@ -44,62 +45,52 @@ export function SiteHeader() {
                             height={32}
                             className="rounded-md"
                         />
-                        <span className="text-xl font-bold">
+                        <span className="text-sm sm:text-base md:text-xl font-bold whitespace-nowrap">
                             Cornell Tech Hub
                         </span>
                     </Link>
                 </div>
-                <nav className="hidden md:flex items-center justify-center flex-1 gap-6 text-sm">
-                    <Link
-                        href="/"
-                        className={cn(
-                            "transition-colors hover:text-primary flex items-center gap-1",
-                            pathname === "/"
-                                ? "font-medium text-foreground"
-                                : "text-muted-foreground"
-                        )}
-                    >
-                        <Home className="h-4 w-4" />
-                        Home
-                    </Link>
-                    <Link
-                        href="/courses"
-                        className={cn(
-                            "transition-colors hover:text-primary flex items-center gap-1",
-                            pathname.startsWith("/courses")
-                                ? "font-medium text-foreground"
-                                : "text-muted-foreground"
-                        )}
-                    >
-                        <BookOpen className="h-4 w-4" />
-                        Courses
-                    </Link>
-                    <Link
-                        href="/forum"
-                        className={cn(
-                            "transition-colors hover:text-primary flex items-center gap-1",
-                            pathname.startsWith("/forum")
-                                ? "font-medium text-foreground"
-                                : "text-muted-foreground"
-                        )}
-                    >
-                        <MessageSquare className="h-4 w-4" />
-                        Forum
-                    </Link>
-                    {/* Marketplace link temporarily disabled
-          <Link
-            href="/marketplace"
-            className={cn(
-              "transition-colors hover:text-primary flex items-center gap-1",
-              pathname.startsWith("/marketplace") ? "font-medium text-foreground" : "text-muted-foreground",
-            )}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            Marketplace
-          </Link>
-          */}
+                <nav className="hidden md:flex items-center justify-center flex-1">
+                    <div className="flex items-center gap-8">
+                        <Link
+                            href="/"
+                            className={cn(
+                                "transition-colors hover:text-primary flex items-center gap-1",
+                                pathname === "/"
+                                    ? "font-medium text-foreground"
+                                    : "text-muted-foreground"
+                            )}
+                        >
+                            <Home className="h-4 w-4" />
+                            Home
+                        </Link>
+                        <Link
+                            href="/courses"
+                            className={cn(
+                                "transition-colors hover:text-primary flex items-center gap-1",
+                                pathname.startsWith("/courses")
+                                    ? "font-medium text-foreground"
+                                    : "text-muted-foreground"
+                            )}
+                        >
+                            <BookOpen className="h-4 w-4" />
+                            Courses
+                        </Link>
+                        <Link
+                            href="/forum"
+                            className={cn(
+                                "transition-colors hover:text-primary flex items-center gap-1",
+                                pathname.startsWith("/forum")
+                                    ? "font-medium text-foreground"
+                                    : "text-muted-foreground"
+                            )}
+                        >
+                            <MessageSquare className="h-4 w-4" />
+                            Forum
+                        </Link>
+                    </div>
                 </nav>
-                <div className="flex flex-1 items-center justify-end gap-2">
+                <div className="flex items-center justify-end w-[200px]">
                     {session ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -139,6 +130,15 @@ export function SiteHeader() {
                                     >
                                         <FileText className="mr-2 h-4 w-4" />
                                         <span>My Posts</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="/forum/saved"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <BookmarkPlus className="mr-2 h-4 w-4" />
+                                        <span>Saved Posts</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>

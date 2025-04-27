@@ -14,6 +14,7 @@ import {
     ThumbsUp,
     SortAsc,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,8 @@ import {
     getForumPostById,
     toggleForumLike,
     checkUserLikeStatus,
+    toggleForumSave,
+    checkUserSaveStatus,
 } from "../actions";
 import { LikeButton } from "@/app/components/LikeButton";
 import { CommentActions } from "@/app/components/CommentActions";
@@ -173,6 +176,20 @@ export default function ThreadContent({
         checkLikeStatus();
     }, [session?.user?.id, threadId]);
 
+    // Add this useEffect to check initial save status
+    useEffect(() => {
+        const checkSaveStatus = async () => {
+            if (session?.user?.id) {
+                const saved = await checkUserSaveStatus(
+                    threadId,
+                    session.user.id
+                );
+                setIsSaved(saved);
+            }
+        };
+        checkSaveStatus();
+    }, [threadId, session?.user?.id]);
+
     // Fetch related threads on component mount
     useEffect(() => {
         async function fetchRelatedThreads() {
@@ -275,13 +292,43 @@ export default function ThreadContent({
         }
     };
 
-    const handleSave = () => {
-        if (!session?.user) {
-            router.push("/auth/signin");
+    // Add this function to handle save/unsave
+    const handleSave = async () => {
+        if (!session?.user?.id) {
+            toast({
+                title: "Error",
+                description: "You must be logged in to save threads",
+                variant: "destructive",
+            });
             return;
         }
-        setIsSaved(!isSaved);
-        // TODO: Implement API call to save/unsave the thread
+
+        try {
+            const result = await toggleForumSave(threadId, session.user.id);
+            if (result.success) {
+                setIsSaved(result.action === "saved");
+                toast({
+                    title: "Success",
+                    description:
+                        result.action === "saved"
+                            ? "Thread saved successfully!"
+                            : "Thread removed from saved items",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to update save status",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error toggling save:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update save status",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleReport = () => {

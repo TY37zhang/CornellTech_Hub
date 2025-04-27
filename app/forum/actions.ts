@@ -760,3 +760,110 @@ export async function getRelatedPosts(
         throw error;
     }
 }
+
+export async function toggleForumSave(postId: string, userId: string) {
+    try {
+        // Check if the user has already saved the post
+        const existingSave = await sql`
+            SELECT id FROM forum_saved 
+            WHERE post_id = ${postId} AND user_id = ${userId}
+        `;
+
+        if (existingSave.length > 0) {
+            // Unsave: Remove the save record
+            await sql`
+                DELETE FROM forum_saved 
+                WHERE post_id = ${postId} AND user_id = ${userId}
+            `;
+
+            revalidatePath(`/forum/${postId}`);
+
+            return {
+                success: true,
+                action: "unsaved",
+            };
+        } else {
+            // Save: Create new save record
+            await sql`
+                INSERT INTO forum_saved (post_id, user_id) 
+                VALUES (${postId}, ${userId})
+            `;
+
+            revalidatePath(`/forum/${postId}`);
+
+            return {
+                success: true,
+                action: "saved",
+            };
+        }
+    } catch (error) {
+        console.error("Error toggling forum save:", error);
+        return { success: false, error: "Failed to update save status" };
+    }
+}
+
+export async function checkUserSaveStatus(postId: string, userId: string) {
+    try {
+        const result = await sql`
+            SELECT id FROM forum_saved 
+            WHERE post_id = ${postId} AND user_id = ${userId}
+        `;
+        return result.length > 0;
+    } catch (error) {
+        console.error("Error checking save status:", error);
+        return false;
+    }
+}
+
+export async function getUserSavedPosts(userId: string): Promise<ForumPostResponse[]> {
+    try {
+        const posts = await sql`
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count,
+                fs.created_at as saved_at
+            FROM forum_saved fs
+            JOIN forum_posts fp ON fs.post_id = fp.id
+            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN users u ON fp.author_id = u.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            WHERE fs.user_id = ${userId}
+            AND fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id, fs.created_at
+            ORDER BY fs.created_at DESC
+        `;
+
+        // Get tags for each post
+        const postsWithTags = await Promise.all(
+            posts.map(async (post) => {
+                const tags = await sql`
+                    SELECT tag
+                    FROM forum_post_tags
+                    WHERE post_id = ${post.id}
+                `;
+                return {
+                    ...post,
+                    tags: tags.map((t) => t.tag),
+                };
+            })
+        );
+
+        return postsWithTags;
+    } catch (error) {
+        console.error("Error fetching saved posts:", error);
+        throw error;
+    }
+}
