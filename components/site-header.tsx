@@ -25,15 +25,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MobileNav } from "@/components/mobile-nav";
+import { motion } from "framer-motion";
+
+const navItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/forum", label: "Forum", icon: MessageSquare },
+];
 
 export function SiteHeader() {
     const pathname = usePathname();
     const { data: session } = useSession();
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <motion.header
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        >
             <div className="flex h-14 items-center justify-between px-6 md:px-8">
-                <div className="flex items-center gap-1 md:gap-2">
+                <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                    className="flex items-center gap-1 md:gap-2"
+                >
                     <Link href="/" className="flex items-center gap-1 md:gap-2">
                         <Image
                             src="/images/logo/logo.png"
@@ -46,48 +63,47 @@ export function SiteHeader() {
                             Cornell Tech Hub
                         </span>
                     </Link>
-                </div>
+                </motion.div>
                 <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
                     <div className="flex items-center gap-8">
-                        <Link
-                            href="/"
-                            className={cn(
-                                "transition-colors hover:text-primary flex items-center gap-1",
-                                pathname === "/"
-                                    ? "font-medium text-foreground"
-                                    : "text-muted-foreground"
-                            )}
-                        >
-                            <Home className="h-4 w-4" />
-                            Home
-                        </Link>
-                        <Link
-                            href="/courses"
-                            className={cn(
-                                "transition-colors hover:text-primary flex items-center gap-1",
-                                pathname.startsWith("/courses")
-                                    ? "font-medium text-foreground"
-                                    : "text-muted-foreground"
-                            )}
-                        >
-                            <BookOpen className="h-4 w-4" />
-                            Courses
-                        </Link>
-                        <Link
-                            href="/forum"
-                            className={cn(
-                                "transition-colors hover:text-primary flex items-center gap-1",
-                                pathname.startsWith("/forum")
-                                    ? "font-medium text-foreground"
-                                    : "text-muted-foreground"
-                            )}
-                        >
-                            <MessageSquare className="h-4 w-4" />
-                            Forum
-                        </Link>
+                        {navItems.map((item, index) => {
+                            const Icon = item.icon;
+                            return (
+                                <motion.div
+                                    key={item.href}
+                                    initial={{ y: -20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{
+                                        duration: 0.3,
+                                        delay: 0.1 + index * 0.1,
+                                    }}
+                                >
+                                    <Link
+                                        href={item.href}
+                                        className={cn(
+                                            "transition-colors hover:text-primary flex items-center gap-1",
+                                            pathname === item.href ||
+                                                pathname.startsWith(
+                                                    item.href + "/"
+                                                )
+                                                ? "font-medium text-foreground"
+                                                : "text-muted-foreground"
+                                        )}
+                                    >
+                                        <Icon className="h-4 w-4" />
+                                        {item.label}
+                                    </Link>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </nav>
-                <div className="flex items-center gap-2">
+                <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                    className="flex items-center gap-2"
+                >
                     <div className="md:hidden">
                         <MobileNav />
                     </div>
@@ -117,7 +133,12 @@ export function SiteHeader() {
                                     align="end"
                                     className="w-56"
                                 >
-                                    <div className="flex items-center justify-start gap-2 p-2">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex items-center justify-start gap-2 p-2"
+                                    >
                                         <div className="flex flex-col space-y-1 leading-none">
                                             <p className="font-medium">
                                                 {session.user?.name}
@@ -126,7 +147,7 @@ export function SiteHeader() {
                                                 {session.user?.email}
                                             </p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
                                         <Link
@@ -185,8 +206,8 @@ export function SiteHeader() {
                             </>
                         )}
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </header>
+        </motion.header>
     );
 }

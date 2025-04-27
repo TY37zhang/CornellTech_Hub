@@ -229,12 +229,16 @@ export default function ThreadContent({
                 // Clear the comment input
                 setNewComment("");
 
-                // Refresh the comments
-                const threadComments = await getForumComments(threadId);
+                // Fetch updated comments
+                const updatedComments = await getForumComments(threadId);
 
                 // Format the comments
-                const formattedComments = threadComments.map((comment) => ({
+                const formattedComments = updatedComments.map((comment) => ({
                     id: comment.id,
+                    content: comment.content,
+                    createdAt: formatDate(comment.created_at),
+                    like_count: comment.like_count || 0,
+                    dislike_count: comment.dislike_count || 0,
                     author: {
                         name: comment.author_name,
                         avatar:
@@ -243,13 +247,17 @@ export default function ThreadContent({
                         program: "Student",
                         joinDate: formatDate(comment.created_at),
                     },
-                    createdAt: formatDate(comment.created_at),
-                    content: comment.content,
-                    likes: comment.like_count,
-                    isAccepted: false,
                 }));
 
+                // Update the comments state
                 setComments(formattedComments);
+                setSortedComments(formattedComments);
+
+                // Show success toast
+                toast({
+                    title: "Reply posted",
+                    description: "Your reply has been added successfully.",
+                });
             } else {
                 setCommentError(result.error || "Failed to add comment");
             }

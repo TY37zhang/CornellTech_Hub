@@ -57,7 +57,7 @@ export default function NewReviewPage() {
                 title: courseName,
                 courseId: courseId,
                 professor: professor || "",
-                category: category || "", // The category should already be lowercase from the URL
+                category: category || "",
             }));
         }
     }, []);
@@ -197,36 +197,50 @@ export default function NewReviewPage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="category">Subject</Label>
-                            <Select
-                                value={formData.category}
-                                onValueChange={(value) =>
-                                    setFormData({
-                                        ...formData,
-                                        category: value,
-                                    })
-                                }
-                            >
-                                <SelectTrigger
-                                    className={
-                                        errors.category ? "border-red-500" : ""
+                            {formData.category ? (
+                                <Select
+                                    value={formData.category}
+                                    onValueChange={(value) =>
+                                        setFormData({
+                                            ...formData,
+                                            category: value,
+                                        })
                                     }
                                 >
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ceee">CEEE</SelectItem>
-                                    <SelectItem value="cs">CS</SelectItem>
-                                    <SelectItem value="ece">ECE</SelectItem>
-                                    <SelectItem value="hadm">HADM</SelectItem>
-                                    <SelectItem value="info">INFO</SelectItem>
-                                    <SelectItem value="law">LAW</SelectItem>
-                                    <SelectItem value="orie">ORIE</SelectItem>
-                                    <SelectItem value="tech">TECH</SelectItem>
-                                    <SelectItem value="techie">
-                                        TECHIE
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                                    <SelectTrigger
+                                        className={
+                                            errors.category
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    >
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ceee">
+                                            CEEE
+                                        </SelectItem>
+                                        <SelectItem value="cs">CS</SelectItem>
+                                        <SelectItem value="ece">ECE</SelectItem>
+                                        <SelectItem value="hadm">
+                                            HADM
+                                        </SelectItem>
+                                        <SelectItem value="info">
+                                            INFO
+                                        </SelectItem>
+                                        <SelectItem value="law">LAW</SelectItem>
+                                        <SelectItem value="orie">
+                                            ORIE
+                                        </SelectItem>
+                                        <SelectItem value="tech">
+                                            TECH
+                                        </SelectItem>
+                                        <SelectItem value="techie">
+                                            TECHIE
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) : null}
                             {errors.category && (
                                 <p className="text-sm text-red-500">
                                     {errors.category}

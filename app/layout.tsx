@@ -4,10 +4,11 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { MobileNav } from "@/components/mobile-nav";
 import AuthProvider from "@/components/providers/session-provider";
-import { Toaster } from "sonner";
+import { AnimatedToaster } from "@/components/ui/animated-toast";
 import { Footer } from "@/components/Footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AnimationProvider } from "@/components/providers/animation-provider";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -50,10 +51,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <AuthProvider>
                     <div className="relative flex min-h-screen flex-col">
                         <SiteHeader />
-                        <div className="flex-1">{children}</div>
+                        <AnimationProvider>{children}</AnimationProvider>
                         <Footer />
                     </div>
-                    <Toaster />
+                    <AnimatedToaster />
                     <Analytics />
                     <SpeedInsights />
                 </AuthProvider>

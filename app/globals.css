@@ -12,6 +12,36 @@ body {
     }
 }
 
+@layer components {
+    .btn-hover-effect {
+        @apply transition-all duration-300 ease-in-out;
+    }
+
+    .btn-hover-effect:hover {
+        @apply transform scale-105 shadow-lg;
+    }
+
+    .btn-hover-effect:active {
+        @apply transform scale-95;
+    }
+
+    .card-hover {
+        @apply transition-all duration-300 ease-in-out;
+    }
+
+    .card-hover:hover {
+        @apply transform -translate-y-1 shadow-xl;
+    }
+
+    .input-focus {
+        @apply transition-all duration-200 ease-in-out;
+    }
+
+    .input-focus:focus {
+        @apply ring-2 ring-primary ring-opacity-50 transform scale-[1.02];
+    }
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;

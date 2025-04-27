@@ -14,6 +14,31 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { useSession } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const navItemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: (i: number) => ({
+        opacity: 1,
+        x: 0,
+        transition: {
+            delay: i * 0.1,
+            duration: 0.3,
+        },
+    }),
+};
+
+const buttonVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+            delay: 0.3 + i * 0.1,
+            duration: 0.3,
+        },
+    }),
+};
 
 export function MobileNav() {
     const [open, setOpen] = useState(false);
@@ -55,72 +80,113 @@ export function MobileNav() {
                 </SheetHeader>
                 <div className="px-6 py-4">
                     <nav className="flex flex-col gap-4">
-                        {routes.map((route) => (
-                            <Link
-                                key={route.href}
-                                href={route.href}
-                                onClick={() => setOpen(false)}
-                                className={cn(
-                                    "flex items-center gap-2 text-base font-medium transition-colors hover:text-foreground pl-2",
-                                    route.active
-                                        ? "text-foreground"
-                                        : "text-muted-foreground"
-                                )}
-                            >
-                                <route.icon className="h-5 w-5" />
-                                {route.label}
-                            </Link>
-                        ))}
+                        <AnimatePresence>
+                            {routes.map((route, i) => (
+                                <motion.div
+                                    key={route.href}
+                                    custom={i}
+                                    variants={navItemVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Link
+                                        href={route.href}
+                                        onClick={() => setOpen(false)}
+                                        className={cn(
+                                            "flex items-center gap-2 text-base font-medium transition-colors hover:text-foreground pl-2",
+                                            route.active
+                                                ? "text-foreground"
+                                                : "text-muted-foreground"
+                                        )}
+                                    >
+                                        <route.icon className="h-5 w-5" />
+                                        {route.label}
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     </nav>
                     {session ? (
                         <div className="mt-8 flex flex-col items-center gap-2">
-                            <Button
-                                variant="outline"
-                                asChild
-                                className="w-[180px]"
-                            >
-                                <Link
-                                    href="/user/posts"
-                                    onClick={() => setOpen(false)}
+                            <AnimatePresence>
+                                <motion.div
+                                    custom={0}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 >
-                                    My Posts
-                                </Link>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                asChild
-                                className="w-[180px]"
-                            >
-                                <Link
-                                    href="/settings"
-                                    onClick={() => setOpen(false)}
+                                    <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px]"
+                                    >
+                                        <Link
+                                            href="/user/posts"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            My Posts
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    custom={1}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 >
-                                    Settings
-                                </Link>
-                            </Button>
+                                    <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px]"
+                                    >
+                                        <Link
+                                            href="/settings"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Settings
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                     ) : (
                         <div className="mt-8 flex flex-col items-center gap-2">
-                            <Button
-                                variant="outline"
-                                asChild
-                                className="w-[180px]"
-                            >
-                                <Link
-                                    href="/auth/signin"
-                                    onClick={() => setOpen(false)}
+                            <AnimatePresence>
+                                <motion.div
+                                    custom={0}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 >
-                                    Sign In
-                                </Link>
-                            </Button>
-                            <Button asChild className="w-[180px]">
-                                <Link
-                                    href="/auth/signup"
-                                    onClick={() => setOpen(false)}
+                                    <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px]"
+                                    >
+                                        <Link
+                                            href="/auth/signin"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Sign In
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    custom={1}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 >
-                                    Sign Up
-                                </Link>
-                            </Button>
+                                    <Button asChild className="w-[180px]">
+                                        <Link
+                                            href="/auth/signup"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Sign Up
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                     )}
                 </div>
