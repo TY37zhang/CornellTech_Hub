@@ -165,8 +165,17 @@ interface ForumPostResponse {
     tags: string[];
 }
 
-export async function getForumPosts(): Promise<ForumPostResponse[]> {
+export async function getForumPosts(
+    limit = 10,
+    offset = 0
+): Promise<{ posts: ForumPostResponse[]; total: number }> {
     try {
+        // Get total count first
+        const totalCountResult = await sql`
+            SELECT COUNT(*) as count FROM forum_posts WHERE status = 'active';
+        `;
+        const total = totalCountResult[0]?.count || 0;
+
         const posts = await sql`
             SELECT 
                 fp.id,
@@ -191,6 +200,7 @@ export async function getForumPosts(): Promise<ForumPostResponse[]> {
             WHERE fp.status = 'active'
             GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
             ORDER BY fp.created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
         // Get tags for each post
@@ -208,7 +218,10 @@ export async function getForumPosts(): Promise<ForumPostResponse[]> {
             })
         );
 
-        return postsWithTags;
+        return {
+            posts: postsWithTags,
+            total,
+        };
     } catch (error) {
         console.error("Error fetching forum posts:", error);
         throw error;
@@ -815,7 +828,9 @@ export async function checkUserSaveStatus(postId: string, userId: string) {
     }
 }
 
-export async function getUserSavedPosts(userId: string): Promise<ForumPostResponse[]> {
+export async function getUserSavedPosts(
+    userId: string
+): Promise<ForumPostResponse[]> {
     try {
         const posts = await sql`
             SELECT 

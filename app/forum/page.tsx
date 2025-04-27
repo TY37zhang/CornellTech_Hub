@@ -147,84 +147,79 @@ function calculateHotScore(thread: {
 
 export default function ForumPage() {
     // State for search and filters
-    const [searchQuery, setSearchQuery] = useState("");
-    const [categoryFilter, setCategoryFilter] = useState("all");
-    const [timeFilter, setTimeFilter] = useState("all");
-    const [sortBy, setSortBy] = useState("activity");
-    const [activeTab, setActiveTab] = useState("all");
     const [threads, setThreads] = useState<Thread[]>([]);
+    const [forumStats, setForumStats] = useState<any>(null);
+    const [topContributors, setTopContributors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [forumStats, setForumStats] = useState({
-        totalThreads: 0,
-        totalPosts: 0,
-        activeUsers: 0,
-        newToday: 0,
-    });
-    const [topContributors, setTopContributors] = useState<
-        Array<{
-            id: string;
-            name: string;
-            avatar_url: string | null;
-            post_count: number;
-        }>
-    >([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState<string>("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const threadsPerPage = 10;
+    const [activeTab, setActiveTab] = useState("all");
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
     const [isMobile, setIsMobile] = useState(false);
 
     // Fetch threads, stats, and top contributors on component mount
     useEffect(() => {
         async function fetchData() {
             try {
-                const [posts, stats, contributors] = await Promise.all([
-                    getForumPosts(),
+                const offset = (currentPage - 1) * threadsPerPage;
+                const [postsData, stats, contributors] = await Promise.all([
+                    getForumPosts(threadsPerPage, offset),
                     getForumStats(),
                     getTopContributors(),
                 ]);
 
-                const formattedThreads: Thread[] = posts.map((post) => {
-                    const hotStatus = calculateHotScore({
-                        likes: post.like_count,
-                        replies: post.reply_count,
-                        views: post.view_count,
-                        createdAt: post.created_at,
-                    });
+                const formattedThreads: Thread[] = postsData.posts.map(
+                    (post) => {
+                        const hotStatus = calculateHotScore({
+                            likes: post.like_count,
+                            replies: post.reply_count,
+                            views: post.view_count,
+                            createdAt: post.created_at,
+                        });
 
-                    return {
-                        id: post.id,
-                        title: post.title,
-                        author: {
-                            name: post.author_name,
-                            avatar:
-                                post.author_avatar ||
-                                "/placeholder.svg?height=32&width=32",
-                            initials: getInitials(post.author_name),
-                        },
-                        category: post.category_name,
-                        categoryColor: getCategoryColor(post.category_name),
-                        content: post.content,
-                        tags: post.tags,
-                        replies: post.reply_count,
-                        likes: post.like_count,
-                        views: post.view_count,
-                        createdAt: formatDate(post.created_at),
-                        isHot: hotStatus.isHot,
-                        hotScore: hotStatus.score,
-                        isNew:
-                            new Date(post.created_at).getTime() >
-                            Date.now() - 7 * 24 * 60 * 60 * 1000,
-                    };
-                });
+                        return {
+                            id: post.id,
+                            title: post.title,
+                            author: {
+                                name: post.author_name,
+                                avatar:
+                                    post.author_avatar ||
+                                    "/placeholder.svg?height=32&width=32",
+                                initials: getInitials(post.author_name),
+                            },
+                            category: post.category_name,
+                            categoryColor: getCategoryColor(post.category_name),
+                            content: post.content,
+                            tags: post.tags,
+                            replies: post.reply_count,
+                            likes: post.like_count,
+                            views: post.view_count,
+                            createdAt: formatDate(post.created_at),
+                            isHot: hotStatus.isHot,
+                            hotScore: hotStatus.score,
+                            isNew:
+                                new Date(post.created_at).getTime() >
+                                Date.now() - 7 * 24 * 60 * 60 * 1000,
+                        };
+                    }
+                );
 
                 setThreads(formattedThreads);
                 setForumStats(stats);
                 setTopContributors(contributors);
+                setTotalPages(Math.ceil(postsData.total / threadsPerPage));
+                setLoading(false);
             } catch (error) {
                 console.error("Error fetching data:", error);
-            } finally {
                 setLoading(false);
             }
         }
+
         fetchData();
-    }, []);
+    }, [currentPage]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -238,9 +233,6 @@ export default function ForumPage() {
             window.removeEventListener("resize", checkMobile);
         };
     }, []);
-
-    // Filtered and sorted threads
-    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
@@ -264,59 +256,22 @@ export default function ForumPage() {
         }
 
         // Apply category filter
-        if (categoryFilter !== "all") {
+        if (selectedCategory !== "all") {
             result = result.filter(
-                (thread) => thread.category.toLowerCase() === categoryFilter
+                (thread) => thread.category.toLowerCase() === selectedCategory
             );
-        }
-
-        // Apply time filter
-        if (timeFilter !== "all") {
-            const now = new Date();
-            result = result.filter((thread) => {
-                const postDate = new Date(thread.createdAt);
-                const diffTime = Math.abs(now.getTime() - postDate.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                switch (timeFilter) {
-                    case "day":
-                        return diffDays <= 1;
-                    case "week":
-                        return diffDays <= 7;
-                    case "month":
-                        return diffDays <= 30;
-                    case "year":
-                        return diffDays <= 365;
-                    default:
-                        return true;
-                }
-            });
         }
 
         // Apply sorting
         result.sort((a, b) => {
-            switch (sortBy) {
-                case "activity":
-                    return (
-                        new Date(b.createdAt).getTime() -
-                        new Date(a.createdAt).getTime()
-                    );
-                case "newest":
-                    return (
-                        new Date(b.createdAt).getTime() -
-                        new Date(a.createdAt).getTime()
-                    );
-                case "popular":
-                    return b.likes - a.likes;
-                case "replies":
-                    return b.replies - a.replies;
-                default:
-                    return 0;
-            }
+            return (
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            );
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, categoryFilter, timeFilter, sortBy, activeTab, threads]);
+    }, [searchQuery, selectedCategory, activeTab, threads]);
 
     if (loading) {
         return (
@@ -456,180 +411,182 @@ export default function ForumPage() {
                                     >
                                         <div className="space-y-4">
                                             {filteredThreads.length > 0 ? (
-                                                filteredThreads.map(
-                                                    (thread) => (
-                                                        <Link
-                                                            href={`/forum/${thread.id}`}
-                                                            key={thread.id}
-                                                            className="block"
-                                                        >
-                                                            <Card className="hover:bg-muted/50 transition-colors">
-                                                                <CardHeader className="p-4">
-                                                                    <div className="flex items-start justify-between gap-4">
-                                                                        <div className="flex items-start gap-4">
-                                                                            <Avatar className="h-8 w-8">
-                                                                                <AvatarImage
-                                                                                    src={
-                                                                                        thread
-                                                                                            .author
-                                                                                            .avatar
-                                                                                    }
-                                                                                    alt={
-                                                                                        thread
-                                                                                            .author
-                                                                                            .name
-                                                                                    }
-                                                                                />
-                                                                                <AvatarFallback>
-                                                                                    {
-                                                                                        thread
-                                                                                            .author
-                                                                                            .initials
-                                                                                    }
-                                                                                </AvatarFallback>
-                                                                            </Avatar>
-                                                                            <div className="space-y-1">
-                                                                                <CardTitle className="text-lg font-semibold truncate-title">
-                                                                                    {
-                                                                                        thread.title
-                                                                                    }
-                                                                                </CardTitle>
-                                                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                    <span>
-                                                                                        {
+                                                <div className="grid gap-4">
+                                                    {filteredThreads.map(
+                                                        (thread) => (
+                                                            <Link
+                                                                href={`/forum/${thread.id}`}
+                                                                key={thread.id}
+                                                                className="block"
+                                                            >
+                                                                <Card className="hover:bg-muted/50 transition-colors">
+                                                                    <CardHeader className="p-4">
+                                                                        <div className="flex items-start justify-between gap-4">
+                                                                            <div className="flex items-start gap-4">
+                                                                                <Avatar className="h-8 w-8">
+                                                                                    <AvatarImage
+                                                                                        src={
+                                                                                            thread
+                                                                                                .author
+                                                                                                .avatar
+                                                                                        }
+                                                                                        alt={
                                                                                             thread
                                                                                                 .author
                                                                                                 .name
                                                                                         }
-                                                                                    </span>
-                                                                                    <span>
-                                                                                        •
-                                                                                    </span>
-                                                                                    <span>
+                                                                                    />
+                                                                                    <AvatarFallback>
                                                                                         {
-                                                                                            thread.createdAt
+                                                                                            thread
+                                                                                                .author
+                                                                                                .initials
                                                                                         }
-                                                                                    </span>
+                                                                                    </AvatarFallback>
+                                                                                </Avatar>
+                                                                                <div className="space-y-1">
+                                                                                    <CardTitle className="text-lg font-semibold truncate-title">
+                                                                                        {
+                                                                                            thread.title
+                                                                                        }
+                                                                                    </CardTitle>
+                                                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                                                        <span>
+                                                                                            {
+                                                                                                thread
+                                                                                                    .author
+                                                                                                    .name
+                                                                                            }
+                                                                                        </span>
+                                                                                        <span>
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span>
+                                                                                            {
+                                                                                                thread.createdAt
+                                                                                            }
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-2">
-                                                                            {thread.isNew && (
-                                                                                <Badge
-                                                                                    variant="secondary"
-                                                                                    className="bg-[#4bcefa] text-white px-2 py-0.5"
-                                                                                >
-                                                                                    🌟
-                                                                                    New
-                                                                                </Badge>
-                                                                            )}
-                                                                            {thread.isHot &&
-                                                                                thread.hotScore && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                {thread.isNew && (
                                                                                     <Badge
                                                                                         variant="secondary"
-                                                                                        className={
-                                                                                            thread.hotScore >
-                                                                                            200
-                                                                                                ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full"
-                                                                                                : thread.hotScore >
-                                                                                                  150
-                                                                                                ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
-                                                                                                : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
-                                                                                        }
+                                                                                        className="bg-[#4bcefa] text-white px-2 py-0.5"
                                                                                     >
-                                                                                        🔥{" "}
-                                                                                        {thread.hotScore >
-                                                                                        200
-                                                                                            ? "Super Hot"
-                                                                                            : thread.hotScore >
-                                                                                              150
-                                                                                            ? "Very Hot"
-                                                                                            : "Hot"}
+                                                                                        🌟
+                                                                                        New
                                                                                     </Badge>
                                                                                 )}
-                                                                            <Badge
-                                                                                variant="secondary"
-                                                                                className={
-                                                                                    thread.categoryColor
-                                                                                }
-                                                                            >
-                                                                                {
-                                                                                    thread.category
-                                                                                }
-                                                                            </Badge>
+                                                                                {thread.isHot &&
+                                                                                    thread.hotScore && (
+                                                                                        <Badge
+                                                                                            variant="secondary"
+                                                                                            className={
+                                                                                                thread.hotScore >
+                                                                                                200
+                                                                                                    ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full"
+                                                                                                    : thread.hotScore >
+                                                                                                      150
+                                                                                                    ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
+                                                                                                    : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
+                                                                                            }
+                                                                                        >
+                                                                                            🔥{" "}
+                                                                                            {thread.hotScore >
+                                                                                            200
+                                                                                                ? "Super Hot"
+                                                                                                : thread.hotScore >
+                                                                                                  150
+                                                                                                ? "Very Hot"
+                                                                                                : "Hot"}
+                                                                                        </Badge>
+                                                                                    )}
+                                                                                <Badge
+                                                                                    variant="secondary"
+                                                                                    className={
+                                                                                        thread.categoryColor
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        thread.category
+                                                                                    }
+                                                                                </Badge>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">
-                                                                        {thread
-                                                                            .content
-                                                                            .length >
-                                                                        126
-                                                                            ? thread.content.slice(
-                                                                                  0,
-                                                                                  126
-                                                                              ) +
-                                                                              "..."
-                                                                            : thread.content}
-                                                                    </p>
-                                                                </CardHeader>
-                                                                <CardFooter className="p-4 pt-0">
-                                                                    <div className="flex flex-col gap-4">
-                                                                        <div className="flex items-center gap-4">
-                                                                            {thread.tags.map(
-                                                                                (
-                                                                                    tag
-                                                                                ) => (
-                                                                                    <Badge
-                                                                                        key={
-                                                                                            tag
-                                                                                        }
-                                                                                        variant="outline"
-                                                                                        className="text-xs font-normal"
-                                                                                    >
-                                                                                        {
-                                                                                            tag
-                                                                                        }
-                                                                                    </Badge>
-                                                                                )
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex items-center justify-between">
-                                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <MessageSquare className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.replies
-                                                                                        }{" "}
-                                                                                        replies
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <ThumbsUp className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.likes
-                                                                                        }{" "}
-                                                                                        likes
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <Users className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.views
-                                                                                        }{" "}
-                                                                                        views
-                                                                                    </span>
+                                                                        <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">
+                                                                            {thread
+                                                                                .content
+                                                                                .length >
+                                                                            126
+                                                                                ? thread.content.slice(
+                                                                                      0,
+                                                                                      126
+                                                                                  ) +
+                                                                                  "..."
+                                                                                : thread.content}
+                                                                        </p>
+                                                                    </CardHeader>
+                                                                    <CardFooter className="p-4 pt-0">
+                                                                        <div className="flex flex-col gap-4">
+                                                                            <div className="flex items-center gap-4">
+                                                                                {thread.tags.map(
+                                                                                    (
+                                                                                        tag
+                                                                                    ) => (
+                                                                                        <Badge
+                                                                                            key={
+                                                                                                tag
+                                                                                            }
+                                                                                            variant="outline"
+                                                                                            className="text-xs font-normal"
+                                                                                        >
+                                                                                            {
+                                                                                                tag
+                                                                                            }
+                                                                                        </Badge>
+                                                                                    )
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <MessageSquare className="h-4 w-4" />
+                                                                                        <span>
+                                                                                            {
+                                                                                                thread.replies
+                                                                                            }{" "}
+                                                                                            replies
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <ThumbsUp className="h-4 w-4" />
+                                                                                        <span>
+                                                                                            {
+                                                                                                thread.likes
+                                                                                            }{" "}
+                                                                                            likes
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <Users className="h-4 w-4" />
+                                                                                        <span>
+                                                                                            {
+                                                                                                thread.views
+                                                                                            }{" "}
+                                                                                            views
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                </CardFooter>
-                                                            </Card>
-                                                        </Link>
-                                                    )
-                                                )
+                                                                    </CardFooter>
+                                                                </Card>
+                                                            </Link>
+                                                        )
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <div className="text-center py-10">
                                                     <p className="text-muted-foreground">
@@ -780,7 +737,7 @@ export default function ForumPage() {
                                                     Total Threads
                                                 </span>
                                                 <span className="font-medium">
-                                                    {forumStats.totalThreads}
+                                                    {forumStats?.totalThreads}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
@@ -788,7 +745,7 @@ export default function ForumPage() {
                                                     Total Posts
                                                 </span>
                                                 <span className="font-medium">
-                                                    {forumStats.totalPosts}
+                                                    {forumStats?.totalPosts}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
@@ -796,7 +753,7 @@ export default function ForumPage() {
                                                     New Today
                                                 </span>
                                                 <span className="font-medium">
-                                                    {forumStats.newToday}
+                                                    {forumStats?.newToday}
                                                 </span>
                                             </div>
                                         </CardContent>
@@ -862,6 +819,56 @@ export default function ForumPage() {
                 </section>
 
                 <section className="container px-4 py-8 md:px-6">
+                    {totalPages > 1 && (
+                        <div className="w-full flex justify-center mb-8">
+                            <nav
+                                className="flex items-center gap-2"
+                                aria-label="Pagination"
+                            >
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setCurrentPage((prev) =>
+                                            Math.max(1, prev - 1)
+                                        )
+                                    }
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {Array.from(
+                                        { length: totalPages },
+                                        (_, i) => i + 1
+                                    ).map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={
+                                                currentPage === page
+                                                    ? "default"
+                                                    : "outline"
+                                            }
+                                            onClick={() => setCurrentPage(page)}
+                                            className="w-10 h-10"
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setCurrentPage((prev) =>
+                                            Math.min(totalPages, prev + 1)
+                                        )
+                                    }
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </Button>
+                            </nav>
+                        </div>
+                    )}
                     <div className="flex flex-col items-center justify-center space-y-4 text-center">
                         <div className="space-y-2">
                             <h2 className="text-2xl font-bold tracking-tight">
