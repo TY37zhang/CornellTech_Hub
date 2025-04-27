@@ -148,199 +148,220 @@ export default function MyReviewsPage() {
     }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">My Reviews</h1>
-            <Tabs
-                defaultValue="all"
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-            >
-                <TabsList>
-                    <TabsTrigger value="all">All Courses</TabsTrigger>
-                    <TabsTrigger value="ceee">CEEE</TabsTrigger>
-                    <TabsTrigger value="cs">CS</TabsTrigger>
-                    <TabsTrigger value="ece">ECE</TabsTrigger>
-                    <TabsTrigger value="hadm">HADM</TabsTrigger>
-                    <TabsTrigger value="info">INFO</TabsTrigger>
-                    <TabsTrigger value="law">LAW</TabsTrigger>
-                    <TabsTrigger value="orie">ORIE</TabsTrigger>
-                    <TabsTrigger value="tech">TECH</TabsTrigger>
-                    <TabsTrigger value="techie">TECHIE</TabsTrigger>
-                </TabsList>
+        <div className="flex min-h-screen flex-col">
+            <div className="flex-1">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
+                    <div className="container px-4 md:px-6">
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <h1 className="text-4xl font-bold tracking-tight">
+                                My Reviews
+                            </h1>
+                            <p className="text-muted-foreground text-lg mt-2">
+                                Your forum discussions and contributions
+                            </p>
+                        </div>
+                    </div>
+                </section>
 
-                <TabsContent value={activeTab} className="mt-6">
-                    {filteredReviews.length === 0 ? (
-                        <div className="text-center text-gray-500">
-                            {reviews.length === 0
-                                ? "You haven't written any reviews yet."
-                                : "No reviews found in this category."}
-                        </div>
-                    ) : (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {filteredReviews.map((review) => (
-                                <Card
-                                    key={review.id}
-                                    className="h-full overflow-hidden transition-all hover:border-primary"
-                                >
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <CardTitle className="text-xl">
-                                                    {review.courseCode}
-                                                </CardTitle>
-                                                <CardDescription className="text-sm">
-                                                    {review.courseName}
-                                                </CardDescription>
-                                            </div>
-                                            <Badge
-                                                className={getCategoryColor(
-                                                    review.category
-                                                )}
-                                            >
-                                                {review.category?.toUpperCase()}
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="pb-3">
-                                        <div className="flex items-center gap-1 text-sm">
-                                            <div className="flex">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`h-4 w-4 ${
-                                                            i <
-                                                            Math.round(
-                                                                review.rating
+                <section className="container px-4 py-6 md:px-6">
+                    <Tabs
+                        defaultValue="all"
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
+                        <TabsList>
+                            <TabsTrigger value="all">All Courses</TabsTrigger>
+                            <TabsTrigger value="ceee">CEEE</TabsTrigger>
+                            <TabsTrigger value="cs">CS</TabsTrigger>
+                            <TabsTrigger value="ece">ECE</TabsTrigger>
+                            <TabsTrigger value="hadm">HADM</TabsTrigger>
+                            <TabsTrigger value="info">INFO</TabsTrigger>
+                            <TabsTrigger value="law">LAW</TabsTrigger>
+                            <TabsTrigger value="orie">ORIE</TabsTrigger>
+                            <TabsTrigger value="tech">TECH</TabsTrigger>
+                            <TabsTrigger value="techie">TECHIE</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value={activeTab} className="mt-6">
+                            {filteredReviews.length === 0 ? (
+                                <div className="text-center text-gray-500">
+                                    {reviews.length === 0
+                                        ? "You haven't written any reviews yet."
+                                        : "No reviews found in this category."}
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {filteredReviews.map((review) => (
+                                        <Card
+                                            key={review.id}
+                                            className="h-full overflow-hidden transition-all hover:border-primary"
+                                        >
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <CardTitle className="text-xl">
+                                                            {review.courseCode}
+                                                        </CardTitle>
+                                                        <CardDescription className="text-sm">
+                                                            {review.courseName}
+                                                        </CardDescription>
+                                                    </div>
+                                                    <Badge
+                                                        className={getCategoryColor(
+                                                            review.category
+                                                        )}
+                                                    >
+                                                        {review.category?.toUpperCase()}
+                                                    </Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="pb-3">
+                                                <div className="flex items-center gap-1 text-sm">
+                                                    <div className="flex">
+                                                        {[...Array(5)].map(
+                                                            (_, i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    className={`h-4 w-4 ${
+                                                                        i <
+                                                                        Math.round(
+                                                                            review.rating
+                                                                        )
+                                                                            ? "fill-yellow-400 text-yellow-400"
+                                                                            : "text-gray-300"
+                                                                    }`}
+                                                                />
                                                             )
-                                                                ? "fill-yellow-400 text-yellow-400"
-                                                                : "text-gray-300"
-                                                        }`}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <span className="font-medium">
-                                                {review.rating.toFixed(1)}
-                                            </span>
-                                        </div>
-                                        <div className="mt-3 space-y-2">
-                                            {review.difficulty !==
-                                                undefined && (
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
-                                                        Difficulty
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
-                                                            <div
-                                                                className="h-2 rounded-full bg-yellow-400"
-                                                                style={{
-                                                                    width: `${
-                                                                        review.difficulty *
-                                                                        20
-                                                                    }%`,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span>
-                                                            {review.difficulty.toFixed(
-                                                                1
-                                                            )}
-                                                            /5
-                                                        </span>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            )}
-                                            {review.workload !== undefined && (
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
-                                                        Workload
+                                                    <span className="font-medium">
+                                                        {review.rating.toFixed(
+                                                            1
+                                                        )}
                                                     </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
-                                                            <div
-                                                                className="h-2 rounded-full bg-yellow-400"
-                                                                style={{
-                                                                    width: `${
-                                                                        review.workload *
-                                                                        20
-                                                                    }%`,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span>
-                                                            {review.workload.toFixed(
-                                                                1
-                                                            )}
-                                                            /5
-                                                        </span>
-                                                    </div>
                                                 </div>
-                                            )}
-                                            {review.value !== undefined && (
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
-                                                        Value
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
-                                                            <div
-                                                                className="h-2 rounded-full bg-yellow-400"
-                                                                style={{
-                                                                    width: `${
-                                                                        review.value *
-                                                                        20
-                                                                    }%`,
-                                                                }}
-                                                            />
+                                                <div className="mt-3 space-y-2">
+                                                    {review.difficulty !==
+                                                        undefined && (
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Difficulty
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                review.difficulty *
+                                                                                20
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {review.difficulty.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /5
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <span>
-                                                            {review.value.toFixed(
-                                                                1
-                                                            )}
-                                                            /5
-                                                        </span>
-                                                    </div>
+                                                    )}
+                                                    {review.workload !==
+                                                        undefined && (
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Workload
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                review.workload *
+                                                                                20
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {review.workload.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /5
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {review.value !==
+                                                        undefined && (
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Value
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                                    <div
+                                                                        className="h-2 rounded-full bg-yellow-400"
+                                                                        style={{
+                                                                            width: `${
+                                                                                review.value *
+                                                                                20
+                                                                            }%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span>
+                                                                    {review.value.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    /5
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <p className="mt-4 text-sm whitespace-pre-wrap break-words text-muted-foreground">
-                                            {review.content}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            {new Date(
-                                                review.createdAt
-                                            ).toLocaleDateString()}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter className="flex justify-end gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                                handleEdit(review.id)
-                                            }
-                                            className="h-8 w-8 p-0"
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                                handleDelete(review.id)
-                                            }
-                                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </TabsContent>
-            </Tabs>
+                                                <p className="mt-4 text-sm whitespace-pre-wrap break-words text-muted-foreground">
+                                                    {review.content}
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-2">
+                                                    {new Date(
+                                                        review.createdAt
+                                                    ).toLocaleDateString()}
+                                                </p>
+                                            </CardContent>
+                                            <CardFooter className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        handleEdit(review.id)
+                                                    }
+                                                    className="h-8 w-8 p-0"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        handleDelete(review.id)
+                                                    }
+                                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
+                </section>
+            </div>
         </div>
     );
 }
