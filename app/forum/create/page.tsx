@@ -96,11 +96,11 @@ export default function CreateThreadPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        // Validate title is not empty
-        if (!formData.title.trim()) {
+        // Validate title length
+        if (formData.title.trim().length < 4) {
             toast({
                 title: "Error",
-                description: "Title cannot be empty",
+                description: "Title must be at least 4 characters long",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -243,8 +243,9 @@ export default function CreateThreadPage() {
                                         required
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Be specific and imagine you're asking a
-                                        question to another person
+                                        Title must be at least 4 characters
+                                        long. Be specific and imagine you're
+                                        asking a question to another person.
                                     </p>
                                 </div>
 
@@ -302,8 +303,10 @@ export default function CreateThreadPage() {
                                         required
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Include all the information someone
-                                        would need to answer your question
+                                        Content must be at least 20 characters
+                                        long. Include all the information
+                                        someone would need to answer your
+                                        question.
                                     </p>
                                 </div>
 
