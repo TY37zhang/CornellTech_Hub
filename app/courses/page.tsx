@@ -91,6 +91,19 @@ export default function CoursesPage() {
         fetchCourses();
     }, [searchQuery]);
 
+    // Filter courses based on active tab
+    useEffect(() => {
+        if (activeTab === "all") {
+            setFilteredCourses(courses);
+        } else {
+            const filtered = courses.filter(
+                (course) =>
+                    course.category.toLowerCase() === activeTab.toLowerCase()
+            );
+            setFilteredCourses(filtered);
+        }
+    }, [activeTab, courses]);
+
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 900);
