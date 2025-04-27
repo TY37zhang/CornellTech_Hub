@@ -739,10 +739,12 @@ export default function ForumPage() {
                                 new discussion thread.
                             </p>
                         </div>
-                        <Button className="gap-1">
-                            <PlusCircle className="h-4 w-4" />
-                            <span>Create New Thread</span>
-                        </Button>
+                        <Link href="/forum/create">
+                            <Button className="gap-1">
+                                <PlusCircle className="h-4 w-4" />
+                                <span>Create New Thread</span>
+                            </Button>
+                        </Link>
                     </div>
                 </section>
             </div>
