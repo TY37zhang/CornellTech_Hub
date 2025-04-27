@@ -517,9 +517,9 @@ export default function ForumPage() {
                                                                             {thread.isNew && (
                                                                                 <Badge
                                                                                     variant="secondary"
-                                                                                    className="bg-[#f6993f] text-white px-2 py-0.5"
+                                                                                    className="bg-[#4bcefa] text-white px-2 py-0.5"
                                                                                 >
-                                                                                    🚀
+                                                                                    🌟
                                                                                     New
                                                                                 </Badge>
                                                                             )}
@@ -530,11 +530,11 @@ export default function ForumPage() {
                                                                                         className={
                                                                                             thread.hotScore >
                                                                                             200
-                                                                                                ? "bg-red-600 text-white px-2 py-0.5"
+                                                                                                ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full"
                                                                                                 : thread.hotScore >
                                                                                                   150
-                                                                                                ? "bg-orange-500 text-white px-2 py-0.5"
-                                                                                                : "bg-orange-400 text-white px-2 py-0.5"
+                                                                                                ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
+                                                                                                : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
                                                                                         }
                                                                                     >
                                                                                         🔥{" "}
