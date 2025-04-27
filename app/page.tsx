@@ -31,12 +31,12 @@ export default function Dashboard() {
                             <div className="flex flex-col justify-center space-y-4">
                                 <div className="space-y-2">
                                     <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                                        Cornell Tech Student Resource Hub
+                                        Cornell Tech Hub
                                     </h1>
                                     <p className="max-w-[600px] text-muted-foreground md:text-xl">
                                         Your one-stop platform for course
-                                        reviews, discussions, marketplace, and
-                                        campus resources.
+                                        reviews, discussions, and campus
+                                        resources.
                                     </p>
                                 </div>
                                 {/* <div className="flex flex-col gap-2 min-[400px]:flex-row">
