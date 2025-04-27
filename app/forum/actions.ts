@@ -3,6 +3,7 @@
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { neon } from "@neondatabase/serverless";
+import { sendForumReplyNotification } from "@/lib/email/forum-notifications";
 
 export async function createThread({
     title,
