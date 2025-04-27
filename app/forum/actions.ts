@@ -92,6 +92,16 @@ export async function createThread({
             `;
         }
 
+        // Store notification preference
+        if (notifyOnReply) {
+            await sql`
+                INSERT INTO forum_notification_preferences (post_id, user_id, notify_on_reply)
+                VALUES (${postId}, ${authorId}, true)
+                ON CONFLICT (post_id, user_id) DO UPDATE
+                SET notify_on_reply = true, updated_at = CURRENT_TIMESTAMP;
+            `;
+        }
+
         // Revalidate the forum page to show the new thread
         revalidatePath("/forum");
 
@@ -517,6 +527,9 @@ export async function createForumComment({
                 CURRENT_TIMESTAMP
             ) RETURNING id;
         `;
+
+        // Send notification if enabled
+        await sendForumReplyNotification(postId, result[0].id, authorId);
 
         // Revalidate the thread page to show the new comment
         revalidatePath(`/forum/${postId}`);
