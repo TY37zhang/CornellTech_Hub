@@ -16,6 +16,16 @@ import { Star, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Review {
     id: string;
@@ -58,6 +68,7 @@ export default function MyReviewsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("all");
+    const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -347,7 +358,9 @@ export default function MyReviewsPage() {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() =>
-                                                        handleDelete(review.id)
+                                                        setReviewToDelete(
+                                                            review.id
+                                                        )
                                                     }
                                                     className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                                 >
@@ -362,6 +375,32 @@ export default function MyReviewsPage() {
                     </Tabs>
                 </section>
             </div>
+
+            <AlertDialog
+                open={!!reviewToDelete}
+                onOpenChange={() => setReviewToDelete(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Review</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this review? This
+                            action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() =>
+                                reviewToDelete && handleDelete(reviewToDelete)
+                            }
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

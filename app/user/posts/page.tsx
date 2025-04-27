@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FileText, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -237,73 +238,56 @@ export default function UserPostsPage() {
                             posts.map((post) => (
                                 <Card
                                     key={post.id}
-                                    className="hover:shadow-md transition-shadow"
+                                    className="hover:shadow-md transition-shadow relative group"
                                 >
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="space-y-1">
-                                                <CardTitle>
-                                                    <a
-                                                        href={`/forum/${post.slug}`}
-                                                        className="hover:text-primary"
-                                                    >
+                                    <Link
+                                        href={`/forum/${post.slug}`}
+                                        className="block"
+                                    >
+                                        <CardHeader>
+                                            <div className="flex items-start justify-between">
+                                                <div className="space-y-1">
+                                                    <CardTitle>
                                                         {post.title}
-                                                    </a>
-                                                </CardTitle>
-                                                <CardDescription>
-                                                    Posted{" "}
-                                                    {formatDate(post.createdAt)}
-                                                </CardDescription>
+                                                    </CardTitle>
+                                                    <CardDescription>
+                                                        Posted{" "}
+                                                        {formatDate(
+                                                            post.createdAt
+                                                        )}
+                                                    </CardDescription>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={getCategoryColor(
+                                                            post.category
+                                                        )}
+                                                    >
+                                                        {post.category}
+                                                    </Badge>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Badge
-                                                    variant="outline"
-                                                    className={getCategoryColor(
-                                                        post.category
-                                                    )}
-                                                >
-                                                    {post.category}
-                                                </Badge>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-muted-foreground hover:text-destructive"
-                                                    onClick={() =>
-                                                        setPostToDelete(post.id)
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-muted-foreground line-clamp-2">
-                                            {post.content}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <a
-                                            href={`/forum/${post.slug}`}
-                                            className="text-primary hover:underline font-medium inline-flex items-center gap-2"
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-muted-foreground line-clamp-2">
+                                                {post.content}
+                                            </p>
+                                        </CardContent>
+                                    </Link>
+                                    <CardFooter className="flex justify-end pt-0">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-muted-foreground hover:text-destructive"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setPostToDelete(post.id);
+                                            }}
                                         >
-                                            Read more
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="16"
-                                                height="16"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className="w-4 h-4"
-                                            >
-                                                <path d="M5 12h14" />
-                                                <path d="m12 5 7 7-7 7" />
-                                            </svg>
-                                        </a>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </CardFooter>
                                 </Card>
                             ))

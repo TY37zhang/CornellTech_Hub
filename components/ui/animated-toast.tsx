@@ -6,7 +6,7 @@ import { Toaster as SonnerToaster } from "sonner";
 export function AnimatedToaster() {
     return (
         <SonnerToaster
-            position="top-right"
+            position="bottom-right"
             toastOptions={{
                 className: "toast",
                 duration: 5000,

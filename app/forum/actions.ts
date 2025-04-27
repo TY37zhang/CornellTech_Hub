@@ -252,52 +252,112 @@ export async function getForumPostById(
     id: string
 ): Promise<ForumPostResponse | null> {
     try {
-        const post = await sql`
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count,
-                (
-                    SELECT COUNT(*)
-                    FROM forum_posts fp2
-                    WHERE fp2.author_id = u.id
-                    AND fp2.status = 'active'
-                ) as author_post_count,
-                (
-                    SELECT COALESCE(SUM(total_likes), 0)
-                    FROM (
-                        SELECT COUNT(DISTINCT fl2.id) as total_likes
+        // Check if the input is a valid UUID
+        const isUUID =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                id
+            );
+
+        let post;
+        if (isUUID) {
+            // If it's a UUID, query by post ID
+            post = await sql`
+                SELECT 
+                    fp.id,
+                    fp.title,
+                    fp.content,
+                    fp.created_at,
+                    fp.updated_at,
+                    fc.name as category_name,
+                    fc.slug as category_slug,
+                    u.name as author_name,
+                    u.avatar_url as author_avatar,
+                    u.id as author_id,
+                    COUNT(DISTINCT fc2.id) as reply_count,
+                    COUNT(DISTINCT fl.id) as like_count,
+                    COUNT(DISTINCT fv.id) as view_count,
+                    (
+                        SELECT COUNT(*)
                         FROM forum_posts fp2
-                        LEFT JOIN forum_likes fl2 ON fp2.id = fl2.post_id
                         WHERE fp2.author_id = u.id
                         AND fp2.status = 'active'
-                        GROUP BY fp2.id
-                        UNION ALL
-                        SELECT COALESCE(like_count, 0) as total_likes
-                        FROM forum_comments fc3
-                        WHERE fc3.author_id = u.id
-                    ) likes_count
-                ) as author_total_likes
-            FROM forum_posts fp
-            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN users u ON fp.author_id = u.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            WHERE fp.id = ${id}
-            AND fp.status = 'active'
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-        `;
+                    ) as author_post_count,
+                    (
+                        SELECT COALESCE(SUM(total_likes), 0)
+                        FROM (
+                            SELECT COUNT(DISTINCT fl2.id) as total_likes
+                            FROM forum_posts fp2
+                            LEFT JOIN forum_likes fl2 ON fp2.id = fl2.post_id
+                            WHERE fp2.author_id = u.id
+                            AND fp2.status = 'active'
+                            GROUP BY fp2.id
+                            UNION ALL
+                            SELECT COALESCE(like_count, 0) as total_likes
+                            FROM forum_comments fc3
+                            WHERE fc3.author_id = u.id
+                        ) likes_count
+                    ) as author_total_likes
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                LEFT JOIN users u ON fp.author_id = u.id
+                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+                LEFT JOIN forum_views fv ON fp.id = fv.post_id
+                WHERE fp.id = ${id}
+                AND fp.status = 'active'
+                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+            `;
+        } else {
+            // If it's not a UUID, assume it's a category slug and get the first post from that category
+            post = await sql`
+                SELECT 
+                    fp.id,
+                    fp.title,
+                    fp.content,
+                    fp.created_at,
+                    fp.updated_at,
+                    fc.name as category_name,
+                    fc.slug as category_slug,
+                    u.name as author_name,
+                    u.avatar_url as author_avatar,
+                    u.id as author_id,
+                    COUNT(DISTINCT fc2.id) as reply_count,
+                    COUNT(DISTINCT fl.id) as like_count,
+                    COUNT(DISTINCT fv.id) as view_count,
+                    (
+                        SELECT COUNT(*)
+                        FROM forum_posts fp2
+                        WHERE fp2.author_id = u.id
+                        AND fp2.status = 'active'
+                    ) as author_post_count,
+                    (
+                        SELECT COALESCE(SUM(total_likes), 0)
+                        FROM (
+                            SELECT COUNT(DISTINCT fl2.id) as total_likes
+                            FROM forum_posts fp2
+                            LEFT JOIN forum_likes fl2 ON fp2.id = fl2.post_id
+                            WHERE fp2.author_id = u.id
+                            AND fp2.status = 'active'
+                            GROUP BY fp2.id
+                            UNION ALL
+                            SELECT COALESCE(like_count, 0) as total_likes
+                            FROM forum_comments fc3
+                            WHERE fc3.author_id = u.id
+                        ) likes_count
+                    ) as author_total_likes
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                LEFT JOIN users u ON fp.author_id = u.id
+                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+                LEFT JOIN forum_views fv ON fp.id = fv.post_id
+                WHERE fc.slug = ${id}
+                AND fp.status = 'active'
+                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+                ORDER BY fp.created_at DESC
+                LIMIT 1
+            `;
+        }
 
         if (!post || post.length === 0) {
             return null;
@@ -307,7 +367,7 @@ export async function getForumPostById(
         const tags = await sql`
             SELECT tag
             FROM forum_post_tags
-            WHERE post_id = ${id}
+            WHERE post_id = ${post[0].id}
         `;
 
         return {
@@ -335,6 +395,33 @@ export async function getForumComments(
     postId: string
 ): Promise<ForumCommentResponse[]> {
     try {
+        // Check if the input is a valid UUID
+        const isUUID =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                postId
+            );
+
+        let actualPostId = postId;
+
+        if (!isUUID) {
+            // If it's not a UUID, assume it's a category slug and get the first post from that category
+            const post = await sql`
+                SELECT fp.id
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                WHERE fc.slug = ${postId}
+                AND fp.status = 'active'
+                ORDER BY fp.created_at DESC
+                LIMIT 1
+            `;
+
+            if (!post || post.length === 0) {
+                return [];
+            }
+
+            actualPostId = post[0].id;
+        }
+
         const comments = await sql`
             SELECT 
                 fc.id,
@@ -347,7 +434,7 @@ export async function getForumComments(
                 COALESCE(fc.dislike_count, 0) as dislike_count
             FROM forum_comments fc
             LEFT JOIN users u ON fc.author_id = u.id
-            WHERE fc.post_id = ${postId}
+            WHERE fc.post_id = ${actualPostId}
             ORDER BY fc.created_at ASC
         `;
 
@@ -690,6 +777,33 @@ export async function getRelatedPosts(
     limit: number = 4
 ): Promise<ForumPostResponse[]> {
     try {
+        // Check if the input is a valid UUID
+        const isUUID =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                currentPostId
+            );
+
+        let actualPostId = currentPostId;
+
+        if (!isUUID) {
+            // If it's not a UUID, assume it's a category slug and get the first post from that category
+            const post = await sql`
+                SELECT fp.id
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                WHERE fc.slug = ${currentPostId}
+                AND fp.status = 'active'
+                ORDER BY fp.created_at DESC
+                LIMIT 1
+            `;
+
+            if (!post || post.length === 0) {
+                return [];
+            }
+
+            actualPostId = post[0].id;
+        }
+
         const posts = await sql`
             SELECT 
                 fp.id,
@@ -712,7 +826,7 @@ export async function getRelatedPosts(
             LEFT JOIN forum_likes fl ON fp.id = fl.post_id
             LEFT JOIN forum_views fv ON fp.id = fv.post_id
             WHERE fc.slug = ${categorySlug}
-            AND fp.id != ${currentPostId}
+            AND fp.id != ${actualPostId}
             AND fp.status = 'active'
             GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
             ORDER BY fp.created_at DESC
