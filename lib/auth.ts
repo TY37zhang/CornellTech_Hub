@@ -31,11 +31,10 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
-            console.log("Sign in attempt:", {
-                email: user.email,
-                name: user.name,
-                provider: account?.provider,
-            });
+            // Remove debug logs for sign in attempt
+            if (!user.email || !user.name) {
+                return null;
+            }
 
             // Only allow Cornell email addresses
             if (user.email && !user.email.endsWith("@cornell.edu")) {
@@ -49,11 +48,10 @@ export const authOptions: NextAuthOptions = {
             // If using Google provider, check if user exists in our database
             if (account?.provider === "google") {
                 try {
-                    console.log("Checking if user exists in database");
+                    // Remove debug logs for user existence check
                     const result = await sql`
                         SELECT * FROM users WHERE email = ${user.email}
                     `;
-                    console.log("Database query result:", result);
 
                     // If user doesn't exist, create them
                     if (result.length === 0) {
@@ -81,6 +79,7 @@ export const authOptions: NextAuthOptions = {
                             result[0].avatar_url || DEFAULT_PROFILE_PICTURE;
                     }
                 } catch (error) {
+                    // Keep error logging for critical errors
                     console.error("Error during Google sign in:", error);
                     throw new Error(
                         "Failed to process Google sign in. Please try again."
@@ -104,7 +103,10 @@ export const authOptions: NextAuthOptions = {
                 const result = await sql`
                     SELECT name, avatar_url FROM users WHERE id = ${token.id}
                 `;
-                console.log("Session callback - fetched user data:", result);
+                // Remove debug logs for session callback
+                if (!result || result.length === 0) {
+                    return null;
+                }
 
                 if (result.length > 0) {
                     session.user.name = result[0].name;

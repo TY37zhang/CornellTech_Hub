@@ -65,8 +65,6 @@ const prisma = {
                     }
                 }
 
-                console.log("Executing query:", query, "with params:", params); // Debug query
-
                 // Execute the query with parameters
                 const result = await sql(query, params);
 
@@ -89,13 +87,6 @@ const prisma = {
                 `;
 
                 const params = [where.id];
-
-                console.log(
-                    "Executing delete query:",
-                    query,
-                    "with params:",
-                    params
-                );
 
                 // Execute the query with parameters
                 await sql(query, params);
@@ -169,8 +160,6 @@ const prisma = {
                         query += ` ORDER BY ${orderClauses.join(", ")}`;
                     }
                 }
-
-                console.log("Executing query:", query, "with params:", params);
 
                 // Execute the query with parameters
                 const result = await sql(query, params);

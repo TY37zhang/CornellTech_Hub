@@ -343,14 +343,16 @@ export default function ThreadContent({
     // Handle sort change
     const handleSort = async (value: string) => {
         try {
-            setIsLoading(true);
             setSortBy(value);
             const sorted = await getSortedComments(threadId, value);
             setSortedComments(sorted);
         } catch (error) {
             console.error("Error sorting comments:", error);
-        } finally {
-            setIsLoading(false);
+            toast({
+                title: "Error",
+                description: "Failed to sort comments. Please try again.",
+                variant: "destructive",
+            });
         }
     };
 

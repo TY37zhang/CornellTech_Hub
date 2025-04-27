@@ -6,10 +6,8 @@ import prisma from "@/lib/prisma";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        console.log("Session data:", session);
 
         if (!session || !session.user) {
-            console.log("No session or user found");
             return NextResponse.json(
                 { error: "Unauthorized" },
                 { status: 401 }
@@ -17,13 +15,11 @@ export async function GET() {
         }
 
         const userEmail = session.user.email;
-        console.log("User email:", userEmail);
 
         if (!userEmail) {
-            console.log("No email found in session");
             return NextResponse.json(
-                { error: "User email not found" },
-                { status: 400 }
+                { error: "Unauthorized" },
+                { status: 401 }
             );
         }
 
@@ -45,12 +41,11 @@ export async function GET() {
             },
         });
 
-        console.log("Found posts:", posts);
-
-        // Return empty array if no posts found
         if (!posts || posts.length === 0) {
-            console.log("No posts found for user");
-            return NextResponse.json([]);
+            return NextResponse.json(
+                { posts: [] },
+                { status: 200, headers: { "Content-Type": "application/json" } }
+            );
         }
 
         return NextResponse.json(posts);

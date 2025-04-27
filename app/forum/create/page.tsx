@@ -58,7 +58,8 @@ export default function CreateThreadPage() {
 
     // Don't render the form if not authenticated
     if (!session?.user) {
-        return null;
+        router.push("/auth/signin");
+        return;
     }
 
     const addTag = () => {
@@ -128,12 +129,6 @@ export default function CreateThreadPage() {
             setIsLoading(false);
             return;
         }
-
-        console.log("Session state:", {
-            status,
-            user: session?.user,
-            userId: session?.user?.id,
-        });
 
         if (!session?.user?.id) {
             toast({
