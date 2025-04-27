@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import {
     ArrowLeft,
     BookmarkPlus,
+    BookmarkCheck,
     Flag,
     MessageSquare,
     Share2,
@@ -541,7 +542,11 @@ export default function ThreadContent({
                                             }`}
                                             onClick={handleSave}
                                         >
-                                            <BookmarkPlus className="h-4 w-4" />
+                                            {isSaved ? (
+                                                <BookmarkCheck className="h-4 w-4" />
+                                            ) : (
+                                                <BookmarkPlus className="h-4 w-4" />
+                                            )}
                                             <span>
                                                 {isSaved ? "Saved" : "Save"}
                                             </span>

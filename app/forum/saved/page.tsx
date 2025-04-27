@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { BookmarkPlus } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -91,67 +92,72 @@ export default function SavedPostsPage() {
                             </Card>
                         ) : (
                             savedPosts.map((post) => (
-                                <Card
+                                <Link
                                     key={post.id}
-                                    className="hover:shadow-md transition-shadow"
+                                    href={`/forum/${post.id}`}
+                                    className="block"
                                 >
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="space-y-1">
-                                                <CardTitle>
-                                                    <a
-                                                        href={`/forum/${post.id}`}
-                                                        className="hover:text-primary"
-                                                    >
+                                    <Card className="hover:shadow-md transition-shadow">
+                                        <CardHeader>
+                                            <div className="flex items-start justify-between">
+                                                <div className="space-y-1">
+                                                    <CardTitle>
                                                         {post.title}
-                                                    </a>
-                                                </CardTitle>
-                                                <CardDescription>
-                                                    Posted by {post.author_name}{" "}
-                                                    •{" "}
-                                                    {formatDate(
-                                                        post.created_at
-                                                    )}
-                                                </CardDescription>
-                                            </div>
-                                            <Badge variant="outline">
-                                                {post.category_name}
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-muted-foreground line-clamp-2">
-                                            {post.content}
-                                        </p>
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {post.tags.map((tag: string) => (
-                                                <Badge
-                                                    key={tag}
-                                                    variant="secondary"
-                                                    className="text-xs"
-                                                >
-                                                    {tag}
+                                                    </CardTitle>
+                                                    <CardDescription>
+                                                        Posted by{" "}
+                                                        {post.author_name} •{" "}
+                                                        {formatDate(
+                                                            post.created_at
+                                                        )}
+                                                    </CardDescription>
+                                                </div>
+                                                <Badge variant="outline">
+                                                    {post.category_name}
                                                 </Badge>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-1">
-                                            <span>
-                                                {post.reply_count} replies
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <span>{post.like_count} likes</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <span>{post.view_count} views</span>
-                                        </div>
-                                        <div className="ml-auto text-xs">
-                                            Saved {formatDate(post.saved_at)}
-                                        </div>
-                                    </CardFooter>
-                                </Card>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-muted-foreground line-clamp-2">
+                                                {post.content}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 mt-4">
+                                                {post.tags.map(
+                                                    (tag: string) => (
+                                                        <Badge
+                                                            key={tag}
+                                                            variant="secondary"
+                                                            className="text-xs"
+                                                        >
+                                                            {tag}
+                                                        </Badge>
+                                                    )
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <span>
+                                                    {post.reply_count} replies
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span>
+                                                    {post.like_count} likes
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span>
+                                                    {post.view_count} views
+                                                </span>
+                                            </div>
+                                            <div className="ml-auto text-xs">
+                                                Saved{" "}
+                                                {formatDate(post.saved_at)}
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                </Link>
                             ))
                         )}
                     </div>
