@@ -4,37 +4,72 @@ import { neon } from "@neondatabase/serverless";
 // Initialize the Neon client
 const sql = neon(process.env.DATABASE_URL || "");
 
-export async function GET() {
+export async function GET(request) {
     try {
-        // Fetch courses with their reviews
-        const courses = await sql`
-            SELECT 
-                c.id,
-                c.code,
-                c.name as title,
-                c.department as category,
-                c.professor_id as professor,
-                COUNT(cr.id) as review_count,
-                ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
-                ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
-                ROUND(AVG(cr.workload)::numeric, 1) as workload,
-                ROUND(AVG(cr.rating)::numeric, 1) as value,
-                (
-                    SELECT content 
-                    FROM course_reviews 
-                    WHERE course_id = c.id 
-                    ORDER BY created_at DESC 
-                    LIMIT 1
-                ) as latest_review
-            FROM courses c
-            LEFT JOIN course_reviews cr ON c.id = cr.course_id
-            GROUP BY c.id, c.code, c.name, c.department, c.professor_id
-            HAVING COUNT(cr.id) > 0
-            ORDER BY rating DESC NULLS LAST
-        `;
+        const { searchParams } = new URL(request.url);
+        const search = searchParams.get("search") || "";
+
+        let courses;
+        if (search) {
+            courses = await sql`
+                SELECT 
+                    c.id,
+                    c.code,
+                    c.name as title,
+                    c.department as category,
+                    c.professor_id as professor,
+                    COUNT(cr.id) as review_count,
+                    ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
+                    ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
+                    ROUND(AVG(cr.workload)::numeric, 1) as workload,
+                    ROUND(AVG(cr.rating)::numeric, 1) as value,
+                    (
+                        SELECT content 
+                        FROM course_reviews 
+                        WHERE course_id = c.id 
+                        ORDER BY created_at DESC 
+                        LIMIT 1
+                    ) as latest_review
+                FROM courses c
+                LEFT JOIN course_reviews cr ON c.id = cr.course_id
+                WHERE c.name ILIKE ${"%" + search + "%"}
+                   OR c.professor_id ILIKE ${"%" + search + "%"}
+                   OR c.code ILIKE ${"%" + search + "%"}
+                   OR c.department ILIKE ${"%" + search + "%"}
+                GROUP BY c.id, c.code, c.name, c.department, c.professor_id
+                HAVING COUNT(cr.id) > 0
+                ORDER BY rating DESC NULLS LAST
+            `;
+        } else {
+            courses = await sql`
+                SELECT 
+                    c.id,
+                    c.code,
+                    c.name as title,
+                    c.department as category,
+                    c.professor_id as professor,
+                    COUNT(cr.id) as review_count,
+                    ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
+                    ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
+                    ROUND(AVG(cr.workload)::numeric, 1) as workload,
+                    ROUND(AVG(cr.rating)::numeric, 1) as value,
+                    (
+                        SELECT content 
+                        FROM course_reviews 
+                        WHERE course_id = c.id 
+                        ORDER BY created_at DESC 
+                        LIMIT 1
+                    ) as latest_review
+                FROM courses c
+                LEFT JOIN course_reviews cr ON c.id = cr.course_id
+                GROUP BY c.id, c.code, c.name, c.department, c.professor_id
+                HAVING COUNT(cr.id) > 0
+                ORDER BY rating DESC NULLS LAST
+            `;
+        }
 
         // Transform the data to match the frontend interface
-        const transformedCourses = courses.map((course: any) => ({
+        const transformedCourses = courses.map((course) => ({
             id: course.code,
             title: course.title,
             professor: course.professor || "Unknown Professor",

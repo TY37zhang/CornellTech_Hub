@@ -68,7 +68,11 @@ export default function CoursesPage() {
         const fetchCourses = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch("/api/courses");
+                const params = new URLSearchParams();
+                if (searchQuery) params.set("search", searchQuery);
+                const response = await fetch(
+                    `/api/courses?${params.toString()}`
+                );
                 if (!response.ok) {
                     throw new Error("Failed to fetch courses");
                 }
@@ -85,7 +89,7 @@ export default function CoursesPage() {
         };
 
         fetchCourses();
-    }, []);
+    }, [searchQuery]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -99,51 +103,6 @@ export default function CoursesPage() {
             window.removeEventListener("resize", checkMobile);
         };
     }, []);
-
-    // Apply search, tab filter, and sorting
-    useEffect(() => {
-        let result = [...courses];
-
-        // Search filter
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(
-                (course) =>
-                    course.title.toLowerCase().includes(q) ||
-                    course.professor.toLowerCase().includes(q)
-            );
-        }
-
-        // Tab (category) filter
-        if (activeTab !== "all") {
-            result = result.filter((course) => course.category === activeTab);
-        }
-
-        // Sorting
-        result.sort((a, b) => {
-            switch (sortBy) {
-                case "rating":
-                    return b.rating - a.rating;
-                case "reviews":
-                    return b.reviewCount - a.reviewCount;
-                case "newest":
-                    return 0;
-                case "name":
-                    return a.title.localeCompare(b.title);
-                default:
-                    return 0;
-            }
-        });
-
-        setFilteredCourses(result);
-    }, [
-        searchQuery,
-        activeTab,
-        programFilter,
-        semesterFilter,
-        sortBy,
-        courses,
-    ]);
 
     // Helper to render stars
     const renderStars = (rating: number) => {
