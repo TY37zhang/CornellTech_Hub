@@ -57,6 +57,7 @@ export default function CoursesPage() {
     const [activeTab, setActiveTab] = useState("all");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
 
     // Courses state
     const [courses, setCourses] = useState<Course[]>([]);
@@ -84,6 +85,19 @@ export default function CoursesPage() {
         };
 
         fetchCourses();
+    }, []);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 900);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+
+        return () => {
+            window.removeEventListener("resize", checkMobile);
+        };
     }, []);
 
     // Apply search, tab filter, and sorting
@@ -188,25 +202,64 @@ export default function CoursesPage() {
                         className="w-full"
                     >
                         <div className="flex w-full items-center justify-between">
-                            <TabsList>
-                                <TabsTrigger value="all">
-                                    All Courses
-                                </TabsTrigger>
-                                <TabsTrigger value="ceee">CEEE</TabsTrigger>
-                                <TabsTrigger value="cs">CS</TabsTrigger>
-                                <TabsTrigger value="ece">ECE</TabsTrigger>
-                                <TabsTrigger value="hadm">HADM</TabsTrigger>
-                                <TabsTrigger value="info">INFO</TabsTrigger>
-                                <TabsTrigger value="law">LAW</TabsTrigger>
-                                <TabsTrigger value="orie">ORIE</TabsTrigger>
-                                <TabsTrigger value="tech">TECH</TabsTrigger>
-                                <TabsTrigger value="techie">TECHIE</TabsTrigger>
-                            </TabsList>
+                            {isMobile ? (
+                                <Select
+                                    value={activeTab}
+                                    onValueChange={setActiveTab}
+                                >
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            All Courses
+                                        </SelectItem>
+                                        <SelectItem value="ceee">
+                                            CEEE
+                                        </SelectItem>
+                                        <SelectItem value="cs">CS</SelectItem>
+                                        <SelectItem value="ece">ECE</SelectItem>
+                                        <SelectItem value="hadm">
+                                            HADM
+                                        </SelectItem>
+                                        <SelectItem value="info">
+                                            INFO
+                                        </SelectItem>
+                                        <SelectItem value="law">LAW</SelectItem>
+                                        <SelectItem value="orie">
+                                            ORIE
+                                        </SelectItem>
+                                        <SelectItem value="tech">
+                                            TECH
+                                        </SelectItem>
+                                        <SelectItem value="techie">
+                                            TECHIE
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <TabsList>
+                                    <TabsTrigger value="all">
+                                        All Courses
+                                    </TabsTrigger>
+                                    <TabsTrigger value="ceee">CEEE</TabsTrigger>
+                                    <TabsTrigger value="cs">CS</TabsTrigger>
+                                    <TabsTrigger value="ece">ECE</TabsTrigger>
+                                    <TabsTrigger value="hadm">HADM</TabsTrigger>
+                                    <TabsTrigger value="info">INFO</TabsTrigger>
+                                    <TabsTrigger value="law">LAW</TabsTrigger>
+                                    <TabsTrigger value="orie">ORIE</TabsTrigger>
+                                    <TabsTrigger value="tech">TECH</TabsTrigger>
+                                    <TabsTrigger value="techie">
+                                        TECHIE
+                                    </TabsTrigger>
+                                </TabsList>
+                            )}
                             <div className="flex items-center gap-2">
                                 <Link href="/courses/new-review">
                                     <Button className="gap-1">
                                         <PlusCircle className="h-4 w-4" />
-                                        <span>New Review</span>
+                                        {!isMobile && <span>New Review</span>}
                                     </Button>
                                 </Link>
                             </div>

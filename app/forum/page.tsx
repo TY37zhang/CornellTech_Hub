@@ -124,6 +124,7 @@ export default function ForumPage() {
             post_count: number;
         }>
     >([]);
+    const [isMobile, setIsMobile] = useState(false);
 
     // Fetch threads, stats, and top contributors on component mount
     useEffect(() => {
@@ -169,6 +170,19 @@ export default function ForumPage() {
             }
         }
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 900);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+
+        return () => {
+            window.removeEventListener("resize", checkMobile);
+        };
     }, []);
 
     // Filtered and sorted threads
@@ -311,34 +325,72 @@ export default function ForumPage() {
                                     className="w-full"
                                 >
                                     <div className="flex w-full items-center justify-between">
-                                        <TabsList>
-                                            <TabsTrigger value="all">
-                                                All Discussions
-                                            </TabsTrigger>
-                                            <TabsTrigger value="Academics">
-                                                Academics
-                                            </TabsTrigger>
-                                            <TabsTrigger value="Career">
-                                                Career
-                                            </TabsTrigger>
-                                            <TabsTrigger value="Campus Life">
-                                                Campus Life
-                                            </TabsTrigger>
-                                            <TabsTrigger value="Technology">
-                                                Technology
-                                            </TabsTrigger>
-                                            <TabsTrigger value="Events">
-                                                Events
-                                            </TabsTrigger>
-                                            <TabsTrigger value="General">
-                                                General
-                                            </TabsTrigger>
-                                        </TabsList>
+                                        {isMobile ? (
+                                            <Select
+                                                value={activeTab}
+                                                onValueChange={setActiveTab}
+                                            >
+                                                <SelectTrigger className="w-[200px]">
+                                                    <SelectValue placeholder="Select category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">
+                                                        All Discussions
+                                                    </SelectItem>
+                                                    <SelectItem value="Academics">
+                                                        Academics
+                                                    </SelectItem>
+                                                    <SelectItem value="Career">
+                                                        Career
+                                                    </SelectItem>
+                                                    <SelectItem value="Campus Life">
+                                                        Campus Life
+                                                    </SelectItem>
+                                                    <SelectItem value="Technology">
+                                                        Technology
+                                                    </SelectItem>
+                                                    <SelectItem value="Events">
+                                                        Events
+                                                    </SelectItem>
+                                                    <SelectItem value="General">
+                                                        General
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <TabsList>
+                                                <TabsTrigger value="all">
+                                                    All Discussions
+                                                </TabsTrigger>
+                                                <TabsTrigger value="Academics">
+                                                    Academics
+                                                </TabsTrigger>
+                                                <TabsTrigger value="Career">
+                                                    Career
+                                                </TabsTrigger>
+                                                <TabsTrigger value="Campus Life">
+                                                    Campus Life
+                                                </TabsTrigger>
+                                                <TabsTrigger value="Technology">
+                                                    Technology
+                                                </TabsTrigger>
+                                                <TabsTrigger value="Events">
+                                                    Events
+                                                </TabsTrigger>
+                                                <TabsTrigger value="General">
+                                                    General
+                                                </TabsTrigger>
+                                            </TabsList>
+                                        )}
                                         <div className="flex items-center gap-2">
                                             <Link href="/forum/create">
                                                 <Button className="gap-1">
                                                     <PlusCircle className="h-4 w-4" />
-                                                    <span>New Discussion</span>
+                                                    {!isMobile && (
+                                                        <span>
+                                                            New Discussion
+                                                        </span>
+                                                    )}
                                                 </Button>
                                             </Link>
                                         </div>

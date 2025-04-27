@@ -32,11 +32,8 @@ export function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-14 items-center px-2 md:container">
-                <div className="flex items-center gap-1 md:gap-2 w-[200px]">
-                    <div className="md:hidden">
-                        <MobileNav />
-                    </div>
+            <div className="flex h-14 items-center justify-between px-6 md:px-8">
+                <div className="flex items-center gap-1 md:gap-2">
                     <Link href="/" className="flex items-center gap-1 md:gap-2">
                         <Image
                             src="/placeholder.svg?height=32&width=32"
@@ -50,7 +47,7 @@ export function SiteHeader() {
                         </span>
                     </Link>
                 </div>
-                <nav className="hidden md:flex items-center justify-center flex-1">
+                <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
                     <div className="flex items-center gap-8">
                         <Link
                             href="/"
@@ -90,95 +87,104 @@ export function SiteHeader() {
                         </Link>
                     </div>
                 </nav>
-                <div className="flex items-center justify-end w-[200px]">
-                    {session ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="relative h-8 w-8 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
+                <div className="flex items-center gap-2">
+                    <div className="md:hidden">
+                        <MobileNav />
+                    </div>
+                    <div className="hidden md:flex items-center gap-2">
+                        {session ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="relative h-8 w-8 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
+                                    >
+                                        <Avatar className="h-8 w-8 ring-0">
+                                            <AvatarImage
+                                                src={session.user?.image || ""}
+                                                alt={session.user?.name || ""}
+                                                className="ring-0"
+                                            />
+                                            <AvatarFallback className="ring-0">
+                                                {session.user?.name?.charAt(
+                                                    0
+                                                ) || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-56"
                                 >
-                                    <Avatar className="h-8 w-8 ring-0">
-                                        <AvatarImage
-                                            src={session.user?.image || ""}
-                                            alt={session.user?.name || ""}
-                                            className="ring-0"
-                                        />
-                                        <AvatarFallback className="ring-0">
-                                            {session.user?.name?.charAt(0) ||
-                                                "U"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <div className="flex items-center justify-start gap-2 p-2">
-                                    <div className="flex flex-col space-y-1 leading-none">
-                                        <p className="font-medium">
-                                            {session.user?.name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {session.user?.email}
-                                        </p>
+                                    <div className="flex items-center justify-start gap-2 p-2">
+                                        <div className="flex flex-col space-y-1 leading-none">
+                                            <p className="font-medium">
+                                                {session.user?.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {session.user?.email}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href="/user/posts"
-                                        className="flex items-center cursor-pointer"
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/user/posts"
+                                            className="flex items-center cursor-pointer"
+                                        >
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            <span>My Posts</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/forum/saved"
+                                            className="flex items-center cursor-pointer"
+                                        >
+                                            <BookmarkPlus className="mr-2 h-4 w-4" />
+                                            <span>Saved Posts</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/my-reviews"
+                                            className="flex items-center cursor-pointer"
+                                        >
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            <span>My Reviews</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/settings"
+                                            className="flex items-center cursor-pointer"
+                                        >
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            <span>Settings</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() => signOut()}
+                                        className="flex items-center cursor-pointer text-red-600 focus:text-red-600"
                                     >
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        <span>My Posts</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href="/forum/saved"
-                                        className="flex items-center cursor-pointer"
-                                    >
-                                        <BookmarkPlus className="mr-2 h-4 w-4" />
-                                        <span>Saved Posts</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href="/my-reviews"
-                                        className="flex items-center cursor-pointer"
-                                    >
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        <span>My Reviews</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href="/settings"
-                                        className="flex items-center cursor-pointer"
-                                    >
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        <span>Settings</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    onClick={() => signOut()}
-                                    className="flex items-center cursor-pointer text-red-600 focus:text-red-600"
-                                >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Sign out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <>
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href="/auth/signin">Sign In</Link>
-                            </Button>
-                            <Button size="sm" asChild>
-                                <Link href="/auth/signup">Sign Up</Link>
-                            </Button>
-                        </>
-                    )}
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Sign out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <>
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href="/auth/signin">Sign In</Link>
+                                </Button>
+                                <Button size="sm" asChild>
+                                    <Link href="/auth/signup">Sign Up</Link>
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

@@ -4,7 +4,7 @@ import Link from "next/link";
 export function Footer() {
     return (
         <footer className="border-t bg-muted/40">
-            <div className="container flex flex-col gap-6 py-8 md:flex-row md:items-center md:justify-between md:py-12">
+            <div className="container flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:py-6">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <Image
@@ -88,9 +88,22 @@ export function Footer() {
                     </div>
                 </nav>
             </div>
-            <div className="container py-4 text-center text-sm text-muted-foreground border-t">
-                &copy; {new Date().getFullYear()} Cornell Tech Student Resource
-                Hub. All rights reserved.
+            <div className="container py-2 text-center text-sm text-muted-foreground border-t">
+                <div>
+                    &copy; {new Date().getFullYear()} Cornell Tech Student
+                    Resource Hub. All rights reserved.
+                </div>
+                <div className="text-xs mt-1">
+                    Designed and developed by{" "}
+                    <Link
+                        href="https://www.tianyinzhang.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                    >
+                        Tianyin Zhang
+                    </Link>
+                </div>
             </div>
         </footer>
     );
