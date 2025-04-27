@@ -55,9 +55,6 @@ export const authOptions: NextAuthOptions = {
                     `;
                     console.log("Database query result:", result);
 
-                    // Use default profile picture if user doesn't have one
-                    const avatarUrl = user.image || DEFAULT_PROFILE_PICTURE;
-
                     // If user doesn't exist, create them
                     if (result.length === 0) {
                         console.log(
@@ -66,37 +63,22 @@ export const authOptions: NextAuthOptions = {
                         );
                         const newUser = await sql`
                             INSERT INTO users (name, email, avatar_url)
-                            VALUES (${user.name}, ${user.email}, ${avatarUrl})
+                            VALUES (${user.name}, ${user.email}, ${DEFAULT_PROFILE_PICTURE})
                             RETURNING id, name, email, avatar_url
                         `;
                         console.log("New user created:", newUser[0]);
 
-                        // Update the user object with the new user's ID
+                        // Update the user object with the new user's ID and avatar
                         user.id = newUser[0].id;
+                        user.image = newUser[0].avatar_url;
                     } else {
-                        // Update the user object with the existing user's ID
+                        // Update the user object with the existing user's data
                         console.log("Found existing user:", result[0]);
                         user.id = result[0].id;
-
-                        // Only update the avatar_url if it's null or different
-                        if (
-                            !result[0].avatar_url ||
-                            avatarUrl !== result[0].avatar_url
-                        ) {
-                            await sql`
-                                UPDATE users 
-                                SET avatar_url = ${avatarUrl},
-                                    updated_at = NOW()
-                                WHERE id = ${result[0].id}
-                            `;
-                            console.log(
-                                "Updated user's avatar_url to:",
-                                avatarUrl
-                            );
-                        }
-
-                        // Keep the user's chosen display name
                         user.name = result[0].name;
+                        // Use the avatar_url from our database
+                        user.image =
+                            result[0].avatar_url || DEFAULT_PROFILE_PICTURE;
                     }
                 } catch (error) {
                     console.error("Error during Google sign in:", error);
@@ -122,10 +104,22 @@ export const authOptions: NextAuthOptions = {
                 const result = await sql`
                     SELECT name, avatar_url FROM users WHERE id = ${token.id}
                 `;
+                console.log("Session callback - fetched user data:", result);
+
                 if (result.length > 0) {
                     session.user.name = result[0].name;
-                    session.user.image =
-                        result[0].avatar_url || DEFAULT_PROFILE_PICTURE;
+
+                    // Always use the avatar_url from the database
+                    if (result[0].avatar_url) {
+                        session.user.image = result[0].avatar_url;
+                        console.log(
+                            "Session callback - using database avatar_url:",
+                            result[0].avatar_url
+                        );
+                    } else {
+                        session.user.image = DEFAULT_PROFILE_PICTURE;
+                        console.log("Session callback - using default avatar");
+                    }
                 }
             }
             return session;

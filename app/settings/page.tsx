@@ -28,6 +28,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 
 // Define the form schema
 const profileFormSchema = z.object({
@@ -46,6 +47,7 @@ export default function SettingsPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -133,6 +135,59 @@ export default function SettingsPage() {
         }
     }
 
+    // Handle profile picture upload
+    async function handleAvatarUpload(
+        event: React.ChangeEvent<HTMLInputElement>
+    ) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please upload an image file");
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Image size should be less than 5MB");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            // Create a FormData object
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // Upload the file
+            const response = await fetch("/api/user/profile/avatar", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update profile picture");
+            }
+
+            const data = await response.json();
+            console.log("Avatar upload response:", data);
+
+            // Force a session update
+            await update();
+
+            // Refresh the page to ensure all components get the updated data
+            router.refresh();
+
+            toast.success("Profile picture updated successfully");
+        } catch (error) {
+            console.error("Error uploading profile picture:", error);
+            toast.error("Failed to update profile picture");
+        } finally {
+            setIsUploading(false);
+        }
+    }
+
     // Show loading state while checking authentication or fetching profile
     if (status === "loading" || isFetching) {
         return (
@@ -173,23 +228,41 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="flex items-center gap-4">
-                                    <Avatar className="h-20 w-20">
-                                        <AvatarImage
-                                            src={session?.user?.image || ""}
-                                            alt={session?.user?.name || ""}
-                                        />
-                                        <AvatarFallback>
-                                            {session?.user?.name?.charAt(0) ||
-                                                "U"}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                    <div className="relative">
+                                        <Avatar className="h-20 w-20">
+                                            <AvatarImage
+                                                src={session?.user?.image || ""}
+                                                alt={session?.user?.name || ""}
+                                            />
+                                            <AvatarFallback>
+                                                {session?.user?.name?.charAt(
+                                                    0
+                                                ) || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <label
+                                            htmlFor="avatar-upload"
+                                            className="absolute bottom-0 right-0 p-1 bg-background rounded-full border cursor-pointer hover:bg-muted transition-colors"
+                                        >
+                                            <Upload className="h-4 w-4" />
+                                            <input
+                                                id="avatar-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleAvatarUpload}
+                                                disabled={isUploading}
+                                            />
+                                        </label>
+                                    </div>
                                     <div>
                                         <h3 className="text-lg font-medium">
                                             Profile Picture
                                         </h3>
                                         <p className="text-sm text-muted-foreground">
-                                            Your profile picture is managed
-                                            through your Google account.
+                                            Upload a new profile picture.
+                                            Supported formats: JPG, PNG, GIF.
+                                            Max size: 5MB.
                                         </p>
                                     </div>
                                 </div>
