@@ -133,46 +133,92 @@ interface ForumPostResponse {
 }
 
 export async function getForumPosts(
+    search = "",
     limit = 10,
     offset = 0
 ): Promise<{ posts: ForumPostResponse[]; total: number }> {
     try {
-        // Get total count first
-        const totalCountResult = await sql`
-            SELECT COUNT(*) as count FROM forum_posts WHERE status = 'active';
-        `;
+        let totalCountResult;
+        let posts;
+        if (search) {
+            totalCountResult = await sql`
+                SELECT COUNT(*) as count
+                FROM forum_posts fp
+                LEFT JOIN users u ON fp.author_id = u.id
+                WHERE fp.status = 'active'
+                AND (
+                    fp.title ILIKE ${"%" + search + "%"}
+                    OR fp.content ILIKE ${"%" + search + "%"}
+                    OR u.name ILIKE ${"%" + search + "%"}
+                )
+            `;
+            posts = await sql`
+                SELECT 
+                    fp.id,
+                    fp.title,
+                    fp.content,
+                    fp.created_at,
+                    fp.updated_at,
+                    fc.name as category_name,
+                    fc.slug as category_slug,
+                    u.name as author_name,
+                    u.avatar_url as author_avatar,
+                    u.id as author_id,
+                    COUNT(DISTINCT fc2.id) as reply_count,
+                    COUNT(DISTINCT fl.id) as like_count,
+                    COUNT(DISTINCT fv.id) as view_count
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                LEFT JOIN users u ON fp.author_id = u.id
+                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+                LEFT JOIN forum_views fv ON fp.id = fv.post_id
+                WHERE fp.status = 'active'
+                AND (
+                    fp.title ILIKE ${"%" + search + "%"}
+                    OR fp.content ILIKE ${"%" + search + "%"}
+                    OR u.name ILIKE ${"%" + search + "%"}
+                )
+                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+                ORDER BY fp.created_at DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+        } else {
+            totalCountResult = await sql`
+                SELECT COUNT(*) as count FROM forum_posts WHERE status = 'active';
+            `;
+            posts = await sql`
+                SELECT 
+                    fp.id,
+                    fp.title,
+                    fp.content,
+                    fp.created_at,
+                    fp.updated_at,
+                    fc.name as category_name,
+                    fc.slug as category_slug,
+                    u.name as author_name,
+                    u.avatar_url as author_avatar,
+                    u.id as author_id,
+                    COUNT(DISTINCT fc2.id) as reply_count,
+                    COUNT(DISTINCT fl.id) as like_count,
+                    COUNT(DISTINCT fv.id) as view_count
+                FROM forum_posts fp
+                LEFT JOIN forum_categories fc ON fp.category_id = fc.id
+                LEFT JOIN users u ON fp.author_id = u.id
+                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+                LEFT JOIN forum_views fv ON fp.id = fv.post_id
+                WHERE fp.status = 'active'
+                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+                ORDER BY fp.created_at DESC
+                LIMIT ${limit} OFFSET ${offset}
+            `;
+        }
         const total = totalCountResult[0]?.count || 0;
-
-        const posts = await sql`
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count
-            FROM forum_posts fp
-            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN users u ON fp.author_id = u.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            WHERE fp.status = 'active'
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-            ORDER BY fp.created_at DESC
-            LIMIT ${limit} OFFSET ${offset}
-        `;
 
         // Get tags for each post
         const postsWithTags = await Promise.all(
-            posts.map(async (post) => {
+            posts.map(async (post: any) => {
                 const tags = await sql`
                     SELECT tag
                     FROM forum_post_tags
@@ -180,7 +226,7 @@ export async function getForumPosts(
                 `;
                 return {
                     ...post,
-                    tags: tags.map((t) => t.tag),
+                    tags: tags.map((t: any) => t.tag),
                 };
             })
         );

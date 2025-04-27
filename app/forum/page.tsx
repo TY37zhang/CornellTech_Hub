@@ -186,14 +186,22 @@ export default function ForumPage() {
         async function fetchData() {
             try {
                 const offset = (currentPage - 1) * threadsPerPage;
-                const [postsData, stats, contributors] = await Promise.all([
-                    getForumPosts(threadsPerPage, offset),
+                const params = new URLSearchParams({
+                    search: searchQuery,
+                    limit: threadsPerPage.toString(),
+                    offset: offset.toString(),
+                });
+                const res = await fetch(
+                    `/api/forum/posts?${params.toString()}`
+                );
+                const postsData = await res.json();
+                const [stats, contributors] = await Promise.all([
                     getForumStats(),
                     getTopContributors(),
                 ]);
 
                 const formattedThreads: Thread[] = postsData.posts.map(
-                    (post) => {
+                    (post: any) => {
                         const hotStatus = calculateHotScore({
                             likes: post.like_count,
                             replies: post.reply_count,
@@ -240,7 +248,7 @@ export default function ForumPage() {
         }
 
         fetchData();
-    }, [currentPage]);
+    }, [searchQuery, currentPage]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -258,18 +266,6 @@ export default function ForumPage() {
     // Apply filters and sorting whenever dependencies change
     useEffect(() => {
         let result = [...threads];
-
-        // Apply search filter
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            result = result.filter(
-                (thread) =>
-                    thread.title.toLowerCase().includes(query) ||
-                    thread.content.toLowerCase().includes(query) ||
-                    thread.author.name.toLowerCase().includes(query) ||
-                    thread.tags.some((tag) => tag.toLowerCase().includes(query))
-            );
-        }
 
         // Apply tab filter
         if (activeTab !== "all") {
@@ -292,7 +288,7 @@ export default function ForumPage() {
         });
 
         setFilteredThreads(result);
-    }, [searchQuery, selectedCategory, activeTab, threads]);
+    }, [activeTab, selectedCategory, threads]);
 
     if (loading) {
         return (
