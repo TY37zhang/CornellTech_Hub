@@ -57,8 +57,9 @@ interface Thread {
         color: string;
     };
     createdAt: string;
-    isHot?: boolean;
-    isNew?: boolean;
+    isHot: boolean;
+    isNew: boolean;
+    hotScore: number;
 }
 
 // Helper function to get category color
@@ -101,6 +102,49 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
+// Add this function before the ForumPage component
+function calculateHotScore(thread: {
+    likes: number;
+    replies: number;
+    views: number;
+    createdAt: string;
+}): { isHot: boolean; score: number } {
+    const now = new Date();
+    const threadDate = new Date(thread.createdAt);
+    const hoursSinceCreation =
+        (now.getTime() - threadDate.getTime()) / (1000 * 60 * 60);
+
+    // Weights for different factors
+    const weights = {
+        likes: 1,
+        replies: 1.5,
+        views: 0.2,
+        recency: 2,
+    };
+
+    // Calculate individual scores
+    const likeScore = thread.likes * weights.likes;
+    const replyScore = thread.replies * weights.replies;
+    const viewScore = thread.views * weights.views;
+
+    // Recency boost (decreases as thread gets older, max boost is 100)
+    const recencyBoost = Math.max(
+        0,
+        100 - (hoursSinceCreation / 24) * weights.recency
+    );
+
+    // Calculate total score
+    const totalScore = likeScore + replyScore + viewScore + recencyBoost;
+
+    // Dynamic threshold based on time
+    const threshold = 50 + (hoursSinceCreation / 24) * 10; // Threshold increases over time
+
+    return {
+        isHot: totalScore > threshold,
+        score: totalScore,
+    };
+}
+
 export default function ForumPage() {
     // State for search and filters
     const [searchQuery, setSearchQuery] = useState("");
@@ -136,29 +180,39 @@ export default function ForumPage() {
                     getTopContributors(),
                 ]);
 
-                const formattedThreads: Thread[] = posts.map((post) => ({
-                    id: post.id,
-                    title: post.title,
-                    author: {
-                        name: post.author_name,
-                        avatar:
-                            post.author_avatar ||
-                            "/placeholder.svg?height=32&width=32",
-                        initials: getInitials(post.author_name),
-                    },
-                    category: post.category_name,
-                    categoryColor: getCategoryColor(post.category_name),
-                    content: post.content,
-                    tags: post.tags,
-                    replies: post.reply_count,
-                    likes: post.like_count,
-                    views: post.view_count,
-                    createdAt: formatDate(post.created_at),
-                    isHot: post.like_count > 10 || post.reply_count > 20,
-                    isNew:
-                        new Date(post.created_at).getTime() >
-                        Date.now() - 7 * 24 * 60 * 60 * 1000,
-                }));
+                const formattedThreads: Thread[] = posts.map((post) => {
+                    const hotStatus = calculateHotScore({
+                        likes: post.like_count,
+                        replies: post.reply_count,
+                        views: post.view_count,
+                        createdAt: post.created_at,
+                    });
+
+                    return {
+                        id: post.id,
+                        title: post.title,
+                        author: {
+                            name: post.author_name,
+                            avatar:
+                                post.author_avatar ||
+                                "/placeholder.svg?height=32&width=32",
+                            initials: getInitials(post.author_name),
+                        },
+                        category: post.category_name,
+                        categoryColor: getCategoryColor(post.category_name),
+                        content: post.content,
+                        tags: post.tags,
+                        replies: post.reply_count,
+                        likes: post.like_count,
+                        views: post.view_count,
+                        createdAt: formatDate(post.created_at),
+                        isHot: hotStatus.isHot,
+                        hotScore: hotStatus.score,
+                        isNew:
+                            new Date(post.created_at).getTime() >
+                            Date.now() - 7 * 24 * 60 * 60 * 1000,
+                    };
+                });
 
                 setThreads(formattedThreads);
                 setForumStats(stats);
@@ -435,7 +489,7 @@ export default function ForumPage() {
                                                                                 </AvatarFallback>
                                                                             </Avatar>
                                                                             <div className="space-y-1">
-                                                                                <CardTitle className="text-lg font-semibold">
+                                                                                <CardTitle className="text-lg font-semibold truncate-title">
                                                                                     {
                                                                                         thread.title
                                                                                     }
@@ -459,16 +513,51 @@ export default function ForumPage() {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                        <Badge
-                                                                            variant="secondary"
-                                                                            className={
-                                                                                thread.categoryColor
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                thread.category
-                                                                            }
-                                                                        </Badge>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {thread.isNew && (
+                                                                                <Badge
+                                                                                    variant="secondary"
+                                                                                    className="bg-[#f6993f] text-white px-2 py-0.5"
+                                                                                >
+                                                                                    🚀
+                                                                                    New
+                                                                                </Badge>
+                                                                            )}
+                                                                            {thread.isHot &&
+                                                                                thread.hotScore && (
+                                                                                    <Badge
+                                                                                        variant="secondary"
+                                                                                        className={
+                                                                                            thread.hotScore >
+                                                                                            200
+                                                                                                ? "bg-red-600 text-white px-2 py-0.5"
+                                                                                                : thread.hotScore >
+                                                                                                  150
+                                                                                                ? "bg-orange-500 text-white px-2 py-0.5"
+                                                                                                : "bg-orange-400 text-white px-2 py-0.5"
+                                                                                        }
+                                                                                    >
+                                                                                        🔥{" "}
+                                                                                        {thread.hotScore >
+                                                                                        200
+                                                                                            ? "Super Hot"
+                                                                                            : thread.hotScore >
+                                                                                              150
+                                                                                            ? "Very Hot"
+                                                                                            : "Hot"}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            <Badge
+                                                                                variant="secondary"
+                                                                                className={
+                                                                                    thread.categoryColor
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    thread.category
+                                                                                }
+                                                                            </Badge>
+                                                                        </div>
                                                                     </div>
                                                                     <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">
                                                                         {thread
@@ -534,14 +623,6 @@ export default function ForumPage() {
                                                                                     </span>
                                                                                 </div>
                                                                             </div>
-                                                                            {thread.isNew && (
-                                                                                <Badge
-                                                                                    variant="secondary"
-                                                                                    className="bg-yellow-100 text-yellow-800"
-                                                                                >
-                                                                                    New
-                                                                                </Badge>
-                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </CardFooter>
@@ -802,4 +883,21 @@ export default function ForumPage() {
             </div>
         </div>
     );
+}
+
+const styles = `
+    @media (max-width: 900px) {
+        .truncate-title {
+            max-width: 15ch;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+`;
+
+if (typeof document !== "undefined") {
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
 }
