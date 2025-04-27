@@ -47,7 +47,7 @@ export default function Dashboard() {
                                 </div> */}
                             </div>
                             <Image
-                                src="/placeholder.svg?height=550&width=550"
+                                src="/images/home/campus_1.jpg"
                                 width={550}
                                 height={550}
                                 alt="Cornell Tech Campus"

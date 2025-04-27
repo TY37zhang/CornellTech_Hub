@@ -36,7 +36,7 @@ export function SiteHeader() {
                 <div className="flex items-center gap-1 md:gap-2">
                     <Link href="/" className="flex items-center gap-1 md:gap-2">
                         <Image
-                            src="/placeholder.svg?height=32&width=32"
+                            src="/images/logo/logo.png"
                             alt="Cornell Tech Logo"
                             width={32}
                             height={32}

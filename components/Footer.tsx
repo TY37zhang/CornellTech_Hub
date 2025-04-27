@@ -8,7 +8,7 @@ export function Footer() {
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <Image
-                            src="/placeholder.svg?height=24&width=24"
+                            src="/images/logo/logo.png"
                             alt="Cornell Tech Logo"
                             width={24}
                             height={24}

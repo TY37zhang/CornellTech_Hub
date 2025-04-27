@@ -26,7 +26,7 @@ export const metadata = {
     description: "A community for Cornell Tech students",
     generator: "v0.dev",
     icons: {
-        icon: "/favicon.ico",
+        icon: "/images/logo/cornell-tech.svg",
     },
 };
 
@@ -40,9 +40,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 />
                 <link
                     rel="icon"
-                    href="/favicon.ico"
-                    type="image/x-icon"
-                    sizes="16x16"
+                    href="/images/logo/cornell-tech.svg"
+                    type="image/svg+xml"
                 />
             </head>
             <body className={inter.className} suppressHydrationWarning={true}>
