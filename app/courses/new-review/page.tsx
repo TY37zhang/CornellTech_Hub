@@ -74,10 +74,6 @@ export default function NewReviewPage() {
                 "Professor name must be at least 2 characters";
         }
 
-        if (!formData.category) {
-            newErrors.category = "Please select a category";
-        }
-
         if (formData.review.length < 10) {
             newErrors.review = "Review must be at least 10 characters";
         }
@@ -191,45 +187,6 @@ export default function NewReviewPage() {
                             {errors.professor && (
                                 <p className="text-sm text-red-500">
                                     {errors.professor}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="category">Subject</Label>
-                            <Select
-                                value={formData.category}
-                                onValueChange={(value) =>
-                                    setFormData({
-                                        ...formData,
-                                        category: value,
-                                    })
-                                }
-                            >
-                                <SelectTrigger
-                                    className={
-                                        errors.category ? "border-red-500" : ""
-                                    }
-                                >
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ceee">CEEE</SelectItem>
-                                    <SelectItem value="cs">CS</SelectItem>
-                                    <SelectItem value="ece">ECE</SelectItem>
-                                    <SelectItem value="hadm">HADM</SelectItem>
-                                    <SelectItem value="info">INFO</SelectItem>
-                                    <SelectItem value="law">LAW</SelectItem>
-                                    <SelectItem value="orie">ORIE</SelectItem>
-                                    <SelectItem value="tech">TECH</SelectItem>
-                                    <SelectItem value="techie">
-                                        TECHIE
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors.category && (
-                                <p className="text-sm text-red-500">
-                                    {errors.category}
                                 </p>
                             )}
                         </div>

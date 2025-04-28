@@ -7,7 +7,6 @@ import {
     ArrowLeft,
     BookOpen,
     Calendar,
-    Clock,
     Star,
     ThumbsDown,
     ThumbsUp,
@@ -58,6 +57,41 @@ interface Course {
     description?: string;
     syllabus?: string;
     ratings?: Record<string, number>;
+    departments?: string[];
+}
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    const colors: { [key: string]: string } = {
+        ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+        cs: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
+        ece: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
+        hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
+        info: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+        law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
+        orie: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
+        tech: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+        techie: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
+        arch: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100 dark:bg-cyan-800/20 dark:text-cyan-400",
+        cee: "bg-lime-100 text-lime-800 hover:bg-lime-100 dark:bg-lime-800/20 dark:text-lime-400",
+        cmbp: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-800/20 dark:text-emerald-400",
+        cmpb: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
+        ctiv: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
+        design: "bg-violet-100 text-violet-800 hover:bg-violet-100 dark:bg-violet-800/20 dark:text-violet-400",
+        hbds: "bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-100 dark:bg-fuchsia-800/20 dark:text-fuchsia-400",
+        hinf: "bg-sky-100 text-sky-800 hover:bg-sky-100 dark:bg-sky-800/20 dark:text-sky-400",
+        hpec: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
+        iamp: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
+        nba: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
+        nbay: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+        pbsb: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
+        phar: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+        tpcm: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+    };
+    return (
+        colors[category] ||
+        "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
+    );
 }
 
 export default function CourseDetailPage() {
@@ -176,12 +210,38 @@ export default function CourseDetailPage() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            <Badge
-                                                className={course.categoryColor}
-                                                variant="secondary"
-                                            >
-                                                {course.category.toUpperCase()}
-                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                                {Array.isArray(
+                                                    course.departments
+                                                ) &&
+                                                course.departments.length >
+                                                    0 ? (
+                                                    course.departments.map(
+                                                        (dept, index) => (
+                                                            <Badge
+                                                                key={index}
+                                                                className={`${getCategoryColor(dept.toLowerCase())} min-w-[56px] justify-center text-center`}
+                                                                variant="secondary"
+                                                            >
+                                                                {dept.toUpperCase()}
+                                                            </Badge>
+                                                        )
+                                                    )
+                                                ) : (
+                                                    <Badge
+                                                        className={
+                                                            course.categoryColor
+                                                        }
+                                                        variant="secondary"
+                                                    >
+                                                        {(
+                                                            course
+                                                                .departments?.[0] ||
+                                                            ""
+                                                        ).toUpperCase()}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title}
@@ -211,17 +271,8 @@ export default function CourseDetailPage() {
                                         <div className="flex items-center gap-2">
                                             <Calendar className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">
-                                                {course.semester} {course.year}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
-                                                ~
-                                                {Math.round(
-                                                    course.workload * 2
-                                                )}{" "}
-                                                hours/week
+                                                {course.semester} {course.year}{" "}
+                                                • 2 weeks ago
                                             </span>
                                         </div>
                                     </div>
@@ -339,7 +390,7 @@ export default function CourseDetailPage() {
                                                 course.id
                                             )}&professor=${encodeURIComponent(
                                                 course.professor
-                                            )}&category=${course.category.toLowerCase()}`}
+                                            )}&category=${(course.departments?.[0] || "").toLowerCase()}`}
                                         >
                                             <Button className="w-full">
                                                 Write a Review
@@ -392,7 +443,10 @@ export default function CourseDetailPage() {
                                         <ul className="list-disc pl-6 text-muted-foreground">
                                             <li>
                                                 Fundamental concepts in{" "}
-                                                {course.category.toLowerCase()}{" "}
+                                                {(
+                                                    course.departments?.[0] ||
+                                                    ""
+                                                ).toLowerCase()}{" "}
                                                 and their applications
                                             </li>
                                             <li>
@@ -410,7 +464,10 @@ export default function CourseDetailPage() {
                                             </li>
                                             <li>
                                                 How to evaluate and apply{" "}
-                                                {course.category.toLowerCase()}{" "}
+                                                {(
+                                                    course.departments?.[0] ||
+                                                    ""
+                                                ).toLowerCase()}{" "}
                                                 principles
                                             </li>
                                             <li>
@@ -425,7 +482,9 @@ export default function CourseDetailPage() {
                                         </h3>
                                         <p className="text-muted-foreground">
                                             Basic knowledge of{" "}
-                                            {course.category.toLowerCase()}{" "}
+                                            {(
+                                                course.departments?.[0] || ""
+                                            ).toLowerCase()}{" "}
                                             concepts is recommended. Programming
                                             experience may be helpful but is not
                                             required for all sections.
@@ -485,58 +544,6 @@ export default function CourseDetailPage() {
                                             </div>
                                         </CardContent>
                                     </Card>
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle>
-                                                Course Details
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">
-                                                        Department
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {course.category.toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">
-                                                        Course Code
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {course.id}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">
-                                                        Credits
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {course.credits}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">
-                                                        Semesters Offered
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        {course.semester}{" "}
-                                                        {course.year}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">
-                                                        Last Updated
-                                                    </span>
-                                                    <span className="font-medium">
-                                                        2 weeks ago
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
                                 </div>
                             </div>
                         </TabsContent>
@@ -555,240 +562,12 @@ export default function CourseDetailPage() {
                                             course.id
                                         )}&professor=${encodeURIComponent(
                                             course.professor
-                                        )}&category=${course.category.toLowerCase()}`}
+                                        )}&category=${(course.departments?.[0] || "").toLowerCase()}`}
                                     >
-                                        <Button>Write a Review</Button>
+                                        <Button className="w-full">
+                                            Write a Review
+                                        </Button>
                                     </Link>
-                                </div>
-                                <div className="space-y-4">
-                                    {course.reviews.length > 0 ? (
-                                        course.reviews.map((review) => (
-                                            <Card key={review.id}>
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex items-center gap-4">
-                                                            <Avatar>
-                                                                <AvatarImage
-                                                                    src={
-                                                                        review.avatarUrl ||
-                                                                        undefined
-                                                                    }
-                                                                />
-                                                                <AvatarFallback>
-                                                                    {
-                                                                        review
-                                                                            .author[0]
-                                                                    }
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div>
-                                                                <CardTitle className="text-base">
-                                                                    {
-                                                                        review.author
-                                                                    }
-                                                                </CardTitle>
-                                                                <CardDescription>
-                                                                    {new Date(
-                                                                        review.createdAt
-                                                                    ).toLocaleDateString()}
-                                                                </CardDescription>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            {renderStars(
-                                                                review.rating
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <p className="text-muted-foreground">
-                                                        {review.content}
-                                                    </p>
-                                                </CardContent>
-                                                <CardFooter className="pt-1">
-                                                    <div className="flex gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center gap-1">
-                                                            <span>
-                                                                Difficulty:
-                                                            </span>
-                                                            <span className="font-medium">
-                                                                {review.difficulty.toFixed(
-                                                                    1
-                                                                )}
-                                                                /5
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <span>
-                                                                Workload:
-                                                            </span>
-                                                            <span className="font-medium">
-                                                                {review.workload.toFixed(
-                                                                    1
-                                                                )}
-                                                                /5
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </CardFooter>
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-10">
-                                            <p className="text-muted-foreground">
-                                                No reviews yet. Be the first to
-                                                review this course!
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="syllabus" className="pt-6">
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <h2 className="text-2xl font-bold tracking-tight">
-                                        Course Syllabus
-                                    </h2>
-                                    <p className="text-muted-foreground">
-                                        {course.syllabus}
-                                    </p>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold tracking-tight">
-                                        Weekly Schedule
-                                    </h3>
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 1: Introduction to{" "}
-                                                {course.title}
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Overview of key concepts and
-                                                    applications
-                                                </li>
-                                                <li>
-                                                    Course structure and
-                                                    expectations
-                                                </li>
-                                                <li>
-                                                    Introduction to fundamental
-                                                    principles
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 2-3: Core Concepts
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Detailed exploration of
-                                                    foundational theories
-                                                </li>
-                                                <li>
-                                                    Practical applications and
-                                                    examples
-                                                </li>
-                                                <li>
-                                                    Hands-on exercises and
-                                                    assignments
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 4-5: Advanced Topics
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Exploration of more complex
-                                                    concepts
-                                                </li>
-                                                <li>
-                                                    Case studies and real-world
-                                                    applications
-                                                </li>
-                                                <li>
-                                                    Group projects and
-                                                    presentations
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 6: Midterm
-                                            </h4>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 7-10: Specialized Topics
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    In-depth exploration of
-                                                    specialized areas
-                                                </li>
-                                                <li>
-                                                    Guest lectures from industry
-                                                    experts
-                                                </li>
-                                                <li>
-                                                    Advanced projects and
-                                                    assignments
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-semibold">
-                                                Week 11-14: Final Projects
-                                            </h4>
-                                            <ul className="list-disc pl-6 text-muted-foreground">
-                                                <li>
-                                                    Project development and
-                                                    implementation
-                                                </li>
-                                                <li>
-                                                    Peer reviews and feedback
-                                                </li>
-                                                <li>
-                                                    Final presentations and
-                                                    demonstrations
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold tracking-tight">
-                                        Grading
-                                    </h3>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between">
-                                            <span>
-                                                Homework Assignments (5)
-                                            </span>
-                                            <span>30%</span>
-                                        </div>
-                                        <Separator />
-                                        <div className="flex justify-between">
-                                            <span>Midterm Exam</span>
-                                            <span>25%</span>
-                                        </div>
-                                        <Separator />
-                                        <div className="flex justify-between">
-                                            <span>Final Project</span>
-                                            <span>35%</span>
-                                        </div>
-                                        <Separator />
-                                        <div className="flex justify-between">
-                                            <span>Participation</span>
-                                            <span>10%</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </TabsContent>

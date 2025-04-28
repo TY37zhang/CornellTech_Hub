@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Filter, Search, Star, PlusCircle } from "lucide-react";
+import {
+    Filter,
+    Search,
+    Star,
+    PlusCircle,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +55,85 @@ interface Course {
     value: number;
     review: string;
     categoryColor: string;
+    crossListed?: { departments: string[] };
+}
+
+// Pagination logic for visible page numbers
+const getVisiblePages = (current: number, total: number): number[] => {
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+    // Always show 5 buttons if possible
+    if (current <= 3) {
+        end = Math.min(5, total);
+    } else if (current >= total - 2) {
+        start = Math.max(1, total - 4);
+    }
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+};
+
+// Program options
+const programOptions = [
+    { value: "all", label: "All Programs" },
+    { value: "arch", label: "ARCH" },
+    { value: "cee", label: "CEE" },
+    { value: "cmbp", label: "CMBP" },
+    { value: "cmpb", label: "CMPB" },
+    { value: "cs", label: "CS" },
+    { value: "ctiv", label: "CTIV" },
+    { value: "design", label: "DESIGN" },
+    { value: "ece", label: "ECE" },
+    { value: "hbds", label: "HBDS" },
+    { value: "hinf", label: "HINF" },
+    { value: "hpec", label: "HPEC" },
+    { value: "iamp", label: "IAMP" },
+    { value: "info", label: "INFO" },
+    { value: "law", label: "LAW" },
+    { value: "nba", label: "NBA" },
+    { value: "nbay", label: "NBAY" },
+    { value: "orie", label: "ORIE" },
+    { value: "pbsb", label: "PBSB" },
+    { value: "phar", label: "PHAR" },
+    { value: "tech", label: "TECH" },
+    { value: "techie", label: "TECHIE" },
+    { value: "tpcm", label: "TPCM" },
+];
+
+// Helper function to get category color
+function getCategoryColor(category: string): string {
+    const colors: { [key: string]: string } = {
+        ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+        cs: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
+        ece: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
+        hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
+        info: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+        law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
+        orie: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
+        tech: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+        techie: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
+        arch: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100 dark:bg-cyan-800/20 dark:text-cyan-400",
+        cee: "bg-lime-100 text-lime-800 hover:bg-lime-100 dark:bg-lime-800/20 dark:text-lime-400",
+        cmbp: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-800/20 dark:text-emerald-400",
+        cmpb: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
+        ctiv: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
+        design: "bg-violet-100 text-violet-800 hover:bg-violet-100 dark:bg-violet-800/20 dark:text-violet-400",
+        hbds: "bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-100 dark:bg-fuchsia-800/20 dark:text-fuchsia-400",
+        hinf: "bg-sky-100 text-sky-800 hover:bg-sky-100 dark:bg-sky-800/20 dark:text-sky-400",
+        hpec: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
+        iamp: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
+        nba: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
+        nbay: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+        pbsb: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
+        phar: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+        tpcm: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+    };
+    return (
+        colors[category] ||
+        "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
+    );
 }
 
 export default function CoursesPage() {
@@ -54,10 +142,14 @@ export default function CoursesPage() {
     const [programFilter, setProgramFilter] = useState("all");
     const [semesterFilter, setSemesterFilter] = useState("all");
     const [sortBy, setSortBy] = useState("rating");
-    const [activeTab, setActiveTab] = useState("all");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const coursesPerPage = 15;
 
     // Courses state
     const [courses, setCourses] = useState<Course[]>([]);
@@ -70,6 +162,15 @@ export default function CoursesPage() {
                 setIsLoading(true);
                 const params = new URLSearchParams();
                 if (searchQuery) params.set("search", searchQuery);
+                // Only apply program filter at the API level if it's not "all"
+                if (programFilter !== "all")
+                    params.set("category", programFilter);
+                params.set("limit", coursesPerPage.toString());
+                params.set(
+                    "offset",
+                    ((currentPage - 1) * coursesPerPage).toString()
+                );
+
                 const response = await fetch(
                     `/api/courses?${params.toString()}`
                 );
@@ -77,8 +178,9 @@ export default function CoursesPage() {
                     throw new Error("Failed to fetch courses");
                 }
                 const data = await response.json();
-                setCourses(data);
-                setFilteredCourses(data);
+                setCourses(data.courses);
+                setFilteredCourses(data.courses);
+                setTotalPages(Math.ceil(data.total / coursesPerPage));
             } catch (err) {
                 setError(
                     err instanceof Error ? err.message : "An error occurred"
@@ -89,20 +191,7 @@ export default function CoursesPage() {
         };
 
         fetchCourses();
-    }, [searchQuery]);
-
-    // Filter courses based on active tab
-    useEffect(() => {
-        if (activeTab === "all") {
-            setFilteredCourses(courses);
-        } else {
-            const filtered = courses.filter(
-                (course) =>
-                    course.category.toLowerCase() === activeTab.toLowerCase()
-            );
-            setFilteredCourses(filtered);
-        }
-    }, [activeTab, courses]);
+    }, [searchQuery, currentPage, programFilter]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -156,9 +245,10 @@ export default function CoursesPage() {
                                     placeholder="Search courses by name, professor, or keyword..."
                                     className="w-full pl-8 rounded-md border bg-background"
                                     value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1); // Reset to first page on search
+                                    }}
                                 />
                             </div>
                         </div>
@@ -167,254 +257,312 @@ export default function CoursesPage() {
 
                 {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
-                    <Tabs
-                        defaultValue="all"
-                        value={activeTab}
-                        onValueChange={setActiveTab}
-                        className="w-full"
-                    >
-                        <div className="flex w-full items-center justify-between">
-                            {isMobile ? (
-                                <Select
-                                    value={activeTab}
-                                    onValueChange={setActiveTab}
-                                >
-                                    <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder="Select category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            All Courses
-                                        </SelectItem>
-                                        <SelectItem value="ceee">
-                                            CEEE
-                                        </SelectItem>
-                                        <SelectItem value="cs">CS</SelectItem>
-                                        <SelectItem value="ece">ECE</SelectItem>
-                                        <SelectItem value="hadm">
-                                            HADM
-                                        </SelectItem>
-                                        <SelectItem value="info">
-                                            INFO
-                                        </SelectItem>
-                                        <SelectItem value="law">LAW</SelectItem>
-                                        <SelectItem value="orie">
-                                            ORIE
-                                        </SelectItem>
-                                        <SelectItem value="tech">
-                                            TECH
-                                        </SelectItem>
-                                        <SelectItem value="techie">
-                                            TECHIE
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            ) : (
-                                <TabsList>
-                                    <TabsTrigger value="all">
-                                        All Courses
-                                    </TabsTrigger>
-                                    <TabsTrigger value="ceee">CEEE</TabsTrigger>
-                                    <TabsTrigger value="cs">CS</TabsTrigger>
-                                    <TabsTrigger value="ece">ECE</TabsTrigger>
-                                    <TabsTrigger value="hadm">HADM</TabsTrigger>
-                                    <TabsTrigger value="info">INFO</TabsTrigger>
-                                    <TabsTrigger value="law">LAW</TabsTrigger>
-                                    <TabsTrigger value="orie">ORIE</TabsTrigger>
-                                    <TabsTrigger value="tech">TECH</TabsTrigger>
-                                    <TabsTrigger value="techie">
-                                        TECHIE
-                                    </TabsTrigger>
-                                </TabsList>
-                            )}
-                            <div className="flex items-center gap-2">
-                                <Link href="/courses/new-review">
-                                    <Button className="gap-1">
-                                        <PlusCircle className="h-4 w-4" />
-                                        {!isMobile && <span>New Review</span>}
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Single dynamic content pane filtered by activeTab */}
-                        <TabsContent value={activeTab} className="mt-6">
-                            {isLoading ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {[...Array(6)].map((_, i) => (
-                                        <Card
-                                            key={i}
-                                            className="h-full overflow-hidden"
+                    <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <Select
+                                value={programFilter}
+                                onValueChange={(value) => {
+                                    setProgramFilter(value);
+                                    setCurrentPage(1); // Reset to first page when changing filter
+                                }}
+                            >
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Select program" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {programOptions.map((option) => (
+                                        <SelectItem
+                                            key={option.value}
+                                            value={option.value}
                                         >
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Link href="/courses/new-review">
+                                <Button className="gap-1">
+                                    <PlusCircle className="h-4 w-4" />
+                                    {!isMobile && <span>New Review</span>}
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Course Grid */}
+                    <div className="mt-6">
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[...Array(6)].map((_, i) => (
+                                    <Card
+                                        key={i}
+                                        className="h-full overflow-hidden"
+                                    >
+                                        <CardHeader className="pb-3">
+                                            <div className="h-6 w-3/4 bg-muted rounded animate-pulse" />
+                                            <div className="h-4 w-1/2 bg-muted rounded animate-pulse mt-2" />
+                                        </CardHeader>
+                                        <CardContent className="pb-3">
+                                            <div className="space-y-2">
+                                                <div className="h-4 w-full bg-muted rounded animate-pulse" />
+                                                <div className="h-4 w-5/6 bg-muted rounded animate-pulse" />
+                                                <div className="h-4 w-4/6 bg-muted rounded animate-pulse" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-10">
+                                <p className="text-red-500">{error}</p>
+                                <Button
+                                    variant="outline"
+                                    className="mt-4"
+                                    onClick={() => window.location.reload()}
+                                >
+                                    Try Again
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredCourses.map((course) => (
+                                    <Link
+                                        href={`/courses/${course.id}`}
+                                        key={course.id}
+                                        className="group"
+                                    >
+                                        <Card className="h-full overflow-hidden transition-all hover:border-primary">
                                             <CardHeader className="pb-3">
-                                                <div className="h-6 w-3/4 bg-muted rounded animate-pulse" />
-                                                <div className="h-4 w-1/2 bg-muted rounded animate-pulse mt-2" />
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <CardTitle className="text-xl">
+                                                            {course.title}
+                                                        </CardTitle>
+                                                        <CardDescription className="text-sm">
+                                                            {course.professor}
+                                                        </CardDescription>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {course.crossListed ? (
+                                                            course.crossListed.departments.map(
+                                                                (
+                                                                    dept,
+                                                                    index
+                                                                ) => (
+                                                                    <Badge
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        className={`${getCategoryColor(dept.toLowerCase())} min-w-[56px] justify-center text-center`}
+                                                                    >
+                                                                        {dept.toUpperCase()}
+                                                                    </Badge>
+                                                                )
+                                                            )
+                                                        ) : (
+                                                            <Badge
+                                                                className={
+                                                                    course.categoryColor
+                                                                }
+                                                            >
+                                                                {course.category.toUpperCase()}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </CardHeader>
                                             <CardContent className="pb-3">
-                                                <div className="space-y-2">
-                                                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
-                                                    <div className="h-4 w-5/6 bg-muted rounded animate-pulse" />
-                                                    <div className="h-4 w-4/6 bg-muted rounded animate-pulse" />
+                                                <div className="flex items-center gap-1 text-sm">
+                                                    <div className="flex">
+                                                        {renderStars(
+                                                            course.rating
+                                                        )}
+                                                    </div>
+                                                    <span className="font-medium">
+                                                        {course.rating.toFixed(
+                                                            1
+                                                        )}
+                                                    </span>
+                                                    <span className="text-muted-foreground">
+                                                        ({course.reviewCount}{" "}
+                                                        reviews)
+                                                    </span>
+                                                </div>
+                                                <div className="mt-3 space-y-2">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            Difficulty
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                                <div
+                                                                    className="h-2 rounded-full bg-yellow-400"
+                                                                    style={{
+                                                                        width: `${
+                                                                            course.difficulty *
+                                                                            20
+                                                                        }%`,
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <span>
+                                                                {course.difficulty.toFixed(
+                                                                    1
+                                                                )}
+                                                                /5
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            Workload
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                                <div
+                                                                    className="h-2 rounded-full bg-yellow-400"
+                                                                    style={{
+                                                                        width: `${
+                                                                            course.workload *
+                                                                            20
+                                                                        }%`,
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <span>
+                                                                {course.workload.toFixed(
+                                                                    1
+                                                                )}
+                                                                /5
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            Value
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                                <div
+                                                                    className="h-2 rounded-full bg-yellow-400"
+                                                                    style={{
+                                                                        width: `${
+                                                                            course.value *
+                                                                            20
+                                                                        }%`,
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <span>
+                                                                {course.value.toFixed(
+                                                                    1
+                                                                )}
+                                                                /5
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </CardContent>
+                                            <CardFooter className="pt-1">
+                                                <p className="line-clamp-2 text-sm text-muted-foreground">
+                                                    "{course.review}"
+                                                </p>
+                                            </CardFooter>
                                         </Card>
-                                    ))}
-                                </div>
-                            ) : error ? (
-                                <div className="text-center py-10">
-                                    <p className="text-red-500">{error}</p>
+                                    </Link>
+                                ))}
+
+                                {filteredCourses.length === 0 && (
+                                    <div className="col-span-full text-center py-10">
+                                        <p className="text-muted-foreground">
+                                            No courses found matching your
+                                            search criteria.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Pagination Controls */}
+                        {!isLoading && !error && totalPages > 1 && (
+                            <div className="w-full flex justify-center mt-8">
+                                <nav
+                                    className="flex items-center gap-2"
+                                    aria-label="Pagination"
+                                >
                                     <Button
                                         variant="outline"
-                                        className="mt-4"
-                                        onClick={() => window.location.reload()}
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        aria-label="First page"
+                                        className="w-10 h-10 p-0"
                                     >
-                                        Try Again
+                                        <ChevronsLeft className="w-5 h-5" />
                                     </Button>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredCourses.map((course) => (
-                                        <Link
-                                            href={`/courses/${course.id}`}
-                                            key={course.id}
-                                            className="group"
-                                        >
-                                            <Card className="h-full overflow-hidden transition-all hover:border-primary">
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-xl">
-                                                                {course.title}
-                                                            </CardTitle>
-                                                            <CardDescription className="text-sm">
-                                                                {
-                                                                    course.professor
-                                                                }
-                                                            </CardDescription>
-                                                        </div>
-                                                        <Badge
-                                                            className={
-                                                                course.categoryColor
-                                                            }
-                                                        >
-                                                            {course.category.toUpperCase()}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    <div className="flex items-center gap-1 text-sm">
-                                                        <div className="flex">
-                                                            {renderStars(
-                                                                course.rating
-                                                            )}
-                                                        </div>
-                                                        <span className="font-medium">
-                                                            {course.rating.toFixed(
-                                                                1
-                                                            )}
-                                                        </span>
-                                                        <span className="text-muted-foreground">
-                                                            (
-                                                            {course.reviewCount}{" "}
-                                                            reviews)
-                                                        </span>
-                                                    </div>
-                                                    <div className="mt-3 space-y-2">
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Difficulty
-                                                            </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
-                                                                    <div
-                                                                        className="h-2 rounded-full bg-yellow-400"
-                                                                        style={{
-                                                                            width: `${
-                                                                                course.difficulty *
-                                                                                20
-                                                                            }%`,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <span>
-                                                                    {course.difficulty.toFixed(
-                                                                        1
-                                                                    )}
-                                                                    /5
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Workload
-                                                            </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
-                                                                    <div
-                                                                        className="h-2 rounded-full bg-yellow-400"
-                                                                        style={{
-                                                                            width: `${
-                                                                                course.workload *
-                                                                                20
-                                                                            }%`,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <span>
-                                                                    {course.workload.toFixed(
-                                                                        1
-                                                                    )}
-                                                                    /5
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Value
-                                                            </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
-                                                                    <div
-                                                                        className="h-2 rounded-full bg-yellow-400"
-                                                                        style={{
-                                                                            width: `${
-                                                                                course.value *
-                                                                                20
-                                                                            }%`,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <span>
-                                                                    {course.value.toFixed(
-                                                                        1
-                                                                    )}
-                                                                    /5
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className="pt-1">
-                                                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                                                        "{course.review}"
-                                                    </p>
-                                                </CardFooter>
-                                            </Card>
-                                        </Link>
-                                    ))}
-
-                                    {filteredCourses.length === 0 && (
-                                        <div className="col-span-full text-center py-10">
-                                            <p className="text-muted-foreground">
-                                                No courses found matching your
-                                                search criteria.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </TabsContent>
-                    </Tabs>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setCurrentPage((prev) =>
+                                                Math.max(1, prev - 1)
+                                            )
+                                        }
+                                        disabled={currentPage === 1}
+                                        aria-label="Previous page"
+                                        className="w-10 h-10 p-0"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {getVisiblePages(
+                                            currentPage,
+                                            totalPages
+                                        ).map((page: number) => (
+                                            <Button
+                                                key={page}
+                                                variant={
+                                                    currentPage === page
+                                                        ? "default"
+                                                        : "outline"
+                                                }
+                                                onClick={() =>
+                                                    setCurrentPage(page)
+                                                }
+                                                className="w-10 h-10"
+                                            >
+                                                {page}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setCurrentPage((prev) =>
+                                                Math.min(totalPages, prev + 1)
+                                            )
+                                        }
+                                        disabled={currentPage === totalPages}
+                                        aria-label="Next page"
+                                        className="w-10 h-10 p-0"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setCurrentPage(totalPages)
+                                        }
+                                        disabled={currentPage === totalPages}
+                                        aria-label="Last page"
+                                        className="w-10 h-10 p-0"
+                                    >
+                                        <ChevronsRight className="w-5 h-5" />
+                                    </Button>
+                                </nav>
+                            </div>
+                        )}
+                    </div>
                 </section>
 
                 {/* Add Review CTA */}

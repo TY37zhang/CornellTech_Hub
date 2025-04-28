@@ -8,17 +8,15 @@ const sql = neon(process.env.DATABASE_URL || "");
 
 // Define the request schema
 const requestSchema = z.object({
-    title: z.string().min(2, "Title must be at least 2 characters"),
-    professor: z
-        .string()
-        .min(2, "Professor name must be at least 2 characters"),
-    category: z.string().min(1, "Category is required"),
+    title: z.string().min(1, "Title is required"),
+    professor: z.string().min(1, "Professor is required"),
+    category: z.string().optional(),
     difficulty: z.number().min(1).max(5),
     workload: z.number().min(1).max(5),
     value: z.number().min(1).max(5),
     overall_rating: z.number().min(1).max(5),
-    review: z.string().min(10, "Review must be at least 10 characters"),
-    course_id: z.string().optional(),
+    review: z.string().min(1, "Review is required"),
+    courseId: z.string().min(1, "Course ID is required"),
 });
 
 export async function POST(request: Request) {
