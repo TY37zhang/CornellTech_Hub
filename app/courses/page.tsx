@@ -170,6 +170,8 @@ export default function CoursesPage() {
                     "offset",
                     ((currentPage - 1) * coursesPerPage).toString()
                 );
+                // Add sortBy to API request
+                if (sortBy) params.set("sortBy", sortBy);
 
                 const response = await fetch(
                     `/api/courses?${params.toString()}`
@@ -191,7 +193,7 @@ export default function CoursesPage() {
         };
 
         fetchCourses();
-    }, [searchQuery, currentPage, programFilter]);
+    }, [searchQuery, currentPage, programFilter, sortBy]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -258,7 +260,7 @@ export default function CoursesPage() {
                 {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4 min-w-0">
                             <Select
                                 value={programFilter}
                                 onValueChange={(value) => {
@@ -278,6 +280,35 @@ export default function CoursesPage() {
                                             {option.label}
                                         </SelectItem>
                                     ))}
+                                </SelectContent>
+                            </Select>
+                            {/* Sort Dropdown */}
+                            <Select
+                                value={sortBy}
+                                onValueChange={(value) => {
+                                    setSortBy(value);
+                                    setCurrentPage(1); // Reset to first page when changing sort
+                                }}
+                            >
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="recent">
+                                        Most Recent
+                                    </SelectItem>
+                                    <SelectItem value="popular">
+                                        Most Popular
+                                    </SelectItem>
+                                    <SelectItem value="rating">
+                                        Highest Rated
+                                    </SelectItem>
+                                    <SelectItem value="difficulty">
+                                        Most Difficult
+                                    </SelectItem>
+                                    <SelectItem value="workload">
+                                        Heaviest Workload
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

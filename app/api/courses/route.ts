@@ -11,6 +11,7 @@ export async function GET(request) {
         const category = searchParams.get("category") || "";
         const limit = parseInt(searchParams.get("limit") || "5", 10);
         const offset = parseInt(searchParams.get("offset") || "0", 10);
+        const sortBy = searchParams.get("sortBy") || "rating";
 
         let courses;
         let totalCount;
@@ -51,6 +52,26 @@ export async function GET(request) {
         const countResult = await sql(countQuery, params);
         totalCount = countResult[0].count;
 
+        // Determine ORDER BY clause based on sortBy
+        let orderByClause = "ORDER BY rating DESC NULLS LAST";
+        switch (sortBy) {
+            case "recent":
+                orderByClause = "ORDER BY MAX_CREATED_AT DESC NULLS LAST";
+                break;
+            case "popular":
+                orderByClause = "ORDER BY review_count DESC NULLS LAST";
+                break;
+            case "rating":
+                orderByClause = "ORDER BY rating DESC NULLS LAST";
+                break;
+            case "difficulty":
+                orderByClause = "ORDER BY difficulty DESC NULLS LAST";
+                break;
+            case "workload":
+                orderByClause = "ORDER BY workload DESC NULLS LAST";
+                break;
+        }
+
         // Get courses with filters - group by name and professor
         const coursesQuery = `
             WITH course_data AS (
@@ -64,6 +85,7 @@ export async function GET(request) {
                     ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
                     ROUND(AVG(cr.workload)::numeric, 1) as workload,
                     ROUND(AVG(cr.rating)::numeric, 1) as value,
+                    MAX(cr.created_at) as MAX_CREATED_AT,
                     (
                         SELECT content 
                         FROM course_reviews 
@@ -91,7 +113,7 @@ export async function GET(request) {
                 value,
                 latest_review
             FROM course_data
-            ORDER BY rating DESC NULLS LAST
+            ${orderByClause}
             LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `;
 
