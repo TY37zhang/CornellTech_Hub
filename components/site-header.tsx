@@ -11,6 +11,7 @@ import {
     LogOut,
     FileText,
     BookmarkPlus,
+    Calendar,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/forum", label: "Forum", icon: MessageSquare },
+    { href: "/planner", label: "Planner", icon: Calendar },
 ];
 
 export function SiteHeader() {

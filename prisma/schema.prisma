@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id                     String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  code                   String                   @db.VarChar(20)
+  name                   String                   @db.VarChar(255)
+  description            String?
+  credits                Int
+  department             String                   @db.VarChar(100)
+  semester               String                   @db.VarChar(20)
+  year                   Int
+  createdAt              DateTime?                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime?                @default(now()) @map("updated_at") @db.Timestamptz(6)
+  professorId            String                   @default("Unknown Professor") @map("professor_id") @db.VarChar(255)
+  fullCode               String?                  @map("full_code") @db.VarChar(32)
+  concentration_core     String?                  @db.VarChar(32)
+  concentration_elective String?                  @db.VarChar(32)
+  categories             CourseCategoryJunction[]
+  planners               CoursePlanner[]
+  course_reviews         course_reviews[]
+  schedules              CourseSchedule[]
+
+  @@unique([code, semester, year])
+  @@index([code], map: "idx_courses_code")
+  @@index([department], map: "idx_courses_department")
+  @@index([semester, year], map: "idx_courses_semester_year")
+  @@map("courses")
+}
+
+model User {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  name          String    @db.VarChar(255)
+  avatar_url    String?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+  program       String?   @db.VarChar(20)
+  
+  // Forum relations
+  forum_posts   ForumPost[]   @relation("AuthorPosts")
+  forum_comments ForumComment[] @relation("AuthorComments")
+  forum_likes   ForumLike[]
+  forum_views   ForumView[]
+  forum_saved   ForumSaved[]
+  forum_notification_preferences ForumNotificationPreference[]
+  
+  // Course relations
+  course_schedules CourseSchedule[]
+  course_planners  CoursePlanner[]
+  course_reviews   course_reviews[]
+  
+  // Marketplace relations
+  marketplace_listings marketplace_items[]
+
+  @@map("users")
+}
+
+model CourseSchedule {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id   String   @db.Uuid
+  course_id String   @db.Uuid
+  day       String   @db.VarChar(20)
+  start_time String  @db.VarChar(10)
+  end_time   String  @db.VarChar(10)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  course    Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("course_schedules")
+}
+
+model CoursePlanner {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         String    @db.Uuid
+  course_id       String    @db.Uuid
+  requirement_type String?  @db.VarChar(32)
+  semester        String    @db.VarChar(20)
+  year            Int
+  status          String?   @default("planned") @db.VarChar(20)
+  notes           String?
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  
+  course          Course    @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("course_planner")
+}
+
+model ForumCategory {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String      @db.VarChar(100)
+  description String?
+  slug        String      @unique @db.VarChar(100)
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  posts       ForumPost[]
+
+  @@map("forum_categories")
+}
+
+model ForumPost {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title           String    @db.VarChar(255)
+  content         String
+  author_id       String    @db.Uuid
+  category_id     String    @db.Uuid
+  status          String    @default("active") @db.VarChar(50)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  notify_on_reply Boolean   @default(false)
+  
+  author          User      @relation("AuthorPosts", fields: [author_id], references: [id])
+  category        ForumCategory @relation(fields: [category_id], references: [id])
+  comments        ForumComment[]
+  likes           ForumLike[]
+  views           ForumView[]
+  tags            ForumPostTag[]
+  saved_by        ForumSaved[]
+  notification_preferences ForumNotificationPreference[]
+
+  @@map("forum_posts")
+}
+
+model ForumComment {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  content        String
+  post_id        String    @db.Uuid
+  author_id      String    @db.Uuid
+  parent_id      String?   @db.Uuid
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  like_count     Int       @default(0)
+  dislike_count  Int       @default(0)
+
+  author         User      @relation("AuthorComments", fields: [author_id], references: [id])
+  post           ForumPost @relation(fields: [post_id], references: [id])
+  parent         ForumComment? @relation("CommentReplies", fields: [parent_id], references: [id])
+  replies        ForumComment[] @relation("CommentReplies")
+
+  @@map("forum_comments")
+}
+
+model ForumLike {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id    String    @db.Uuid
+  user_id    String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  post       ForumPost @relation(fields: [post_id], references: [id])
+  user       User    @relation(fields: [user_id], references: [id])
+
+  @@unique([post_id, user_id])
+  @@map("forum_likes")
+}
+
+model ForumPostTag {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id    String    @db.Uuid
+  tag        String    @db.VarChar(100)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  post       ForumPost @relation(fields: [post_id], references: [id])
+
+  @@unique([post_id, tag])
+  @@map("forum_post_tags")
+}
+
+model ForumView {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id    String    @db.Uuid
+  user_id    String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  post       ForumPost @relation(fields: [post_id], references: [id])
+  user       User    @relation(fields: [user_id], references: [id])
+
+  @@map("forum_views")
+}
+
+model ForumSaved {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  post_id    String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  post       ForumPost @relation(fields: [post_id], references: [id])
+  user       User    @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, post_id])
+  @@map("forum_saved")
+}
+
+model ForumNotificationPreference {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  post_id         String    @db.Uuid
+  user_id         String    @db.Uuid
+  notify_on_reply Boolean   @default(false)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+
+  post            ForumPost @relation(fields: [post_id], references: [id])
+  user            User    @relation(fields: [user_id], references: [id])
+
+  @@unique([post_id, user_id])
+  @@map("forum_notification_preferences")
+}
+
+model CourseCategory {
+  id        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String                   @unique @db.VarChar(50)
+  slug      String                   @unique @db.VarChar(50)
+  createdAt DateTime?                @default(now()) @map("created_at") @db.Timestamptz(6)
+  courses   CourseCategoryJunction[]
+
+  @@map("course_categories")
+}
+
+model CourseCategoryJunction {
+  courseId   String         @map("course_id") @db.Uuid
+  categoryId String         @map("category_id") @db.Uuid
+  createdAt  DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
+  category   CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  course     Course         @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([courseId, categoryId])
+  @@map("course_category_junction")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model course_reviews {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id      String    @db.Uuid
+  author_id      String    @db.Uuid
+  rating         Int
+  difficulty     Int
+  workload       Int
+  content        String
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  overall_rating Decimal   @db.Decimal(2, 1)
+  users          User      @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  courses        Course    @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([author_id], map: "idx_course_reviews_author")
+  @@index([author_id], map: "idx_course_reviews_author_id")
+  @@index([course_id], map: "idx_course_reviews_course")
+  @@index([course_id], map: "idx_course_reviews_course_id")
+}
+
+model marketplace_items {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String
+  price       Decimal   @db.Decimal(10, 2)
+  category    String    @db.VarChar(100)
+  condition   String    @db.VarChar(50)
+  image_url   String?
+  seller_id   String    @db.Uuid
+  status      String    @default("active") @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  users       User      @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum vote_action {
+  like
+  dislike
+}

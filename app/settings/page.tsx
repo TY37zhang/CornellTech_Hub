@@ -27,8 +27,17 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/animated-toast";
 import { Upload } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 
 // Define the form schema
 const profileFormSchema = z.object({
@@ -38,9 +47,25 @@ const profileFormSchema = z.object({
     email: z.string().email({
         message: "Please enter a valid email address.",
     }),
+    program: z.string().min(2, {
+        message: "Please select a program.",
+    }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+const programs = {
+    "meng-cs": "MEng in Computer Science",
+    "meng-ds": "MEng in Data Science & Decision Analytics",
+    "meng-ece": "MEng in Electrical and Computer Engineering",
+    "meng-orie": "MEng in Operations Research & Information Engineering",
+    "ms-dt": "MS in Design Technology",
+    "ms-is-cm": "MS in Information Systems (Connective Media)",
+    "ms-is-ht": "MS in Information Systems (Health Tech)",
+    "ms-is-ut": "MS in Information Systems (Urban Tech)",
+    mba: "Johnson Cornell Tech MBA",
+    llm: "LLM in Law, Technology and Entrepreneurship",
+};
 
 export default function SettingsPage() {
     const { data: session, status, update } = useSession();
@@ -48,6 +73,9 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [name, setName] = useState("");
+    const [program, setProgram] = useState("");
+    const { toast } = useToast();
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -62,6 +90,7 @@ export default function SettingsPage() {
         defaultValues: {
             name: session?.user?.name || "",
             email: session?.user?.email || "",
+            program: session?.user?.program || "",
         },
     });
 
@@ -70,14 +99,17 @@ export default function SettingsPage() {
         async function fetchProfile() {
             if (status === "authenticated") {
                 try {
-                    const response = await fetch("/api/user/profile");
+                    const response = await fetch("/api/user");
 
                     if (response.ok) {
                         const data = await response.json();
                         form.reset({
                             name: data.name || "",
                             email: data.email || "",
+                            program: data.program || "",
                         });
+                        setName(data.name || "");
+                        setProgram(data.program || "");
                     } else {
                         console.error(
                             "Failed to fetch profile:",
@@ -99,37 +131,42 @@ export default function SettingsPage() {
     async function onSubmit(data: ProfileFormValues) {
         setIsLoading(true);
         try {
-            const response = await fetch("/api/user/profile", {
+            const response = await fetch("/api/user", {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     name: data.name,
+                    program: data.program,
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to update profile");
+                throw new Error(
+                    errorData.message || "Failed to update profile"
+                );
             }
 
-            const updatedProfile = await response.json();
-
-            // Update the session with the new name
             await update(); // This will trigger a full session refresh
-
-            // Refresh the page to ensure all components get the updated data
             router.refresh();
 
-            toast.success("Profile updated successfully");
+            toast({
+                title: "Success",
+                description: "Your settings have been saved successfully.",
+                variant: "success",
+            });
         } catch (error) {
             console.error("Error updating profile:", error);
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to update profile"
-            );
+            toast({
+                title: "Error",
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to update settings. Please try again.",
+                variant: "destructive",
+            });
         } finally {
             setIsLoading(false);
         }
@@ -144,23 +181,29 @@ export default function SettingsPage() {
 
         // Validate file type
         if (!file.type.startsWith("image/")) {
-            toast.error("Please upload an image file");
+            toast({
+                title: "Invalid File",
+                message: "Please upload an image file",
+                type: "error",
+            });
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            toast.error("Image size should be less than 5MB");
+            toast({
+                title: "File Too Large",
+                message: "Image size should be less than 5MB",
+                type: "error",
+            });
             return;
         }
 
         setIsUploading(true);
         try {
-            // Create a FormData object
             const formData = new FormData();
             formData.append("file", file);
 
-            // Upload the file
             const response = await fetch("/api/user/profile/avatar", {
                 method: "POST",
                 body: formData,
@@ -170,19 +213,21 @@ export default function SettingsPage() {
                 throw new Error("Failed to update profile picture");
             }
 
-            const data = await response.json();
-            console.log("Avatar upload response:", data);
-
-            // Force a session update
             await update();
-
-            // Refresh the page to ensure all components get the updated data
             router.refresh();
 
-            toast.success("Profile picture updated successfully");
+            toast({
+                title: "Success!",
+                message: "Profile picture updated successfully",
+                type: "success",
+            });
         } catch (error) {
             console.error("Error uploading profile picture:", error);
-            toast.error("Failed to update profile picture");
+            toast({
+                title: "Error",
+                message: "Failed to update profile picture",
+                type: "error",
+            });
         } finally {
             setIsUploading(false);
         }
@@ -308,6 +353,58 @@ export default function SettingsPage() {
                                                     <FormDescription>
                                                         Your email is managed
                                                         through your Google
+                                                        account.
+                                                    </FormDescription>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="program"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>
+                                                        Program
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <Select
+                                                            value={field.value}
+                                                            onValueChange={
+                                                                field.onChange
+                                                            }
+                                                        >
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select your program" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {Object.entries(
+                                                                    programs
+                                                                ).map(
+                                                                    ([
+                                                                        value,
+                                                                        label,
+                                                                    ]) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                value
+                                                                            }
+                                                                            value={
+                                                                                value
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                label
+                                                                            }
+                                                                        </SelectItem>
+                                                                    )
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormDescription>
+                                                        Your program is managed
+                                                        through your Cornell
                                                         account.
                                                     </FormDescription>
                                                     <FormMessage />

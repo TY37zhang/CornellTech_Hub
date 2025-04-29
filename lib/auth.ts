@@ -60,9 +60,9 @@ export const authOptions: NextAuthOptions = {
                             user.email
                         );
                         const newUser = await sql`
-                            INSERT INTO users (name, email, avatar_url)
-                            VALUES (${user.name}, ${user.email}, ${DEFAULT_PROFILE_PICTURE})
-                            RETURNING id, name, email, avatar_url
+                            INSERT INTO users (name, email, avatar_url, program)
+                            VALUES (${user.name}, ${user.email}, ${DEFAULT_PROFILE_PICTURE}, NULL)
+                            RETURNING id, name, email, avatar_url, program
                         `;
                         console.log("New user created:", newUser[0]);
 
@@ -101,7 +101,7 @@ export const authOptions: NextAuthOptions = {
 
                 // Get the latest user data from database
                 const result = await sql`
-                    SELECT name, avatar_url FROM users WHERE id = ${token.id}
+                    SELECT name, avatar_url, program FROM users WHERE id = ${token.id}
                 `;
                 // Remove debug logs for session callback
                 if (!result || result.length === 0) {
@@ -110,6 +110,7 @@ export const authOptions: NextAuthOptions = {
 
                 if (result.length > 0) {
                     session.user.name = result[0].name;
+                    session.user.program = result[0].program;
 
                     // Always use the avatar_url from the database
                     if (result[0].avatar_url) {

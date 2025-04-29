@@ -4,7 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { MobileNav } from "@/components/mobile-nav";
 import AuthProvider from "@/components/providers/session-provider";
-import { AnimatedToaster } from "@/components/ui/animated-toast";
+import { Toaster } from "@/components/ui/toaster";
 import { Footer } from "@/components/Footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                         <AnimationProvider>{children}</AnimationProvider>
                         <Footer />
                     </div>
-                    <AnimatedToaster />
+                    <Toaster />
                     <Analytics />
                     <SpeedInsights />
                 </AuthProvider>

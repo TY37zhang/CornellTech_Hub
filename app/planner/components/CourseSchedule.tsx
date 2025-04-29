@@ -1,0 +1,742 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2, Clock, X, ChevronDown } from "lucide-react";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+
+interface Course {
+    id: string;
+    code: string;
+    name: string;
+    credits: number;
+    description?: string;
+    department: string;
+    semester: string;
+    year: number;
+}
+
+interface CourseTime {
+    id?: string;
+    courseId: string;
+    courseName: string;
+    day: string;
+    startTime: string;
+    endTime: string;
+}
+
+interface CourseScheduleProps {
+    selectedCourses: Course[];
+}
+
+const DAYS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+];
+
+const TIMES = Array.from({ length: 33 }, (_, i) => {
+    const hour = Math.floor(i / 4) + 8;
+    const minutes = (i % 4) * 15;
+    return `${hour}:${minutes.toString().padStart(2, "0")}`;
+});
+
+function CourseTimeCard({
+    course,
+    onDelete,
+    onUpdate,
+    onAddTimeSlot,
+}: {
+    course: CourseTime;
+    onDelete: (id: string) => Promise<void>;
+    onUpdate: (id: string, updates: Partial<CourseTime>) => Promise<void>;
+    onAddTimeSlot: (course: Course) => Promise<void>;
+}) {
+    const [isEditing, setIsEditing] = useState(false);
+
+    return (
+        <Card className="group relative hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h3 className="font-medium">{course.courseName}</h3>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                            <Clock className="h-4 w-4" />
+                            <span>
+                                {course.startTime} - {course.endTime}
+                            </span>
+                        </div>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => course.id && onDelete(course.id)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                    <Popover open={isEditing} onOpenChange={setIsEditing}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                Edit Time
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-4">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">
+                                        Day
+                                    </label>
+                                    <Select
+                                        value={course.day}
+                                        onValueChange={(day) => {
+                                            course.id &&
+                                                onUpdate(course.id, { day });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 flex items-center justify-between">
+                                            <SelectValue
+                                                placeholder="Select day"
+                                                className="flex-1 text-left"
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {DAYS.map((day) => (
+                                                <SelectItem
+                                                    key={day}
+                                                    value={day}
+                                                >
+                                                    {day}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">
+                                            Start Time
+                                        </label>
+                                        <Select
+                                            value={course.startTime}
+                                            onValueChange={(time) => {
+                                                course.id &&
+                                                    onUpdate(course.id, {
+                                                        startTime: time,
+                                                    });
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-8 flex items-center justify-between">
+                                                <SelectValue
+                                                    placeholder="Start time"
+                                                    className="flex-1 text-left"
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {TIMES.map((time) => (
+                                                    <SelectItem
+                                                        key={time}
+                                                        value={time}
+                                                    >
+                                                        {time}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">
+                                            End Time
+                                        </label>
+                                        <Select
+                                            value={course.endTime}
+                                            onValueChange={(time) => {
+                                                course.id &&
+                                                    onUpdate(course.id, {
+                                                        endTime: time,
+                                                    });
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-8 flex items-center justify-between">
+                                                <SelectValue
+                                                    placeholder="End time"
+                                                    className="flex-1 text-left"
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {TIMES.map((time) => (
+                                                    <SelectItem
+                                                        key={time}
+                                                        value={time}
+                                                    >
+                                                        {time}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => {
+                            onAddTimeSlot({
+                                id: course.courseId,
+                                name: course.courseName,
+                                code: "", // This will be filled from the course data
+                                credits: 0,
+                                department: "",
+                                semester: "",
+                                year: 0,
+                            });
+                        }}
+                    >
+                        Add Time Slot
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+export default function CourseSchedule({
+    selectedCourses,
+}: CourseScheduleProps) {
+    const [courseTimes, setCourseTimes] = useState<CourseTime[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        loadSchedule();
+    }, []);
+
+    const loadSchedule = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch("/api/schedule");
+            if (!response.ok) {
+                throw new Error("Failed to load schedule");
+            }
+            const data = await response.json();
+            setCourseTimes(
+                data.map((schedule: any) => ({
+                    id: schedule.id,
+                    courseId: schedule.courseId,
+                    courseName: schedule.course.name,
+                    day: schedule.day,
+                    startTime: schedule.startTime,
+                    endTime: schedule.endTime,
+                }))
+            );
+        } catch (error) {
+            console.error("Error loading schedule:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load your schedule",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteSchedule = async (scheduleId: string) => {
+        try {
+            const response = await fetch(`/api/schedule?id=${scheduleId}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete schedule");
+            }
+
+            setCourseTimes(courseTimes.filter((ct) => ct.id !== scheduleId));
+            toast({
+                title: "Success",
+                description: "Schedule deleted successfully",
+            });
+        } catch (error) {
+            console.error("Error deleting schedule:", error);
+            toast({
+                title: "Error",
+                description: "Failed to delete schedule",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleUpdateSchedule = async (
+        scheduleId: string,
+        updates: Partial<CourseTime>
+    ) => {
+        try {
+            // Find the current course time data
+            const currentCourse = courseTimes.find(
+                (ct) => ct.id === scheduleId
+            );
+            if (!currentCourse) {
+                throw new Error("Course not found");
+            }
+
+            // Merge current data with updates
+            const updatedData = {
+                day: updates.day || currentCourse.day,
+                startTime: updates.startTime || currentCourse.startTime,
+                endTime: updates.endTime || currentCourse.endTime,
+            };
+
+            const response = await fetch(`/api/schedule/${scheduleId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedData),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update schedule");
+            }
+
+            setCourseTimes((prevTimes) =>
+                prevTimes.map((ct) =>
+                    ct.id === scheduleId ? { ...ct, ...updates } : ct
+                )
+            );
+
+            toast({
+                title: "Success",
+                description: "Schedule updated successfully",
+            });
+        } catch (error) {
+            console.error("Error updating schedule:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update schedule",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleAddCourse = async (course: Course) => {
+        try {
+            // Find existing times for this course
+            const existingTimes = courseTimes.filter(
+                (ct) => ct.courseId === course.id
+            );
+
+            // Default to the next available day
+            let defaultDay = "Monday";
+            if (existingTimes.length > 0) {
+                const usedDays = existingTimes.map((ct) => ct.day);
+                defaultDay =
+                    DAYS.find((day) => !usedDays.includes(day)) || "Monday";
+            }
+
+            const response = await fetch("/api/schedule", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    courseId: course.id,
+                    day: defaultDay,
+                    startTime: "9:00",
+                    endTime: "10:15",
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to add course");
+            }
+
+            const savedSchedule = await response.json();
+            setCourseTimes([
+                ...courseTimes,
+                {
+                    id: savedSchedule.id,
+                    courseId: course.id,
+                    courseName: course.name,
+                    day: defaultDay,
+                    startTime: "9:00",
+                    endTime: "10:15",
+                },
+            ]);
+
+            toast({
+                title: "Success",
+                description: "Course time slot added",
+            });
+        } catch (error) {
+            console.error("Error adding course:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add course",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // Group courses by day
+    const coursesByDay = DAYS.reduce(
+        (acc, day) => {
+            acc[day] = courseTimes.filter((course) => course.day === day);
+            return acc;
+        },
+        {} as Record<string, CourseTime[]>
+    );
+
+    if (isLoading) {
+        return (
+            <Card className="w-full">
+                <CardContent className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading schedule...</span>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Course Schedule</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-6">
+                    {/* Available Courses */}
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-medium">
+                            Available Courses
+                        </h3>
+                        <div className="flex gap-2 flex-wrap">
+                            {selectedCourses
+                                .filter(
+                                    (course) =>
+                                        !courseTimes.some(
+                                            (ct) => ct.courseId === course.id
+                                        )
+                                )
+                                .map((course) => (
+                                    <div
+                                        key={course.id}
+                                        className="flex flex-col space-y-2 p-4 border rounded-lg"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="font-medium">
+                                                    {course.code}
+                                                </h3>
+                                                <p className="text-sm text-gray-600">
+                                                    {course.name}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                                    <span>
+                                                        {course.department}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>
+                                                        {course.semester}{" "}
+                                                        {course.year}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>
+                                                        {course.credits} credits
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 px-3 flex items-center justify-center"
+                                                    onClick={() =>
+                                                        handleAddCourse(course)
+                                                    }
+                                                >
+                                                    Add to Schedule
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* Weekly Schedule */}
+                    <div className="space-y-6">
+                        {DAYS.map((day) => (
+                            <div key={day} className="space-y-4">
+                                <h3 className="text-lg font-semibold border-b pb-2">
+                                    {day}
+                                </h3>
+                                <div className="grid gap-4">
+                                    {coursesByDay[day]
+                                        ?.sort((a, b) =>
+                                            a.startTime.localeCompare(
+                                                b.startTime
+                                            )
+                                        )
+                                        .map((course) => (
+                                            <div
+                                                key={course.id}
+                                                className="flex flex-col space-y-2 p-4 border rounded-lg"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <h3 className="font-medium">
+                                                            {course.courseName}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                                                            <Clock className="h-4 w-4" />
+                                                            <span>
+                                                                {
+                                                                    course.startTime
+                                                                }{" "}
+                                                                -{" "}
+                                                                {course.endTime}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Popover>
+                                                            <PopoverTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-8 px-3 flex items-center justify-center"
+                                                                >
+                                                                    Edit Time
+                                                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-80 p-4">
+                                                                <div className="space-y-4">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-sm font-medium">
+                                                                            Day
+                                                                        </label>
+                                                                        <Select
+                                                                            value={
+                                                                                course.day
+                                                                            }
+                                                                            onValueChange={(
+                                                                                day
+                                                                            ) => {
+                                                                                course.id &&
+                                                                                    onUpdate(
+                                                                                        course.id,
+                                                                                        {
+                                                                                            day,
+                                                                                        }
+                                                                                    );
+                                                                            }}
+                                                                        >
+                                                                            <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                <SelectValue
+                                                                                    placeholder="Select day"
+                                                                                    className="flex-1 text-left"
+                                                                                />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {DAYS.map(
+                                                                                    (
+                                                                                        day
+                                                                                    ) => (
+                                                                                        <SelectItem
+                                                                                            key={
+                                                                                                day
+                                                                                            }
+                                                                                            value={
+                                                                                                day
+                                                                                            }
+                                                                                        >
+                                                                                            {
+                                                                                                day
+                                                                                            }
+                                                                                        </SelectItem>
+                                                                                    )
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                Start
+                                                                                Time
+                                                                            </label>
+                                                                            <Select
+                                                                                value={
+                                                                                    course.startTime
+                                                                                }
+                                                                                onValueChange={(
+                                                                                    time
+                                                                                ) => {
+                                                                                    course.id &&
+                                                                                        onUpdate(
+                                                                                            course.id,
+                                                                                            {
+                                                                                                startTime:
+                                                                                                    time,
+                                                                                            }
+                                                                                        );
+                                                                                }}
+                                                                            >
+                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                    <SelectValue
+                                                                                        placeholder="Start time"
+                                                                                        className="flex-1 text-left"
+                                                                                    />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {TIMES.map(
+                                                                                        (
+                                                                                            time
+                                                                                        ) => (
+                                                                                            <SelectItem
+                                                                                                key={
+                                                                                                    time
+                                                                                                }
+                                                                                                value={
+                                                                                                    time
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    time
+                                                                                                }
+                                                                                            </SelectItem>
+                                                                                        )
+                                                                                    )}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                End
+                                                                                Time
+                                                                            </label>
+                                                                            <Select
+                                                                                value={
+                                                                                    course.endTime
+                                                                                }
+                                                                                onValueChange={(
+                                                                                    time
+                                                                                ) => {
+                                                                                    course.id &&
+                                                                                        onUpdate(
+                                                                                            course.id,
+                                                                                            {
+                                                                                                endTime:
+                                                                                                    time,
+                                                                                            }
+                                                                                        );
+                                                                                }}
+                                                                            >
+                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                    <SelectValue
+                                                                                        placeholder="End time"
+                                                                                        className="flex-1 text-left"
+                                                                                    />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {TIMES.map(
+                                                                                        (
+                                                                                            time
+                                                                                        ) => (
+                                                                                            <SelectItem
+                                                                                                key={
+                                                                                                    time
+                                                                                                }
+                                                                                                value={
+                                                                                                    time
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    time
+                                                                                                }
+                                                                                            </SelectItem>
+                                                                                        )
+                                                                                    )}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 px-3 flex items-center justify-center"
+                                                            onClick={() => {
+                                                                onAddTimeSlot({
+                                                                    id: course.courseId,
+                                                                    name: course.courseName,
+                                                                    code: "",
+                                                                    credits: 0,
+                                                                    department:
+                                                                        "",
+                                                                    semester:
+                                                                        "",
+                                                                    year: 0,
+                                                                });
+                                                            }}
+                                                        >
+                                                            Add Time Slot
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-8 w-8 p-0 flex items-center justify-center text-gray-500 hover:text-gray-900"
+                                                            onClick={() =>
+                                                                course.id &&
+                                                                onDelete(
+                                                                    course.id
+                                                                )
+                                                            }
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    {coursesByDay[day]?.length === 0 && (
+                                        <p className="text-sm text-gray-500 py-2">
+                                            No courses scheduled
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

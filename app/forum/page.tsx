@@ -17,6 +17,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -180,6 +181,7 @@ export default function ForumPage() {
     const [activeTab, setActiveTab] = useState("all");
     const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
     const [isMobile, setIsMobile] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Fetch threads, stats, and top contributors on component mount
     useEffect(() => {
@@ -194,47 +196,88 @@ export default function ForumPage() {
                 const res = await fetch(
                     `/api/forum/posts?${params.toString()}`
                 );
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(
+                        errorData.error || `HTTP error! status: ${res.status}`
+                    );
+                }
+
                 const postsData = await res.json();
                 const [stats, contributors] = await Promise.all([
                     getForumStats(),
                     getTopContributors(),
                 ]);
 
-                const formattedThreads: Thread[] = postsData.posts.map(
-                    (post: any) => {
-                        const hotStatus = calculateHotScore({
-                            likes: post.like_count,
-                            replies: post.reply_count,
-                            views: post.view_count,
-                            createdAt: post.created_at,
-                        });
+                if (!postsData.success) {
+                    throw new Error(postsData.error || "Failed to fetch posts");
+                }
 
-                        return {
-                            id: post.id,
-                            title: post.title,
-                            author: {
-                                name: post.author_name,
-                                avatar:
-                                    post.author_avatar ||
-                                    "/placeholder.svg?height=32&width=32",
-                                initials: getInitials(post.author_name),
-                            },
-                            category: post.category_name,
-                            categoryColor: getCategoryColor(post.category_name),
-                            content: post.content,
-                            tags: post.tags,
-                            replies: post.reply_count,
-                            likes: post.like_count,
-                            views: post.view_count,
-                            createdAt: formatDate(post.created_at),
-                            isHot: hotStatus.isHot,
-                            hotScore: hotStatus.score,
-                            isNew:
-                                new Date(post.created_at).getTime() >
-                                Date.now() - 7 * 24 * 60 * 60 * 1000,
-                        };
-                    }
-                );
+                if (!Array.isArray(postsData.posts)) {
+                    throw new Error(
+                        "Invalid response format: posts array not found"
+                    );
+                }
+
+                const formattedThreads: Thread[] = postsData.posts
+                    .map((post: any) => {
+                        if (!post || typeof post !== "object") {
+                            console.error("Invalid post data:", post);
+                            return null;
+                        }
+
+                        try {
+                            const hotStatus = calculateHotScore({
+                                likes: post.like_count || 0,
+                                replies: post.reply_count || 0,
+                                views: post.view_count || 0,
+                                createdAt:
+                                    post.created_at || new Date().toISOString(),
+                            });
+
+                            return {
+                                id: post.id || "",
+                                title: post.title || "",
+                                author: {
+                                    name: post.author_name || "Anonymous",
+                                    avatar:
+                                        post.author_avatar ||
+                                        "/placeholder.svg?height=32&width=32",
+                                    initials: getInitials(
+                                        post.author_name || "Anonymous"
+                                    ),
+                                },
+                                category: post.category_name || "Uncategorized",
+                                categoryColor: getCategoryColor(
+                                    post.category_name || "Uncategorized"
+                                ),
+                                content: post.content || "",
+                                tags: Array.isArray(post.tags) ? post.tags : [],
+                                replies: post.reply_count || 0,
+                                likes: post.like_count || 0,
+                                views: post.view_count || 0,
+                                createdAt: formatDate(
+                                    post.created_at || new Date().toISOString()
+                                ),
+                                isHot: hotStatus.isHot,
+                                hotScore: hotStatus.score,
+                                isNew:
+                                    new Date(
+                                        post.created_at || Date.now()
+                                    ).getTime() >
+                                    Date.now() - 7 * 24 * 60 * 60 * 1000,
+                            };
+                        } catch (error) {
+                            console.error(
+                                "Error formatting post:",
+                                error,
+                                post
+                            );
+                            return null;
+                        }
+                    })
+                    .filter(Boolean) as Thread[];
 
                 setThreads(formattedThreads);
                 setForumStats(stats);
@@ -243,6 +286,11 @@ export default function ForumPage() {
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching data:", error);
+                setError(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to fetch data"
+                );
                 setLoading(false);
             }
         }
@@ -296,6 +344,34 @@ export default function ForumPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
                     <p className="mt-4 text-lg">Loading forum posts...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center">
+                    <div className="rounded-full h-32 w-32 mx-auto mb-4">
+                        <ExclamationTriangleIcon className="h-full w-full text-red-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-red-500 mb-2">
+                        Error Loading Forum
+                    </h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                        {error}
+                    </p>
+                    <button
+                        onClick={() => {
+                            setError(null);
+                            setLoading(true);
+                            fetchData();
+                        }}
+                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                    >
+                        Try Again
+                    </button>
                 </div>
             </div>
         );
@@ -505,9 +581,9 @@ export default function ForumPage() {
                                                                                                 200
                                                                                                     ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full"
                                                                                                     : thread.hotScore >
-                                                                                                      150
-                                                                                                    ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
-                                                                                                    : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
+                                                                                                        150
+                                                                                                      ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
+                                                                                                      : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
                                                                                             }
                                                                                         >
                                                                                             🔥{" "}
@@ -515,9 +591,9 @@ export default function ForumPage() {
                                                                                             200
                                                                                                 ? "Super Hot"
                                                                                                 : thread.hotScore >
-                                                                                                  150
-                                                                                                ? "Very Hot"
-                                                                                                : "Hot"}
+                                                                                                    150
+                                                                                                  ? "Very Hot"
+                                                                                                  : "Hot"}
                                                                                         </Badge>
                                                                                     )}
                                                                                 <Badge

@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, Menu, MessageSquare, ShoppingBag } from "lucide-react";
+import {
+    BookOpen,
+    Home,
+    Menu,
+    MessageSquare,
+    ShoppingBag,
+    Calendar,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +70,12 @@ export function MobileNav() {
             label: "Forum",
             icon: MessageSquare,
             active: pathname.startsWith("/forum"),
+        },
+        {
+            href: "/planner",
+            label: "Planner",
+            icon: Calendar,
+            active: pathname.startsWith("/planner"),
         },
     ];
 
