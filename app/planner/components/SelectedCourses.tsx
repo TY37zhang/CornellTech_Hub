@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface Course {
     id: string;
@@ -53,7 +54,7 @@ export default function SelectedCourses({
     };
 
     return (
-        <Card className="p-6">
+        <Card className="p-6 w-full overflow-hidden">
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Selected Courses</h3>
                 <div className="grid gap-2">
@@ -64,56 +65,55 @@ export default function SelectedCourses({
                         return (
                             <div
                                 key={course.id}
-                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/5"
+                                className="flex flex-col space-y-2 p-4 border rounded-lg"
                             >
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-medium">
-                                        {course.code}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="min-w-0">
+                                        <h4 className="font-medium truncate">
+                                            {course.code}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 truncate">
+                                            {course.name}
+                                        </p>
+                                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                                            <span>{course.department}</span>
+                                            <span>•</span>
+                                            <span>
+                                                {course.semester} {course.year}
+                                            </span>
+                                            <span>•</span>
+                                            <span>
+                                                {course.credits} credits
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="text-sm text-muted-foreground truncate">
-                                        {course.name}
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 mt-1">
-                                        <Badge
-                                            variant={
-                                                course.department.toLowerCase() as any
-                                            }
-                                            className="text-xs"
+                                    <div className="flex items-center gap-2">
+                                        <Select
+                                            value={currentAssignment || "none"}
+                                            onValueChange={(value) => {
+                                                onAddToRequirement(
+                                                    course,
+                                                    value === "none"
+                                                        ? null
+                                                        : value
+                                                );
+                                            }}
                                         >
-                                            {course.department}
-                                        </Badge>
-                                        <Badge
-                                            variant="secondary"
-                                            className="text-xs"
-                                        >
-                                            {course.credits} credits
-                                        </Badge>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Select
-                                        value={currentAssignment || "none"}
-                                        onValueChange={(value) => {
-                                            onAddToRequirement(
-                                                course,
-                                                value === "none" ? null : value
-                                            );
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-[200px] h-9">
-                                            <div className="flex-1 text-left truncate pr-2">
-                                                <SelectValue />
-                                            </div>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem
-                                                value="none"
-                                                className="text-sm"
-                                            >
-                                                No Selection
-                                            </SelectItem>
-                                            {Object.entries(requirements).map(
-                                                ([key, requirement]) => (
+                                            <SelectTrigger className="w-[200px] h-9">
+                                                <div className="flex-1 text-left truncate pr-2">
+                                                    <SelectValue />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem
+                                                    value="none"
+                                                    className="text-sm"
+                                                >
+                                                    No Selection
+                                                </SelectItem>
+                                                {Object.entries(
+                                                    requirements
+                                                ).map(([key, requirement]) => (
                                                     <SelectItem
                                                         key={key}
                                                         value={key}
@@ -126,18 +126,20 @@ export default function SelectedCourses({
                                                             )
                                                             .trim()}
                                                     </SelectItem>
-                                                )
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-9 px-3 flex items-center justify-center"
-                                        onClick={() => onRemoveCourse(course)}
-                                    >
-                                        Remove
-                                    </Button>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                            onClick={() =>
+                                                onRemoveCourse(course)
+                                            }
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         );

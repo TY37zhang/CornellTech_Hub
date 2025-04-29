@@ -420,37 +420,39 @@ export default function ForumPage() {
                                 >
                                     <div className="flex w-full items-center justify-between">
                                         {isMobile ? (
-                                            <Select
-                                                value={activeTab}
-                                                onValueChange={setActiveTab}
-                                            >
-                                                <SelectTrigger className="w-[200px]">
-                                                    <SelectValue placeholder="Select category" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">
-                                                        All Discussions
-                                                    </SelectItem>
-                                                    <SelectItem value="Academics">
-                                                        Academics
-                                                    </SelectItem>
-                                                    <SelectItem value="Career">
-                                                        Career
-                                                    </SelectItem>
-                                                    <SelectItem value="Campus Life">
-                                                        Campus Life
-                                                    </SelectItem>
-                                                    <SelectItem value="Technology">
-                                                        Technology
-                                                    </SelectItem>
-                                                    <SelectItem value="Events">
-                                                        Events
-                                                    </SelectItem>
-                                                    <SelectItem value="General">
-                                                        General
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="flex items-center">
+                                                <Select
+                                                    value={activeTab}
+                                                    onValueChange={setActiveTab}
+                                                >
+                                                    <SelectTrigger className="w-[200px]">
+                                                        <SelectValue placeholder="Select category" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">
+                                                            All Discussions
+                                                        </SelectItem>
+                                                        <SelectItem value="Academics">
+                                                            Academics
+                                                        </SelectItem>
+                                                        <SelectItem value="Career">
+                                                            Career
+                                                        </SelectItem>
+                                                        <SelectItem value="Campus Life">
+                                                            Campus Life
+                                                        </SelectItem>
+                                                        <SelectItem value="Technology">
+                                                            Technology
+                                                        </SelectItem>
+                                                        <SelectItem value="Events">
+                                                            Events
+                                                        </SelectItem>
+                                                        <SelectItem value="General">
+                                                            General
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         ) : (
                                             <TabsList>
                                                 <TabsTrigger value="all">
@@ -496,17 +498,17 @@ export default function ForumPage() {
                                     >
                                         <div className="space-y-4">
                                             {filteredThreads.length > 0 ? (
-                                                <div className="grid gap-4">
+                                                <div className="grid gap-4 max-w-full">
                                                     {filteredThreads.map(
                                                         (thread) => (
                                                             <Link
                                                                 href={`/forum/${thread.id}`}
                                                                 key={thread.id}
-                                                                className="block"
+                                                                className="block w-full"
                                                             >
-                                                                <Card className="hover:bg-muted/50 transition-colors">
+                                                                <Card className="hover:bg-muted/50 transition-colors overflow-hidden">
                                                                     <CardHeader className="p-4">
-                                                                        <div className="flex items-start justify-between gap-4">
+                                                                        <div className="flex items-start justify-between gap-4 flex-wrap">
                                                                             <div className="flex items-start gap-4">
                                                                                 <Avatar className="h-8 w-8">
                                                                                     <AvatarImage
@@ -554,7 +556,7 @@ export default function ForumPage() {
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-2">
+                                                                            <div className="flex items-center gap-2 flex-wrap">
                                                                                 {thread.isNew && (
                                                                                     <Badge
                                                                                         variant="new"

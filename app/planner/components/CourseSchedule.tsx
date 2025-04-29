@@ -11,7 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Clock, X, ChevronDown } from "lucide-react";
+import { Loader2, Clock, X, ChevronDown, AlertTriangle } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -57,6 +57,21 @@ const TIMES = Array.from({ length: 33 }, (_, i) => {
     const minutes = (i % 4) * 15;
     return `${hour}:${minutes.toString().padStart(2, "0")}`;
 });
+
+// Utility to parse "HH:mm" to minutes since midnight
+function timeToMinutes(time: string) {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+}
+
+// Utility to format duration in minutes to "x hour & x min"
+function formatDuration(start: string, end: string) {
+    const mins = timeToMinutes(end) - timeToMinutes(start);
+    if (mins <= 0) return "";
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h > 0 ? `${h} hour${h > 1 ? "s" : ""}` : ""}${h && m ? " & " : ""}${m ? `${m} min${m > 1 ? "s" : ""}` : ""}`;
+}
 
 function CourseTimeCard({
     course,
@@ -420,7 +435,7 @@ export default function CourseSchedule({
     }
 
     return (
-        <Card className="w-full">
+        <Card className="w-full overflow-hidden">
             <CardHeader>
                 <CardTitle>Course Schedule</CardTitle>
             </CardHeader>
@@ -442,17 +457,17 @@ export default function CourseSchedule({
                                 .map((course) => (
                                     <div
                                         key={course.id}
-                                        className="flex flex-col space-y-2 p-4 border rounded-lg"
+                                        className="flex-1 min-w-[300px] max-w-full flex flex-col space-y-2 p-4 border rounded-lg"
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h3 className="font-medium">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <h3 className="font-medium truncate">
                                                     {course.code}
                                                 </h3>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-sm text-gray-600 truncate">
                                                     {course.name}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
                                                     <span>
                                                         {course.department}
                                                     </span>
@@ -471,7 +486,7 @@ export default function CourseSchedule({
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 px-3 flex items-center justify-center"
+                                                    className="h-8 px-3 flex items-center justify-center whitespace-nowrap"
                                                     onClick={() =>
                                                         handleAddCourse(course)
                                                     }
@@ -487,40 +502,75 @@ export default function CourseSchedule({
 
                     {/* Weekly Schedule */}
                     <div className="space-y-6">
-                        {DAYS.map((day) => (
-                            <div key={day} className="space-y-4">
-                                <h3 className="text-lg font-semibold border-b pb-2">
-                                    {day}
-                                </h3>
-                                <div className="grid gap-4">
-                                    {coursesByDay[day]
-                                        ?.sort((a, b) =>
-                                            a.startTime.localeCompare(
-                                                b.startTime
-                                            )
-                                        )
-                                        .map((course) => (
+                        {DAYS.map((day) => {
+                            // Sort by real time
+                            const sorted = (coursesByDay[day] || [])
+                                .slice()
+                                .sort(
+                                    (a, b) =>
+                                        timeToMinutes(a.startTime) -
+                                        timeToMinutes(b.startTime)
+                                );
+                            // Find overlaps
+                            const overlaps: Set<string> = new Set();
+                            for (let i = 1; i < sorted.length; ++i) {
+                                const prev = sorted[i - 1];
+                                const curr = sorted[i];
+                                if (
+                                    timeToMinutes(curr.startTime) <
+                                    timeToMinutes(prev.endTime)
+                                ) {
+                                    overlaps.add(prev.id!);
+                                    overlaps.add(curr.id!);
+                                }
+                            }
+                            return (
+                                <div key={day} className="space-y-4">
+                                    <h3 className="text-lg font-semibold border-b pb-2">
+                                        {day}
+                                    </h3>
+                                    <div className="grid gap-4">
+                                        {sorted.map((course) => (
                                             <div
                                                 key={course.id}
-                                                className="flex flex-col space-y-2 p-4 border rounded-lg"
+                                                className={`flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
                                             >
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <h3 className="font-medium">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div className="min-w-0">
+                                                        <h3 className="font-medium truncate">
                                                             {course.courseName}
                                                         </h3>
                                                         <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                                                            <Clock className="h-4 w-4" />
-                                                            <span>
+                                                            <Clock className="h-4 w-4 flex-shrink-0" />
+                                                            <span className="truncate">
                                                                 {
                                                                     course.startTime
                                                                 }{" "}
                                                                 -{" "}
                                                                 {course.endTime}
                                                             </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                (
+                                                                {formatDuration(
+                                                                    course.startTime,
+                                                                    course.endTime
+                                                                )}
+                                                                )
+                                                            </span>
+                                                            {overlaps.has(
+                                                                course.id!
+                                                            ) && (
+                                                                <span
+                                                                    className="flex items-center text-red-600 ml-2"
+                                                                    title="This time slot overlaps with another."
+                                                                >
+                                                                    <AlertTriangle className="h-4 w-4 mr-1" />
+                                                                    Overlap
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
                                                         <Popover>
                                                             <PopoverTrigger
                                                                 asChild
@@ -548,7 +598,7 @@ export default function CourseSchedule({
                                                                                 day
                                                                             ) => {
                                                                                 course.id &&
-                                                                                    onUpdate(
+                                                                                    handleUpdateSchedule(
                                                                                         course.id,
                                                                                         {
                                                                                             day,
@@ -598,7 +648,7 @@ export default function CourseSchedule({
                                                                                     time
                                                                                 ) => {
                                                                                     course.id &&
-                                                                                        onUpdate(
+                                                                                        handleUpdateSchedule(
                                                                                             course.id,
                                                                                             {
                                                                                                 startTime:
@@ -648,7 +698,7 @@ export default function CourseSchedule({
                                                                                     time
                                                                                 ) => {
                                                                                     course.id &&
-                                                                                        onUpdate(
+                                                                                        handleUpdateSchedule(
                                                                                             course.id,
                                                                                             {
                                                                                                 endTime:
@@ -694,28 +744,30 @@ export default function CourseSchedule({
                                                             size="sm"
                                                             className="h-8 px-3 flex items-center justify-center"
                                                             onClick={() => {
-                                                                onAddTimeSlot({
-                                                                    id: course.courseId,
-                                                                    name: course.courseName,
-                                                                    code: "",
-                                                                    credits: 0,
-                                                                    department:
-                                                                        "",
-                                                                    semester:
-                                                                        "",
-                                                                    year: 0,
-                                                                });
+                                                                handleAddCourse(
+                                                                    {
+                                                                        id: course.courseId,
+                                                                        name: course.courseName,
+                                                                        code: "",
+                                                                        credits: 0,
+                                                                        department:
+                                                                            "",
+                                                                        semester:
+                                                                            "",
+                                                                        year: 0,
+                                                                    }
+                                                                );
                                                             }}
                                                         >
                                                             Add Time Slot
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
-                                                            size="sm"
-                                                            className="h-8 w-8 p-0 flex items-center justify-center text-gray-500 hover:text-gray-900"
+                                                            size="icon"
+                                                            className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
                                                             onClick={() =>
                                                                 course.id &&
-                                                                onDelete(
+                                                                handleDeleteSchedule(
                                                                     course.id
                                                                 )
                                                             }
@@ -726,14 +778,15 @@ export default function CourseSchedule({
                                                 </div>
                                             </div>
                                         ))}
-                                    {coursesByDay[day]?.length === 0 && (
+                                    </div>
+                                    {sorted.length === 0 && (
                                         <p className="text-sm text-gray-500 py-2">
                                             No courses scheduled
                                         </p>
                                     )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </CardContent>
