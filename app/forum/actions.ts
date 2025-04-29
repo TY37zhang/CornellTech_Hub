@@ -259,78 +259,75 @@ export async function getForumPosts(
 }
 
 export async function getForumPostsByCategory(
-    categorySlug: string
-): Promise<ForumPostResponse[]> {
+    categorySlug: string,
+    limit = 10,
+    offset = 0
+): Promise<{ posts: ForumPostResponse[]; total: number }> {
     try {
-        const posts = await db.ForumPost.findMany({
-            where: {
-                status: "active",
-                category: {
-                    slug: categorySlug,
-                },
-            },
-            include: {
-                category: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
-                },
-                users: {
-                    select: {
-                        name: true,
-                        avatarUrl: true,
-                        id: true,
-                    },
-                },
-                comments: {
-                    select: {
-                        id: true,
-                    },
-                },
-                likes: {
-                    select: {
-                        id: true,
-                    },
-                },
-                forum_views: {
-                    select: {
-                        id: true,
-                    },
-                },
-                tags: {
-                    select: {
-                        tag: true,
-                    },
-                },
-            },
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
+        // Get total count
+        const countQuery = `
+            SELECT COUNT(DISTINCT fp.id) as total
+            FROM forum_posts fp
+            JOIN forum_categories fc ON fp.category_id = fc.id
+            WHERE fp.status = 'active' AND fc.slug = $1
+        `;
+        const countResult = await sql(countQuery, [categorySlug]);
+        const total = parseInt(countResult[0].total);
 
+        // Get posts with all related data
+        const postsQuery = `
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count,
+                ARRAY_AGG(DISTINCT fpt.tag) as tags
+            FROM forum_posts fp
+            JOIN users u ON fp.author_id = u.id
+            JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
+            WHERE fp.status = 'active' AND fc.slug = $1
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+            ORDER BY fp.created_at DESC
+            LIMIT $2 OFFSET $3
+        `;
+        const posts = await sql(postsQuery, [categorySlug, limit, offset]);
+
+        // Format the response
         const formattedPosts: ForumPostResponse[] = posts.map((post) => ({
             id: post.id,
             title: post.title,
             content: post.content,
             created_at:
-                post.createdAt?.toISOString() || new Date().toISOString(),
+                post.created_at?.toISOString() || new Date().toISOString(),
             updated_at:
-                post.updatedAt?.toISOString() || new Date().toISOString(),
-            category_name: post.category.name,
-            category_slug: post.category.slug,
-            author_name: post.users.name,
-            author_avatar: post.users.avatarUrl,
-            author_id: post.users.id,
-            reply_count: post.comments.length,
-            like_count: post.likes.length,
-            view_count: post.forum_views.length,
-            tags: post.tags.map((t) => t.tag),
+                post.updated_at?.toISOString() || new Date().toISOString(),
+            category_name: post.category_name,
+            category_slug: post.category_slug,
+            author_name: post.author_name,
+            author_avatar: post.author_avatar,
+            author_id: post.author_id,
+            reply_count: parseInt(post.reply_count) || 0,
+            like_count: parseInt(post.like_count) || 0,
+            view_count: parseInt(post.view_count) || 0,
+            tags: post.tags.filter(Boolean),
         }));
 
-        return formattedPosts;
+        return { posts: formattedPosts, total };
     } catch (error) {
-        console.error("Error fetching category posts:", error);
+        console.error("Error fetching forum posts by category:", error);
         throw error;
     }
 }
@@ -339,10 +336,16 @@ export async function getForumPostById(
     id: string
 ): Promise<ForumPostResponse | null> {
     try {
-        // Check if the input is a valid UUID
+        // Extract UUID from slug if it contains one
+        const uuidMatch = id.match(
+            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+        );
+        const postId = uuidMatch ? uuidMatch[0] : id;
+
+        // Check if we found a UUID
         const isUUID =
             /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-                id
+                postId
             );
 
         let query: string;
@@ -376,7 +379,7 @@ export async function getForumPostById(
                 WHERE fp.id = $1 AND fp.status = 'active'
                 GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
             `;
-            params = [id];
+            params = [postId];
         } else {
             // If it's not a UUID, assume it's a category slug and get the first post from that category
             query = `
@@ -773,4 +776,264 @@ export async function toggleForumCommentLike(
             error: error instanceof Error ? error.message : "Unknown error",
         };
     }
+}
+
+export async function getRelatedPosts(
+    postId: string,
+    category: string,
+    limit = 5
+): Promise<ForumPostResponse[]> {
+    try {
+        // Extract UUID from slug if it contains one
+        const uuidMatch = postId.match(
+            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+        );
+        const actualPostId = uuidMatch ? uuidMatch[0] : postId;
+
+        const query = `
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count,
+                ARRAY_AGG(DISTINCT fpt.tag) as tags
+            FROM forum_posts fp
+            JOIN users u ON fp.author_id = u.id
+            JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
+            WHERE fp.status = 'active' 
+            AND fc.slug = $1
+            AND fp.id != $2
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
+            ORDER BY fp.created_at DESC
+            LIMIT $3
+        `;
+
+        const posts = await sql(query, [category, actualPostId, limit]);
+
+        // Format the response
+        return posts.map((post) => ({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            created_at:
+                post.created_at?.toISOString() || new Date().toISOString(),
+            updated_at:
+                post.updated_at?.toISOString() || new Date().toISOString(),
+            category_name: post.category_name,
+            category_slug: post.category_slug,
+            author_name: post.author_name,
+            author_avatar: post.author_avatar,
+            author_id: post.author_id,
+            reply_count: parseInt(post.reply_count) || 0,
+            like_count: parseInt(post.like_count) || 0,
+            view_count: parseInt(post.view_count) || 0,
+            tags: post.tags.filter(Boolean),
+        }));
+    } catch (error) {
+        console.error("Error fetching related posts:", error);
+        return [];
+    }
+}
+
+export async function checkUserLikeStatus(
+    postId: string,
+    userId: string
+): Promise<{ hasLiked: boolean }> {
+    try {
+        const query = `
+            SELECT EXISTS (
+                SELECT 1 FROM forum_likes
+                WHERE post_id = $1 AND user_id = $2
+            ) as has_liked
+        `;
+        const result = await sql(query, [postId, userId]);
+        return { hasLiked: result[0]?.has_liked || false };
+    } catch (error) {
+        console.error("Error checking user like status:", error);
+        return { hasLiked: false };
+    }
+}
+
+export async function checkUserSaveStatus(
+    postId: string,
+    userId: string
+): Promise<boolean> {
+    try {
+        const query = `
+            SELECT EXISTS (
+                SELECT 1 FROM forum_saved
+                WHERE post_id = $1 AND user_id = $2
+            ) as has_saved
+        `;
+        const result = await sql(query, [postId, userId]);
+        return result[0]?.has_saved || false;
+    } catch (error) {
+        console.error("Error checking user save status:", error);
+        return false;
+    }
+}
+
+export async function toggleForumSave(postId: string, userId: string) {
+    try {
+        // Check if the user has already saved the post
+        const checkSaveQuery = `
+            SELECT id FROM forum_saved
+            WHERE post_id = $1 AND user_id = $2
+        `;
+        const existingSave = await sql(checkSaveQuery, [postId, userId]);
+
+        if (existingSave && existingSave.length > 0) {
+            // Unsave: Remove the save record
+            const deleteSaveQuery = `
+                DELETE FROM forum_saved
+                WHERE id = $1
+            `;
+            await sql(deleteSaveQuery, [existingSave[0].id]);
+
+            revalidatePath(`/forum/${postId}`);
+            revalidatePath("/forum/saved");
+
+            return {
+                success: true,
+                action: "unsaved",
+            };
+        } else {
+            // Save: Create new save record
+            const createSaveQuery = `
+                INSERT INTO forum_saved (post_id, user_id, created_at)
+                VALUES ($1, $2, NOW())
+            `;
+            await sql(createSaveQuery, [postId, userId]);
+
+            revalidatePath(`/forum/${postId}`);
+            revalidatePath("/forum/saved");
+
+            return {
+                success: true,
+                action: "saved",
+            };
+        }
+    } catch (error) {
+        console.error("Error toggling forum save:", error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+        };
+    }
+}
+
+export async function getCommentVoteStatus(commentId: string, userId: string) {
+    try {
+        const query = `
+            SELECT action_type as vote_type
+            FROM comment_votes
+            WHERE comment_id = $1 AND user_id = $2
+        `;
+        const result = await sql(query, [commentId, userId]);
+        return { voteType: result[0]?.vote_type || null };
+    } catch (error) {
+        console.error("Error getting vote status:", error);
+        return { voteType: null };
+    }
+}
+
+export async function toggleCommentLike(
+    commentId: string,
+    userId: string,
+    voteType: "upvote" | "downvote"
+) {
+    try {
+        // Check if user has already voted on this comment
+        const existingVoteQuery = `
+            SELECT id, action_type
+            FROM comment_votes
+            WHERE comment_id = $1 AND user_id = $2
+        `;
+        const existingVote = await sql(existingVoteQuery, [commentId, userId]);
+
+        if (existingVote && existingVote.length > 0) {
+            if (existingVote[0].action_type === voteType) {
+                // Remove vote if clicking the same button
+                const deleteQuery = `
+                    DELETE FROM comment_votes
+                    WHERE id = $1
+                `;
+                await sql(deleteQuery, [existingVote[0].id]);
+
+                // Get updated counts
+                const updatedCounts = await getCommentVoteCounts(commentId);
+                return {
+                    success: true,
+                    action: "removed",
+                    ...updatedCounts,
+                };
+            } else {
+                // Update vote if changing vote type
+                const updateQuery = `
+                    UPDATE comment_votes
+                    SET action_type = $1, updated_at = NOW()
+                    WHERE id = $2
+                `;
+                await sql(updateQuery, [voteType, existingVote[0].id]);
+
+                // Get updated counts
+                const updatedCounts = await getCommentVoteCounts(commentId);
+                return {
+                    success: true,
+                    action: "changed",
+                    ...updatedCounts,
+                };
+            }
+        } else {
+            // Create new vote
+            const insertQuery = `
+                INSERT INTO comment_votes (comment_id, user_id, action_type)
+                VALUES ($1, $2, $3)
+            `;
+            await sql(insertQuery, [commentId, userId, voteType]);
+
+            // Get updated counts
+            const updatedCounts = await getCommentVoteCounts(commentId);
+            return {
+                success: true,
+                action: "added",
+                ...updatedCounts,
+            };
+        }
+    } catch (error) {
+        console.error("Error voting on comment:", error);
+        return {
+            success: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to vote on comment",
+        };
+    }
+}
+
+async function getCommentVoteCounts(commentId: string) {
+    const query = `
+        SELECT like_count, dislike_count
+        FROM forum_comments
+        WHERE id = $1
+    `;
+    const result = await sql(query, [commentId]);
+    return {
+        likeCount: parseInt(result[0].like_count) || 0,
+        dislikeCount: parseInt(result[0].dislike_count) || 0,
+    };
 }

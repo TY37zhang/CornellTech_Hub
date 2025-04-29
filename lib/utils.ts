@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
+export function cn(...inputs: any[]) {
+    return inputs.filter(Boolean).join(" ");
 }
 
 /**
@@ -10,53 +10,84 @@ export function cn(...inputs: ClassValue[]) {
  * @param date - The date to format (string or Date object)
  * @returns A formatted date string
  */
-export function formatDate(date: string | Date): string {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
+export function formatDate(date: string | Date | null | undefined): string {
+    if (!date) {
+        return "No date";
+    }
+
+    let dateObj: Date;
+
+    // If it's already a Date object
+    if (date instanceof Date) {
+        dateObj = date;
+    } else {
+        // Parse the string date
+        dateObj = new Date(date);
+    }
 
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
         return "Invalid date";
     }
 
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - dateObj.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    // Format the date
+    return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+    }).format(dateObj);
+}
 
-    // If less than a minute ago
-    if (diffMinutes < 1) {
-        return "Just now";
+export function formatDateShort(
+    date: string | Date | null | undefined
+): string {
+    if (!date) {
+        return "No date";
     }
 
-    // If less than an hour ago
-    if (diffHours < 1) {
-        return `${diffMinutes} ${diffMinutes === 1 ? "minute" : "minutes"} ago`;
+    let dateObj: Date;
+
+    // If it's already a Date object
+    if (date instanceof Date) {
+        dateObj = date;
+    } else {
+        // Parse the string date
+        dateObj = new Date(date);
     }
 
-    // If less than a day ago
-    if (diffDays < 1) {
-        return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+        return "Invalid date";
     }
 
-    // If less than a week ago
-    if (diffDays < 7) {
-        return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+    // Format the date
+    return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(dateObj);
+}
+
+export function isValidDate(date: string | Date | null | undefined): boolean {
+    if (!date) {
+        return false;
     }
 
-    // If less than a month ago
-    if (diffDays < 30) {
-        const weeks = Math.floor(diffDays / 7);
-        return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
-    }
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return !isNaN(dateObj.getTime());
+}
 
-    // If less than a year ago
-    if (diffDays < 365) {
-        const months = Math.floor(diffDays / 30);
-        return `${months} ${months === 1 ? "month" : "months"} ago`;
-    }
-
-    // If more than a year ago
-    const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? "year" : "years"} ago`;
+export function slugify(text: string): string {
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-") // Replace spaces with -
+        .replace(/[^\w-]+/g, "") // Remove all non-word chars
+        .replace(/--+/g, "-") // Replace multiple - with single -
+        .replace(/^-+/, "") // Trim - from start of text
+        .replace(/-+$/, ""); // Trim - from end of text
 }

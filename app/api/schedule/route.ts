@@ -1,89 +1,141 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { sql } from "@/lib/db";
 
-export async function POST(req: Request) {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
+
         if (!session?.user?.id) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const body = await req.json();
+        const schedules = await sql`
+            SELECT 
+                cs.id,
+                cs.user_id,
+                cs.course_id,
+                cs.day,
+                cs.start_time,
+                cs.end_time,
+                cs.created_at,
+                cs.updated_at,
+                c.code,
+                c.name,
+                c.description,
+                c.credits,
+                c.department
+            FROM course_schedules cs
+            JOIN courses c ON cs.course_id = c.id
+            WHERE cs.user_id = ${session.user.id}
+            ORDER BY 
+                CASE 
+                    WHEN cs.day = 'Monday' THEN 1
+                    WHEN cs.day = 'Tuesday' THEN 2
+                    WHEN cs.day = 'Wednesday' THEN 3
+                    WHEN cs.day = 'Thursday' THEN 4
+                    WHEN cs.day = 'Friday' THEN 5
+                    ELSE 6
+                END,
+                cs.start_time
+        `;
+
+        // Transform the data to match the expected format
+        const transformedSchedules = schedules.map((schedule) => ({
+            id: schedule.id,
+            userId: schedule.user_id,
+            courseId: schedule.course_id,
+            course: {
+                id: schedule.course_id,
+                code: schedule.code,
+                name: schedule.name,
+                description: schedule.description,
+                credits: schedule.credits,
+                department: schedule.department,
+            },
+            day: schedule.day,
+            startTime: schedule.start_time,
+            endTime: schedule.end_time,
+            createdAt: schedule.created_at,
+            updatedAt: schedule.updated_at,
+        }));
+
+        return NextResponse.json(transformedSchedules);
+    } catch (error) {
+        console.error("Error fetching schedules:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch schedules" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const body = await request.json();
         const { courseId, day, startTime, endTime } = body;
 
-        if (!courseId || !day || !startTime || !endTime) {
-            return new NextResponse("Missing required fields", { status: 400 });
-        }
-
-        // Save the schedule to the database
-        const schedule = await db.courseSchedule.create({
-            data: {
-                userId: session.user.id,
-                courseId,
+        const result = await sql`
+            INSERT INTO course_schedules (
+                user_id,
+                course_id,
                 day,
-                startTime,
-                endTime,
-            },
-        });
+                start_time,
+                end_time
+            )
+            VALUES (
+                ${session.user.id},
+                ${courseId},
+                ${day},
+                ${startTime},
+                ${endTime}
+            )
+            RETURNING id
+        `;
 
-        return NextResponse.json(schedule);
+        return NextResponse.json({ id: result[0].id });
     } catch (error) {
-        console.error("[SCHEDULE_POST]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        console.error("Error creating schedule:", error);
+        return NextResponse.json(
+            { error: "Failed to create schedule" },
+            { status: 500 }
+        );
     }
 }
 
-export async function GET(req: Request) {
+export async function DELETE(request: Request) {
     try {
         const session = await getServerSession(authOptions);
+
         if (!session?.user?.id) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Get all schedules for the user
-        const schedules = await db.courseSchedule.findMany({
-            where: {
-                userId: session.user.id,
-            },
-            include: {
-                course: true,
-            },
-        });
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
 
-        return NextResponse.json(schedules);
-    } catch (error) {
-        console.error("[SCHEDULE_GET]", error);
-        return new NextResponse("Internal Error", { status: 500 });
-    }
-}
-
-export async function DELETE(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const { searchParams } = new URL(req.url);
-        const scheduleId = searchParams.get("id");
-
-        if (!scheduleId) {
+        if (!id) {
             return new NextResponse("Missing schedule ID", { status: 400 });
         }
 
-        // Delete the schedule
-        await db.courseSchedule.delete({
-            where: {
-                id: scheduleId,
-                userId: session.user.id,
-            },
-        });
+        await sql`
+            DELETE FROM course_schedules
+            WHERE id = ${id} AND user_id = ${session.user.id}
+        `;
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {
-        console.error("[SCHEDULE_DELETE]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        console.error("Error deleting schedule:", error);
+        return NextResponse.json(
+            { error: "Failed to delete schedule" },
+            { status: 500 }
+        );
     }
 }

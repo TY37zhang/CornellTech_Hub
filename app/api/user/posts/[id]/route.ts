@@ -1,58 +1,73 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 
-export async function DELETE(
-    req: Request,
+const sql = neon(process.env.DATABASE_URL || "");
+
+export async function GET(
+    request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session || !session.user) {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 }
-            );
+        if (!session?.user?.id) {
+            return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const userEmail = session.user.email;
-        const postId = params.id;
-
-        if (!userEmail) {
-            return NextResponse.json(
-                { error: "User email not found" },
-                { status: 400 }
-            );
-        }
-
-        // First verify the post belongs to the user using a direct SQL query
-        const post = await prisma.post.findMany({
-            where: {
-                id: postId,
-                authorEmail: userEmail,
-            },
-            select: {
-                id: true,
-            },
-        });
+        // Fetch the specific post from the database
+        const post = await sql`
+            SELECT 
+                p.id,
+                p.title,
+                p.content,
+                p.created_at,
+                p.updated_at,
+                p.category,
+                p.slug,
+                p.author_id
+            FROM posts p
+            WHERE p.id = ${params.id} AND p.author_id = ${session.user.id}
+        `;
 
         if (!post || post.length === 0) {
-            return NextResponse.json(
-                { error: "Post not found or unauthorized" },
-                { status: 404 }
-            );
+            return new NextResponse("Post not found", { status: 404 });
         }
 
-        // Delete the post using a direct SQL query
-        await prisma.post.delete({
-            where: {
-                id: postId,
-            },
-        });
+        return NextResponse.json(post[0]);
+    } catch (error) {
+        console.error("Error fetching post:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch post" },
+            { status: 500 }
+        );
+    }
+}
 
-        return NextResponse.json({ success: true });
+export async function DELETE(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        // Delete the post from the database
+        const result = await sql`
+            DELETE FROM posts
+            WHERE id = ${params.id} AND author_id = ${session.user.id}
+            RETURNING id
+        `;
+
+        if (!result || result.length === 0) {
+            return new NextResponse("Post not found", { status: 404 });
+        }
+
+        return new NextResponse(null, { status: 204 });
     } catch (error) {
         console.error("Error deleting post:", error);
         return NextResponse.json(

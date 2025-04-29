@@ -57,12 +57,12 @@ export function LikeButton({ postId, initialLikeCount }: LikeButtonProps) {
         <Button
             variant="ghost"
             size="sm"
-            className={`gap-1 ${hasLiked ? "text-primary" : ""}`}
+            className={`gap-1 ${hasLiked ? "text-primary bg-primary/10" : ""}`}
             onClick={handleLike}
             disabled={isLikeLoading}
         >
             <ThumbsUp
-                className={`h-4 w-4 ${isLikeLoading ? "animate-pulse" : ""}`}
+                className={`h-4 w-4 ${hasLiked ? "fill-current" : ""} ${isLikeLoading ? "animate-pulse" : ""}`}
             />
             <span>{likeCount}</span>
         </Button>

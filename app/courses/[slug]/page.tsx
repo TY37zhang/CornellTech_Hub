@@ -220,8 +220,10 @@ export default function CourseDetailPage() {
                                                         (dept, index) => (
                                                             <Badge
                                                                 key={index}
-                                                                className={`${getCategoryColor(dept.toLowerCase())} min-w-[56px] justify-center text-center`}
-                                                                variant="secondary"
+                                                                variant={
+                                                                    dept.toLowerCase() as any
+                                                                }
+                                                                className="min-w-[56px] justify-center text-center"
                                                             >
                                                                 {dept.toUpperCase()}
                                                             </Badge>
@@ -229,16 +231,12 @@ export default function CourseDetailPage() {
                                                     )
                                                 ) : (
                                                     <Badge
-                                                        className={
-                                                            course.categoryColor
+                                                        variant={
+                                                            course.category.toLowerCase() as any
                                                         }
-                                                        variant="secondary"
+                                                        className="min-w-[56px] justify-center text-center"
                                                     >
-                                                        {(
-                                                            course
-                                                                .departments?.[0] ||
-                                                            ""
-                                                        ).toUpperCase()}
+                                                        {course.category.toUpperCase()}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -405,22 +403,22 @@ export default function CourseDetailPage() {
 
                 <section className="container px-4 py-6 md:px-6">
                     <Tabs defaultValue="overview" className="w-full">
-                        <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+                        <TabsList className="inline-flex h-10 items-center gap-6 justify-start rounded-none border-b bg-transparent p-0">
                             <TabsTrigger
                                 value="overview"
-                                className="rounded-none border-b-2 border-transparent bg-transparent px-4 py-2 font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
                             >
                                 Overview
                             </TabsTrigger>
                             <TabsTrigger
                                 value="reviews"
-                                className="rounded-none border-b-2 border-transparent bg-transparent px-4 py-2 font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
                             >
                                 Reviews
                             </TabsTrigger>
                             <TabsTrigger
                                 value="syllabus"
-                                className="rounded-none border-b-2 border-transparent bg-transparent px-4 py-2 font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
                             >
                                 Syllabus
                             </TabsTrigger>

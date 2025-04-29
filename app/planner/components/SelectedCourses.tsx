@@ -75,16 +75,12 @@ export default function SelectedCourses({
                                     </div>
                                     <div className="flex flex-wrap gap-2 mt-1">
                                         <Badge
-                                            variant="outline"
+                                            variant={
+                                                course.department.toLowerCase() as any
+                                            }
                                             className="text-xs"
                                         >
                                             {course.department}
-                                        </Badge>
-                                        <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                        >
-                                            {course.semester} {course.year}
                                         </Badge>
                                         <Badge
                                             variant="secondary"

@@ -22,7 +22,9 @@ export function CommentActions({
     const router = useRouter();
     const [likeCount, setLikeCount] = useState(initialLikeCount);
     const [dislikeCount, setDislikeCount] = useState(initialDislikeCount);
-    const [userVote, setUserVote] = useState<"like" | "dislike" | null>(null);
+    const [userVote, setUserVote] = useState<"upvote" | "downvote" | null>(
+        null
+    );
     const [isLoading, setIsLoading] = useState(false);
 
     // Check user's existing vote on mount
@@ -45,7 +47,7 @@ export function CommentActions({
         checkVoteStatus();
     }, [commentId, session?.user?.id]);
 
-    const handleVote = async (action: "like" | "dislike") => {
+    const handleVote = async (action: "upvote" | "downvote") => {
         if (!session?.user) {
             router.push("/auth/signin");
             return;
@@ -87,14 +89,14 @@ export function CommentActions({
                 variant="ghost"
                 size="sm"
                 className={`gap-1 ${
-                    userVote === "like" ? "text-primary bg-primary/10" : ""
+                    userVote === "upvote" ? "text-primary bg-primary/10" : ""
                 }`}
-                onClick={() => handleVote("like")}
+                onClick={() => handleVote("upvote")}
                 disabled={isLoading}
             >
                 <ThumbsUp
                     className={`h-4 w-4 ${
-                        userVote === "like" ? "fill-current" : ""
+                        userVote === "upvote" ? "fill-current" : ""
                     }`}
                 />
                 <span>{likeCount}</span>
@@ -103,14 +105,14 @@ export function CommentActions({
                 variant="ghost"
                 size="sm"
                 className={`gap-1 ${
-                    userVote === "dislike" ? "text-primary bg-primary/10" : ""
+                    userVote === "downvote" ? "text-primary bg-primary/10" : ""
                 }`}
-                onClick={() => handleVote("dislike")}
+                onClick={() => handleVote("downvote")}
                 disabled={isLoading}
             >
                 <ThumbsDown
                     className={`h-4 w-4 ${
-                        userVote === "dislike" ? "fill-current" : ""
+                        userVote === "downvote" ? "fill-current" : ""
                     }`}
                 />
                 <span>{dislikeCount}</span>

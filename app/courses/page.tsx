@@ -260,15 +260,15 @@ export default function CoursesPage() {
                 {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex w-full items-center justify-between">
-                        <div className="flex flex-wrap items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-4">
                             <Select
                                 value={programFilter}
                                 onValueChange={(value) => {
                                     setProgramFilter(value);
-                                    setCurrentPage(1); // Reset to first page when changing filter
+                                    setCurrentPage(1);
                                 }}
                             >
-                                <SelectTrigger className="w-[200px]">
+                                <SelectTrigger className="min-w-[200px] whitespace-nowrap">
                                     <SelectValue placeholder="Select program" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -287,13 +287,13 @@ export default function CoursesPage() {
                                 value={sortBy}
                                 onValueChange={(value) => {
                                     setSortBy(value);
-                                    setCurrentPage(1); // Reset to first page when changing sort
+                                    setCurrentPage(1);
                                 }}
                             >
-                                <SelectTrigger className="w-[200px]">
+                                <SelectTrigger className="min-w-[200px] whitespace-nowrap">
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="min-w-[200px]">
                                     <SelectItem value="recent">
                                         Most Recent
                                     </SelectItem>
@@ -386,7 +386,10 @@ export default function CoursesPage() {
                                                                         key={
                                                                             index
                                                                         }
-                                                                        className={`${getCategoryColor(dept.toLowerCase())} min-w-[56px] justify-center text-center`}
+                                                                        variant={
+                                                                            dept.toLowerCase() as any
+                                                                        }
+                                                                        className="min-w-[56px] justify-center text-center"
                                                                     >
                                                                         {dept.toUpperCase()}
                                                                     </Badge>
@@ -394,9 +397,10 @@ export default function CoursesPage() {
                                                             )
                                                         ) : (
                                                             <Badge
-                                                                className={
-                                                                    course.categoryColor
+                                                                variant={
+                                                                    course.category.toLowerCase() as any
                                                                 }
+                                                                className="min-w-[56px] justify-center text-center"
                                                             >
                                                                 {course.category.toUpperCase()}
                                                             </Badge>

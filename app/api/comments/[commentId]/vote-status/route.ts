@@ -1,45 +1,42 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextRequest } from "next/server";
+import { sql } from "@/lib/db/config";
+import { getCommentVoteStatus } from "@/app/forum/actions";
 
-type Props = {
-    params: {
-        commentId: string;
-    };
-};
-
-export async function GET(request: Request, { params }: Props) {
-    const resolvedParams = await Promise.resolve(params);
+export async function GET(
+    request: NextRequest,
+    { params }: { params: { commentId: string } }
+) {
     try {
-        // Get the user session
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { success: false, error: "Unauthorized" },
-                { status: 401 }
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get("userId");
+        const resolvedParams = await Promise.resolve(params);
+        const commentId = resolvedParams.commentId;
+
+        if (!userId) {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    error: "User ID is required",
+                }),
+                { status: 400 }
             );
         }
 
-        const userId = session.user.id;
-        const commentId = resolvedParams.commentId;
+        const result = await getCommentVoteStatus(commentId, userId);
 
-        // Get the user's vote status for this comment
-        const result = await sql`
-            SELECT action_type as vote_type
-            FROM comment_votes
-            WHERE comment_id = ${commentId}
-            AND user_id = ${userId}
-        `;
-
-        return NextResponse.json({
-            success: true,
-            voteType: result[0]?.vote_type || null,
-        });
+        return new Response(
+            JSON.stringify({
+                success: true,
+                voteType: result.voteType,
+            })
+        );
     } catch (error) {
         console.error("Error getting vote status:", error);
-        return NextResponse.json(
-            { success: false, error: "Failed to get vote status" },
+        return new Response(
+            JSON.stringify({
+                success: false,
+                error: error instanceof Error ? error.message : "Unknown error",
+            }),
             { status: 500 }
         );
     }

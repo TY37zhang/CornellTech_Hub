@@ -565,8 +565,8 @@ export default function ForumPage() {
                                                                             <div className="flex items-center gap-2">
                                                                                 {thread.isNew && (
                                                                                     <Badge
-                                                                                        variant="secondary"
-                                                                                        className="bg-[#4bcefa] text-white px-2 py-0.5"
+                                                                                        variant="new"
+                                                                                        className="px-2 py-0.5"
                                                                                     >
                                                                                         🌟
                                                                                         New
@@ -575,16 +575,8 @@ export default function ForumPage() {
                                                                                 {thread.isHot &&
                                                                                     thread.hotScore && (
                                                                                         <Badge
-                                                                                            variant="secondary"
-                                                                                            className={
-                                                                                                thread.hotScore >
-                                                                                                200
-                                                                                                    ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full"
-                                                                                                    : thread.hotScore >
-                                                                                                        150
-                                                                                                      ? "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-90"
-                                                                                                      : "bg-[#ff5454] text-white px-3 py-0.5 rounded-full opacity-75"
-                                                                                            }
+                                                                                            variant="hot"
+                                                                                            className="px-3 py-0.5"
                                                                                         >
                                                                                             🔥{" "}
                                                                                             {thread.hotScore >
@@ -597,9 +589,8 @@ export default function ForumPage() {
                                                                                         </Badge>
                                                                                     )}
                                                                                 <Badge
-                                                                                    variant="secondary"
-                                                                                    className={
-                                                                                        thread.categoryColor
+                                                                                    variant={
+                                                                                        thread.category.toLowerCase() as any
                                                                                     }
                                                                                 >
                                                                                     {
@@ -632,7 +623,7 @@ export default function ForumPage() {
                                                                                             key={
                                                                                                 tag
                                                                                             }
-                                                                                            variant="outline"
+                                                                                            variant="tag"
                                                                                             className="text-xs font-normal"
                                                                                         >
                                                                                             {

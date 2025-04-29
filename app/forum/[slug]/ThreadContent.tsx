@@ -529,47 +529,29 @@ export default function ThreadContent({
                                 </CardContent>
                                 <CardFooter className="flex items-center justify-between pt-1">
                                     <div className="flex items-center gap-2">
-                                        <LikeButton
-                                            postId={threadId}
-                                            initialLikeCount={
-                                                threadData.stats.likes
-                                            }
-                                        />
-                                        {/* <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="gap-1"
-                                            onClick={handleShare}
-                                        >
-                                            <Share2 className="h-4 w-4" />
-                                            <span>Share</span>
-                                        </Button> */}
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className={`gap-1 ${
-                                                isSaved ? "text-primary" : ""
-                                            }`}
-                                            onClick={handleSave}
-                                        >
-                                            {isSaved ? (
-                                                <BookmarkCheck className="h-4 w-4" />
-                                            ) : (
-                                                <BookmarkPlus className="h-4 w-4" />
-                                            )}
-                                            <span>
-                                                {isSaved ? "Saved" : "Save"}
-                                            </span>
-                                        </Button>
-                                        {/* <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="gap-1"
-                                            onClick={handleReport}
-                                        >
-                                            <Flag className="h-4 w-4" />
-                                            <span>Report</span>
-                                        </Button> */}
+                                        <div className="flex items-center gap-2">
+                                            <LikeButton
+                                                postId={threadId}
+                                                initialLikeCount={
+                                                    threadData.stats.likes
+                                                }
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className={`gap-1 ${isSaved ? "text-primary" : ""}`}
+                                                onClick={handleSave}
+                                            >
+                                                {isSaved ? (
+                                                    <BookmarkCheck className="h-4 w-4" />
+                                                ) : (
+                                                    <BookmarkPlus className="h-4 w-4" />
+                                                )}
+                                                <span>
+                                                    {isSaved ? "Saved" : "Save"}
+                                                </span>
+                                            </Button>
+                                        </div>
                                     </div>
                                 </CardFooter>
                             </Card>
@@ -577,32 +559,36 @@ export default function ThreadContent({
                             {/* Replies */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold tracking-tight">
-                                        {threadData.stats.replies}{" "}
-                                        {threadData.stats.replies === 1
-                                            ? "Reply"
-                                            : "Replies"}
-                                    </h2>
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={handleSort}
-                                        disabled={isLoading}
-                                    >
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Sort by..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="recent">
-                                                Most Recent
-                                            </SelectItem>
-                                            <SelectItem value="most-liked">
-                                                Most Liked
-                                            </SelectItem>
-                                            <SelectItem value="most-disliked">
-                                                Most Disliked
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex-1">
+                                        <h2 className="text-xl font-bold tracking-tight">
+                                            {threadData.stats.replies}{" "}
+                                            {threadData.stats.replies === 1
+                                                ? "Reply"
+                                                : "Replies"}
+                                        </h2>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <Select
+                                            value={sortBy}
+                                            onValueChange={handleSort}
+                                            disabled={isLoading}
+                                        >
+                                            <SelectTrigger className="w-[140px]">
+                                                <SelectValue placeholder="Sort by..." />
+                                            </SelectTrigger>
+                                            <SelectContent align="end">
+                                                <SelectItem value="recent">
+                                                    Most Recent
+                                                </SelectItem>
+                                                <SelectItem value="most-liked">
+                                                    Most Liked
+                                                </SelectItem>
+                                                <SelectItem value="most-disliked">
+                                                    Most Disliked
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
                                 {isLoading ? (
@@ -700,22 +686,6 @@ export default function ThreadContent({
                                                                 0
                                                             }
                                                         />
-                                                        {/* <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="gap-1"
-                                                        >
-                                                            <Share2 className="h-4 w-4" />
-                                                            <span>Share</span>
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="gap-1"
-                                                        >
-                                                            <Flag className="h-4 w-4" />
-                                                            <span>Report</span>
-                                                        </Button> */}
                                                     </div>
                                                 </CardFooter>
                                             </Card>
@@ -786,14 +756,6 @@ export default function ThreadContent({
                                         </div>
                                     </div>
                                 </CardContent>
-                                {/* <CardFooter>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        View Profile
-                                    </Button>
-                                </CardFooter> */}
                             </Card>
 
                             {/* Related Threads */}

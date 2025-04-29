@@ -1,19 +1,89 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { sql } from "@/lib/db";
 
-export async function POST(req: Request) {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        console.log("Session in POST:", session);
 
         if (!session?.user?.id) {
-            console.error("Unauthorized: No session or user ID");
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const body = await req.json();
+        // Fetch the user's course plans from the database
+        const coursePlans = await sql`
+            SELECT 
+                cp.id as plan_id,
+                cp.user_id,
+                cp.course_id,
+                cp.requirement_type,
+                cp.semester,
+                cp.year,
+                cp.status,
+                cp.notes,
+                cp.created_at,
+                cp.updated_at,
+                c.id,
+                c.code,
+                c.name,
+                c.description,
+                c.credits,
+                c.department,
+                c.full_code,
+                c.concentration_core,
+                c.concentration_elective,
+                c.professor_id
+            FROM course_planner cp
+            JOIN courses c ON cp.course_id = c.id
+            WHERE cp.user_id = ${session.user.id}
+            ORDER BY cp.year, cp.semester
+        `;
+
+        // Transform the data to match the expected format
+        const transformedPlans = coursePlans.map((plan) => ({
+            id: plan.plan_id,
+            userId: plan.user_id,
+            course: {
+                id: plan.id, // course id
+                code: plan.code,
+                name: plan.name,
+                description: plan.description,
+                credits: plan.credits,
+                department: plan.department,
+                fullCode: plan.full_code,
+                concentrationCore: plan.concentration_core,
+                concentrationElective: plan.concentration_elective,
+                professorId: plan.professor_id,
+            },
+            requirementType: plan.requirement_type,
+            semester: plan.semester,
+            year: plan.year,
+            status: plan.status,
+            notes: plan.notes,
+            createdAt: plan.created_at,
+            updatedAt: plan.updated_at,
+        }));
+
+        return NextResponse.json(transformedPlans);
+    } catch (error) {
+        console.error("Error fetching course plans:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch course plans" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const body = await request.json();
         const {
             courseId,
             requirementType,
@@ -23,165 +93,151 @@ export async function POST(req: Request) {
             notes = "",
         } = body;
 
-        console.log("Received planner POST request:", {
-            userId: session.user.id,
-            courseId,
-            requirementType,
-            semester,
-            year,
-            status,
-        });
-
-        if (!courseId || !requirementType || !semester || !year) {
-            const missingFields = [];
-            if (!courseId) missingFields.push("courseId");
-            if (!requirementType) missingFields.push("requirementType");
-            if (!semester) missingFields.push("semester");
-            if (!year) missingFields.push("year");
-
-            console.error("Missing required fields:", missingFields);
-            return new NextResponse(
-                `Missing required fields: ${missingFields.join(", ")}`,
-                { status: 400 }
-            );
-        }
-
-        // Verify the course exists
-        const courseExists = await db.course.findUnique({
-            where: { id: courseId },
-        });
-
-        if (!courseExists) {
-            console.error("Course not found:", courseId);
-            return new NextResponse("Course not found", { status: 404 });
-        }
-
-        // Save or update the course plan
-        const coursePlan = await db.coursePlanner.upsert({
-            where: {
-                unique_user_course_semester: {
-                    userId: session.user.id,
-                    courseId,
-                    semester,
-                    year,
-                },
-            },
-            update: {
-                requirementType,
-                status,
-                notes,
-            },
-            create: {
-                userId: session.user.id,
-                courseId,
-                requirementType,
+        // Create a new course plan
+        const coursePlan = await sql`
+            INSERT INTO course_planner (
+                user_id,
+                course_id,
+                requirement_type,
                 semester,
                 year,
                 status,
-                notes,
-            },
-        });
+                notes
+            )
+            VALUES (
+                ${session.user.id},
+                ${courseId},
+                ${requirementType},
+                ${semester},
+                ${year},
+                ${status},
+                ${notes}
+            )
+            RETURNING id
+        `;
 
-        console.log("Course plan saved successfully:", coursePlan);
-        return NextResponse.json(coursePlan);
+        // Fetch the created plan with course details
+        const createdPlan = await sql`
+            SELECT 
+                cp.id as plan_id,
+                cp.user_id,
+                cp.course_id,
+                cp.requirement_type,
+                cp.semester,
+                cp.year,
+                cp.status,
+                cp.notes,
+                cp.created_at,
+                cp.updated_at,
+                c.id,
+                c.code,
+                c.name,
+                c.description,
+                c.credits,
+                c.department,
+                c.full_code,
+                c.concentration_core,
+                c.concentration_elective,
+                c.professor_id
+            FROM course_planner cp
+            JOIN courses c ON cp.course_id = c.id
+            WHERE cp.id = ${coursePlan[0].id}
+        `;
+
+        const transformedPlan = {
+            id: createdPlan[0].plan_id,
+            userId: createdPlan[0].user_id,
+            course: {
+                id: createdPlan[0].id,
+                code: createdPlan[0].code,
+                name: createdPlan[0].name,
+                description: createdPlan[0].description,
+                credits: createdPlan[0].credits,
+                department: createdPlan[0].department,
+                fullCode: createdPlan[0].full_code,
+                concentrationCore: createdPlan[0].concentration_core,
+                concentrationElective: createdPlan[0].concentration_elective,
+                professorId: createdPlan[0].professor_id,
+            },
+            requirementType: createdPlan[0].requirement_type,
+            semester: createdPlan[0].semester,
+            year: createdPlan[0].year,
+            status: createdPlan[0].status,
+            notes: createdPlan[0].notes,
+            createdAt: createdPlan[0].created_at,
+            updatedAt: createdPlan[0].updated_at,
+        };
+
+        return NextResponse.json(transformedPlan);
     } catch (error) {
-        console.error("[PLANNER_POST] Detailed error:", error);
-        return new NextResponse(
-            error instanceof Error ? error.message : "Internal Error",
+        console.error("Error creating course plan:", error);
+        return NextResponse.json(
+            { error: "Failed to create course plan" },
             { status: 500 }
         );
     }
 }
 
-export async function GET(req: Request) {
+export async function PUT(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        console.log("Session in GET:", session);
 
         if (!session?.user?.id) {
-            console.error("Unauthorized: No session or user ID");
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        console.log("Fetching course plans for user:", session.user.id);
+        const body = await request.json();
+        const { id, requirementType, semester, year, status, notes } = body;
 
-        // Get all course plans for the user with course details
-        const coursePlans = await db.coursePlanner.findMany({
-            where: {
-                userId: session.user.id,
-            },
-            include: {
-                course: true,
-            },
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
+        // Update the course plan
+        await sql`
+            UPDATE course_planner
+            SET 
+                requirement_type = ${requirementType},
+                semester = ${semester},
+                year = ${year},
+                status = ${status},
+                notes = ${notes},
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${id} AND user_id = ${session.user.id}
+        `;
 
-        console.log(`Found ${coursePlans.length} course plans`);
-        return NextResponse.json(coursePlans);
+        return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("[PLANNER_GET] Detailed error:", error);
-        return new NextResponse(
-            error instanceof Error ? error.message : "Internal Error",
+        console.error("Error updating course plan:", error);
+        return NextResponse.json(
+            { error: "Failed to update course plan" },
             { status: 500 }
         );
     }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        console.log("Session in DELETE:", session);
 
         if (!session?.user?.id) {
-            console.error("Unauthorized: No session or user ID");
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { searchParams } = new URL(req.url);
-        const courseId = searchParams.get("courseId");
-        const semester = searchParams.get("semester");
-        const year = searchParams.get("year");
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
 
-        console.log("Received planner DELETE request:", {
-            userId: session.user.id,
-            courseId,
-            semester,
-            year,
-        });
-
-        if (!courseId || !semester || !year) {
-            const missingFields = [];
-            if (!courseId) missingFields.push("courseId");
-            if (!semester) missingFields.push("semester");
-            if (!year) missingFields.push("year");
-
-            console.error("Missing required fields:", missingFields);
-            return new NextResponse(
-                `Missing required fields: ${missingFields.join(", ")}`,
-                { status: 400 }
-            );
+        if (!id) {
+            return new NextResponse("Missing course plan ID", { status: 400 });
         }
 
         // Delete the course plan
-        await db.coursePlanner.delete({
-            where: {
-                unique_user_course_semester: {
-                    userId: session.user.id,
-                    courseId,
-                    semester,
-                    year: parseInt(year),
-                },
-            },
-        });
+        await sql`
+            DELETE FROM course_planner
+            WHERE id = ${id} AND user_id = ${session.user.id}
+        `;
 
-        console.log("Course plan deleted successfully");
         return new NextResponse(null, { status: 204 });
     } catch (error) {
-        console.error("[PLANNER_DELETE] Detailed error:", error);
-        return new NextResponse(
-            error instanceof Error ? error.message : "Internal Error",
+        console.error("Error deleting course plan:", error);
+        return NextResponse.json(
+            { error: "Failed to delete course plan" },
             { status: 500 }
         );
     }
