@@ -63,7 +63,11 @@ export function CommentActions({
                 action
             );
 
-            if (result.success) {
+            if (
+                result.success &&
+                "likeCount" in result &&
+                "dislikeCount" in result
+            ) {
                 setLikeCount(result.likeCount);
                 setDislikeCount(result.dislikeCount);
 

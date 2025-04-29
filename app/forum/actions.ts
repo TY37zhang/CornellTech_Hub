@@ -1,6 +1,5 @@
 "use server";
 
-import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { neon } from "@neondatabase/serverless";
 import { sendForumReplyNotification } from "@/lib/email/forum-notifications";

@@ -184,117 +184,109 @@ export default function ForumPage() {
     const [error, setError] = useState<string | null>(null);
 
     // Fetch threads, stats, and top contributors on component mount
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const offset = (currentPage - 1) * threadsPerPage;
-                const params = new URLSearchParams({
-                    search: searchQuery,
-                    limit: threadsPerPage.toString(),
-                    offset: offset.toString(),
-                });
-                const res = await fetch(
-                    `/api/forum/posts?${params.toString()}`
+    const fetchData = async () => {
+        try {
+            const offset = (currentPage - 1) * threadsPerPage;
+            const params = new URLSearchParams({
+                search: searchQuery,
+                limit: threadsPerPage.toString(),
+                offset: offset.toString(),
+            });
+            const res = await fetch(`/api/forum/posts?${params.toString()}`);
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(
+                    errorData.error || `HTTP error! status: ${res.status}`
                 );
-
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(
-                        errorData.error || `HTTP error! status: ${res.status}`
-                    );
-                }
-
-                const postsData = await res.json();
-                const [stats, contributors] = await Promise.all([
-                    getForumStats(),
-                    getTopContributors(),
-                ]);
-
-                if (!postsData.success) {
-                    throw new Error(postsData.error || "Failed to fetch posts");
-                }
-
-                if (!Array.isArray(postsData.posts)) {
-                    throw new Error(
-                        "Invalid response format: posts array not found"
-                    );
-                }
-
-                const formattedThreads: Thread[] = postsData.posts
-                    .map((post: any) => {
-                        if (!post || typeof post !== "object") {
-                            console.error("Invalid post data:", post);
-                            return null;
-                        }
-
-                        try {
-                            const hotStatus = calculateHotScore({
-                                likes: post.like_count || 0,
-                                replies: post.reply_count || 0,
-                                views: post.view_count || 0,
-                                createdAt:
-                                    post.created_at || new Date().toISOString(),
-                            });
-
-                            return {
-                                id: post.id || "",
-                                title: post.title || "",
-                                author: {
-                                    name: post.author_name || "Anonymous",
-                                    avatar:
-                                        post.author_avatar ||
-                                        "/placeholder.svg?height=32&width=32",
-                                    initials: getInitials(
-                                        post.author_name || "Anonymous"
-                                    ),
-                                },
-                                category: post.category_name || "Uncategorized",
-                                categoryColor: getCategoryColor(
-                                    post.category_name || "Uncategorized"
-                                ),
-                                content: post.content || "",
-                                tags: Array.isArray(post.tags) ? post.tags : [],
-                                replies: post.reply_count || 0,
-                                likes: post.like_count || 0,
-                                views: post.view_count || 0,
-                                createdAt: formatDate(
-                                    post.created_at || new Date().toISOString()
-                                ),
-                                isHot: hotStatus.isHot,
-                                hotScore: hotStatus.score,
-                                isNew:
-                                    new Date(
-                                        post.created_at || Date.now()
-                                    ).getTime() >
-                                    Date.now() - 7 * 24 * 60 * 60 * 1000,
-                            };
-                        } catch (error) {
-                            console.error(
-                                "Error formatting post:",
-                                error,
-                                post
-                            );
-                            return null;
-                        }
-                    })
-                    .filter(Boolean) as Thread[];
-
-                setThreads(formattedThreads);
-                setForumStats(stats);
-                setTopContributors(contributors);
-                setTotalPages(Math.ceil(postsData.total / threadsPerPage));
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                setError(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to fetch data"
-                );
-                setLoading(false);
             }
-        }
 
+            const postsData = await res.json();
+            const [stats, contributors] = await Promise.all([
+                getForumStats(),
+                getTopContributors(),
+            ]);
+
+            if (!postsData.success) {
+                throw new Error(postsData.error || "Failed to fetch posts");
+            }
+
+            if (!Array.isArray(postsData.posts)) {
+                throw new Error(
+                    "Invalid response format: posts array not found"
+                );
+            }
+
+            const formattedThreads: Thread[] = postsData.posts
+                .map((post: any) => {
+                    if (!post || typeof post !== "object") {
+                        console.error("Invalid post data:", post);
+                        return null;
+                    }
+
+                    try {
+                        const hotStatus = calculateHotScore({
+                            likes: post.like_count || 0,
+                            replies: post.reply_count || 0,
+                            views: post.view_count || 0,
+                            createdAt:
+                                post.created_at || new Date().toISOString(),
+                        });
+
+                        return {
+                            id: post.id || "",
+                            title: post.title || "",
+                            author: {
+                                name: post.author_name || "Anonymous",
+                                avatar:
+                                    post.author_avatar ||
+                                    "/placeholder.svg?height=32&width=32",
+                                initials: getInitials(
+                                    post.author_name || "Anonymous"
+                                ),
+                            },
+                            category: post.category_name || "Uncategorized",
+                            categoryColor: getCategoryColor(
+                                post.category_name || "Uncategorized"
+                            ),
+                            content: post.content || "",
+                            tags: Array.isArray(post.tags) ? post.tags : [],
+                            replies: post.reply_count || 0,
+                            likes: post.like_count || 0,
+                            views: post.view_count || 0,
+                            createdAt: formatDate(
+                                post.created_at || new Date().toISOString()
+                            ),
+                            isHot: hotStatus.isHot,
+                            hotScore: hotStatus.score,
+                            isNew:
+                                new Date(
+                                    post.created_at || Date.now()
+                                ).getTime() >
+                                Date.now() - 7 * 24 * 60 * 60 * 1000,
+                        };
+                    } catch (error) {
+                        console.error("Error formatting post:", error, post);
+                        return null;
+                    }
+                })
+                .filter(Boolean) as Thread[];
+
+            setThreads(formattedThreads);
+            setForumStats(stats);
+            setTopContributors(contributors);
+            setTotalPages(Math.ceil(postsData.total / threadsPerPage));
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setError(
+                error instanceof Error ? error.message : "Failed to fetch data"
+            );
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, [searchQuery, currentPage]);
 
