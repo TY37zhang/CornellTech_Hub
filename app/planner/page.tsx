@@ -1122,12 +1122,92 @@ export default function PlannerPage() {
                                         description: "All available courses",
                                     }}
                                     selectedCourses={selectedCourses}
-                                    onSelectCourse={(course) => {
-                                        setSelectedCourses([
-                                            ...selectedCourses,
-                                            course,
-                                        ]);
-                                        setSearchQuery("");
+                                    onSelectCourse={async (course) => {
+                                        try {
+                                            // Add to selectedCourses state
+                                            setSelectedCourses([
+                                                ...selectedCourses,
+                                                course,
+                                            ]);
+                                            setSearchQuery("");
+
+                                            // Save to database
+                                            const saveData = {
+                                                courseId: course.id,
+                                                requirementType: null, // No requirement type initially
+                                                semester:
+                                                    course.semester || "Fall",
+                                                year:
+                                                    course.year ||
+                                                    new Date().getFullYear(),
+                                                status: "planned",
+                                            };
+
+                                            const createResponse = await fetch(
+                                                "/api/planner",
+                                                {
+                                                    method: "POST",
+                                                    headers: {
+                                                        "Content-Type":
+                                                            "application/json",
+                                                    },
+                                                    body: JSON.stringify(
+                                                        saveData
+                                                    ),
+                                                }
+                                            );
+
+                                            if (!createResponse.ok) {
+                                                const errorText =
+                                                    await createResponse.text();
+                                                console.error(
+                                                    "Error creating course plan:",
+                                                    errorText
+                                                );
+                                                throw new Error(
+                                                    `Failed to create course plan: ${errorText}`
+                                                );
+                                            }
+
+                                            const newPlan =
+                                                await createResponse.json();
+                                            console.log(
+                                                "Course plan created successfully:",
+                                                newPlan
+                                            );
+
+                                            // Store the new plan ID
+                                            setCoursePlanIds((prev) => ({
+                                                ...prev,
+                                                [course.id]: newPlan.id,
+                                            }));
+
+                                            toast({
+                                                title: "Success",
+                                                description:
+                                                    "Course added to your plan",
+                                                variant: "default",
+                                            });
+                                        } catch (error) {
+                                            console.error(
+                                                "Error saving course:",
+                                                error
+                                            );
+                                            // Revert the UI state on error
+                                            setSelectedCourses((prev) =>
+                                                prev.filter(
+                                                    (c) => c.id !== course.id
+                                                )
+                                            );
+                                            toast({
+                                                title: "Error",
+                                                description:
+                                                    error instanceof Error
+                                                        ? error.message
+                                                        : "Failed to save course to your plan",
+                                                variant: "destructive",
+                                            });
+                                        }
                                     }}
                                     searchQuery={searchQuery}
                                 />
