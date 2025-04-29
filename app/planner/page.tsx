@@ -512,6 +512,9 @@ export default function PlannerPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
     const { toast } = useToast();
+    const [coursePlanIds, setCoursePlanIds] = useState<{
+        [courseId: string]: string;
+    }>({});
 
     useEffect(() => {
         const initializePage = async () => {
@@ -559,24 +562,33 @@ export default function PlannerPage() {
             const data = await response.json();
             console.log("Loaded course plans:", data);
 
-            // Convert the flat list into the coursePlan structure
+            // Convert the flat list into the coursePlan structure and store plan IDs
             const newCoursePlan: { [key: string]: Course[] } = {};
+            const coursePlanIds: { [courseId: string]: string } = {};
             data.forEach((plan: any) => {
                 if (plan.requirementType) {
                     if (!newCoursePlan[plan.requirementType]) {
                         newCoursePlan[plan.requirementType] = [];
                     }
                     newCoursePlan[plan.requirementType].push(plan.course);
+                    coursePlanIds[plan.course.id] = plan.id; // Store the plan ID
                 }
             });
+
+            // Store the plan IDs in state
+            setCoursePlanIds(coursePlanIds);
 
             setCoursePlan(newCoursePlan);
 
             // Add courses to selectedCourses if not already there
             const newSelectedCourses = [...selectedCourses];
+            const existingCourseIds = new Set(
+                newSelectedCourses.map((c) => c.id)
+            );
             data.forEach((plan: any) => {
-                if (!selectedCourses.some((c) => c.id === plan.course.id)) {
+                if (!existingCourseIds.has(plan.course.id)) {
                     newSelectedCourses.push(plan.course);
+                    existingCourseIds.add(plan.course.id);
                 }
             });
             setSelectedCourses(newSelectedCourses);
@@ -701,7 +713,11 @@ export default function PlannerPage() {
     };
 
     const handleCourseSelection = (courses: Course[]) => {
-        setSelectedCourses(courses);
+        const existingCourseIds = new Set(selectedCourses.map((c) => c.id));
+        const uniqueNewCourses = courses.filter(
+            (course) => !existingCourseIds.has(course.id)
+        );
+        setSelectedCourses([...selectedCourses, ...uniqueNewCourses]);
     };
 
     const handleAddToRequirement = async (
@@ -733,7 +749,7 @@ export default function PlannerPage() {
 
                 // Delete from database
                 const deleteResponse = await fetch(
-                    `/api/planner?courseId=${course.id}&semester=${course.semester}&year=${course.year}`,
+                    `/api/planner?courseId=${course.id}`,
                     {
                         method: "DELETE",
                     }
@@ -794,55 +810,93 @@ export default function PlannerPage() {
                     });
                 }
 
-                // Save to database
-                const saveData = {
-                    courseId: course.id,
-                    requirementType: requirementKey,
-                    semester: course.semester,
-                    year: course.year,
-                    status: "planned",
-                };
-
-                console.log("Saving course plan:", saveData);
-
-                fetch("/api/planner", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(saveData),
-                })
-                    .then(async (response) => {
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error(
-                                "Error saving course plan:",
-                                errorText
-                            );
-                            throw new Error(
-                                `Failed to save course plan: ${errorText}`
-                            );
-                        }
-                        return response.json();
-                    })
-                    .then((data) => {
-                        console.log("Course plan saved successfully:", data);
-                    })
-                    .catch((error) => {
-                        console.error("Error in save operation:", error);
-                        toast({
-                            title: "Error",
-                            description:
-                                error.message || "Failed to save course plan",
-                            variant: "destructive",
-                        });
-                    });
-
                 return {
                     ...prevPlan,
                     [requirementKey]: [...currentCourses, course],
                 };
             });
+
+            // Save to database
+            const saveData = {
+                courseId: course.id,
+                requirementType: requirementKey,
+                semester: course.semester || "Fall",
+                year: course.year || new Date().getFullYear(),
+                status: "planned",
+            };
+
+            console.log("Saving course plan:", saveData);
+
+            try {
+                // First check if a plan already exists for this course
+                const existingPlanId = coursePlanIds[course.id];
+                if (existingPlanId) {
+                    // Update existing plan
+                    const updateResponse = await fetch("/api/planner", {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            id: existingPlanId,
+                            requirementType: requirementKey,
+                            semester: course.semester || "Fall",
+                            year: course.year || new Date().getFullYear(),
+                            status: "planned",
+                        }),
+                    });
+
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        console.error("Error updating course plan:", errorText);
+                        throw new Error(
+                            `Failed to update course plan: ${errorText}`
+                        );
+                    }
+
+                    const updatedPlan = await updateResponse.json();
+                    console.log(
+                        "Course plan updated successfully:",
+                        updatedPlan
+                    );
+                } else {
+                    // Create new plan
+                    const createResponse = await fetch("/api/planner", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(saveData),
+                    });
+
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error("Error creating course plan:", errorText);
+                        throw new Error(
+                            `Failed to create course plan: ${errorText}`
+                        );
+                    }
+
+                    const newPlan = await createResponse.json();
+                    console.log("Course plan created successfully:", newPlan);
+
+                    // Store the new plan ID
+                    setCoursePlanIds((prev) => ({
+                        ...prev,
+                        [course.id]: newPlan.id,
+                    }));
+                }
+            } catch (error) {
+                console.error("Error in save operation:", error);
+                toast({
+                    title: "Error",
+                    description:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to save course plan",
+                    variant: "destructive",
+                });
+            }
         } catch (error) {
             console.error("Error handling requirement assignment:", error);
             toast({
@@ -1072,12 +1126,80 @@ export default function PlannerPage() {
                         {/* Selected Courses List */}
                         <SelectedCourses
                             selectedCourses={selectedCourses}
-                            onRemoveCourse={(course: Course) => {
-                                setSelectedCourses((prevCourses: Course[]) =>
-                                    prevCourses.filter(
-                                        (c) => c.id !== course.id
-                                    )
-                                );
+                            onRemoveCourse={async (course: Course) => {
+                                try {
+                                    const planId = coursePlanIds[course.id];
+                                    if (!planId) {
+                                        console.error(
+                                            "No plan ID found for course:",
+                                            course.id
+                                        );
+                                        return;
+                                    }
+
+                                    // Remove from selectedCourses
+                                    setSelectedCourses(
+                                        (prevCourses: Course[]) =>
+                                            prevCourses.filter(
+                                                (c) => c.id !== course.id
+                                            )
+                                    );
+
+                                    // Remove from all requirements in coursePlan
+                                    setCoursePlan(
+                                        (prevPlan: {
+                                            [key: string]: Course[];
+                                        }) => {
+                                            const newPlan = { ...prevPlan };
+                                            for (const key in newPlan) {
+                                                newPlan[key] = newPlan[
+                                                    key
+                                                ].filter(
+                                                    (c) => c.id !== course.id
+                                                );
+                                            }
+                                            return newPlan;
+                                        }
+                                    );
+
+                                    // Delete from database using plan ID
+                                    const deleteResponse = await fetch(
+                                        `/api/planner?id=${planId}`,
+                                        {
+                                            method: "DELETE",
+                                        }
+                                    );
+
+                                    if (!deleteResponse.ok) {
+                                        const errorText =
+                                            await deleteResponse.text();
+                                        console.error(
+                                            "Error deleting course plan:",
+                                            errorText
+                                        );
+                                        throw new Error(
+                                            `Failed to delete course plan: ${errorText}`
+                                        );
+                                    }
+
+                                    // Remove the plan ID from state
+                                    setCoursePlanIds((prev) => {
+                                        const newIds = { ...prev };
+                                        delete newIds[course.id];
+                                        return newIds;
+                                    });
+                                } catch (error) {
+                                    console.error(
+                                        "Error removing course:",
+                                        error
+                                    );
+                                    toast({
+                                        title: "Error",
+                                        description:
+                                            "Failed to remove the course. Please try again.",
+                                        variant: "destructive",
+                                    });
+                                }
                             }}
                             requirements={
                                 programRequirements[userProgram!].requirements
