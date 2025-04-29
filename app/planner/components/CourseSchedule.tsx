@@ -252,6 +252,16 @@ export default function CourseSchedule({
         loadSchedule();
     }, []);
 
+    // Add new useEffect to handle course removal
+    useEffect(() => {
+        // Remove any course times for courses that are no longer selected
+        setCourseTimes((prevTimes) =>
+            prevTimes.filter((time) =>
+                selectedCourses.some((course) => course.id === time.courseId)
+            )
+        );
+    }, [selectedCourses]);
+
     const loadSchedule = async () => {
         try {
             setIsLoading(true);
@@ -443,10 +453,10 @@ export default function CourseSchedule({
                 <div className="space-y-6">
                     {/* Available Courses */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-medium">
+                        <h3 className="text-lg font-semibold mb-4">
                             Available Courses
                         </h3>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {selectedCourses
                                 .filter(
                                     (course) =>
@@ -455,19 +465,19 @@ export default function CourseSchedule({
                                         )
                                 )
                                 .map((course) => (
-                                    <div
+                                    <Card
                                         key={course.id}
-                                        className="flex-1 min-w-[300px] max-w-full flex flex-col space-y-2 p-4 border rounded-lg"
+                                        className="flex flex-col justify-between p-4"
                                     >
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div className="min-w-0">
-                                                <h3 className="font-medium truncate">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-2">
+                                                <h3 className="text-xl font-semibold">
                                                     {course.code}
                                                 </h3>
-                                                <p className="text-sm text-gray-600 truncate">
+                                                <p className="text-gray-600 text-base">
                                                     {course.name}
                                                 </p>
-                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <span>
                                                         {course.department}
                                                     </span>
@@ -482,20 +492,17 @@ export default function CourseSchedule({
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-8 px-3 flex items-center justify-center whitespace-nowrap"
-                                                    onClick={() =>
-                                                        handleAddCourse(course)
-                                                    }
-                                                >
-                                                    Add to Schedule
-                                                </Button>
-                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() =>
+                                                    handleAddCourse(course)
+                                                }
+                                                className="whitespace-nowrap"
+                                            >
+                                                Add to Schedule
+                                            </Button>
                                         </div>
-                                    </div>
+                                    </Card>
                                 ))}
                         </div>
                     </div>

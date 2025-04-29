@@ -116,7 +116,10 @@ export default function CourseSelector({
                     {searchResults.map((course) => (
                         <div
                             key={course.id}
-                            onClick={() => onSelectCourse(course)}
+                            onClick={() => {
+                                onSelectCourse(course);
+                                setSearchResults([]);
+                            }}
                             className="flex items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors cursor-pointer group"
                         >
                             <div className="flex-1 min-w-0">

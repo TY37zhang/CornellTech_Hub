@@ -896,6 +896,16 @@ export default function PlannerPage() {
                             : "Failed to save course plan",
                     variant: "destructive",
                 });
+                // Revert the UI state on error
+                setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
+                    const newPlan = { ...prevPlan };
+                    if (requirementKey) {
+                        newPlan[requirementKey] = newPlan[
+                            requirementKey
+                        ].filter((c) => c.id !== course.id);
+                    }
+                    return newPlan;
+                });
             }
         } catch (error) {
             console.error("Error handling requirement assignment:", error);
@@ -1112,12 +1122,13 @@ export default function PlannerPage() {
                                         description: "All available courses",
                                     }}
                                     selectedCourses={selectedCourses}
-                                    onSelectCourse={(course) =>
+                                    onSelectCourse={(course) => {
                                         setSelectedCourses([
                                             ...selectedCourses,
                                             course,
-                                        ])
-                                    }
+                                        ]);
+                                        setSearchQuery("");
+                                    }}
                                     searchQuery={searchQuery}
                                 />
                             </div>
@@ -1129,13 +1140,6 @@ export default function PlannerPage() {
                             onRemoveCourse={async (course: Course) => {
                                 try {
                                     const planId = coursePlanIds[course.id];
-                                    if (!planId) {
-                                        console.error(
-                                            "No plan ID found for course:",
-                                            course.id
-                                        );
-                                        return;
-                                    }
 
                                     // Remove from selectedCourses
                                     setSelectedCourses(
@@ -1162,41 +1166,109 @@ export default function PlannerPage() {
                                         }
                                     );
 
-                                    // Delete from database using plan ID
-                                    const deleteResponse = await fetch(
-                                        `/api/planner?id=${planId}`,
-                                        {
-                                            method: "DELETE",
-                                        }
-                                    );
+                                    // Delete course plan from database if it exists
+                                    if (planId) {
+                                        const deleteResponse = await fetch(
+                                            `/api/planner?id=${planId}`,
+                                            {
+                                                method: "DELETE",
+                                            }
+                                        );
 
-                                    if (!deleteResponse.ok) {
-                                        const errorText =
-                                            await deleteResponse.text();
-                                        console.error(
-                                            "Error deleting course plan:",
-                                            errorText
-                                        );
-                                        throw new Error(
-                                            `Failed to delete course plan: ${errorText}`
-                                        );
+                                        if (!deleteResponse.ok) {
+                                            const errorText =
+                                                await deleteResponse.text();
+                                            console.error(
+                                                "Error deleting course plan:",
+                                                errorText
+                                            );
+                                            throw new Error(
+                                                `Failed to delete course plan: ${errorText}`
+                                            );
+                                        }
+
+                                        // Remove the plan ID from state
+                                        setCoursePlanIds((prev) => {
+                                            const newIds = { ...prev };
+                                            delete newIds[course.id];
+                                            return newIds;
+                                        });
                                     }
 
-                                    // Remove the plan ID from state
-                                    setCoursePlanIds((prev) => {
-                                        const newIds = { ...prev };
-                                        delete newIds[course.id];
-                                        return newIds;
+                                    // First get all schedule entries for this course
+                                    const scheduleResponse = await fetch(
+                                        `/api/schedule?courseId=${course.id}`
+                                    );
+                                    if (!scheduleResponse.ok) {
+                                        console.error(
+                                            "Error fetching course schedules:",
+                                            await scheduleResponse.text()
+                                        );
+                                    } else {
+                                        const schedules =
+                                            await scheduleResponse.json();
+
+                                        // Delete each schedule entry
+                                        for (const schedule of schedules) {
+                                            const deleteScheduleResponse =
+                                                await fetch(
+                                                    `/api/schedule?id=${schedule.id}`,
+                                                    {
+                                                        method: "DELETE",
+                                                    }
+                                                );
+
+                                            if (!deleteScheduleResponse.ok) {
+                                                console.error(
+                                                    "Error deleting schedule entry:",
+                                                    await deleteScheduleResponse.text()
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    toast({
+                                        title: "Success",
+                                        description:
+                                            "Course removed successfully",
+                                        variant: "default",
                                     });
                                 } catch (error) {
                                     console.error(
                                         "Error removing course:",
                                         error
                                     );
+                                    // Revert UI state on error
+                                    setSelectedCourses((prev) => [
+                                        ...prev,
+                                        course,
+                                    ]);
+                                    setCoursePlan((prevPlan) => {
+                                        const newPlan = { ...prevPlan };
+                                        // Restore course to its original requirement if it exists
+                                        if (coursePlanIds[course.id]) {
+                                            const requirementKey = Object.keys(
+                                                newPlan
+                                            ).find((key) =>
+                                                newPlan[key].some(
+                                                    (c) => c.id === course.id
+                                                )
+                                            );
+                                            if (requirementKey) {
+                                                newPlan[requirementKey] = [
+                                                    ...newPlan[requirementKey],
+                                                    course,
+                                                ];
+                                            }
+                                        }
+                                        return newPlan;
+                                    });
                                     toast({
                                         title: "Error",
                                         description:
-                                            "Failed to remove the course. Please try again.",
+                                            error instanceof Error
+                                                ? error.message
+                                                : "Failed to remove the course. Please try again.",
                                         variant: "destructive",
                                     });
                                 }
