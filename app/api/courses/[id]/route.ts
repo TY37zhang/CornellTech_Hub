@@ -58,9 +58,10 @@ export async function GET(
             SELECT 
                 cr.id,
                 cr.content,
-                cr.rating,
+                cr.overall_rating as rating,
                 cr.difficulty,
                 cr.workload,
+                cr.rating as value,
                 cr.created_at,
                 u.name as author,
                 u.avatar_url
@@ -92,6 +93,7 @@ export async function GET(
                 rating: Number(review.rating) || 0,
                 difficulty: Number(review.difficulty) || 0,
                 workload: Number(review.workload) || 0,
+                value: Number(review.value) || 0,
                 createdAt: review.created_at,
                 author: review.author,
                 avatarUrl: review.avatar_url,

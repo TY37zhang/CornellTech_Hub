@@ -34,6 +34,7 @@ interface Review {
     rating: number;
     difficulty: number;
     workload: number;
+    value: number;
     createdAt: string;
     author: string;
     avatarUrl: string | null;
@@ -632,6 +633,14 @@ export default function CourseDetailPage() {
                                                                     review.workload
                                                                 }
                                                                 /5
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <span className="text-sm font-medium">
+                                                                Value:
+                                                            </span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {review.value}/5
                                                             </span>
                                                         </div>
                                                     </div>
