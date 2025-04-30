@@ -371,9 +371,6 @@ export default function CoursesPage() {
                                                         <CardTitle className="text-xl">
                                                             {course.title}
                                                         </CardTitle>
-                                                        <CardDescription className="text-sm">
-                                                            {course.professor}
-                                                        </CardDescription>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
                                                         {course.crossListed ? (

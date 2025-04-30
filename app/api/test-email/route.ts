@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function GET() {
     try {
         const { data, error } = await resend.emails.send({
-            from: "Cornell Tech Hub <onboarding@resend.dev>",
+            from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "onboarding@resend.dev"}>`,
             to: "delivered@resend.dev", // Resend's testing email address
             subject: "Test Email from Cornell Tech Hub",
             html: `

@@ -58,7 +58,7 @@ export async function sendForumReplyNotification(
 
         // Send email notification
         await resend.emails.send({
-            from: "Cornell Tech Hub <onboarding@resend.dev>", // Use your verified domain in production
+            from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "cornelltechhub@resend.dev"}>`,
             to: post.email,
             subject: `New reply to your forum post: ${post.title}`,
             html: `

@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         `;
 
         await resend.emails.send({
-            from: "Cornell Tech Hub <onboarding@resend.dev>",
+            from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "onboarding@resend.dev"}>`,
             to: process.env.ADMIN_EMAIL || "delivered@resend.dev",
             subject: emailSubject,
             html: emailContent,

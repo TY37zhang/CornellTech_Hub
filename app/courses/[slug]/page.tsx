@@ -303,9 +303,6 @@ export default function CourseDetailPage() {
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title.split(", ")[0]}
                                         </h1>
-                                        <p className="text-muted-foreground">
-                                            {course.professor}
-                                        </p>
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <div className="flex items-center">
                                                 {renderStars(course.rating)}
