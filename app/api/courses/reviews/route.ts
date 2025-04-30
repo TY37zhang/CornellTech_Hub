@@ -44,7 +44,7 @@ export async function POST(request: Request) {
                 year,
                 credits
             ) VALUES (
-                ${validatedData.title.toLowerCase().replace(/\s+/g, "-")},
+                ${validatedData.courseId},
                 ${validatedData.title},
                 ${validatedData.professor},
                 ${validatedData.category},
