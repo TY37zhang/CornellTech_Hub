@@ -100,6 +100,10 @@ export function Footer() {
                     Resource Hub. All rights reserved.
                 </div>
                 <div className="text-xs mt-1">
+                    This is a student-built independent project and is not
+                    officially affiliated with Cornell Tech.
+                </div>
+                <div className="text-xs mt-1">
                     Designed and developed by{" "}
                     <Link
                         href="https://www.tianyinzhang.com/"

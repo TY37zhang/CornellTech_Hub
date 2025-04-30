@@ -30,11 +30,18 @@ export default function Dashboard() {
                         <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_700px]">
                             <div className="flex flex-col justify-center space-y-4">
                                 <div className="space-y-2">
-                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                         Cornell Tech Hub
                                     </h1>
+                                    <p className="text-sm text-muted-foreground italic">
+                                        This is a student-built independent
+                                        project and is not officially affiliated
+                                        with Cornell Tech.
+                                    </p>
                                     <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                                        Your one-stop platform for Cornell Tech.
+                                        Connect with peers, share course
+                                        reviews, and discover resources for your
+                                        Cornell Tech journey.
                                     </p>
                                 </div>
                                 {/* <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -305,7 +312,7 @@ export default function Dashboard() {
                     <div className="flex flex-col items-center justify-center space-y-4 text-center">
                         <div className="space-y-2">
                             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                Join the Cornell Tech Community
+                                Join the Community
                             </h2>
                             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
                                 Connect with fellow students, share resources,
