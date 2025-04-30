@@ -159,7 +159,7 @@ export default function NewReviewPage() {
                 },
                 body: JSON.stringify({
                     ...formData,
-                    course_id: formData.courseId,
+                    courseId: formData.courseCode || formData.courseId,
                     category: formData.categories.join(", "),
                 }),
             });

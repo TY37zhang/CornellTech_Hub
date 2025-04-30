@@ -44,7 +44,7 @@ export async function POST(request: Request) {
                 year,
                 credits
             ) VALUES (
-                ${validatedData.courseId},
+                ${validatedData.courseId.substring(0, 20)},
                 ${validatedData.title},
                 ${validatedData.professor},
                 ${validatedData.category},
