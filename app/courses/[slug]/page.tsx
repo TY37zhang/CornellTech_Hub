@@ -461,19 +461,19 @@ export default function CourseDetailPage() {
                 </section>
 
                 <section className="container px-4 py-6 md:px-6">
-                    <Tabs defaultValue="overview" className="w-full">
+                    <Tabs defaultValue="reviews" className="w-full">
                         <TabsList className="inline-flex h-10 items-center gap-6 justify-start rounded-none border-b bg-transparent p-0">
-                            <TabsTrigger
-                                value="overview"
-                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
-                            >
-                                Overview
-                            </TabsTrigger>
                             <TabsTrigger
                                 value="reviews"
                                 className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
                             >
                                 Reviews
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="overview"
+                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
+                            >
+                                Overview
                             </TabsTrigger>
                             <TabsTrigger
                                 value="syllabus"
@@ -483,125 +483,10 @@ export default function CourseDetailPage() {
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="overview" className="pt-6">
-                            <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <h2 className="text-2xl font-bold tracking-tight">
-                                            Course Description
-                                        </h2>
-                                        <p className="text-muted-foreground">
-                                            {course.description}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h3 className="text-xl font-bold tracking-tight">
-                                            What You'll Learn
-                                        </h3>
-                                        <ul className="list-disc pl-6 text-muted-foreground">
-                                            <li>
-                                                Fundamental concepts in{" "}
-                                                {(
-                                                    course.departments?.[0] ||
-                                                    ""
-                                                ).toLowerCase()}{" "}
-                                                and their applications
-                                            </li>
-                                            <li>
-                                                Practical skills and
-                                                methodologies relevant to the
-                                                field
-                                            </li>
-                                            <li>
-                                                Critical thinking and
-                                                problem-solving approaches
-                                            </li>
-                                            <li>
-                                                Industry-standard tools and
-                                                technologies
-                                            </li>
-                                            <li>
-                                                How to evaluate and apply{" "}
-                                                {(
-                                                    course.departments?.[0] ||
-                                                    ""
-                                                ).toLowerCase()}{" "}
-                                                principles
-                                            </li>
-                                            <li>
-                                                Real-world applications and case
-                                                studies
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h3 className="text-xl font-bold tracking-tight">
-                                            Prerequisites
-                                        </h3>
-                                        <p className="text-muted-foreground">
-                                            Basic knowledge of{" "}
-                                            {(
-                                                course.departments?.[0] || ""
-                                            ).toLowerCase()}{" "}
-                                            concepts is recommended. Programming
-                                            experience may be helpful but is not
-                                            required for all sections.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="space-y-6">
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle>
-                                                Rating Distribution
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="space-y-2">
-                                                {[5, 4, 3, 2, 1].map(
-                                                    (rating) => {
-                                                        const count =
-                                                            course.reviews.filter(
-                                                                (r) =>
-                                                                    Math.round(
-                                                                        r.rating
-                                                                    ) === rating
-                                                            ).length;
-                                                        return (
-                                                            <div
-                                                                key={rating}
-                                                                className="flex items-center gap-2"
-                                                            >
-                                                                <div className="flex w-8 items-center justify-end">
-                                                                    <span className="text-base">
-                                                                        {rating}
-                                                                    </span>
-                                                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 ml-1" />
-                                                                </div>
-                                                                <Progress
-                                                                    value={
-                                                                        course.reviewCount >
-                                                                        0
-                                                                            ? (count /
-                                                                                  course.reviewCount) *
-                                                                              100
-                                                                            : 0
-                                                                    }
-                                                                    className="h-2"
-                                                                    indicatorClassName="bg-yellow-400"
-                                                                />
-                                                                <div className="w-8 text-right">
-                                                                    <span className="text-base text-muted-foreground">
-                                                                        {count}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
+                            <div className="flex items-center justify-center py-12">
+                                <p className="text-center text-muted-foreground text-lg">
+                                    Coming soon, currently in dev XD
+                                </p>
                             </div>
                         </TabsContent>
                         <TabsContent value="reviews" className="pt-6">
@@ -714,6 +599,13 @@ export default function CourseDetailPage() {
                                         </p>
                                     </div>
                                 )}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="syllabus" className="pt-6">
+                            <div className="flex items-center justify-center py-12">
+                                <p className="text-center text-muted-foreground text-lg">
+                                    Coming soon, currently in dev XD
+                                </p>
                             </div>
                         </TabsContent>
                     </Tabs>
