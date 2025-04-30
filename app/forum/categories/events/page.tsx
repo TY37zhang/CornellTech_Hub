@@ -106,7 +106,7 @@ export default function EventsCategoryPage() {
     useEffect(() => {
         async function fetchThreads() {
             try {
-                const posts = await getForumPostsByCategory("events");
+                const { posts } = await getForumPostsByCategory("events");
                 const formattedThreads: Thread[] = posts.map((post) => ({
                     id: post.id,
                     title: post.title,
@@ -237,30 +237,6 @@ export default function EventsCategoryPage() {
                                         }
                                     />
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={setSortBy}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="activity">
-                                                Recent Activity
-                                            </SelectItem>
-                                            <SelectItem value="newest">
-                                                Newest
-                                            </SelectItem>
-                                            <SelectItem value="popular">
-                                                Most Popular
-                                            </SelectItem>
-                                            <SelectItem value="replies">
-                                                Most Replies
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -269,14 +245,35 @@ export default function EventsCategoryPage() {
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold tracking-tight">
-                            Discussions
+                            Events Discussions
                         </h2>
-                        <Link href="/forum/create">
-                            <Button className="gap-1">
-                                <PlusCircle className="h-4 w-4" />
-                                <span>New Thread</span>
-                            </Button>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="activity">
+                                        Most Recent
+                                    </SelectItem>
+                                    <SelectItem value="newest">
+                                        Newest
+                                    </SelectItem>
+                                    <SelectItem value="popular">
+                                        Most Popular
+                                    </SelectItem>
+                                    <SelectItem value="replies">
+                                        Most Replies
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Link href="/forum/create">
+                                <Button className="gap-2">
+                                    <PlusCircle className="h-4 w-4" />
+                                    New Discussion
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid gap-4">

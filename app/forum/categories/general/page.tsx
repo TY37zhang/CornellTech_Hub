@@ -104,7 +104,7 @@ export default function GeneralCategoryPage() {
     useEffect(() => {
         async function fetchThreads() {
             try {
-                const posts = await getForumPostsByCategory("general");
+                const { posts } = await getForumPostsByCategory("general");
                 const formattedThreads: Thread[] = posts.map((post) => ({
                     id: post.id,
                     title: post.title,
@@ -235,30 +235,6 @@ export default function GeneralCategoryPage() {
                                             setSearchQuery(e.target.value)
                                         }
                                     />
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={setSortBy}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="activity">
-                                                Recent Activity
-                                            </SelectItem>
-                                            <SelectItem value="newest">
-                                                Newest
-                                            </SelectItem>
-                                            <SelectItem value="popular">
-                                                Most Popular
-                                            </SelectItem>
-                                            <SelectItem value="replies">
-                                                Most Replies
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
                                 </div>
                             </div>
                         </div>

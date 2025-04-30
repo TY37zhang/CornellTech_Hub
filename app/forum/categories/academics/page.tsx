@@ -10,6 +10,13 @@ import {
     ThumbsUp,
     Users,
 } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -77,12 +84,16 @@ export default function AcademicsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [threads, setThreads] = useState<Thread[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sortBy, setSortBy] = useState("activity");
+
+    // Filtered and sorted threads
+    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
 
     // Fetch threads on component mount
     useEffect(() => {
         async function fetchThreads() {
             try {
-                const posts = await getForumPostsByCategory("academics");
+                const { posts } = await getForumPostsByCategory("academics");
                 const formattedThreads: Thread[] = posts.map((post) => ({
                     id: post.id,
                     title: post.title,
@@ -116,17 +127,46 @@ export default function AcademicsPage() {
         fetchThreads();
     }, []);
 
-    // Filter threads based on search query
-    const filteredThreads = threads.filter((thread) => {
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-            thread.title.toLowerCase().includes(query) ||
-            thread.content.toLowerCase().includes(query) ||
-            thread.author.name.toLowerCase().includes(query) ||
-            thread.tags.some((tag) => tag.toLowerCase().includes(query))
-        );
-    });
+    // Apply filters and sorting whenever dependencies change
+    useEffect(() => {
+        let result = [...threads];
+
+        // Apply search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(
+                (thread) =>
+                    thread.title.toLowerCase().includes(query) ||
+                    thread.content.toLowerCase().includes(query) ||
+                    thread.author.name.toLowerCase().includes(query) ||
+                    thread.tags.some((tag) => tag.toLowerCase().includes(query))
+            );
+        }
+
+        // Apply sorting
+        result.sort((a, b) => {
+            switch (sortBy) {
+                case "activity":
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
+                case "newest":
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
+                case "popular":
+                    return b.likes - a.likes;
+                case "replies":
+                    return b.replies - a.replies;
+                default:
+                    return 0;
+            }
+        });
+
+        setFilteredThreads(result);
+    }, [searchQuery, sortBy, threads]);
 
     if (loading) {
         return (
@@ -193,12 +233,33 @@ export default function AcademicsPage() {
                         <h2 className="text-2xl font-bold tracking-tight">
                             Academic Discussions
                         </h2>
-                        <Link href="/forum/create">
-                            <Button className="gap-2">
-                                <PlusCircle className="h-4 w-4" />
-                                New Discussion
-                            </Button>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="activity">
+                                        Most Recent
+                                    </SelectItem>
+                                    <SelectItem value="newest">
+                                        Newest
+                                    </SelectItem>
+                                    <SelectItem value="popular">
+                                        Most Popular
+                                    </SelectItem>
+                                    <SelectItem value="replies">
+                                        Most Replies
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Link href="/forum/create">
+                                <Button className="gap-2">
+                                    <PlusCircle className="h-4 w-4" />
+                                    New Discussion
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="space-y-4">

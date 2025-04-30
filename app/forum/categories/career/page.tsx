@@ -106,7 +106,7 @@ export default function CareerCategoryPage() {
     useEffect(() => {
         async function fetchThreads() {
             try {
-                const posts = await getForumPostsByCategory("career");
+                const { posts } = await getForumPostsByCategory("career");
                 const formattedThreads: Thread[] = posts.map((post) => ({
                     id: post.id,
                     title: post.title,
@@ -237,30 +237,6 @@ export default function CareerCategoryPage() {
                                         }
                                     />
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Select
-                                        value={sortBy}
-                                        onValueChange={setSortBy}
-                                    >
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="activity">
-                                                Recent Activity
-                                            </SelectItem>
-                                            <SelectItem value="newest">
-                                                Newest
-                                            </SelectItem>
-                                            <SelectItem value="popular">
-                                                Most Popular
-                                            </SelectItem>
-                                            <SelectItem value="replies">
-                                                Most Replies
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -269,14 +245,35 @@ export default function CareerCategoryPage() {
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold tracking-tight">
-                            Discussions
+                            Career Discussions
                         </h2>
-                        <Link href="/forum/create">
-                            <Button className="gap-1">
-                                <PlusCircle className="h-4 w-4" />
-                                <span>New Thread</span>
-                            </Button>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="activity">
+                                        Most Recent
+                                    </SelectItem>
+                                    <SelectItem value="newest">
+                                        Newest
+                                    </SelectItem>
+                                    <SelectItem value="popular">
+                                        Most Popular
+                                    </SelectItem>
+                                    <SelectItem value="replies">
+                                        Most Replies
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Link href="/forum/create">
+                                <Button className="gap-2">
+                                    <PlusCircle className="h-4 w-4" />
+                                    New Discussion
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid gap-4">
@@ -287,42 +284,51 @@ export default function CareerCategoryPage() {
                                     key={thread.id}
                                     className="group"
                                 >
-                                    <Card className="transition-all hover:border-primary">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <CardTitle className="text-xl group-hover:text-primary">
-                                                        {thread.title}
-                                                    </CardTitle>
-                                                    <CardDescription className="flex items-center gap-2 mt-1">
-                                                        <Avatar className="h-5 w-5">
-                                                            <AvatarImage
-                                                                src={
-                                                                    thread
-                                                                        .author
-                                                                        .avatar ||
-                                                                    "/placeholder.svg"
-                                                                }
-                                                                alt={`@${thread.author.name}`}
-                                                            />
-                                                            <AvatarFallback>
+                                    <Card className="hover:bg-muted/50 transition-colors">
+                                        <CardHeader className="p-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-start gap-4">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage
+                                                            src={
+                                                                thread.author
+                                                                    .avatar
+                                                            }
+                                                            alt={
+                                                                thread.author
+                                                                    .name
+                                                            }
+                                                        />
+                                                        <AvatarFallback>
+                                                            {
+                                                                thread.author
+                                                                    .initials
+                                                            }
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="space-y-1">
+                                                        <CardTitle className="text-lg font-semibold">
+                                                            {thread.title}
+                                                        </CardTitle>
+                                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                            <span>
                                                                 {
                                                                     thread
                                                                         .author
-                                                                        .initials
+                                                                        .name
                                                                 }
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <span>
-                                                            {thread.author.name}
-                                                        </span>
-                                                        <span>•</span>
-                                                        <span>
-                                                            {thread.createdAt}
-                                                        </span>
-                                                    </CardDescription>
+                                                            </span>
+                                                            <span>•</span>
+                                                            <span>
+                                                                {
+                                                                    thread.createdAt
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <Badge
+                                                    variant="secondary"
                                                     className={
                                                         thread.categoryColor
                                                     }
@@ -330,56 +336,57 @@ export default function CareerCategoryPage() {
                                                     {thread.category}
                                                 </Badge>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <p className="line-clamp-2 text-muted-foreground">
+                                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                                                 {thread.content}
                                             </p>
-                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                {thread.tags.map((tag) => (
-                                                    <Badge
-                                                        key={tag}
-                                                        variant="outline"
-                                                        className="text-xs font-normal"
-                                                    >
-                                                        {tag}
-                                                    </Badge>
-                                                ))}
+                                        </CardHeader>
+                                        <CardFooter className="p-4 pt-0">
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    {thread.tags.map((tag) => (
+                                                        <Badge
+                                                            key={tag}
+                                                            variant="outline"
+                                                            className="text-xs font-normal"
+                                                        >
+                                                            {tag}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                        <div className="flex items-center gap-1">
+                                                            <MessageSquare className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.replies}{" "}
+                                                                replies
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <ThumbsUp className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.likes}{" "}
+                                                                likes
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Users className="h-4 w-4" />
+                                                            <span>
+                                                                {thread.views}{" "}
+                                                                views
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {thread.isNew && (
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="bg-yellow-100 text-yellow-800"
+                                                        >
+                                                            New
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </CardContent>
-                                        <CardFooter className="flex items-center justify-between pt-1">
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <MessageSquare className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.replies} replies
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <ThumbsUp className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.likes} likes
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Users className="h-4 w-4" />
-                                                    <span>
-                                                        {thread.views} views
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {thread.badge && (
-                                                <div className="flex items-center gap-2">
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className={
-                                                            thread.badge.color
-                                                        }
-                                                    >
-                                                        {thread.badge.text}
-                                                    </Badge>
-                                                </div>
-                                            )}
                                         </CardFooter>
                                     </Card>
                                 </Link>
