@@ -39,23 +39,29 @@ interface Review {
     courseName: string;
     courseCode: string;
     category: string;
+    professor?: string;
+    semester?: string;
+    year?: string;
 }
 
 // Helper function to get category color
-function getCategoryColor(category: string): string {
+function getCategoryColor(category: string | undefined): string {
+    if (!category) {
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400";
+    }
     const colors: { [key: string]: string } = {
-        ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        cs: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        ece: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
-        info: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
-        orie: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
-        tech: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
-        techie: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
+        CEEE: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+        CS: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
+        ECE: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
+        HADM: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
+        INFO: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+        LAW: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
+        ORIE: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
+        TECH: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+        TECHIE: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
     };
     return (
-        colors[category.toLowerCase()] ||
+        colors[category.toUpperCase()] ||
         "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
     );
 }
@@ -105,7 +111,9 @@ export default function MyReviewsPage() {
 
         // Filter by category
         if (activeTab !== "all") {
-            result = result.filter((review) => review.category === activeTab);
+            result = result.filter(
+                (review) => review.category?.toUpperCase() === activeTab
+            );
         }
 
         setFilteredReviews(result);
@@ -183,15 +191,15 @@ export default function MyReviewsPage() {
                     >
                         <TabsList>
                             <TabsTrigger value="all">All Courses</TabsTrigger>
-                            <TabsTrigger value="ceee">CEEE</TabsTrigger>
-                            <TabsTrigger value="cs">CS</TabsTrigger>
-                            <TabsTrigger value="ece">ECE</TabsTrigger>
-                            <TabsTrigger value="hadm">HADM</TabsTrigger>
-                            <TabsTrigger value="info">INFO</TabsTrigger>
-                            <TabsTrigger value="law">LAW</TabsTrigger>
-                            <TabsTrigger value="orie">ORIE</TabsTrigger>
-                            <TabsTrigger value="tech">TECH</TabsTrigger>
-                            <TabsTrigger value="techie">TECHIE</TabsTrigger>
+                            <TabsTrigger value="CEEE">CEEE</TabsTrigger>
+                            <TabsTrigger value="CS">CS</TabsTrigger>
+                            <TabsTrigger value="ECE">ECE</TabsTrigger>
+                            <TabsTrigger value="HADM">HADM</TabsTrigger>
+                            <TabsTrigger value="INFO">INFO</TabsTrigger>
+                            <TabsTrigger value="LAW">LAW</TabsTrigger>
+                            <TabsTrigger value="ORIE">ORIE</TabsTrigger>
+                            <TabsTrigger value="TECH">TECH</TabsTrigger>
+                            <TabsTrigger value="TECHIE">TECHIE</TabsTrigger>
                         </TabsList>
                         <TabsContent value={activeTab} className="mt-6">
                             {filteredReviews.length === 0 ? (
@@ -211,10 +219,16 @@ export default function MyReviewsPage() {
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <CardTitle className="text-xl">
-                                                            {review.courseCode}
+                                                            {review.courseName}
                                                         </CardTitle>
                                                         <CardDescription className="text-sm">
-                                                            {review.courseName}
+                                                            {review.professor && (
+                                                                <span className="text-muted-foreground">
+                                                                    {
+                                                                        review.professor
+                                                                    }
+                                                                </span>
+                                                            )}
                                                         </CardDescription>
                                                     </div>
                                                     <Badge
@@ -246,7 +260,7 @@ export default function MyReviewsPage() {
                                                         )}
                                                     </div>
                                                     <span className="font-medium">
-                                                        {review.rating.toFixed(
+                                                        {review.rating?.toFixed(
                                                             1
                                                         )}
                                                     </span>
@@ -264,14 +278,15 @@ export default function MyReviewsPage() {
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
                                                                             width: `${
-                                                                                review.difficulty *
+                                                                                (review.difficulty ||
+                                                                                    0) *
                                                                                 20
                                                                             }%`,
                                                                         }}
                                                                     />
                                                                 </div>
                                                                 <span>
-                                                                    {review.difficulty.toFixed(
+                                                                    {review.difficulty?.toFixed(
                                                                         1
                                                                     )}
                                                                     /5
@@ -291,14 +306,15 @@ export default function MyReviewsPage() {
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
                                                                             width: `${
-                                                                                review.workload *
+                                                                                (review.workload ||
+                                                                                    0) *
                                                                                 20
                                                                             }%`,
                                                                         }}
                                                                     />
                                                                 </div>
                                                                 <span>
-                                                                    {review.workload.toFixed(
+                                                                    {review.workload?.toFixed(
                                                                         1
                                                                     )}
                                                                     /5
@@ -318,14 +334,15 @@ export default function MyReviewsPage() {
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
                                                                             width: `${
-                                                                                review.value *
+                                                                                (review.value ||
+                                                                                    0) *
                                                                                 20
                                                                             }%`,
                                                                         }}
                                                                     />
                                                                 </div>
                                                                 <span>
-                                                                    {review.value.toFixed(
+                                                                    {review.value?.toFixed(
                                                                         1
                                                                     )}
                                                                     /5
@@ -337,11 +354,30 @@ export default function MyReviewsPage() {
                                                 <p className="mt-4 text-sm whitespace-pre-wrap break-words text-muted-foreground">
                                                     {review.content}
                                                 </p>
-                                                <p className="text-xs text-gray-400 mt-2">
-                                                    {new Date(
-                                                        review.createdAt
-                                                    ).toLocaleDateString()}
-                                                </p>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {new Date(
+                                                            review.createdAt
+                                                        ).toLocaleDateString(
+                                                            "en-US",
+                                                            {
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            }
+                                                        )}
+                                                    </p>
+                                                    {review.semester &&
+                                                        review.year && (
+                                                            <p className="text-xs text-muted-foreground">
+                                                                •{" "}
+                                                                {
+                                                                    review.semester
+                                                                }{" "}
+                                                                {review.year}
+                                                            </p>
+                                                        )}
+                                                </div>
                                             </CardContent>
                                             <CardFooter className="flex justify-end gap-2">
                                                 <Button
