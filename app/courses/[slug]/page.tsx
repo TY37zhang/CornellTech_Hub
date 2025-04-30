@@ -567,6 +567,86 @@ export default function CourseDetailPage() {
                                         </Button>
                                     </Link>
                                 </div>
+                                {course.reviews.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {course.reviews.map((review) => (
+                                            <Card key={review.id}>
+                                                <CardHeader>
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center space-x-4">
+                                                            <Avatar>
+                                                                <AvatarImage
+                                                                    src={
+                                                                        review.avatarUrl ||
+                                                                        undefined
+                                                                    }
+                                                                />
+                                                                <AvatarFallback>
+                                                                    {review.author.charAt(
+                                                                        0
+                                                                    )}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="text-sm font-medium leading-none">
+                                                                    {
+                                                                        review.author
+                                                                    }
+                                                                </p>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {new Date(
+                                                                        review.createdAt
+                                                                    ).toLocaleDateString()}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            {renderStars(
+                                                                review.rating
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {review.content}
+                                                    </p>
+                                                    <div className="mt-4 flex flex-wrap gap-4">
+                                                        <div className="flex items-center space-x-1">
+                                                            <span className="text-sm font-medium">
+                                                                Difficulty:
+                                                            </span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {
+                                                                    review.difficulty
+                                                                }
+                                                                /5
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <span className="text-sm font-medium">
+                                                                Workload:
+                                                            </span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {
+                                                                    review.workload
+                                                                }
+                                                                /5
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                                        <p className="text-center text-muted-foreground">
+                                            No reviews yet. Be the first to
+                                            review this course!
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </TabsContent>
                     </Tabs>
