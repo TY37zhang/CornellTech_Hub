@@ -47,17 +47,23 @@ export function Footer() {
                     <div className="grid gap-3 text-sm">
                         <h3 className="font-semibold">Support</h3>
                         <Link
-                            href="/coming-soon"
+                            href="/feedback"
                             className="text-muted-foreground hover:text-foreground"
                         >
-                            Help Center
+                            Feedback
                         </Link>
                         <Link
                             href="/coming-soon"
                             className="text-muted-foreground hover:text-foreground"
                         >
-                            Contact Us
+                            Help Center
                         </Link>
+                        {/* <Link
+                            href="/coming-soon"
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            Contact Us
+                        </Link> */}
                         <Link
                             href="/coming-soon"
                             className="text-muted-foreground hover:text-foreground"

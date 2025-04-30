@@ -10,6 +10,7 @@ import {
     MessageSquare,
     ShoppingBag,
     Calendar,
+    MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,25 @@ export function MobileNav() {
                                             onClick={() => setOpen(false)}
                                         >
                                             Settings
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    custom={2}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px]"
+                                    >
+                                        <Link
+                                            href="/feedback"
+                                            onClick={() => setOpen(false)}
+                                        >
+                                            Feedback
                                         </Link>
                                     </Button>
                                 </motion.div>

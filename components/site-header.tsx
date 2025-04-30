@@ -12,6 +12,7 @@ import {
     FileText,
     BookmarkPlus,
     Calendar,
+    MessageCircle,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -185,6 +186,15 @@ export function SiteHeader() {
                                         >
                                             <Settings className="mr-2 h-4 w-4" />
                                             <span>Settings</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/feedback"
+                                            className="flex items-center cursor-pointer"
+                                        >
+                                            <MessageCircle className="mr-2 h-4 w-4" />
+                                            <span>Feedback</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
