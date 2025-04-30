@@ -1,85 +1,166 @@
 # Cornell Tech Hub
 
-A community platform for Cornell Tech students to share resources, discuss courses, and connect with peers.
+A comprehensive platform for Cornell Tech students to manage their academic journey, including course planning, reviews, and community engagement.
 
 ## Features
 
--   Course reviews and ratings
--   Student forum for discussions
--   Marketplace for buying and selling items
--   Authentication with Google (Cornell email required)
+### Course Management
+
+- Course catalog with detailed information
+- Course reviews and ratings
+- Course planning and scheduling
+- Course categories and filtering
+
+### Academic Planning
+
+- Course planner with semester-by-semester planning
+- Schedule management with day/time organization
+- Requirement tracking
+- Notes and status tracking for planned courses
+
+### Community Features
+
+- Forum system with categories
+- Post and comment functionality
+- Like and view tracking
+- Saved posts and notifications
+- Tag system for better organization
+
+### User Management
+
+- User profiles with program information
+- Avatar support
+- Authentication system
+- Personalized settings
+
+### Marketplace
+
+- Item listings
+- User-to-user transactions
+
+## Tech Stack
+
+### Frontend
+
+- Next.js 15.3.1
+- React 18.3.1
+- TypeScript
+- Tailwind CSS
+- Radix UI components
+- Framer Motion for animations
+- React Hook Form for form management
+- Zod for validation
+
+### Backend
+
+- Next.js API routes
+- Prisma ORM
+- PostgreSQL database
+- NextAuth.js for authentication
+- Cloudinary for media storage
+- Resend for email functionality
+
+### Development Tools
+
+- ESLint for code linting
+- TypeScript for type safety
+- PostCSS for CSS processing
+- Tailwind CSS for styling
 
 ## Getting Started
 
 ### Prerequisites
 
--   Node.js 18+ and npm
--   A Google Cloud Platform account for OAuth setup
--   A Neon database account for PostgreSQL
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory with the following variables:
-
-```
-# Database
-DATABASE_URL=your_neon_database_url
-
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-### Setting up Google OAuth
-
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Navigate to "APIs & Services" > "Credentials"
-4. Click "Create Credentials" > "OAuth client ID"
-5. Select "Web application" as the application type
-6. Add the following authorized redirect URIs:
-    - `http://localhost:3000/api/auth/callback/google` (for development)
-    - `https://your-production-domain.com/api/auth/callback/google` (for production)
-7. Copy the Client ID and Client Secret to your `.env.local` file
-
-### Database Setup
-
-The application uses a Neon PostgreSQL database. You'll need to create the following tables:
-
-```sql
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  name TEXT,
-  email TEXT UNIQUE NOT NULL,
-  password TEXT,
-  google_id TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
+- Node.js (latest LTS version)
+- PostgreSQL database
+- Environment variables (see `.env.example`)
 
 ### Installation
 
-```bash
-# Install dependencies
-npm install
+1. Clone the repository:
 
-# Run the development server
+```bash
+git clone https://github.com/yourusername/cornell-tech-hub.git
+cd cornell-tech-hub
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your configuration values.
+
+4. Set up the database:
+
+```bash
+npx prisma migrate dev
+```
+
+5. Run the development server:
+
+```bash
 npm run dev
 ```
 
-## Authentication
+The application will be available at `http://localhost:3000`.
 
-The application uses NextAuth.js for authentication with the following providers:
+## Project Structure
 
--   Google OAuth (primary method)
--   Email/Password (legacy support)
+```
+cornell-tech-hub/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── components/        # Shared components
+│   ├── courses/           # Course-related pages
+│   ├── forum/             # Forum pages
+│   ├── marketplace/       # Marketplace pages
+│   ├── planner/           # Course planner pages
+│   ├── reviews/           # Review pages
+│   └── user/              # User-related pages
+├── components/            # Global components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions
+├── prisma/                # Database schema and migrations
+├── public/                # Static assets
+└── styles/                # Global styles
+```
 
-For Google authentication, users must use their Cornell email address (@cornell.edu) to sign up. The application verifies this requirement during the sign-in process.
+## Database Schema
+
+The application uses a PostgreSQL database with the following main entities:
+
+- Users
+- Courses
+- Course Reviews
+- Course Schedules
+- Course Planners
+- Forum Posts
+- Forum Comments
+- Forum Categories
+- Marketplace Items
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Cornell Tech for providing the course data
+- All contributors who have helped build this platform
