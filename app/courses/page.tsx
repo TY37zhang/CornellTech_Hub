@@ -260,7 +260,7 @@ export default function CoursesPage() {
                 {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                             <Select
                                 value={programFilter}
                                 onValueChange={(value) => {
@@ -357,22 +357,22 @@ export default function CoursesPage() {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {filteredCourses.map((course) => (
                                     <Link
                                         href={`/courses/${course.id}`}
                                         key={course.id}
-                                        className="group"
+                                        className="group w-full"
                                     >
-                                        <Card className="h-full overflow-hidden transition-all hover:border-primary">
+                                        <Card className="h-full w-full overflow-hidden transition-all hover:border-primary">
                                             <CardHeader className="pb-3">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <CardTitle className="text-xl">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <CardTitle className="text-xl truncate">
                                                             {course.title}
                                                         </CardTitle>
                                                     </div>
-                                                    <div className="flex flex-col items-end gap-1">
+                                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                                         {course.crossListed ? (
                                                             (() => {
                                                                 // Get unique departments
@@ -413,7 +413,7 @@ export default function CoursesPage() {
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="pb-3">
-                                                <div className="flex items-center gap-1 text-sm">
+                                                <div className="flex items-center gap-1 text-sm flex-wrap">
                                                     <div className="flex">
                                                         {renderStars(
                                                             course.rating
@@ -430,23 +430,20 @@ export default function CoursesPage() {
                                                     </span>
                                                 </div>
                                                 <div className="mt-3 space-y-2">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
+                                                    <div className="flex justify-between text-sm items-center gap-2">
+                                                        <span className="text-muted-foreground whitespace-nowrap">
                                                             Difficulty
                                                         </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                            <div className="h-2 flex-1 rounded-full bg-muted">
                                                                 <div
                                                                     className="h-2 rounded-full bg-yellow-400"
                                                                     style={{
-                                                                        width: `${
-                                                                            course.difficulty *
-                                                                            20
-                                                                        }%`,
+                                                                        width: `${course.difficulty * 20}%`,
                                                                     }}
                                                                 />
                                                             </div>
-                                                            <span>
+                                                            <span className="whitespace-nowrap">
                                                                 {course.difficulty.toFixed(
                                                                     1
                                                                 )}
@@ -454,23 +451,20 @@ export default function CoursesPage() {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
+                                                    <div className="flex justify-between text-sm items-center gap-2">
+                                                        <span className="text-muted-foreground whitespace-nowrap">
                                                             Workload
                                                         </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                            <div className="h-2 flex-1 rounded-full bg-muted">
                                                                 <div
                                                                     className="h-2 rounded-full bg-yellow-400"
                                                                     style={{
-                                                                        width: `${
-                                                                            course.workload *
-                                                                            20
-                                                                        }%`,
+                                                                        width: `${course.workload * 20}%`,
                                                                     }}
                                                                 />
                                                             </div>
-                                                            <span>
+                                                            <span className="whitespace-nowrap">
                                                                 {course.workload.toFixed(
                                                                     1
                                                                 )}
@@ -478,23 +472,20 @@ export default function CoursesPage() {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">
+                                                    <div className="flex justify-between text-sm items-center gap-2">
+                                                        <span className="text-muted-foreground whitespace-nowrap">
                                                             Value
                                                         </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-24 rounded-full bg-muted">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                            <div className="h-2 flex-1 rounded-full bg-muted">
                                                                 <div
                                                                     className="h-2 rounded-full bg-yellow-400"
                                                                     style={{
-                                                                        width: `${
-                                                                            course.value *
-                                                                            20
-                                                                        }%`,
+                                                                        width: `${course.value * 20}%`,
                                                                     }}
                                                                 />
                                                             </div>
-                                                            <span>
+                                                            <span className="whitespace-nowrap">
                                                                 {course.value.toFixed(
                                                                     1
                                                                 )}
@@ -505,7 +496,7 @@ export default function CoursesPage() {
                                                 </div>
                                             </CardContent>
                                             <CardFooter className="pt-1">
-                                                <p className="line-clamp-2 text-sm text-muted-foreground">
+                                                <p className="line-clamp-2 text-sm text-muted-foreground w-full">
                                                     "{course.review}"
                                                 </p>
                                             </CardFooter>
