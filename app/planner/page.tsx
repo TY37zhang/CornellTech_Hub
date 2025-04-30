@@ -748,19 +748,29 @@ export default function PlannerPage() {
                 });
 
                 // Delete from database
-                const deleteResponse = await fetch(
-                    `/api/planner?courseId=${course.id}`,
-                    {
-                        method: "DELETE",
-                    }
-                );
-
-                if (!deleteResponse.ok) {
-                    const errorText = await deleteResponse.text();
-                    console.error("Error deleting course plan:", errorText);
-                    throw new Error(
-                        `Failed to delete course plan: ${errorText}`
+                const planId = coursePlanIds[course.id];
+                if (planId) {
+                    const deleteResponse = await fetch(
+                        `/api/planner?id=${planId}`,
+                        {
+                            method: "DELETE",
+                        }
                     );
+
+                    if (!deleteResponse.ok) {
+                        const errorText = await deleteResponse.text();
+                        console.error("Error deleting course plan:", errorText);
+                        throw new Error(
+                            `Failed to delete course plan: ${errorText}`
+                        );
+                    }
+
+                    // Remove the plan ID from state
+                    setCoursePlanIds((prev) => {
+                        const newIds = { ...prev };
+                        delete newIds[course.id];
+                        return newIds;
+                    });
                 }
 
                 return;
@@ -915,6 +925,78 @@ export default function PlannerPage() {
                     error instanceof Error
                         ? error.message
                         : "Failed to update course requirements",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleRemoveCourse = async (course: Course) => {
+        try {
+            // Remove from selectedCourses
+            setSelectedCourses((prevCourses: Course[]) =>
+                prevCourses.filter((c) => c.id !== course.id)
+            );
+
+            // Remove from all requirements in coursePlan
+            setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
+                const newPlan = { ...prevPlan };
+                for (const key in newPlan) {
+                    newPlan[key] = newPlan[key].filter(
+                        (c) => c.id !== course.id
+                    );
+                }
+                return newPlan;
+            });
+
+            // Delete all course plans for this course from database
+            const response = await fetch(`/api/planner?courseId=${course.id}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Error deleting course plans:", errorText);
+                throw new Error(`Failed to delete course plans: ${errorText}`);
+            }
+
+            // Remove all plan IDs for this course from state
+            setCoursePlanIds((prev) => {
+                const newIds = { ...prev };
+                delete newIds[course.id];
+                return newIds;
+            });
+
+            toast({
+                title: "Success",
+                description: "Course removed successfully",
+                variant: "default",
+            });
+        } catch (error) {
+            console.error("Error removing course:", error);
+            // Revert UI state on error
+            setSelectedCourses((prev) => [...prev, course]);
+            setCoursePlan((prevPlan) => {
+                const newPlan = { ...prevPlan };
+                // Restore course to its original requirement if it exists
+                if (coursePlanIds[course.id]) {
+                    const requirementKey = Object.keys(newPlan).find((key) =>
+                        newPlan[key].some((c) => c.id === course.id)
+                    );
+                    if (requirementKey) {
+                        newPlan[requirementKey] = [
+                            ...newPlan[requirementKey],
+                            course,
+                        ];
+                    }
+                }
+                return newPlan;
+            });
+            toast({
+                title: "Error",
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to remove the course. Please try again.",
                 variant: "destructive",
             });
         }
@@ -1217,142 +1299,7 @@ export default function PlannerPage() {
                         {/* Selected Courses List */}
                         <SelectedCourses
                             selectedCourses={selectedCourses}
-                            onRemoveCourse={async (course: Course) => {
-                                try {
-                                    const planId = coursePlanIds[course.id];
-
-                                    // Remove from selectedCourses
-                                    setSelectedCourses(
-                                        (prevCourses: Course[]) =>
-                                            prevCourses.filter(
-                                                (c) => c.id !== course.id
-                                            )
-                                    );
-
-                                    // Remove from all requirements in coursePlan
-                                    setCoursePlan(
-                                        (prevPlan: {
-                                            [key: string]: Course[];
-                                        }) => {
-                                            const newPlan = { ...prevPlan };
-                                            for (const key in newPlan) {
-                                                newPlan[key] = newPlan[
-                                                    key
-                                                ].filter(
-                                                    (c) => c.id !== course.id
-                                                );
-                                            }
-                                            return newPlan;
-                                        }
-                                    );
-
-                                    // Delete course plan from database if it exists
-                                    if (planId) {
-                                        const deleteResponse = await fetch(
-                                            `/api/planner?id=${planId}`,
-                                            {
-                                                method: "DELETE",
-                                            }
-                                        );
-
-                                        if (!deleteResponse.ok) {
-                                            const errorText =
-                                                await deleteResponse.text();
-                                            console.error(
-                                                "Error deleting course plan:",
-                                                errorText
-                                            );
-                                            throw new Error(
-                                                `Failed to delete course plan: ${errorText}`
-                                            );
-                                        }
-
-                                        // Remove the plan ID from state
-                                        setCoursePlanIds((prev) => {
-                                            const newIds = { ...prev };
-                                            delete newIds[course.id];
-                                            return newIds;
-                                        });
-                                    }
-
-                                    // First get all schedule entries for this course
-                                    const scheduleResponse = await fetch(
-                                        `/api/schedule?courseId=${course.id}`
-                                    );
-                                    if (!scheduleResponse.ok) {
-                                        console.error(
-                                            "Error fetching course schedules:",
-                                            await scheduleResponse.text()
-                                        );
-                                    } else {
-                                        const schedules =
-                                            await scheduleResponse.json();
-
-                                        // Delete each schedule entry
-                                        for (const schedule of schedules) {
-                                            const deleteScheduleResponse =
-                                                await fetch(
-                                                    `/api/schedule?id=${schedule.id}`,
-                                                    {
-                                                        method: "DELETE",
-                                                    }
-                                                );
-
-                                            if (!deleteScheduleResponse.ok) {
-                                                console.error(
-                                                    "Error deleting schedule entry:",
-                                                    await deleteScheduleResponse.text()
-                                                );
-                                            }
-                                        }
-                                    }
-
-                                    toast({
-                                        title: "Success",
-                                        description:
-                                            "Course removed successfully",
-                                        variant: "default",
-                                    });
-                                } catch (error) {
-                                    console.error(
-                                        "Error removing course:",
-                                        error
-                                    );
-                                    // Revert UI state on error
-                                    setSelectedCourses((prev) => [
-                                        ...prev,
-                                        course,
-                                    ]);
-                                    setCoursePlan((prevPlan) => {
-                                        const newPlan = { ...prevPlan };
-                                        // Restore course to its original requirement if it exists
-                                        if (coursePlanIds[course.id]) {
-                                            const requirementKey = Object.keys(
-                                                newPlan
-                                            ).find((key) =>
-                                                newPlan[key].some(
-                                                    (c) => c.id === course.id
-                                                )
-                                            );
-                                            if (requirementKey) {
-                                                newPlan[requirementKey] = [
-                                                    ...newPlan[requirementKey],
-                                                    course,
-                                                ];
-                                            }
-                                        }
-                                        return newPlan;
-                                    });
-                                    toast({
-                                        title: "Error",
-                                        description:
-                                            error instanceof Error
-                                                ? error.message
-                                                : "Failed to remove the course. Please try again.",
-                                        variant: "destructive",
-                                    });
-                                }
-                            }}
+                            onRemoveCourse={handleRemoveCourse}
                             requirements={
                                 programRequirements[userProgram!].requirements
                             }

@@ -222,16 +222,28 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const courseId = searchParams.get("courseId");
 
-        if (!id) {
-            return new NextResponse("Missing course plan ID", { status: 400 });
+        if (!id && !courseId) {
+            return new NextResponse("Missing course plan ID or course ID", {
+                status: 400,
+            });
         }
 
-        // Delete the course plan
-        await sql`
-            DELETE FROM course_planner
-            WHERE id = ${id} AND user_id = ${session.user.id}
-        `;
+        // Delete the course plan(s)
+        if (id) {
+            // Delete a specific plan by ID
+            await sql`
+                DELETE FROM course_planner
+                WHERE id = ${id} AND user_id = ${session.user.id}
+            `;
+        } else if (courseId) {
+            // Delete all plans for a specific course
+            await sql`
+                DELETE FROM course_planner
+                WHERE course_id = ${courseId} AND user_id = ${session.user.id}
+            `;
+        }
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {
