@@ -1036,3 +1036,62 @@ async function getCommentVoteCounts(commentId: string) {
         dislikeCount: parseInt(result[0].dislike_count) || 0,
     };
 }
+
+export async function getUserSavedPosts(
+    userId: string
+): Promise<ForumPostResponse[]> {
+    try {
+        const query = `
+            SELECT 
+                fp.id,
+                fp.title,
+                fp.content,
+                fp.created_at,
+                fp.updated_at,
+                fc.name as category_name,
+                fc.slug as category_slug,
+                u.name as author_name,
+                u.avatar_url as author_avatar,
+                u.id as author_id,
+                COUNT(DISTINCT fc2.id) as reply_count,
+                COUNT(DISTINCT fl.id) as like_count,
+                COUNT(DISTINCT fv.id) as view_count,
+                ARRAY_AGG(DISTINCT fpt.tag) as tags
+            FROM forum_posts fp
+            JOIN users u ON fp.author_id = u.id
+            JOIN forum_categories fc ON fp.category_id = fc.id
+            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
+            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
+            LEFT JOIN forum_views fv ON fp.id = fv.post_id
+            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
+            JOIN forum_saved fs ON fp.id = fs.post_id
+            WHERE fs.user_id = $1 AND fp.status = 'active'
+            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id, fs.created_at
+            ORDER BY fs.created_at DESC
+        `;
+
+        const posts = await sql(query, [userId]);
+
+        return posts.map((post) => ({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            created_at:
+                post.created_at?.toISOString() || new Date().toISOString(),
+            updated_at:
+                post.updated_at?.toISOString() || new Date().toISOString(),
+            category_name: post.category_name,
+            category_slug: post.category_slug,
+            author_name: post.author_name,
+            author_avatar: post.author_avatar,
+            author_id: post.author_id,
+            reply_count: parseInt(post.reply_count),
+            like_count: parseInt(post.like_count),
+            view_count: parseInt(post.view_count),
+            tags: post.tags.filter(Boolean),
+        }));
+    } catch (error) {
+        console.error("Error in getUserSavedPosts:", error);
+        throw error;
+    }
+}
