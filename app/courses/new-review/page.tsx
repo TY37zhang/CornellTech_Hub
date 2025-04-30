@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,21 +25,46 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+
+interface Course {
+    id: string;
+    code: string;
+    codes: string[];
+    name: string;
+    credits: number;
+    description?: string;
+    department: string;
+    departments: string[];
+    semester: string;
+    year: number;
+    professor_id?: string;
+    isCrossListed: boolean;
+}
 
 export default function NewReviewPage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<Course[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const debouncedSearch = useDebounce(searchQuery, 300);
+
     const [formData, setFormData] = useState({
         title: "",
         professor: "",
         category: "",
+        categories: [] as string[],
         difficulty: 3,
         workload: 3,
         value: 3,
         overall_rating: 3,
         review: "",
         courseId: "",
+        courseCode: "",
     });
 
     useEffect(() => {
@@ -58,20 +83,55 @@ export default function NewReviewPage() {
                 courseId: courseId,
                 professor: professor || "",
                 category: category || "",
+                categories: category ? category.split(", ") : [],
             }));
         }
     }, []);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            if (!debouncedSearch) {
+                setSearchResults([]);
+                setSearchError(null);
+                return;
+            }
+
+            setIsSearching(true);
+            setSearchError(null);
+
+            try {
+                const response = await fetch(
+                    `/api/courses/search?q=${encodeURIComponent(debouncedSearch)}`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch courses");
+                }
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                setSearchResults(data);
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+                setSearchError(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to fetch courses"
+                );
+                setSearchResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        fetchCourses();
+    }, [debouncedSearch]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
         if (formData.title.length < 2) {
             newErrors.title = "Title must be at least 2 characters";
-        }
-
-        if (formData.professor.length < 2) {
-            newErrors.professor =
-                "Professor name must be at least 2 characters";
         }
 
         if (formData.review.length < 10) {
@@ -100,6 +160,7 @@ export default function NewReviewPage() {
                 body: JSON.stringify({
                     ...formData,
                     course_id: formData.courseId,
+                    category: formData.categories.join(", "),
                 }),
             });
 
@@ -110,7 +171,7 @@ export default function NewReviewPage() {
             }
 
             toast.success("Review submitted successfully!");
-            router.push(`/courses/${formData.courseId}`);
+            router.back();
         } catch (error) {
             console.error("Error submitting review:", error);
             toast.error(
@@ -121,6 +182,20 @@ export default function NewReviewPage() {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleSelectCourse = (course: Course) => {
+        setFormData((prev) => ({
+            ...prev,
+            title: course.name,
+            courseId: course.id,
+            professor: course.professor_id || "",
+            category: course.departments[0] || "",
+            categories: course.departments,
+            courseCode: course.codes[0],
+        }));
+        setSearchQuery("");
+        setSearchResults([]);
     };
 
     return (
@@ -147,46 +222,102 @@ export default function NewReviewPage() {
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="title">Course Title</Label>
-                            <Input
-                                id="title"
-                                placeholder="e.g., Machine Learning"
-                                value={formData.title}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        title: e.target.value,
-                                    })
-                                }
-                                required
-                                className={errors.title ? "border-red-500" : ""}
-                            />
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="title"
+                                    placeholder="Search for a course..."
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    className="pl-8 rounded-xl"
+                                    autoComplete="off"
+                                />
+                                {searchResults.length > 0 && (
+                                    <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-background border rounded-lg shadow-lg z-50">
+                                        {searchResults.map((course) => (
+                                            <div
+                                                key={course.id}
+                                                onClick={() =>
+                                                    handleSelectCourse(course)
+                                                }
+                                                className="flex items-center p-3 hover:bg-accent/5 transition-colors cursor-pointer"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium">
+                                                        {course.codes.join(
+                                                            " / "
+                                                        )}
+                                                    </div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        {course.name}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                        {course.departments.map(
+                                                            (dept, index) => (
+                                                                <Badge
+                                                                    key={index}
+                                                                    variant="outline"
+                                                                    className="text-xs"
+                                                                >
+                                                                    {dept}
+                                                                </Badge>
+                                                            )
+                                                        )}
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs"
+                                                        >
+                                                            {course.semester}{" "}
+                                                            {course.year}
+                                                        </Badge>
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="text-xs"
+                                                        >
+                                                            {course.credits}{" "}
+                                                            credits
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            {formData.title && (
+                                <div className="mt-2 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium">
+                                            Selected Course:
+                                        </span>
+                                        <span className="text-sm text-muted-foreground">
+                                            {formData.title}
+                                        </span>
+                                    </div>
+                                    {formData.categories.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.categories.map(
+                                                (dept, index) => (
+                                                    <Badge
+                                                        key={index}
+                                                        variant={
+                                                            dept.toLowerCase() as any
+                                                        }
+                                                        className="min-w-[56px] justify-center text-center"
+                                                    >
+                                                        {dept.toUpperCase()}
+                                                    </Badge>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             {errors.title && (
                                 <p className="text-sm text-red-500">
                                     {errors.title}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="professor">Professor</Label>
-                            <Input
-                                id="professor"
-                                placeholder="e.g., Prof. John Doe"
-                                value={formData.professor}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        professor: e.target.value,
-                                    })
-                                }
-                                required
-                                className={
-                                    errors.professor ? "border-red-500" : ""
-                                }
-                            />
-                            {errors.professor && (
-                                <p className="text-sm text-red-500">
-                                    {errors.professor}
                                 </p>
                             )}
                         </div>

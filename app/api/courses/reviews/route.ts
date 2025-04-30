@@ -10,7 +10,7 @@ const sql = neon(process.env.DATABASE_URL || "");
 const requestSchema = z.object({
     title: z.string().min(1, "Title is required"),
     professor: z.string().min(1, "Professor is required"),
-    category: z.string().optional(),
+    category: z.string(),
     difficulty: z.number().min(1).max(5),
     workload: z.number().min(1).max(5),
     value: z.number().min(1).max(5),
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const validatedData = requestSchema.parse(body);
 
-        // Create or update the course
+        // Create or update the course with all departments
         const courseResult = await sql`
             INSERT INTO courses (
                 code,

@@ -377,24 +377,31 @@ export default function CoursesPage() {
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
                                                         {course.crossListed ? (
-                                                            course.crossListed.departments.map(
-                                                                (
-                                                                    dept,
-                                                                    index
-                                                                ) => (
-                                                                    <Badge
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        variant={
-                                                                            dept.toLowerCase() as any
-                                                                        }
-                                                                        className="min-w-[56px] justify-center text-center"
-                                                                    >
-                                                                        {dept.toUpperCase()}
-                                                                    </Badge>
-                                                                )
-                                                            )
+                                                            (() => {
+                                                                // Get unique departments
+                                                                const uniqueDepts =
+                                                                    Array.from(
+                                                                        new Set(
+                                                                            course.crossListed.departments
+                                                                        )
+                                                                    );
+                                                                return uniqueDepts.map(
+                                                                    (
+                                                                        dept,
+                                                                        index
+                                                                    ) => (
+                                                                        <Badge
+                                                                            key={`${dept}-${index}`}
+                                                                            variant={
+                                                                                dept.toLowerCase() as any
+                                                                            }
+                                                                            className="min-w-[56px] justify-center text-center"
+                                                                        >
+                                                                            {dept.toUpperCase()}
+                                                                        </Badge>
+                                                                    )
+                                                                );
+                                                            })()
                                                         ) : (
                                                             <Badge
                                                                 variant={

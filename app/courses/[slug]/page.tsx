@@ -59,6 +59,7 @@ interface Course {
     syllabus?: string;
     ratings?: Record<string, number>;
     departments?: string[];
+    updatedAt: string;
 }
 
 // Helper function to get category color
@@ -93,6 +94,63 @@ function getCategoryColor(category: string): string {
         colors[category] ||
         "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
     );
+}
+
+// Add helper function for relative time
+function getRelativeTimeString(date: string | Date): string {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInMilliseconds = now.getTime() - past.getTime();
+    const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    const diffInMonths = Math.floor(diffInDays / 30);
+    const diffInYears = Math.floor(diffInDays / 365);
+
+    if (diffInYears > 0)
+        return `${diffInYears} year${diffInYears > 1 ? "s" : ""} ago`;
+    if (diffInMonths > 0)
+        return `${diffInMonths} month${diffInMonths > 1 ? "s" : ""} ago`;
+    if (diffInWeeks > 0)
+        return `${diffInWeeks} week${diffInWeeks > 1 ? "s" : ""} ago`;
+    if (diffInDays > 0)
+        return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    if (diffInHours > 0)
+        return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+    if (diffInMinutes > 0)
+        return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+    return "just now";
+}
+
+// Add this function after the getRelativeTimeString function
+function calculateAverages(reviews: Review[]) {
+    if (!reviews.length) {
+        return {
+            rating: 0,
+            difficulty: 0,
+            workload: 0,
+            value: 0,
+        };
+    }
+
+    const sums = reviews.reduce(
+        (acc, review) => ({
+            rating: acc.rating + review.rating,
+            difficulty: acc.difficulty + review.difficulty,
+            workload: acc.workload + review.workload,
+            value: acc.value + review.value,
+        }),
+        { rating: 0, difficulty: 0, workload: 0, value: 0 }
+    );
+
+    return {
+        rating: Number((sums.rating / reviews.length).toFixed(1)),
+        difficulty: Number((sums.difficulty / reviews.length).toFixed(1)),
+        workload: Number((sums.workload / reviews.length).toFixed(1)),
+        value: Number((sums.value / reviews.length).toFixed(1)),
+    };
 }
 
 export default function CourseDetailPage() {
@@ -141,6 +199,21 @@ export default function CourseDetailPage() {
 
         fetchCourse();
     }, [params.slug]);
+
+    // Add this after setting the course state in useEffect
+    useEffect(() => {
+        if (course?.reviews) {
+            const averages = calculateAverages(course.reviews);
+            setCourse((prev) => ({
+                ...prev!,
+                rating: averages.rating,
+                difficulty: averages.difficulty,
+                workload: averages.workload,
+                value: averages.value,
+                reviewCount: course.reviews.length,
+            }));
+        }
+    }, [course?.reviews]);
 
     // Helper to render stars
     const renderStars = (rating: number) => {
@@ -211,67 +284,61 @@ export default function CourseDetailPage() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            <div className="flex items-center gap-2">
-                                                {Array.isArray(
-                                                    course.departments
-                                                ) &&
-                                                course.departments.length >
-                                                    0 ? (
-                                                    course.departments.map(
-                                                        (dept, index) => (
-                                                            <Badge
-                                                                key={index}
-                                                                variant={
-                                                                    dept.toLowerCase() as any
-                                                                }
-                                                                className="min-w-[56px] justify-center text-center"
-                                                            >
-                                                                {dept.toUpperCase()}
-                                                            </Badge>
-                                                        )
-                                                    )
-                                                ) : (
-                                                    <Badge
-                                                        variant={
-                                                            course.category.toLowerCase() as any
-                                                        }
-                                                        className="min-w-[56px] justify-center text-center"
-                                                    >
-                                                        {course.category.toUpperCase()}
-                                                    </Badge>
-                                                )}
-                                            </div>
+                                            {Array.from(
+                                                new Set(
+                                                    course.departments || []
+                                                )
+                                            )?.map((dept, index) => (
+                                                <Badge
+                                                    key={index}
+                                                    variant={
+                                                        dept.toLowerCase() as any
+                                                    }
+                                                    className="min-w-[56px] justify-center text-center"
+                                                >
+                                                    {dept.toUpperCase()}
+                                                </Badge>
+                                            ))}
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                            {course.title}
+                                            {course.title.split(", ")[0]}
                                         </h1>
                                         <p className="text-muted-foreground">
                                             {course.professor}
                                         </p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-6">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex">
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <div className="flex items-center">
                                                 {renderStars(course.rating)}
+                                                <span className="ml-2">
+                                                    {course.rating
+                                                        ? course.rating.toFixed(
+                                                              1
+                                                          )
+                                                        : "0.0"}
+                                                </span>
                                             </div>
-                                            <span className="font-medium">
-                                                {course.rating.toFixed(1)}
+                                            <span>
+                                                ({course.reviewCount || 0}{" "}
+                                                review
+                                                {course.reviewCount !== 1
+                                                    ? "s"
+                                                    : ""}
+                                                )
                                             </span>
-                                            <span className="text-muted-foreground">
-                                                ({course.reviewCount} reviews)
+                                            <BookOpen className="h-4 w-4 ml-2" />
+                                            <span>
+                                                {course.credits || 0} Credit
+                                                {course.credits !== 1
+                                                    ? "s"
+                                                    : ""}
                                             </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <BookOpen className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
-                                                {course.credits} Credits
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
+                                            <Calendar className="h-4 w-4 ml-2" />
+                                            <span>
                                                 {course.semester} {course.year}{" "}
-                                                • 2 weeks ago
+                                                •{" "}
+                                                {getRelativeTimeString(
+                                                    course.updatedAt
+                                                )}
                                             </span>
                                         </div>
                                     </div>
@@ -313,10 +380,7 @@ export default function CourseDetailPage() {
                                                             <div
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
-                                                                    width: `${
-                                                                        course.difficulty *
-                                                                        20
-                                                                    }%`,
+                                                                    width: `${(course.difficulty / 5) * 100}%`,
                                                                 }}
                                                             ></div>
                                                         </div>
@@ -337,10 +401,7 @@ export default function CourseDetailPage() {
                                                             <div
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
-                                                                    width: `${
-                                                                        course.workload *
-                                                                        20
-                                                                    }%`,
+                                                                    width: `${(course.workload / 5) * 100}%`,
                                                                 }}
                                                             ></div>
                                                         </div>
@@ -361,10 +422,7 @@ export default function CourseDetailPage() {
                                                             <div
                                                                 className="h-2 rounded-full bg-yellow-400"
                                                                 style={{
-                                                                    width: `${
-                                                                        course.value *
-                                                                        20
-                                                                    }%`,
+                                                                    width: `${(course.value / 5) * 100}%`,
                                                                 }}
                                                             ></div>
                                                         </div>

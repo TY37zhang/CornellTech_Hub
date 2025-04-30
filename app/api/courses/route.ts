@@ -78,8 +78,8 @@ export async function GET(request) {
                 SELECT 
                     c.name,
                     c.professor_id,
-                    STRING_AGG(c.code, ', ') as codes,
-                    STRING_AGG(c.department, ', ') as departments,
+                    STRING_AGG(DISTINCT c.code, ', ' ORDER BY c.code) as codes,
+                    STRING_AGG(DISTINCT c.department, ', ' ORDER BY c.department) as departments,
                     COUNT(DISTINCT cr.id) as review_count,
                     ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
                     ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,

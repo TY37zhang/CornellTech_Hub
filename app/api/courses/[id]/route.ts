@@ -48,7 +48,9 @@ export async function GET(
 
         // Aggregate codes and departments
         const codes = crossListResult.map((c: any) => c.code);
-        const departments = crossListResult.map((c: any) => c.category);
+        const departments = [
+            ...new Set(crossListResult.map((c: any) => c.category)),
+        ];
         // Use the first course as the primary
         const course = crossListResult[0];
 
@@ -74,10 +76,11 @@ export async function GET(
         // Transform the data
         const transformedCourse = {
             id: codes[0],
-            codes,
-            title: course.title,
+            title: course.title.split(", ")[0],
             professor: course.professor || "Unknown Professor",
-            departments,
+            departments: [
+                ...new Set(crossListResult.map((c: any) => c.category)),
+            ],
             semester: course.semester,
             year: course.year,
             credits: course.credits,

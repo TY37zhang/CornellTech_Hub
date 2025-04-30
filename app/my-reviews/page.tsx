@@ -42,6 +42,10 @@ interface Review {
     professor?: string;
     semester?: string;
     year?: string;
+    crossListed?: {
+        codes: string[];
+        departments: string[];
+    };
 }
 
 // Helper function to get category color
@@ -111,9 +115,16 @@ export default function MyReviewsPage() {
 
         // Filter by category
         if (activeTab !== "all") {
-            result = result.filter(
-                (review) => review.category?.toUpperCase() === activeTab
-            );
+            result = result.filter((review) => {
+                if (review.crossListed) {
+                    // For cross-listed courses, check if any department matches the active tab
+                    return review.crossListed.departments.some(
+                        (dept) => dept.toUpperCase() === activeTab
+                    );
+                }
+                // For non-cross-listed courses, check the single category
+                return review.category?.toUpperCase() === activeTab;
+            });
         }
 
         setFilteredReviews(result);
@@ -231,13 +242,35 @@ export default function MyReviewsPage() {
                                                             )}
                                                         </CardDescription>
                                                     </div>
-                                                    <Badge
-                                                        className={getCategoryColor(
-                                                            review.category
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {review.crossListed ? (
+                                                            review.crossListed.departments.map(
+                                                                (
+                                                                    dept,
+                                                                    index
+                                                                ) => (
+                                                                    <Badge
+                                                                        key={`${dept}-${index}`}
+                                                                        variant={
+                                                                            dept.toLowerCase() as any
+                                                                        }
+                                                                        className="min-w-[56px] justify-center text-center"
+                                                                    >
+                                                                        {dept.toUpperCase()}
+                                                                    </Badge>
+                                                                )
+                                                            )
+                                                        ) : (
+                                                            <Badge
+                                                                variant={
+                                                                    review.category.toLowerCase() as any
+                                                                }
+                                                                className="min-w-[56px] justify-center text-center"
+                                                            >
+                                                                {review.category.toUpperCase()}
+                                                            </Badge>
                                                         )}
-                                                    >
-                                                        {review.category?.toUpperCase()}
-                                                    </Badge>
+                                                    </div>
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="pb-3">
