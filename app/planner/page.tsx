@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import SelectedCourses from "./components/SelectedCourses";
 import RequirementAssignment from "./components/RequirementAssignment";
 import CourseSchedule from "./components/CourseSchedule";
+import AdditionalQuestions from "./components/AdditionalQuestions";
 
 interface Course {
     id: string;
@@ -515,6 +516,8 @@ export default function PlannerPage() {
     const [coursePlanIds, setCoursePlanIds] = useState<{
         [courseId: string]: string;
     }>({});
+    const [hasEthicsCourse, setHasEthicsCourse] = useState(false);
+    const [hasTechie5901, setHasTechie5901] = useState(false);
 
     useEffect(() => {
         const initializePage = async () => {
@@ -1002,6 +1005,209 @@ export default function PlannerPage() {
         }
     };
 
+    const handleEthicsCourseChange = async (
+        hasEthicsCourse: boolean,
+        course?: Course,
+        deductFromCategory?: string
+    ) => {
+        try {
+            if (!userProgram) return;
+
+            // Check if ethics credit and deduction are already added
+            const jacobsTechnicalCore = coursePlan["JacobsTechnicalCore"] || [];
+            const hasEthicsCredit = jacobsTechnicalCore.some(
+                (course) => course.id === "ethics-credit"
+            );
+
+            // Check if deduction already exists in the target category
+            const targetCategory = coursePlan[deductFromCategory || ""] || [];
+            const hasDeduction = targetCategory.some((course) =>
+                course.id.startsWith("ethics-deduction-")
+            );
+
+            // If trying to add when already added, or remove when not added, do nothing
+            if (
+                (hasEthicsCourse && hasEthicsCredit && hasDeduction) ||
+                (!hasEthicsCourse && !hasEthicsCredit && !hasDeduction)
+            ) {
+                return;
+            }
+
+            if (hasEthicsCourse) {
+                if (course && deductFromCategory) {
+                    // Check if we can add the credit
+                    const totalCredits = jacobsTechnicalCore.reduce(
+                        (sum, course) => sum + course.credits,
+                        0
+                    );
+
+                    // Only add if there's room in Jacobs Technical Core
+                    if (
+                        totalCredits <
+                        programRequirements[userProgram].requirements
+                            .JacobsTechnicalCore.credits
+                    ) {
+                        // First remove any existing deductions to prevent duplicates
+                        setCoursePlan((prev) => {
+                            const newPlan = { ...prev };
+                            newPlan[deductFromCategory] = (
+                                newPlan[deductFromCategory] || []
+                            ).filter(
+                                (course) =>
+                                    !course.id.startsWith("ethics-deduction-")
+                            );
+                            return newPlan;
+                        });
+
+                        // Create a deduction course for the selected category with a unique ID
+                        const timestamp = Date.now();
+                        const deductionCourse: Course = {
+                            id: `ethics-deduction-${deductFromCategory}-${timestamp}`,
+                            code: "ETHICS-DEDUCT",
+                            name: "Ethics Credit Deduction",
+                            credits: -1,
+                            department: "ETHICS",
+                            semester: "Fall",
+                            year: new Date().getFullYear(),
+                        };
+
+                        // Add the deduction to the specified category
+                        setCoursePlan((prev) => ({
+                            ...prev,
+                            [deductFromCategory]: [
+                                ...(prev[deductFromCategory] || []),
+                                deductionCourse,
+                            ],
+                        }));
+
+                        // Add ethics credit to Jacobs Technical Core
+                        const ethicsCreditCourse: Course = {
+                            id: "ethics-credit",
+                            code: "ETHICS",
+                            name: "Ethics Course Credit",
+                            credits: 1,
+                            department: "ETHICS",
+                            semester: "Fall",
+                            year: new Date().getFullYear(),
+                        };
+
+                        setCoursePlan((prev) => ({
+                            ...prev,
+                            JacobsTechnicalCore: [
+                                ...jacobsTechnicalCore,
+                                ethicsCreditCourse,
+                            ],
+                        }));
+                        setHasEthicsCourse(true);
+                    } else {
+                        throw new Error(
+                            "Cannot add more credits to Jacobs Technical Core"
+                        );
+                    }
+                } else {
+                    throw new Error(
+                        "Course and deduction category are required when ethics course is selected"
+                    );
+                }
+            } else {
+                // Remove both the deduction and the ethics credit
+                setCoursePlan((prev) => {
+                    const newPlan = { ...prev };
+                    for (const category in newPlan) {
+                        newPlan[category] = newPlan[category].filter(
+                            (course) =>
+                                course.id !== "ethics-credit" &&
+                                !course.id.startsWith("ethics-deduction-")
+                        );
+                    }
+                    return newPlan;
+                });
+                setHasEthicsCourse(false);
+            }
+        } catch (error) {
+            console.error("Error handling ethics course change:", error);
+            // Revert state on error
+            setHasEthicsCourse(false);
+            setCoursePlan((prev) => {
+                const newPlan = { ...prev };
+                for (const category in newPlan) {
+                    newPlan[category] = newPlan[category].filter(
+                        (course) =>
+                            course.id !== "ethics-credit" &&
+                            !course.id.startsWith("ethics-deduction-")
+                    );
+                }
+                return newPlan;
+            });
+            throw error;
+        }
+    };
+
+    const handleTechie5901Change = async (hasTechie5901: boolean) => {
+        try {
+            if (!userProgram) return;
+
+            // Check if the credit is already added
+            const jacobsProgrammaticCore =
+                coursePlan["JacobsProgrammaticCore"] || [];
+            const hasSpecCredit = jacobsProgrammaticCore.some(
+                (course) => course.id === "info5920-anchor-credit"
+            );
+
+            // If trying to add when already added, or remove when not added, do nothing
+            if (
+                (hasTechie5901 && hasSpecCredit) ||
+                (!hasTechie5901 && !hasSpecCredit)
+            ) {
+                return;
+            }
+
+            if (hasTechie5901) {
+                // Add credits to Jacobs Programmatic Core
+                const specCourse: Course = {
+                    id: "info5920-anchor-credit",
+                    code: "INFO 5920",
+                    name: "Spec Project (Anchor)",
+                    credits: 1, // This is the 1-credit version
+                    department: "INFO",
+                    semester: "Fall",
+                    year: new Date().getFullYear(),
+                };
+
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore: [
+                        ...jacobsProgrammaticCore,
+                        specCourse,
+                    ],
+                }));
+                setHasTechie5901(true);
+            } else {
+                // Remove INFO 5920 anchor credit
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore:
+                        prev.JacobsProgrammaticCore?.filter(
+                            (course) => course.id !== "info5920-anchor-credit"
+                        ) || [],
+                }));
+                setHasTechie5901(false);
+            }
+        } catch (error) {
+            console.error("Error handling INFO 5920 anchor change:", error);
+            // Revert state on error
+            setHasTechie5901(false);
+            setCoursePlan((prev) => ({
+                ...prev,
+                JacobsProgrammaticCore:
+                    prev.JacobsProgrammaticCore?.filter(
+                        (course) => course.id !== "info5920-anchor-credit"
+                    ) || [],
+            }));
+            throw error;
+        }
+    };
+
     if (isLoading) {
         return <div className="container mx-auto py-8">Loading...</div>;
     }
@@ -1149,6 +1355,14 @@ export default function PlannerPage() {
                                 </div>
                             </Card>
                         ))}
+
+                        {/* Additional Questions Card */}
+                        <AdditionalQuestions
+                            onEthicsCourseChange={handleEthicsCourseChange}
+                            onTechie5901Change={handleTechie5901Change}
+                            selectedCourses={selectedCourses}
+                            coursePlan={coursePlan}
+                        />
 
                         {/* Additional Requirements Card */}
                         {programRequirements[userProgram]
