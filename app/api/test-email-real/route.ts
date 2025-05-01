@@ -3,20 +3,20 @@ import { NextResponse } from "next/server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function GET() {
+export async function POST(req: Request) {
     try {
-        if (!process.env.ADMIN_EMAIL) {
+        const { to } = await req.json();
+
+        if (!to) {
             return NextResponse.json(
-                {
-                    error: "No admin email configured. Please set ADMIN_EMAIL in your environment variables.",
-                },
+                { error: "Email address is required" },
                 { status: 400 }
             );
         }
 
         const { data, error } = await resend.emails.send({
             from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "onboarding@resend.dev"}>`,
-            to: process.env.ADMIN_EMAIL,
+            to,
             subject: "Test Email from Cornell Tech Hub",
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

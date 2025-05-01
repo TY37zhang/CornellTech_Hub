@@ -48,9 +48,12 @@ export async function POST(req: Request) {
             </div>
         `;
 
+        // Get admin email from environment variables, with a fallback to the user's email for testing
+        const adminEmail = process.env.ADMIN_EMAIL || session.user.email;
+
         await resend.emails.send({
             from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "onboarding@resend.dev"}>`,
-            to: process.env.ADMIN_EMAIL || "delivered@resend.dev",
+            to: adminEmail,
             subject: emailSubject,
             html: emailContent,
         });

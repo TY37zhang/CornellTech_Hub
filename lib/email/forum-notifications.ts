@@ -52,8 +52,7 @@ export async function sendForumReplyNotification(
 
         // Get the app URL from environment variables or use a default
         const appUrl =
-            process.env.NEXT_PUBLIC_APP_URL ||
-            "https://cornell-tech-hub.vercel.app";
+            process.env.APP_URL || "https://cornell-tech-hub.vercel.app";
         const postUrl = `${appUrl}/forum/${postId}`;
 
         // Send email notification
