@@ -58,8 +58,7 @@ export default function CreateThreadPage() {
 
     // Don't render the form if not authenticated
     if (!session?.user) {
-        router.push("/auth/signin");
-        return;
+        return null;
     }
 
     const addTag = () => {
