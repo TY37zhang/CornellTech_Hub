@@ -11,7 +11,7 @@ Cornell Tech Hub is a comprehensive academic management platform designed specif
 - **Course Catalog**: Comprehensive database of Cornell Tech courses with detailed information including course codes, descriptions, credits, and department information
 - **Course Planning**: Semester-by-semester course planning with requirement tracking and status management
 - **Schedule Management**: Day/time organization for course schedules with conflict detection
-- **Course Reviews**: Student-generated reviews with ratings for difficulty, workload, and overall experience
+- **Course Reviews**: Platform for students to share and read reviews of Cornell Tech courses
 
 ### 2. Community Engagement
 
@@ -25,7 +25,6 @@ Cornell Tech Hub is a comprehensive academic management platform designed specif
 
 ### 3. Resource Sharing
 
-- **Marketplace**: Platform for students to buy and sell items within the community
 - **Course Resources**: Sharing of course-related materials and study resources
 
 ## Technical Architecture
@@ -122,3 +121,19 @@ Cornell Tech Hub aims to:
 ## Development Team
 
 The project is maintained by a team of developers committed to improving the Cornell Tech student experience through technology. Contributions are welcome through the standard GitHub workflow of forking, branching, and pull requests.
+
+## Database Schema
+
+### Core Tables
+
+- Users
+- Courses
+- Course Reviews
+- Forum Posts
+- Forum Comments
+
+### Future Enhancements
+
+- Enhanced course planning features
+- Improved forum functionality
+- Integration with Cornell Tech systems

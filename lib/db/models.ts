@@ -10,20 +10,6 @@ export interface User {
     updated_at: Date;
 }
 
-export interface MarketplaceItem {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    category: string;
-    condition: string;
-    image_url: string | null;
-    seller_id: string;
-    status: string;
-    created_at: Date;
-    updated_at: Date;
-}
-
 export interface ForumCategory {
     id: string;
     name: string;
@@ -81,51 +67,6 @@ export const userOperations = {
         const query = "SELECT * FROM users WHERE email = $1";
         const result = await executeQuery<User>(query, [email]);
         return result.rows[0] || null;
-    },
-};
-
-// Marketplace operations
-export const marketplaceOperations = {
-    async create(
-        item: Omit<MarketplaceItem, "id" | "created_at" | "updated_at">
-    ): Promise<MarketplaceItem> {
-        const query = `
-      INSERT INTO marketplace_items (title, description, price, category, condition, image_url, seller_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `;
-        const result = await executeQuery<MarketplaceItem>(query, [
-            item.title,
-            item.description,
-            item.price,
-            item.category,
-            item.condition,
-            item.image_url,
-            item.seller_id,
-            item.status,
-        ]);
-        return result.rows[0];
-    },
-
-    async findAll(limit = 10, offset = 0): Promise<MarketplaceItem[]> {
-        const query = `
-      SELECT * FROM marketplace_items
-      WHERE status = 'active'
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
-    `;
-        const result = await executeQuery<MarketplaceItem>(query, [
-            limit,
-            offset,
-        ]);
-        return result.rows;
-    },
-
-    async findBySeller(sellerId: string): Promise<MarketplaceItem[]> {
-        const query =
-            "SELECT * FROM marketplace_items WHERE seller_id = $1 ORDER BY created_at DESC";
-        const result = await executeQuery<MarketplaceItem>(query, [sellerId]);
-        return result.rows;
     },
 };
 

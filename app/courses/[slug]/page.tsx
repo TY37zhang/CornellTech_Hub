@@ -384,21 +384,21 @@ export default function CourseDetailPage() {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <span className="min-w-[80px] text-sm text-muted-foreground">
                                                         Difficulty
                                                     </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
+                                                    <div className="flex flex-1 items-center gap-3">
+                                                        <div className="h-2.5 flex-1 rounded-full bg-muted">
                                                             <div
-                                                                className="h-2 rounded-full bg-yellow-400"
+                                                                className="h-2.5 rounded-full bg-yellow-400 transition-all"
                                                                 style={{
                                                                     width: `${(course.difficulty / 5) * 100}%`,
                                                                 }}
-                                                            ></div>
+                                                            />
                                                         </div>
-                                                        <span>
+                                                        <span className="min-w-[40px] text-sm font-medium">
                                                             {course.difficulty.toFixed(
                                                                 1
                                                             )}
@@ -406,20 +406,20 @@ export default function CourseDetailPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <span className="min-w-[80px] text-sm text-muted-foreground">
                                                         Workload
                                                     </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
+                                                    <div className="flex flex-1 items-center gap-3">
+                                                        <div className="h-2.5 flex-1 rounded-full bg-muted">
                                                             <div
-                                                                className="h-2 rounded-full bg-yellow-400"
+                                                                className="h-2.5 rounded-full bg-yellow-400 transition-all"
                                                                 style={{
                                                                     width: `${(course.workload / 5) * 100}%`,
                                                                 }}
-                                                            ></div>
+                                                            />
                                                         </div>
-                                                        <span>
+                                                        <span className="min-w-[40px] text-sm font-medium">
                                                             {course.workload.toFixed(
                                                                 1
                                                             )}
@@ -427,20 +427,20 @@ export default function CourseDetailPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-muted-foreground">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <span className="min-w-[80px] text-sm text-muted-foreground">
                                                         Value
                                                     </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 w-24 rounded-full bg-muted">
+                                                    <div className="flex flex-1 items-center gap-3">
+                                                        <div className="h-2.5 flex-1 rounded-full bg-muted">
                                                             <div
-                                                                className="h-2 rounded-full bg-yellow-400"
+                                                                className="h-2.5 rounded-full bg-yellow-400 transition-all"
                                                                 style={{
                                                                     width: `${(course.value / 5) * 100}%`,
                                                                 }}
-                                                            ></div>
+                                                            />
                                                         </div>
-                                                        <span>
+                                                        <span className="min-w-[40px] text-sm font-medium">
                                                             {course.value.toFixed(
                                                                 1
                                                             )}

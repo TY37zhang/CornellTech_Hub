@@ -122,10 +122,7 @@ cornell-tech-hub/
 │   ├── components/        # Shared components
 │   ├── courses/           # Course-related pages
 │   ├── forum/             # Forum pages
-│   ├── marketplace/       # Marketplace pages
-│   ├── planner/           # Course planner pages
-│   ├── reviews/           # Review pages
-│   └── user/              # User-related pages
+│   └── planner/           # Course planner pages
 ├── components/            # Global components
 ├── hooks/                 # Custom React hooks
 ├── lib/                   # Utility functions
