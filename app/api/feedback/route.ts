@@ -12,7 +12,10 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.email) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return new NextResponse(
+                JSON.stringify({ error: "Please sign in to submit feedback" }),
+                { status: 401 }
+            );
         }
 
         const body = await req.json();
@@ -45,11 +48,20 @@ export async function POST(req: Request) {
                     <p style="white-space: pre-wrap;">${message}</p>
                 </div>
                 <p style="color: #666; font-size: 14px;">Feedback ID: ${result[0].id}</p>
+                <p style="color: #666; font-size: 14px;">User ID: ${session.user.id}</p>
             </div>
         `;
 
-        // Get admin email from environment variables, with a fallback to the user's email for testing
-        const adminEmail = process.env.ADMIN_EMAIL || session.user.email;
+        // Get admin email from environment variables
+        const adminEmail = process.env.ADMIN_EMAIL;
+
+        if (!adminEmail) {
+            console.error("ADMIN_EMAIL not configured");
+            return new NextResponse(
+                JSON.stringify({ error: "Server configuration error" }),
+                { status: 500 }
+            );
+        }
 
         await resend.emails.send({
             from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "onboarding@resend.dev"}>`,
