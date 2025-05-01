@@ -12,18 +12,23 @@ export async function sendForumReplyNotification(
     try {
         // Get post details and author info
         const postResult = await sql`
-            SELECT fp.id, fp.title, u.email, u.name as author_name
+            SELECT fp.id, fp.title, u.email, u.name as author_name, fp.author_id
             FROM forum_posts fp
             JOIN users u ON fp.author_id = u.id
             WHERE fp.id = ${postId}
         `;
 
         if (!postResult || postResult.length === 0) {
-            console.error("Post not found for notification");
+            console.error("Post not found for notification:", postId);
             return;
         }
 
         const post = postResult[0];
+        console.log("Found post for notification:", {
+            postId,
+            authorId: post.author_id,
+            title: post.title,
+        });
 
         const commentResult = await sql`
             SELECT fc.id, u.name as author_name
@@ -33,7 +38,7 @@ export async function sendForumReplyNotification(
         `;
 
         if (!commentResult || commentResult.length === 0) {
-            console.error("Comment not found for notification");
+            console.error("Comment not found for notification:", commentId);
             return;
         }
 
@@ -47,8 +52,23 @@ export async function sendForumReplyNotification(
         `;
 
         if (!notificationResult || !notificationResult[0]?.notify_on_reply) {
+            console.log(
+                "No notification preference found or notifications disabled for post:",
+                postId,
+                "user:",
+                post.author_id,
+                "notification result:",
+                notificationResult
+            );
             return; // Author doesn't want notifications
         }
+
+        console.log(
+            "Sending notification email for post:",
+            postId,
+            "to:",
+            post.email
+        );
 
         // Get the app URL from environment variables or use a default
         const appUrl =

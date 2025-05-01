@@ -87,17 +87,14 @@ export async function createThread({
         // Insert tags for the post
         if (tags.length > 0) {
             const tagValues = tags
-                .map(
-                    (tag, index) =>
-                        `($${index + 1}, $${tags.length + 1}, $${tags.length + 2})`
-                )
+                .map((_, index) => `($1, $${index + 2}, $${tags.length + 2})`)
                 .join(", ");
             const tagQuery = `
                 INSERT INTO forum_post_tags (post_id, tag, created_at)
                 VALUES ${tagValues}
                 ON CONFLICT (post_id, tag) DO NOTHING
             `;
-            const tagParams = [...tags, postId, new Date()];
+            const tagParams = [postId, ...tags, new Date()];
             await sql(tagQuery, tagParams);
         }
 
@@ -866,10 +863,7 @@ export async function checkUserLikeStatus(
     }
 }
 
-export async function checkUserSaveStatus(
-    postId: string,
-    userId: string
-): Promise<boolean> {
+export async function checkUserSaveStatus(postId: string, userId: string) {
     try {
         const query = `
             SELECT EXISTS (
