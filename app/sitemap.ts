@@ -1,23 +1,36 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = "https://www.cornelltechhub.info"; 
-
-    // Define your static routes
-    const staticRoutes = [
-        "",
-        "/courses",
-        "/forum",
-        "/planner",
-        "/settings",
-        "/auth/signin",
-        "/auth/signup",
-    ].map((route) => ({
-        url: `${baseUrl}${route}`,
-        lastModified: new Date(),
-        changeFrequency: "daily" as const,
-        priority: route === "" ? 1 : 0.8,
-    }));
-
-    return staticRoutes;
+    return [
+        {
+            url: "https://www.cornelltechhub.info",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 1,
+        },
+        {
+            url: "https://www.cornelltechhub.info/courses",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 0.8,
+        },
+        {
+            url: "https://www.cornelltechhub.info/forum",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 0.8,
+        },
+        {
+            url: "https://www.cornelltechhub.info/planner",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 0.8,
+        },
+        {
+            url: "https://www.cornelltechhub.info/settings",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 0.5,
+        },
+    ];
 }
