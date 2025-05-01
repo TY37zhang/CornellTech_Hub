@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
-
-const sql = neon(process.env.DATABASE_URL || "");
+import { sql } from "@/lib/db";
 
 export async function GET(
     request: Request,
@@ -27,7 +25,7 @@ export async function GET(
                 p.category,
                 p.slug,
                 p.author_id
-            FROM posts p
+            FROM forum_posts p
             WHERE p.id = ${params.id} AND p.author_id = ${session.user.id}
         `;
 
@@ -51,15 +49,46 @@ export async function DELETE(
 ) {
     try {
         const session = await getServerSession(authOptions);
+        const { id: postId } = await Promise.resolve(params);
 
         if (!session?.user?.id) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Delete the post from the database
+        // First delete all notification preferences
+        await sql`
+            DELETE FROM forum_notification_preferences
+            WHERE post_id = ${postId}
+        `;
+
+        // Then delete all saved posts
+        await sql`
+            DELETE FROM forum_saved
+            WHERE post_id = ${postId}
+        `;
+
+        // Then delete all post tags
+        await sql`
+            DELETE FROM forum_post_tags
+            WHERE post_id = ${postId}
+        `;
+
+        // Then delete all likes associated with the post
+        await sql`
+            DELETE FROM forum_likes
+            WHERE post_id = ${postId}
+        `;
+
+        // Then delete all comments associated with the post
+        await sql`
+            DELETE FROM forum_comments
+            WHERE post_id = ${postId}
+        `;
+
+        // Finally delete the post
         const result = await sql`
-            DELETE FROM posts
-            WHERE id = ${params.id} AND author_id = ${session.user.id}
+            DELETE FROM forum_posts
+            WHERE id = ${postId} AND author_id = ${session.user.id}
             RETURNING id
         `;
 

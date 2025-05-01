@@ -58,35 +58,3 @@ export async function GET(request: Request) {
         );
     }
 }
-
-export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        // Delete the post from the database
-        const result = await sql`
-            DELETE FROM forum_posts
-            WHERE id = ${params.id} AND author_id = ${session.user.id}
-            RETURNING id
-        `;
-
-        if (!result || result.length === 0) {
-            return new NextResponse("Post not found", { status: 404 });
-        }
-
-        return new NextResponse(null, { status: 204 });
-    } catch (error) {
-        console.error("Error deleting post:", error);
-        return NextResponse.json(
-            { error: "Failed to delete post" },
-            { status: 500 }
-        );
-    }
-}
