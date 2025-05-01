@@ -20,7 +20,7 @@ export async function DELETE(
             );
         }
 
-        const reviewId = params.id;
+        const { id: reviewId } = await params;
 
         // First verify the review belongs to the user
         const review = await sql`
