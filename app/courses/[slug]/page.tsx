@@ -525,14 +525,16 @@ export default function CourseDetailPage() {
                                                                 <AvatarFallback>
                                                                     {review.author.charAt(
                                                                         0
-                                                                    )}
+                                                                    ) +
+                                                                        "******"}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <div>
                                                                 <p className="text-sm font-medium leading-none">
-                                                                    {
-                                                                        review.author
-                                                                    }
+                                                                    {review.author.charAt(
+                                                                        0
+                                                                    ) +
+                                                                        "******"}
                                                                 </p>
                                                                 <p className="text-sm text-muted-foreground">
                                                                     {new Date(
