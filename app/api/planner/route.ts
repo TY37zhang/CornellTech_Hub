@@ -8,7 +8,10 @@ export async function GET(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
         // Fetch the user's course plans from the database
@@ -80,7 +83,10 @@ export async function POST(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
         const body = await request.json();
@@ -183,7 +189,10 @@ export async function PUT(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
         const body = await request.json();
@@ -217,7 +226,10 @@ export async function DELETE(request: Request) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
         const { searchParams } = new URL(request.url);

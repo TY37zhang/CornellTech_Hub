@@ -1233,6 +1233,32 @@ export default function PlannerPage() {
         return <div className="container mx-auto py-8">Loading...</div>;
     }
 
+    if (!session) {
+        return (
+            <div className="flex min-h-screen flex-col">
+                <div className="flex-1">
+                    <section className="w-full py-12 md:py-24 lg:py-16">
+                        <div className="container px-4 md:px-6">
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <Card className="w-full max-w-2xl">
+                                    <CardHeader className="space-y-1">
+                                        <CardTitle className="text-2xl">
+                                            Login Required
+                                        </CardTitle>
+                                        <CardDescription>
+                                            You need to login to access this
+                                            page.
+                                        </CardDescription>
+                                    </CardHeader>
+                                </Card>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        );
+    }
+
     if (!userProgram || !programRequirements[userProgram]) {
         return (
             <div className="flex min-h-screen flex-col">
