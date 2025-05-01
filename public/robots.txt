@@ -1,6 +1,14 @@
-# Allow all crawlers
+# *
 User-agent: *
 Allow: /
+Disallow: /api/*
+Disallow: /auth/*
+Disallow: /settings
+Disallow: /_next/*
+Disallow: /*.json
 
-# Sitemap location
-Sitemap: https://www.cornelltechhub.info/sitemap.xml 
+# Host
+Host: https://www.cornelltechhub.info
+
+# Sitemaps
+Sitemap: https://www.cornelltechhub.info/sitemap.xml
