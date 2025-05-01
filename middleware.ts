@@ -10,6 +10,8 @@ export const config = {
     matcher: [
         "/dashboard/:path*",
         "/profile/:path*",
+        "/courses/new-review",
+        "/courses/[slug]/new-review",
         // Add other protected routes here
     ],
 };

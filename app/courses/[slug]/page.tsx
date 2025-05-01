@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft,
     BookOpen,
@@ -11,6 +11,7 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -155,6 +156,8 @@ function calculateAverages(reviews: Review[]) {
 
 export default function CourseDetailPage() {
     const params = useParams();
+    const { data: session, status } = useSession();
+    const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -231,6 +234,20 @@ export default function CourseDetailPage() {
             );
         }
         return stars;
+    };
+
+    const handleWriteReview = () => {
+        if (status === "loading") return;
+
+        if (status === "unauthenticated") {
+            router.push(`/auth/signin?callbackUrl=/courses/${params.slug}`);
+            return;
+        }
+
+        if (!course) return;
+
+        const reviewUrl = `/courses/new-review?courseId=${course.id}&courseName=${encodeURIComponent(course.title)}&courseCode=${encodeURIComponent(course.id)}&professor=${encodeURIComponent(course.professor)}&category=${(course.departments?.[0] || "").toLowerCase()}`;
+        router.push(reviewUrl);
     };
 
     if (isLoading) {
@@ -435,21 +452,12 @@ export default function CourseDetailPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter>
-                                        <Link
-                                            href={`/courses/new-review?courseId=${
-                                                course.id
-                                            }&courseName=${encodeURIComponent(
-                                                course.title
-                                            )}&courseCode=${encodeURIComponent(
-                                                course.id
-                                            )}&professor=${encodeURIComponent(
-                                                course.professor
-                                            )}&category=${(course.departments?.[0] || "").toLowerCase()}`}
+                                        <Button
+                                            className="w-full"
+                                            onClick={handleWriteReview}
                                         >
-                                            <Button className="w-full">
-                                                Write a Review
-                                            </Button>
-                                        </Link>
+                                            Write a Review
+                                        </Button>
                                     </CardFooter>
                                 </Card>
                             </div>
@@ -492,21 +500,12 @@ export default function CourseDetailPage() {
                                     <h2 className="text-2xl font-bold tracking-tight">
                                         Course Reviews
                                     </h2>
-                                    <Link
-                                        href={`/courses/new-review?courseId=${
-                                            course.id
-                                        }&courseName=${encodeURIComponent(
-                                            course.title
-                                        )}&courseCode=${encodeURIComponent(
-                                            course.id
-                                        )}&professor=${encodeURIComponent(
-                                            course.professor
-                                        )}&category=${(course.departments?.[0] || "").toLowerCase()}`}
+                                    <Button
+                                        className="w-full"
+                                        onClick={handleWriteReview}
                                     >
-                                        <Button className="w-full">
-                                            Write a Review
-                                        </Button>
-                                    </Link>
+                                        Write a Review
+                                    </Button>
                                 </div>
                                 {course.reviews.length > 0 ? (
                                     <div className="space-y-6">
