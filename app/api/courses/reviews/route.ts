@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { neon } from "@neondatabase/serverless";
-import { z } from "zod";
+import { validationMiddleware } from "@/middleware/validation";
+import { schemas } from "@/lib/validations/schemas";
 
 // Initialize the Neon client
 const sql = neon(process.env.DATABASE_URL || "");
-
-// Define the request schema
-const requestSchema = z.object({
-    title: z.string().min(1, "Title is required"),
-    professor: z.string().min(1, "Professor is required"),
-    category: z.string(),
-    difficulty: z.number().min(1).max(5),
-    workload: z.number().min(1).max(5),
-    value: z.number().min(1).max(5),
-    overall_rating: z.number().min(1).max(5),
-    review: z.string().min(1, "Review is required"),
-    courseId: z.string().min(1, "Course ID is required"),
-});
 
 export async function POST(request: Request) {
     try {
@@ -30,8 +18,16 @@ export async function POST(request: Request) {
             );
         }
 
-        const body = await request.json();
-        const validatedData = requestSchema.parse(body);
+        // Apply validation middleware
+        const validatedRequest = await validationMiddleware(
+            "course",
+            "review"
+        )(request);
+        if (validatedRequest instanceof Response) {
+            return validatedRequest;
+        }
+
+        const validatedData = (validatedRequest as any).validatedData;
 
         // Create or update the course with all departments
         const courseResult = await sql`
@@ -87,12 +83,6 @@ export async function POST(request: Request) {
         return NextResponse.json(reviewResult[0]);
     } catch (error) {
         console.error("Error creating course review:", error);
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { error: "Validation error", details: error.errors },
-                { status: 400 }
-            );
-        }
         return NextResponse.json(
             { error: "Failed to create course review" },
             { status: 500 }

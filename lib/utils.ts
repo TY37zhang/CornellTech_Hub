@@ -91,3 +91,33 @@ export function slugify(text: string): string {
         .replace(/^-+/, "") // Trim - from start of text
         .replace(/-+$/, ""); // Trim - from end of text
 }
+
+/**
+ * Validates if a URL is safe for redirection
+ * @param url The URL to validate
+ * @returns boolean indicating if the URL is safe
+ */
+export function isValidRedirectUrl(url: string): boolean {
+    try {
+        const parsedUrl = new URL(url);
+        // Only allow relative paths and same-origin URLs
+        return (
+            !parsedUrl.hostname || // Allow relative paths
+            parsedUrl.hostname === window.location.hostname // Allow same-origin
+        );
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Sanitizes a URL for safe redirection
+ * @param url The URL to sanitize
+ * @returns The sanitized URL or null if invalid
+ */
+export function sanitizeRedirectUrl(url: string): string | null {
+    if (!isValidRedirectUrl(url)) {
+        return null;
+    }
+    return url;
+}
