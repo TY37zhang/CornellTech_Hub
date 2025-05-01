@@ -232,15 +232,6 @@ export default function MyReviewsPage() {
                                                         <CardTitle className="text-xl">
                                                             {review.courseName}
                                                         </CardTitle>
-                                                        <CardDescription className="text-sm">
-                                                            {review.professor && (
-                                                                <span className="text-muted-foreground">
-                                                                    {
-                                                                        review.professor
-                                                                    }
-                                                                </span>
-                                                            )}
-                                                        </CardDescription>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
                                                         {review.crossListed ? (
