@@ -76,7 +76,7 @@ export async function GET(
         // Transform the data
         const transformedCourse = {
             id: codes[0],
-            title: course.title.split(", ")[0],
+            title: course.title,
             professor: course.professor || "Unknown Professor",
             departments: [
                 ...new Set(crossListResult.map((c: any) => c.category)),

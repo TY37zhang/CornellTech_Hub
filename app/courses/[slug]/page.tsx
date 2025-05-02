@@ -318,7 +318,7 @@ export default function CourseDetailPage() {
                                             ))}
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                            {course.title.split(", ")[0]}
+                                            {course.title}
                                         </h1>
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <div className="flex items-center">
