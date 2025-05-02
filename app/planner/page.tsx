@@ -20,6 +20,7 @@ import SelectedCourses from "./components/SelectedCourses";
 import RequirementAssignment from "./components/RequirementAssignment";
 import CourseSchedule from "./components/CourseSchedule";
 import AdditionalQuestions from "./components/AdditionalQuestions";
+import Link from "next/link";
 
 interface Course {
     id: string;
@@ -1277,6 +1278,17 @@ export default function PlannerPage() {
                                             course planner.
                                         </CardDescription>
                                     </CardHeader>
+                                    <CardContent className="flex flex-col items-center space-y-4">
+                                        <p className="text-muted-foreground">
+                                            You need to select your program to
+                                            start planning your courses.
+                                        </p>
+                                        <Button asChild>
+                                            <Link href="/settings">
+                                                Go to Settings
+                                            </Link>
+                                        </Button>
+                                    </CardContent>
                                 </Card>
                             </div>
                         </div>
