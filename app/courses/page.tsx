@@ -141,7 +141,7 @@ export default function CoursesPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [programFilter, setProgramFilter] = useState("all");
     const [semesterFilter, setSemesterFilter] = useState("all");
-    const [sortBy, setSortBy] = useState("rating");
+    const [sortBy, setSortBy] = useState("popular");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
