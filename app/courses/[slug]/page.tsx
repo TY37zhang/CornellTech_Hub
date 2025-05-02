@@ -452,10 +452,7 @@ export default function CourseDetailPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter>
-                                        <Button
-                                            className="w-full"
-                                            onClick={handleWriteReview}
-                                        >
+                                        <Button onClick={handleWriteReview}>
                                             Write a Review
                                         </Button>
                                     </CardFooter>
@@ -500,10 +497,7 @@ export default function CourseDetailPage() {
                                     <h2 className="text-2xl font-bold tracking-tight">
                                         Course Reviews
                                     </h2>
-                                    <Button
-                                        className="w-full"
-                                        onClick={handleWriteReview}
-                                    >
+                                    <Button onClick={handleWriteReview}>
                                         Write a Review
                                     </Button>
                                 </div>
