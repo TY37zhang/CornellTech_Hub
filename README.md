@@ -33,11 +33,6 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 - Authentication system
 - Personalized settings
 
-### Marketplace
-
-- Item listings
-- User-to-user transactions
-
 ## Tech Stack
 
 ### Frontend
