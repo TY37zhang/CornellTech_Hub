@@ -10,7 +10,9 @@ export async function validateRequest(
     subSchema?: string
 ) {
     try {
-        const body = await request.json();
+        // Clone the request before reading the body
+        const clonedRequest = request.clone();
+        const body = await clonedRequest.json();
         let validationSchema;
 
         if (subSchema) {
@@ -54,7 +56,7 @@ export function validationMiddleware(
 ) {
     return async (request: Request) => {
         const validationResult = await validateRequest(
-            request,
+            request.clone(), // Clone the request before validation
             schema,
             subSchema
         );
@@ -66,8 +68,25 @@ export function validationMiddleware(
             );
         }
 
-        // Add validated data to request for use in route handlers
-        const requestWithData = new Request(request);
+        // Create a new request with the validated data
+        const headers = new Headers(request.headers);
+        const requestWithData = new Request(request.url, {
+            method: request.method,
+            headers: headers,
+            body: request.body,
+            cache: request.cache,
+            credentials: request.credentials,
+            integrity: request.integrity,
+            keepalive: request.keepalive,
+            mode: request.mode,
+            redirect: request.redirect,
+            referrer: request.referrer,
+            referrerPolicy: request.referrerPolicy,
+            signal: request.signal,
+            duplex: "half",
+        });
+
+        // Add validated data to the request
         Object.defineProperty(requestWithData, "validatedData", {
             value: validationResult.data,
             writable: false,

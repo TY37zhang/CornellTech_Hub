@@ -222,72 +222,82 @@ export default function NewReviewPage() {
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="title">Course Title</Label>
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="title"
-                                    placeholder="Search for a course..."
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className="pl-8 rounded-xl"
-                                    autoComplete="off"
-                                />
-                                {searchResults.length > 0 && (
-                                    <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-background border rounded-lg shadow-lg z-50">
-                                        {searchResults.map((course) => (
-                                            <div
-                                                key={course.id}
-                                                onClick={() =>
-                                                    handleSelectCourse(course)
-                                                }
-                                                className="flex items-center p-3 hover:bg-accent/5 transition-colors cursor-pointer"
-                                            >
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-medium">
-                                                        {course.codes.join(
-                                                            " / "
-                                                        )}
-                                                    </div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        {course.name}
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2 mt-1">
-                                                        {course.departments.map(
-                                                            (dept, index) => (
-                                                                <Badge
-                                                                    key={index}
-                                                                    variant="outline"
-                                                                    className="text-xs"
-                                                                >
-                                                                    {dept}
-                                                                </Badge>
-                                                            )
-                                                        )}
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="text-xs"
-                                                        >
-                                                            {course.semester}{" "}
-                                                            {course.year}
-                                                        </Badge>
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="text-xs"
-                                                        >
-                                                            {course.credits}{" "}
-                                                            credits
-                                                        </Badge>
+                            {!formData.title ? (
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="title"
+                                        placeholder="Search for a course..."
+                                        value={searchQuery}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
+                                        className="pl-8 rounded-xl"
+                                        autoComplete="off"
+                                    />
+                                    {searchResults.length > 0 && (
+                                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-background border rounded-lg shadow-lg z-50">
+                                            {searchResults.map((course) => (
+                                                <div
+                                                    key={course.id}
+                                                    onClick={() =>
+                                                        handleSelectCourse(
+                                                            course
+                                                        )
+                                                    }
+                                                    className="flex items-center p-3 hover:bg-accent/5 transition-colors cursor-pointer"
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium">
+                                                            {course.codes.join(
+                                                                " / "
+                                                            )}
+                                                        </div>
+                                                        <div className="text-sm text-muted-foreground">
+                                                            {course.name}
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2 mt-1">
+                                                            {course.departments.map(
+                                                                (
+                                                                    dept,
+                                                                    index
+                                                                ) => (
+                                                                    <Badge
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        variant="outline"
+                                                                        className="text-xs"
+                                                                    >
+                                                                        {dept}
+                                                                    </Badge>
+                                                                )
+                                                            )}
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="text-xs"
+                                                            >
+                                                                {
+                                                                    course.semester
+                                                                }{" "}
+                                                                {course.year}
+                                                            </Badge>
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="text-xs"
+                                                            >
+                                                                {course.credits}{" "}
+                                                                credits
+                                                            </Badge>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            {formData.title && (
-                                <div className="mt-2 space-y-2">
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-medium">
                                             Selected Course:
