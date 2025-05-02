@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { neon } from "@neondatabase/serverless";
+import { DefaultSession } from "next-auth";
 
 // Initialize the Neon client
 const sql = neon(process.env.DATABASE_URL || "");
@@ -8,6 +9,16 @@ const sql = neon(process.env.DATABASE_URL || "");
 // Default profile picture URL
 const DEFAULT_PROFILE_PICTURE =
     "https://api.dicebear.com/7.x/avataaars/svg?seed=default";
+
+// Extend the session type to include our custom fields
+declare module "next-auth" {
+    interface Session extends DefaultSession {
+        user: {
+            id: string;
+            program: string | null;
+        } & DefaultSession["user"];
+    }
+}
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -31,9 +42,8 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async signIn({ user, account, profile }) {
-            // Remove debug logs for sign in attempt
             if (!user.email || !user.name) {
-                return null;
+                return false;
             }
 
             // Only allow Cornell email addresses
@@ -48,7 +58,6 @@ export const authOptions: NextAuthOptions = {
             // If using Google provider, check if user exists in our database
             if (account?.provider === "google") {
                 try {
-                    // Remove debug logs for user existence check
                     const result = await sql`
                         SELECT * FROM users WHERE email = ${user.email}
                     `;
@@ -79,7 +88,6 @@ export const authOptions: NextAuthOptions = {
                             result[0].avatar_url || DEFAULT_PROFILE_PICTURE;
                     }
                 } catch (error) {
-                    // Keep error logging for critical errors
                     console.error("Error during Google sign in:", error);
                     throw new Error(
                         "Failed to process Google sign in. Please try again."
@@ -103,9 +111,9 @@ export const authOptions: NextAuthOptions = {
                 const result = await sql`
                     SELECT name, avatar_url, program FROM users WHERE id = ${token.id}
                 `;
-                // Remove debug logs for session callback
+
                 if (!result || result.length === 0) {
-                    return null;
+                    return session;
                 }
 
                 if (result.length > 0) {
@@ -115,13 +123,8 @@ export const authOptions: NextAuthOptions = {
                     // Always use the avatar_url from the database
                     if (result[0].avatar_url) {
                         session.user.image = result[0].avatar_url;
-                        console.log(
-                            "Session callback - using database avatar_url:",
-                            result[0].avatar_url
-                        );
                     } else {
                         session.user.image = DEFAULT_PROFILE_PICTURE;
-                        console.log("Session callback - using default avatar");
                     }
                 }
             }
