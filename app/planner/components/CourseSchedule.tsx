@@ -254,6 +254,42 @@ export default function CourseSchedule({
 
     // Add new useEffect to handle course removal
     useEffect(() => {
+        // Find courses that were removed
+        const removedCourseIds = courseTimes
+            .map((time) => time.courseId)
+            .filter(
+                (courseId) =>
+                    !selectedCourses.some((course) => course.id === courseId)
+            );
+
+        // Delete schedule entries for removed courses
+        const deleteRemovedSchedules = async () => {
+            for (const courseId of removedCourseIds) {
+                try {
+                    const response = await fetch(
+                        `/api/schedule?courseId=${courseId}`,
+                        {
+                            method: "DELETE",
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Failed to delete schedule");
+                    }
+                } catch (error) {
+                    console.error("Error deleting schedule:", error);
+                    toast({
+                        title: "Error",
+                        description:
+                            "Failed to delete schedule for removed course",
+                        variant: "destructive",
+                    });
+                }
+            }
+        };
+
+        deleteRemovedSchedules();
+
         // Remove any course times for courses that are no longer selected
         setCourseTimes((prevTimes) =>
             prevTimes.filter((time) =>
