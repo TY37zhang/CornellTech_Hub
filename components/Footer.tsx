@@ -100,8 +100,8 @@ export function Footer() {
             </div>
             <div className="container py-2 text-center text-sm text-muted-foreground border-t">
                 <div>
-                    &copy; {new Date().getFullYear()} Cornell Tech Student
-                    Resource Hub. All rights reserved.
+                    &copy; {new Date().getFullYear()} Cornell Tech Hub. All
+                    rights reserved.
                 </div>
                 <div className="text-xs mt-1">
                     This is a student-built independent project and is not
@@ -115,8 +115,9 @@ export function Footer() {
                         rel="noopener noreferrer"
                         className="hover:underline"
                     >
-                        Tianyin Zhang with ❤️
-                    </Link>
+                        Tianyin Zhang
+                    </Link>{" "}
+                    with ♡
                 </div>
             </div>
         </footer>
