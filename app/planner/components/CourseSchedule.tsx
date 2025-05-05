@@ -246,6 +246,18 @@ export default function CourseSchedule({
     const [editStartTime, setEditStartTime] = useState<string>("");
     const [editEndTime, setEditEndTime] = useState<string>("");
 
+    // Add new state for the new course slot popover
+    const [addSlotOpen, setAddSlotOpen] = useState<string | null>(null);
+    const [addSlotDay, setAddSlotDay] = useState(DAYS[0]);
+    const [addSlotStart, setAddSlotStart] = useState("09:00");
+    const [addSlotEnd, setAddSlotEnd] = useState("10:15");
+
+    // Add state for the add time slot popover for scheduled courses
+    const [addSlotCardOpen, setAddSlotCardOpen] = useState<string | null>(null);
+    const [addSlotCardDay, setAddSlotCardDay] = useState(DAYS[0]);
+    const [addSlotCardStart, setAddSlotCardStart] = useState("09:00");
+    const [addSlotCardEnd, setAddSlotCardEnd] = useState("10:15");
+
     useEffect(() => {
         loadSchedule();
     }, []);
@@ -486,6 +498,101 @@ export default function CourseSchedule({
         closeEditPopover();
     };
 
+    // New handler for adding a new course slot
+    const openAddSlot = (course: Course) => {
+        setAddSlotOpen(course.id);
+        setAddSlotDay(DAYS[0]);
+        setAddSlotStart("09:00");
+        setAddSlotEnd("10:15");
+    };
+    const closeAddSlot = () => {
+        setAddSlotOpen(null);
+    };
+    const handleSaveAddSlot = async (course: Course) => {
+        try {
+            const response = await fetch("/api/schedule", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    courseId: course.id,
+                    day: addSlotDay,
+                    startTime: addSlotStart,
+                    endTime: addSlotEnd,
+                }),
+            });
+            if (!response.ok) throw new Error("Failed to add course");
+            const savedSchedule = await response.json();
+            setCourseTimes([
+                ...courseTimes,
+                {
+                    id: savedSchedule.id,
+                    courseId: course.id,
+                    courseName: course.name,
+                    day: addSlotDay,
+                    startTime: addSlotStart,
+                    endTime: addSlotEnd,
+                },
+            ]);
+            toast({ title: "Success", description: "Course time slot added" });
+            closeAddSlot();
+        } catch (error) {
+            console.error("Error adding course:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add course",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // In the scheduled course card, replace the Add Time Slot button with a Popover
+    const openAddSlotCard = (course: CourseTime) => {
+        setAddSlotCardOpen(course.id!);
+        setAddSlotCardDay(DAYS[0]);
+        setAddSlotCardStart("09:00");
+        setAddSlotCardEnd("10:15");
+    };
+    const closeAddSlotCard = () => {
+        setAddSlotCardOpen(null);
+    };
+    const handleSaveAddSlotCard = async (course: CourseTime) => {
+        try {
+            const response = await fetch("/api/schedule", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    courseId: course.courseId,
+                    day: addSlotCardDay,
+                    startTime: addSlotCardStart,
+                    endTime: addSlotCardEnd,
+                }),
+            });
+            if (!response.ok) throw new Error("Failed to add course");
+            const savedSchedule = await response.json();
+            setCourseTimes([
+                ...courseTimes,
+                {
+                    id: savedSchedule.id,
+                    courseId: course.courseId,
+                    courseName: course.courseName,
+                    day: addSlotCardDay,
+                    startTime: addSlotCardStart,
+                    endTime: addSlotCardEnd,
+                },
+            ]);
+            toast({ title: "Success", description: "Course time slot added" });
+            closeAddSlotCard();
+        } catch (error) {
+            console.error("Error adding course:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add course",
+                variant: "destructive",
+            });
+            closeAddSlotCard();
+        }
+    };
+
     if (isLoading) {
         return (
             <Card className="w-full">
@@ -548,13 +655,125 @@ export default function CourseSchedule({
                                             <Button
                                                 variant="outline"
                                                 onClick={() =>
-                                                    handleAddCourse(course)
+                                                    openAddSlot(course)
                                                 }
                                                 className="whitespace-nowrap"
                                             >
                                                 Add to Schedule
                                             </Button>
                                         </div>
+                                        <Popover
+                                            open={addSlotOpen === course.id}
+                                            onOpenChange={(open) =>
+                                                open
+                                                    ? openAddSlot(course)
+                                                    : closeAddSlot()
+                                            }
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <span></span>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-80 p-4">
+                                                <div className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <label className="text-sm font-medium">
+                                                            Day
+                                                        </label>
+                                                        <Select
+                                                            value={addSlotDay}
+                                                            onValueChange={
+                                                                setAddSlotDay
+                                                            }
+                                                        >
+                                                            <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                <SelectValue
+                                                                    placeholder="Select day"
+                                                                    className="flex-1 text-left"
+                                                                />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {DAYS.map(
+                                                                    (day) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                day
+                                                                            }
+                                                                            value={
+                                                                                day
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                day
+                                                                            }
+                                                                        </SelectItem>
+                                                                    )
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium">
+                                                                Start Time
+                                                            </label>
+                                                            <input
+                                                                type="time"
+                                                                className="w-full border rounded px-2 py-1"
+                                                                value={
+                                                                    addSlotStart
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setAddSlotStart(
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium">
+                                                                End Time
+                                                            </label>
+                                                            <input
+                                                                type="time"
+                                                                className="w-full border rounded px-2 py-1"
+                                                                value={
+                                                                    addSlotEnd
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setAddSlotEnd(
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-end gap-2 pt-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={
+                                                                closeAddSlot
+                                                            }
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleSaveAddSlot(
+                                                                    course
+                                                                )
+                                                            }
+                                                        >
+                                                            Save
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
                                     </Card>
                                 ))}
                         </div>
@@ -760,28 +979,146 @@ export default function CourseSchedule({
                                                                 </div>
                                                             </PopoverContent>
                                                         </Popover>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-8 px-3 flex items-center justify-center"
-                                                            onClick={() => {
-                                                                handleAddCourse(
-                                                                    {
-                                                                        id: course.courseId,
-                                                                        name: course.courseName,
-                                                                        code: "",
-                                                                        credits: 0,
-                                                                        department:
-                                                                            "",
-                                                                        semester:
-                                                                            "",
-                                                                        year: 0,
-                                                                    }
-                                                                );
-                                                            }}
+                                                        <Popover
+                                                            open={
+                                                                addSlotCardOpen ===
+                                                                course.id
+                                                            }
+                                                            onOpenChange={(
+                                                                open
+                                                            ) =>
+                                                                open
+                                                                    ? openAddSlotCard(
+                                                                          course
+                                                                      )
+                                                                    : closeAddSlotCard()
+                                                            }
                                                         >
-                                                            Add Time Slot
-                                                        </Button>
+                                                            <PopoverTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-8 px-3 flex items-center justify-center"
+                                                                >
+                                                                    Add Time
+                                                                    Slot
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-80 p-4">
+                                                                <div className="space-y-4">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-sm font-medium">
+                                                                            Day
+                                                                        </label>
+                                                                        <Select
+                                                                            value={
+                                                                                addSlotCardDay
+                                                                            }
+                                                                            onValueChange={
+                                                                                setAddSlotCardDay
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                <SelectValue
+                                                                                    placeholder="Select day"
+                                                                                    className="flex-1 text-left"
+                                                                                />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {DAYS.map(
+                                                                                    (
+                                                                                        day
+                                                                                    ) => (
+                                                                                        <SelectItem
+                                                                                            key={
+                                                                                                day
+                                                                                            }
+                                                                                            value={
+                                                                                                day
+                                                                                            }
+                                                                                        >
+                                                                                            {
+                                                                                                day
+                                                                                            }
+                                                                                        </SelectItem>
+                                                                                    )
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                Start
+                                                                                Time
+                                                                            </label>
+                                                                            <input
+                                                                                type="time"
+                                                                                className="w-full border rounded px-2 py-1"
+                                                                                value={
+                                                                                    addSlotCardStart
+                                                                                }
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    setAddSlotCardStart(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                End
+                                                                                Time
+                                                                            </label>
+                                                                            <input
+                                                                                type="time"
+                                                                                className="w-full border rounded px-2 py-1"
+                                                                                value={
+                                                                                    addSlotCardEnd
+                                                                                }
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    setAddSlotCardEnd(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex justify-end gap-2 pt-2">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={
+                                                                                closeAddSlotCard
+                                                                            }
+                                                                        >
+                                                                            Cancel
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() =>
+                                                                                handleSaveAddSlotCard(
+                                                                                    course
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            Save
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </PopoverContent>
+                                                        </Popover>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"

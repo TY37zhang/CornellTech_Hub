@@ -522,6 +522,30 @@ export default function PlannerPage() {
     const selectedCoursesRef = useRef<HTMLDivElement>(null);
     const coursePlanRef = useRef<HTMLDivElement>(null);
 
+    // Add scroll position persistence
+    useEffect(() => {
+        // Restore scroll position
+        const savedScrollPosition = sessionStorage.getItem(
+            "plannerScrollPosition"
+        );
+        if (savedScrollPosition) {
+            window.scrollTo(0, parseInt(savedScrollPosition));
+        }
+
+        // Save scroll position before unload
+        const handleBeforeUnload = () => {
+            sessionStorage.setItem(
+                "plannerScrollPosition",
+                window.scrollY.toString()
+            );
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+
     useEffect(() => {
         const initializePage = async () => {
             try {
