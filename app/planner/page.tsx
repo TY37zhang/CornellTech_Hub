@@ -550,7 +550,10 @@ export default function PlannerPage() {
             }
         };
 
-        initializePage();
+        // Only initialize if we have a session and haven't initialized before
+        if (session && !userProgram) {
+            initializePage();
+        }
     }, [session]);
 
     const loadSavedCoursePlans = async () => {
