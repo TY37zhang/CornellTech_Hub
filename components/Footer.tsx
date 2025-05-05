@@ -32,13 +32,17 @@ export function Footer() {
                             Forum
                         </Link>
                         <Link
-                            href="/coming-soon"
+                            href="https://admissions.tech.cornell.edu/dnu-admitted/resources/"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             Resources
                         </Link>
                         <Link
-                            href="/coming-soon"
+                            href="https://cornelltech.campusgroups.com/events"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             Events

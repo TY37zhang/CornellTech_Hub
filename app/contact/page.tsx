@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { useSession } from "next-auth/react";
+import React from "react";
 
 const contactFormSchema = z.object({
     name: z.string().min(2, { message: "Name is required" }),
@@ -22,18 +24,29 @@ const contactFormSchema = z.object({
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export default function ContactPage() {
+    const { data: session } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
     const form = useForm<ContactFormValues>({
         resolver: zodResolver(contactFormSchema),
         defaultValues: {
-            name: "",
-            email: "",
+            name: session?.user?.name || "",
+            email: session?.user?.email || "",
             subject: "",
             message: "",
         },
     });
+
+    // If session changes (user logs in/out), update form values
+    useEffect(() => {
+        form.reset({
+            name: session?.user?.name || "",
+            email: session?.user?.email || "",
+            subject: "",
+            message: "",
+        });
+    }, [session]);
 
     async function onSubmit(data: ContactFormValues) {
         setIsSubmitting(true);
