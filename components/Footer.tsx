@@ -65,7 +65,7 @@ export function Footer() {
                             Contact Us
                         </Link> */}
                         <Link
-                            href="/coming-soon"
+                            href="/faq"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             FAQ
@@ -74,19 +74,19 @@ export function Footer() {
                     <div className="grid gap-3 text-sm">
                         <h3 className="font-semibold">Legal</h3>
                         <Link
-                            href="/coming-soon"
+                            href="/privacy-policy"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             Privacy Policy
                         </Link>
                         <Link
-                            href="/coming-soon"
+                            href="/terms-of-service"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             Terms of Service
                         </Link>
                         <Link
-                            href="/coming-soon"
+                            href="/contact"
                             className="text-muted-foreground hover:text-foreground"
                         >
                             Contact
@@ -111,7 +111,7 @@ export function Footer() {
                         rel="noopener noreferrer"
                         className="hover:underline"
                     >
-                        Tianyin Zhang
+                        Tianyin Zhang with ❤️
                     </Link>
                 </div>
             </div>
