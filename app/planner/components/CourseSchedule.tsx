@@ -85,6 +85,29 @@ function CourseTimeCard({
     onAddTimeSlot: (course: Course) => Promise<void>;
 }) {
     const [isEditing, setIsEditing] = useState(false);
+    const [editDay, setEditDay] = useState(course.day);
+    const [editStartTime, setEditStartTime] = useState(course.startTime);
+    const [editEndTime, setEditEndTime] = useState(course.endTime);
+
+    // Reset local state when opening the popup
+    useEffect(() => {
+        if (isEditing) {
+            setEditDay(course.day);
+            setEditStartTime(course.startTime);
+            setEditEndTime(course.endTime);
+        }
+    }, [isEditing, course.day, course.startTime, course.endTime]);
+
+    const handleSave = () => {
+        if (course.id) {
+            onUpdate(course.id, {
+                day: editDay,
+                startTime: editStartTime,
+                endTime: editEndTime,
+            });
+        }
+        setIsEditing(false);
+    };
 
     return (
         <Card className="group relative hover:shadow-md transition-shadow">
@@ -124,11 +147,8 @@ function CourseTimeCard({
                                         Day
                                     </label>
                                     <Select
-                                        value={course.day}
-                                        onValueChange={(day) => {
-                                            course.id &&
-                                                onUpdate(course.id, { day });
-                                        }}
+                                        value={editDay}
+                                        onValueChange={setEditDay}
                                     >
                                         <SelectTrigger className="h-8 flex items-center justify-between">
                                             <SelectValue
@@ -154,65 +174,37 @@ function CourseTimeCard({
                                         <label className="text-sm font-medium">
                                             Start Time
                                         </label>
-                                        <Select
-                                            value={course.startTime}
-                                            onValueChange={(time) => {
-                                                course.id &&
-                                                    onUpdate(course.id, {
-                                                        startTime: time,
-                                                    });
-                                            }}
-                                        >
-                                            <SelectTrigger className="h-8 flex items-center justify-between">
-                                                <SelectValue
-                                                    placeholder="Start time"
-                                                    className="flex-1 text-left"
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {TIMES.map((time) => (
-                                                    <SelectItem
-                                                        key={time}
-                                                        value={time}
-                                                    >
-                                                        {time}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <input
+                                            type="time"
+                                            className="w-full border rounded px-2 py-1"
+                                            value={editStartTime}
+                                            onChange={(e) =>
+                                                setEditStartTime(e.target.value)
+                                            }
+                                        />
                                     </div>
-
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">
                                             End Time
                                         </label>
-                                        <Select
-                                            value={course.endTime}
-                                            onValueChange={(time) => {
-                                                course.id &&
-                                                    onUpdate(course.id, {
-                                                        endTime: time,
-                                                    });
-                                            }}
-                                        >
-                                            <SelectTrigger className="h-8 flex items-center justify-between">
-                                                <SelectValue
-                                                    placeholder="End time"
-                                                    className="flex-1 text-left"
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {TIMES.map((time) => (
-                                                    <SelectItem
-                                                        key={time}
-                                                        value={time}
-                                                    >
-                                                        {time}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <input
+                                            type="time"
+                                            className="w-full border rounded px-2 py-1"
+                                            value={editEndTime}
+                                            onChange={(e) =>
+                                                setEditEndTime(e.target.value)
+                                            }
+                                        />
                                     </div>
+                                </div>
+                                <div className="flex justify-end pt-2">
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={handleSave}
+                                    >
+                                        Save
+                                    </Button>
                                 </div>
                             </div>
                         </PopoverContent>
@@ -247,6 +239,12 @@ export default function CourseSchedule({
     const [courseTimes, setCourseTimes] = useState<CourseTime[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+
+    // Editing state for weekly schedule popovers
+    const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+    const [editDay, setEditDay] = useState<string>("");
+    const [editStartTime, setEditStartTime] = useState<string>("");
+    const [editEndTime, setEditEndTime] = useState<string>("");
 
     useEffect(() => {
         loadSchedule();
@@ -469,6 +467,25 @@ export default function CourseSchedule({
         {} as Record<string, CourseTime[]>
     );
 
+    // When opening the popover, initialize edit state
+    const openEditPopover = (course: CourseTime) => {
+        setEditingCourseId(course.id!);
+        setEditDay(course.day);
+        setEditStartTime(course.startTime);
+        setEditEndTime(course.endTime);
+    };
+    const closeEditPopover = () => {
+        setEditingCourseId(null);
+    };
+    const handleSaveEdit = (courseId: string) => {
+        handleUpdateSchedule(courseId, {
+            day: editDay,
+            startTime: editStartTime,
+            endTime: editEndTime,
+        });
+        closeEditPopover();
+    };
+
     if (isLoading) {
         return (
             <Card className="w-full">
@@ -546,7 +563,6 @@ export default function CourseSchedule({
                     {/* Weekly Schedule */}
                     <div className="space-y-6">
                         {DAYS.map((day) => {
-                            // Sort by real time
                             const sorted = (coursesByDay[day] || [])
                                 .slice()
                                 .sort(
@@ -554,7 +570,6 @@ export default function CourseSchedule({
                                         timeToMinutes(a.startTime) -
                                         timeToMinutes(b.startTime)
                                 );
-                            // Find overlaps
                             const overlaps: Set<string> = new Set();
                             for (let i = 1; i < sorted.length; ++i) {
                                 const prev = sorted[i - 1];
@@ -614,7 +629,21 @@ export default function CourseSchedule({
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <Popover>
+                                                        <Popover
+                                                            open={
+                                                                editingCourseId ===
+                                                                course.id
+                                                            }
+                                                            onOpenChange={(
+                                                                open
+                                                            ) =>
+                                                                open
+                                                                    ? openEditPopover(
+                                                                          course
+                                                                      )
+                                                                    : closeEditPopover()
+                                                            }
+                                                        >
                                                             <PopoverTrigger
                                                                 asChild
                                                             >
@@ -635,19 +664,11 @@ export default function CourseSchedule({
                                                                         </label>
                                                                         <Select
                                                                             value={
-                                                                                course.day
+                                                                                editDay
                                                                             }
-                                                                            onValueChange={(
-                                                                                day
-                                                                            ) => {
-                                                                                course.id &&
-                                                                                    handleUpdateSchedule(
-                                                                                        course.id,
-                                                                                        {
-                                                                                            day,
-                                                                                        }
-                                                                                    );
-                                                                            }}
+                                                                            onValueChange={
+                                                                                setEditDay
+                                                                            }
                                                                         >
                                                                             <SelectTrigger className="h-8 flex items-center justify-between">
                                                                                 <SelectValue
@@ -658,18 +679,18 @@ export default function CourseSchedule({
                                                                             <SelectContent>
                                                                                 {DAYS.map(
                                                                                     (
-                                                                                        day
+                                                                                        d
                                                                                     ) => (
                                                                                         <SelectItem
                                                                                             key={
-                                                                                                day
+                                                                                                d
                                                                                             }
                                                                                             value={
-                                                                                                day
+                                                                                                d
                                                                                             }
                                                                                         >
                                                                                             {
-                                                                                                day
+                                                                                                d
                                                                                             }
                                                                                         </SelectItem>
                                                                                     )
@@ -683,101 +704,58 @@ export default function CourseSchedule({
                                                                                 Start
                                                                                 Time
                                                                             </label>
-                                                                            <Select
+                                                                            <input
+                                                                                type="time"
+                                                                                className="w-full border rounded px-2 py-1"
                                                                                 value={
-                                                                                    course.startTime
+                                                                                    editStartTime
                                                                                 }
-                                                                                onValueChange={(
-                                                                                    time
-                                                                                ) => {
-                                                                                    course.id &&
-                                                                                        handleUpdateSchedule(
-                                                                                            course.id,
-                                                                                            {
-                                                                                                startTime:
-                                                                                                    time,
-                                                                                            }
-                                                                                        );
-                                                                                }}
-                                                                            >
-                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
-                                                                                    <SelectValue
-                                                                                        placeholder="Start time"
-                                                                                        className="flex-1 text-left"
-                                                                                    />
-                                                                                </SelectTrigger>
-                                                                                <SelectContent>
-                                                                                    {TIMES.map(
-                                                                                        (
-                                                                                            time
-                                                                                        ) => (
-                                                                                            <SelectItem
-                                                                                                key={
-                                                                                                    time
-                                                                                                }
-                                                                                                value={
-                                                                                                    time
-                                                                                                }
-                                                                                            >
-                                                                                                {
-                                                                                                    time
-                                                                                                }
-                                                                                            </SelectItem>
-                                                                                        )
-                                                                                    )}
-                                                                                </SelectContent>
-                                                                            </Select>
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    setEditStartTime(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
                                                                         </div>
                                                                         <div className="space-y-2">
                                                                             <label className="text-sm font-medium">
                                                                                 End
                                                                                 Time
                                                                             </label>
-                                                                            <Select
+                                                                            <input
+                                                                                type="time"
+                                                                                className="w-full border rounded px-2 py-1"
                                                                                 value={
-                                                                                    course.endTime
+                                                                                    editEndTime
                                                                                 }
-                                                                                onValueChange={(
-                                                                                    time
-                                                                                ) => {
-                                                                                    course.id &&
-                                                                                        handleUpdateSchedule(
-                                                                                            course.id,
-                                                                                            {
-                                                                                                endTime:
-                                                                                                    time,
-                                                                                            }
-                                                                                        );
-                                                                                }}
-                                                                            >
-                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
-                                                                                    <SelectValue
-                                                                                        placeholder="End time"
-                                                                                        className="flex-1 text-left"
-                                                                                    />
-                                                                                </SelectTrigger>
-                                                                                <SelectContent>
-                                                                                    {TIMES.map(
-                                                                                        (
-                                                                                            time
-                                                                                        ) => (
-                                                                                            <SelectItem
-                                                                                                key={
-                                                                                                    time
-                                                                                                }
-                                                                                                value={
-                                                                                                    time
-                                                                                                }
-                                                                                            >
-                                                                                                {
-                                                                                                    time
-                                                                                                }
-                                                                                            </SelectItem>
-                                                                                        )
-                                                                                    )}
-                                                                                </SelectContent>
-                                                                            </Select>
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    setEditEndTime(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
                                                                         </div>
+                                                                    </div>
+                                                                    <div className="flex justify-end pt-2">
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() =>
+                                                                                handleSaveEdit(
+                                                                                    course.id!
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            Save
+                                                                        </Button>
                                                                     </div>
                                                                 </div>
                                                             </PopoverContent>

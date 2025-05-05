@@ -718,27 +718,12 @@ export default function PlannerPage() {
         return (totalCredits / requiredCredits) * 100;
     };
 
-    const scrollToSelectedCourses = () => {
-        selectedCoursesRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
-    };
-
-    const scrollToCoursePlan = () => {
-        coursePlanRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
-    };
-
     const handleCourseSelection = (courses: Course[]) => {
         const existingCourseIds = new Set(selectedCourses.map((c) => c.id));
         const uniqueNewCourses = courses.filter(
             (course) => !existingCourseIds.has(course.id)
         );
         setSelectedCourses([...selectedCourses, ...uniqueNewCourses]);
-        setTimeout(scrollToSelectedCourses, 100); // Small delay to ensure state update
     };
 
     const handleAddToRequirement = async (
@@ -938,7 +923,6 @@ export default function PlannerPage() {
                     return newPlan;
                 });
             }
-            setTimeout(scrollToCoursePlan, 100); // Small delay to ensure state update
         } catch (error) {
             console.error("Error handling requirement assignment:", error);
             toast({
@@ -993,7 +977,6 @@ export default function PlannerPage() {
                 description: "Course removed successfully",
                 variant: "default",
             });
-            setTimeout(scrollToSelectedCourses, 100); // Small delay to ensure state update
         } catch (error) {
             console.error("Error removing course:", error);
             // Revert UI state on error
@@ -1144,7 +1127,6 @@ export default function PlannerPage() {
                 });
                 setHasEthicsCourse(false);
             }
-            setTimeout(scrollToCoursePlan, 100); // Small delay to ensure state update
         } catch (error) {
             console.error("Error handling ethics course change:", error);
             // Revert state on error
@@ -1214,7 +1196,6 @@ export default function PlannerPage() {
                 }));
                 setHasTechie5901(false);
             }
-            setTimeout(scrollToCoursePlan, 100); // Small delay to ensure state update
         } catch (error) {
             console.error("Error handling INFO 5920 anchor change:", error);
             // Revert state on error
