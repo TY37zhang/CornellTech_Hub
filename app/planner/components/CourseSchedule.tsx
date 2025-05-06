@@ -11,7 +11,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Clock, X, ChevronDown, AlertTriangle } from "lucide-react";
+import {
+    Loader2,
+    Clock,
+    X,
+    ChevronDown,
+    AlertTriangle,
+    ChevronRight,
+} from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -257,6 +264,8 @@ export default function CourseSchedule({
     const [addSlotCardDay, setAddSlotCardDay] = useState(DAYS[0]);
     const [addSlotCardStart, setAddSlotCardStart] = useState("09:00");
     const [addSlotCardEnd, setAddSlotCardEnd] = useState("10:15");
+
+    const [collapsed, setCollapsed] = useState(false);
 
     useEffect(() => {
         loadSchedule();
@@ -605,549 +614,582 @@ export default function CourseSchedule({
     }
 
     return (
-        <Card className="w-full overflow-hidden">
-            <CardHeader>
-                <CardTitle>Course Schedule</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-6">
-                    {/* Available Courses */}
-                    <div className="space-y-2">
-                        <h3 className="text-lg font-semibold mb-4">
-                            Available Courses
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {selectedCourses
-                                .filter(
-                                    (course) =>
-                                        !courseTimes.some(
-                                            (ct) => ct.courseId === course.id
-                                        )
-                                )
-                                .map((course) => (
-                                    <Card
-                                        key={course.id}
-                                        className="flex flex-col justify-between p-4"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div className="space-y-2">
-                                                <h3 className="text-xl font-semibold">
-                                                    {course.code}
-                                                </h3>
-                                                <p className="text-gray-600 text-base">
-                                                    {course.name}
-                                                </p>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <span>
-                                                        {course.department}
-                                                    </span>
-                                                    <span>•</span>
-                                                    <span>
-                                                        {course.semester}{" "}
-                                                        {course.year}
-                                                    </span>
-                                                    <span>•</span>
-                                                    <span>
-                                                        {course.credits} credits
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() =>
-                                                    openAddSlot(course)
-                                                }
-                                                className="whitespace-nowrap"
-                                            >
-                                                Add to Schedule
-                                            </Button>
-                                        </div>
-                                        <Popover
-                                            open={addSlotOpen === course.id}
-                                            onOpenChange={(open) =>
-                                                open
-                                                    ? openAddSlot(course)
-                                                    : closeAddSlot()
-                                            }
+        <Card className="p-6 w-full overflow-hidden">
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <button
+                            type="button"
+                            aria-label={collapsed ? "Expand" : "Collapse"}
+                            onClick={() => setCollapsed((c) => !c)}
+                            className="focus:outline-none"
+                        >
+                            {collapsed ? (
+                                <ChevronRight className="w-5 h-5" />
+                            ) : (
+                                <ChevronDown className="w-5 h-5" />
+                            )}
+                        </button>
+                        Course Schedule
+                    </h3>
+                </div>
+                {!collapsed && (
+                    <div className="space-y-6">
+                        {/* Available Courses */}
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold mb-4">
+                                Available Courses
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {selectedCourses
+                                    .filter(
+                                        (course) =>
+                                            !courseTimes.some(
+                                                (ct) =>
+                                                    ct.courseId === course.id
+                                            )
+                                    )
+                                    .map((course) => (
+                                        <Card
+                                            key={course.id}
+                                            className="flex flex-col justify-between p-4"
                                         >
-                                            <PopoverTrigger asChild>
-                                                <span></span>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-80 p-4">
-                                                <div className="space-y-4">
-                                                    <div className="space-y-2">
-                                                        <label className="text-sm font-medium">
-                                                            Day
-                                                        </label>
-                                                        <Select
-                                                            value={addSlotDay}
-                                                            onValueChange={
-                                                                setAddSlotDay
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="h-8 flex items-center justify-between">
-                                                                <SelectValue
-                                                                    placeholder="Select day"
-                                                                    className="flex-1 text-left"
-                                                                />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {DAYS.map(
-                                                                    (day) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                day
-                                                                            }
-                                                                            value={
-                                                                                day
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                day
-                                                                            }
-                                                                        </SelectItem>
-                                                                    )
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-sm font-medium">
-                                                                Start Time
-                                                            </label>
-                                                            <input
-                                                                type="time"
-                                                                className="w-full border rounded px-2 py-1"
-                                                                value={
-                                                                    addSlotStart
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setAddSlotStart(
-                                                                        e.target
-                                                                            .value
-                                                                    )
-                                                                }
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className="text-sm font-medium">
-                                                                End Time
-                                                            </label>
-                                                            <input
-                                                                type="time"
-                                                                className="w-full border rounded px-2 py-1"
-                                                                value={
-                                                                    addSlotEnd
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setAddSlotEnd(
-                                                                        e.target
-                                                                            .value
-                                                                    )
-                                                                }
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-end gap-2 pt-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={
-                                                                closeAddSlot
-                                                            }
-                                                        >
-                                                            Cancel
-                                                        </Button>
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                handleSaveAddSlot(
-                                                                    course
-                                                                )
-                                                            }
-                                                        >
-                                                            Save
-                                                        </Button>
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-2">
+                                                    <h3 className="text-xl font-semibold">
+                                                        {course.code}
+                                                    </h3>
+                                                    <p className="text-gray-600 text-base">
+                                                        {course.name}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <span>
+                                                            {course.department}
+                                                        </span>
+                                                        <span>•</span>
+                                                        <span>
+                                                            {course.semester}{" "}
+                                                            {course.year}
+                                                        </span>
+                                                        <span>•</span>
+                                                        <span>
+                                                            {course.credits}{" "}
+                                                            credits
+                                                        </span>
                                                     </div>
                                                 </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </Card>
-                                ))}
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        openAddSlot(course)
+                                                    }
+                                                    className="whitespace-nowrap"
+                                                >
+                                                    Add to Schedule
+                                                </Button>
+                                            </div>
+                                            <Popover
+                                                open={addSlotOpen === course.id}
+                                                onOpenChange={(open) =>
+                                                    open
+                                                        ? openAddSlot(course)
+                                                        : closeAddSlot()
+                                                }
+                                            >
+                                                <PopoverTrigger asChild>
+                                                    <span></span>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-80 p-4">
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium">
+                                                                Day
+                                                            </label>
+                                                            <Select
+                                                                value={
+                                                                    addSlotDay
+                                                                }
+                                                                onValueChange={
+                                                                    setAddSlotDay
+                                                                }
+                                                            >
+                                                                <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                    <SelectValue
+                                                                        placeholder="Select day"
+                                                                        className="flex-1 text-left"
+                                                                    />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {DAYS.map(
+                                                                        (
+                                                                            day
+                                                                        ) => (
+                                                                            <SelectItem
+                                                                                key={
+                                                                                    day
+                                                                                }
+                                                                                value={
+                                                                                    day
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    day
+                                                                                }
+                                                                            </SelectItem>
+                                                                        )
+                                                                    )}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <label className="text-sm font-medium">
+                                                                    Start Time
+                                                                </label>
+                                                                <input
+                                                                    type="time"
+                                                                    className="w-full border rounded px-2 py-1"
+                                                                    value={
+                                                                        addSlotStart
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        setAddSlotStart(
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <label className="text-sm font-medium">
+                                                                    End Time
+                                                                </label>
+                                                                <input
+                                                                    type="time"
+                                                                    className="w-full border rounded px-2 py-1"
+                                                                    value={
+                                                                        addSlotEnd
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        setAddSlotEnd(
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-end gap-2 pt-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={
+                                                                    closeAddSlot
+                                                                }
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    handleSaveAddSlot(
+                                                                        course
+                                                                    )
+                                                                }
+                                                            >
+                                                                Save
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </Card>
+                                    ))}
+                            </div>
+                        </div>
+
+                        {/* Weekly Schedule */}
+                        <div className="space-y-6">
+                            {DAYS.map((day) => {
+                                const sorted = (coursesByDay[day] || [])
+                                    .slice()
+                                    .sort(
+                                        (a, b) =>
+                                            timeToMinutes(a.startTime) -
+                                            timeToMinutes(b.startTime)
+                                    );
+                                const overlaps: Set<string> = new Set();
+                                for (let i = 1; i < sorted.length; ++i) {
+                                    const prev = sorted[i - 1];
+                                    const curr = sorted[i];
+                                    if (
+                                        timeToMinutes(curr.startTime) <
+                                        timeToMinutes(prev.endTime)
+                                    ) {
+                                        overlaps.add(prev.id!);
+                                        overlaps.add(curr.id!);
+                                    }
+                                }
+                                return (
+                                    <div key={day} className="space-y-4">
+                                        <h3 className="text-lg font-semibold border-b pb-2">
+                                            {day}
+                                        </h3>
+                                        <div className="grid gap-4">
+                                            {sorted.map((course) => (
+                                                <div
+                                                    key={course.id}
+                                                    className={`flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
+                                                >
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                        <div className="min-w-0">
+                                                            <h3 className="font-medium truncate">
+                                                                {
+                                                                    course.courseName
+                                                                }
+                                                            </h3>
+                                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                                                                <Clock className="h-4 w-4 flex-shrink-0" />
+                                                                <span className="truncate">
+                                                                    {
+                                                                        course.startTime
+                                                                    }{" "}
+                                                                    -{" "}
+                                                                    {
+                                                                        course.endTime
+                                                                    }
+                                                                </span>
+                                                                <span className="text-xs text-gray-500">
+                                                                    (
+                                                                    {formatDuration(
+                                                                        course.startTime,
+                                                                        course.endTime
+                                                                    )}
+                                                                    )
+                                                                </span>
+                                                                {overlaps.has(
+                                                                    course.id!
+                                                                ) && (
+                                                                    <span
+                                                                        className="flex items-center text-red-600 ml-2"
+                                                                        title="This time slot overlaps with another."
+                                                                    >
+                                                                        <AlertTriangle className="h-4 w-4 mr-1" />
+                                                                        Overlap
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <Popover
+                                                                open={
+                                                                    editingCourseId ===
+                                                                    course.id
+                                                                }
+                                                                onOpenChange={(
+                                                                    open
+                                                                ) =>
+                                                                    open
+                                                                        ? openEditPopover(
+                                                                              course
+                                                                          )
+                                                                        : closeEditPopover()
+                                                                }
+                                                            >
+                                                                <PopoverTrigger
+                                                                    asChild
+                                                                >
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-8 px-3 flex items-center justify-center"
+                                                                    >
+                                                                        Edit
+                                                                        Time
+                                                                        <ChevronDown className="ml-2 h-4 w-4" />
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-80 p-4">
+                                                                    <div className="space-y-4">
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                Day
+                                                                            </label>
+                                                                            <Select
+                                                                                value={
+                                                                                    editDay
+                                                                                }
+                                                                                onValueChange={
+                                                                                    setEditDay
+                                                                                }
+                                                                            >
+                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                    <SelectValue
+                                                                                        placeholder="Select day"
+                                                                                        className="flex-1 text-left"
+                                                                                    />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {DAYS.map(
+                                                                                        (
+                                                                                            d
+                                                                                        ) => (
+                                                                                            <SelectItem
+                                                                                                key={
+                                                                                                    d
+                                                                                                }
+                                                                                                value={
+                                                                                                    d
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    d
+                                                                                                }
+                                                                                            </SelectItem>
+                                                                                        )
+                                                                                    )}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-2 gap-4">
+                                                                            <div className="space-y-2">
+                                                                                <label className="text-sm font-medium">
+                                                                                    Start
+                                                                                    Time
+                                                                                </label>
+                                                                                <input
+                                                                                    type="time"
+                                                                                    className="w-full border rounded px-2 py-1"
+                                                                                    value={
+                                                                                        editStartTime
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e
+                                                                                    ) =>
+                                                                                        setEditStartTime(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <label className="text-sm font-medium">
+                                                                                    End
+                                                                                    Time
+                                                                                </label>
+                                                                                <input
+                                                                                    type="time"
+                                                                                    className="w-full border rounded px-2 py-1"
+                                                                                    value={
+                                                                                        editEndTime
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e
+                                                                                    ) =>
+                                                                                        setEditEndTime(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-end pt-2">
+                                                                            <Button
+                                                                                variant="default"
+                                                                                size="sm"
+                                                                                onClick={() =>
+                                                                                    handleSaveEdit(
+                                                                                        course.id!
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                Save
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                            <Popover
+                                                                open={
+                                                                    addSlotCardOpen ===
+                                                                    course.id
+                                                                }
+                                                                onOpenChange={(
+                                                                    open
+                                                                ) =>
+                                                                    open
+                                                                        ? openAddSlotCard(
+                                                                              course
+                                                                          )
+                                                                        : closeAddSlotCard()
+                                                                }
+                                                            >
+                                                                <PopoverTrigger
+                                                                    asChild
+                                                                >
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-8 px-3 flex items-center justify-center"
+                                                                    >
+                                                                        Add Time
+                                                                        Slot
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-80 p-4">
+                                                                    <div className="space-y-4">
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium">
+                                                                                Day
+                                                                            </label>
+                                                                            <Select
+                                                                                value={
+                                                                                    addSlotCardDay
+                                                                                }
+                                                                                onValueChange={
+                                                                                    setAddSlotCardDay
+                                                                                }
+                                                                            >
+                                                                                <SelectTrigger className="h-8 flex items-center justify-between">
+                                                                                    <SelectValue
+                                                                                        placeholder="Select day"
+                                                                                        className="flex-1 text-left"
+                                                                                    />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {DAYS.map(
+                                                                                        (
+                                                                                            day
+                                                                                        ) => (
+                                                                                            <SelectItem
+                                                                                                key={
+                                                                                                    day
+                                                                                                }
+                                                                                                value={
+                                                                                                    day
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    day
+                                                                                                }
+                                                                                            </SelectItem>
+                                                                                        )
+                                                                                    )}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-2 gap-4">
+                                                                            <div className="space-y-2">
+                                                                                <label className="text-sm font-medium">
+                                                                                    Start
+                                                                                    Time
+                                                                                </label>
+                                                                                <input
+                                                                                    type="time"
+                                                                                    className="w-full border rounded px-2 py-1"
+                                                                                    value={
+                                                                                        addSlotCardStart
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e
+                                                                                    ) =>
+                                                                                        setAddSlotCardStart(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <label className="text-sm font-medium">
+                                                                                    End
+                                                                                    Time
+                                                                                </label>
+                                                                                <input
+                                                                                    type="time"
+                                                                                    className="w-full border rounded px-2 py-1"
+                                                                                    value={
+                                                                                        addSlotCardEnd
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e
+                                                                                    ) =>
+                                                                                        setAddSlotCardEnd(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-end gap-2 pt-2">
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                onClick={
+                                                                                    closeAddSlotCard
+                                                                                }
+                                                                            >
+                                                                                Cancel
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="default"
+                                                                                size="sm"
+                                                                                onClick={() =>
+                                                                                    handleSaveAddSlotCard(
+                                                                                        course
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                Save
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                                                onClick={() =>
+                                                                    course.id &&
+                                                                    handleDeleteSchedule(
+                                                                        course.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {sorted.length === 0 && (
+                                            <p className="text-sm text-gray-500 py-2">
+                                                No courses scheduled
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-
-                    {/* Weekly Schedule */}
-                    <div className="space-y-6">
-                        {DAYS.map((day) => {
-                            const sorted = (coursesByDay[day] || [])
-                                .slice()
-                                .sort(
-                                    (a, b) =>
-                                        timeToMinutes(a.startTime) -
-                                        timeToMinutes(b.startTime)
-                                );
-                            const overlaps: Set<string> = new Set();
-                            for (let i = 1; i < sorted.length; ++i) {
-                                const prev = sorted[i - 1];
-                                const curr = sorted[i];
-                                if (
-                                    timeToMinutes(curr.startTime) <
-                                    timeToMinutes(prev.endTime)
-                                ) {
-                                    overlaps.add(prev.id!);
-                                    overlaps.add(curr.id!);
-                                }
-                            }
-                            return (
-                                <div key={day} className="space-y-4">
-                                    <h3 className="text-lg font-semibold border-b pb-2">
-                                        {day}
-                                    </h3>
-                                    <div className="grid gap-4">
-                                        {sorted.map((course) => (
-                                            <div
-                                                key={course.id}
-                                                className={`flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
-                                            >
-                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                    <div className="min-w-0">
-                                                        <h3 className="font-medium truncate">
-                                                            {course.courseName}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                                                            <Clock className="h-4 w-4 flex-shrink-0" />
-                                                            <span className="truncate">
-                                                                {
-                                                                    course.startTime
-                                                                }{" "}
-                                                                -{" "}
-                                                                {course.endTime}
-                                                            </span>
-                                                            <span className="text-xs text-gray-500">
-                                                                (
-                                                                {formatDuration(
-                                                                    course.startTime,
-                                                                    course.endTime
-                                                                )}
-                                                                )
-                                                            </span>
-                                                            {overlaps.has(
-                                                                course.id!
-                                                            ) && (
-                                                                <span
-                                                                    className="flex items-center text-red-600 ml-2"
-                                                                    title="This time slot overlaps with another."
-                                                                >
-                                                                    <AlertTriangle className="h-4 w-4 mr-1" />
-                                                                    Overlap
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <Popover
-                                                            open={
-                                                                editingCourseId ===
-                                                                course.id
-                                                            }
-                                                            onOpenChange={(
-                                                                open
-                                                            ) =>
-                                                                open
-                                                                    ? openEditPopover(
-                                                                          course
-                                                                      )
-                                                                    : closeEditPopover()
-                                                            }
-                                                        >
-                                                            <PopoverTrigger
-                                                                asChild
-                                                            >
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 px-3 flex items-center justify-center"
-                                                                >
-                                                                    Edit Time
-                                                                    <ChevronDown className="ml-2 h-4 w-4" />
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-4">
-                                                                <div className="space-y-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-sm font-medium">
-                                                                            Day
-                                                                        </label>
-                                                                        <Select
-                                                                            value={
-                                                                                editDay
-                                                                            }
-                                                                            onValueChange={
-                                                                                setEditDay
-                                                                            }
-                                                                        >
-                                                                            <SelectTrigger className="h-8 flex items-center justify-between">
-                                                                                <SelectValue
-                                                                                    placeholder="Select day"
-                                                                                    className="flex-1 text-left"
-                                                                                />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                {DAYS.map(
-                                                                                    (
-                                                                                        d
-                                                                                    ) => (
-                                                                                        <SelectItem
-                                                                                            key={
-                                                                                                d
-                                                                                            }
-                                                                                            value={
-                                                                                                d
-                                                                                            }
-                                                                                        >
-                                                                                            {
-                                                                                                d
-                                                                                            }
-                                                                                        </SelectItem>
-                                                                                    )
-                                                                                )}
-                                                                            </SelectContent>
-                                                                        </Select>
-                                                                    </div>
-                                                                    <div className="grid grid-cols-2 gap-4">
-                                                                        <div className="space-y-2">
-                                                                            <label className="text-sm font-medium">
-                                                                                Start
-                                                                                Time
-                                                                            </label>
-                                                                            <input
-                                                                                type="time"
-                                                                                className="w-full border rounded px-2 py-1"
-                                                                                value={
-                                                                                    editStartTime
-                                                                                }
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) =>
-                                                                                    setEditStartTime(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <label className="text-sm font-medium">
-                                                                                End
-                                                                                Time
-                                                                            </label>
-                                                                            <input
-                                                                                type="time"
-                                                                                className="w-full border rounded px-2 py-1"
-                                                                                value={
-                                                                                    editEndTime
-                                                                                }
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) =>
-                                                                                    setEditEndTime(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex justify-end pt-2">
-                                                                        <Button
-                                                                            variant="default"
-                                                                            size="sm"
-                                                                            onClick={() =>
-                                                                                handleSaveEdit(
-                                                                                    course.id!
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            Save
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                        <Popover
-                                                            open={
-                                                                addSlotCardOpen ===
-                                                                course.id
-                                                            }
-                                                            onOpenChange={(
-                                                                open
-                                                            ) =>
-                                                                open
-                                                                    ? openAddSlotCard(
-                                                                          course
-                                                                      )
-                                                                    : closeAddSlotCard()
-                                                            }
-                                                        >
-                                                            <PopoverTrigger
-                                                                asChild
-                                                            >
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 px-3 flex items-center justify-center"
-                                                                >
-                                                                    Add Time
-                                                                    Slot
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-4">
-                                                                <div className="space-y-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-sm font-medium">
-                                                                            Day
-                                                                        </label>
-                                                                        <Select
-                                                                            value={
-                                                                                addSlotCardDay
-                                                                            }
-                                                                            onValueChange={
-                                                                                setAddSlotCardDay
-                                                                            }
-                                                                        >
-                                                                            <SelectTrigger className="h-8 flex items-center justify-between">
-                                                                                <SelectValue
-                                                                                    placeholder="Select day"
-                                                                                    className="flex-1 text-left"
-                                                                                />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                {DAYS.map(
-                                                                                    (
-                                                                                        day
-                                                                                    ) => (
-                                                                                        <SelectItem
-                                                                                            key={
-                                                                                                day
-                                                                                            }
-                                                                                            value={
-                                                                                                day
-                                                                                            }
-                                                                                        >
-                                                                                            {
-                                                                                                day
-                                                                                            }
-                                                                                        </SelectItem>
-                                                                                    )
-                                                                                )}
-                                                                            </SelectContent>
-                                                                        </Select>
-                                                                    </div>
-                                                                    <div className="grid grid-cols-2 gap-4">
-                                                                        <div className="space-y-2">
-                                                                            <label className="text-sm font-medium">
-                                                                                Start
-                                                                                Time
-                                                                            </label>
-                                                                            <input
-                                                                                type="time"
-                                                                                className="w-full border rounded px-2 py-1"
-                                                                                value={
-                                                                                    addSlotCardStart
-                                                                                }
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) =>
-                                                                                    setAddSlotCardStart(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <label className="text-sm font-medium">
-                                                                                End
-                                                                                Time
-                                                                            </label>
-                                                                            <input
-                                                                                type="time"
-                                                                                className="w-full border rounded px-2 py-1"
-                                                                                value={
-                                                                                    addSlotCardEnd
-                                                                                }
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) =>
-                                                                                    setAddSlotCardEnd(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex justify-end gap-2 pt-2">
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            onClick={
-                                                                                closeAddSlotCard
-                                                                            }
-                                                                        >
-                                                                            Cancel
-                                                                        </Button>
-                                                                        <Button
-                                                                            variant="default"
-                                                                            size="sm"
-                                                                            onClick={() =>
-                                                                                handleSaveAddSlotCard(
-                                                                                    course
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            Save
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                                                            onClick={() =>
-                                                                course.id &&
-                                                                handleDeleteSchedule(
-                                                                    course.id
-                                                                )
-                                                            }
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {sorted.length === 0 && (
-                                        <p className="text-sm text-gray-500 py-2">
-                                            No courses scheduled
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </CardContent>
+                )}
+            </div>
         </Card>
     );
 }

@@ -1465,6 +1465,11 @@ export default function PlannerPage() {
                                             Track your progress through the
                                             progress bars and credit counters
                                         </li>
+                                        <li>
+                                            Add your courses to the Course
+                                            Schedule section to plan your weekly
+                                            timetable
+                                        </li>
                                     </ol>
                                 </div>
                                 <div className="space-y-2">
@@ -1483,6 +1488,10 @@ export default function PlannerPage() {
                                         <li>
                                             Mark courses as "taken" if you've
                                             already completed them
+                                        </li>
+                                        <li>
+                                            Selected Courses and Course Schedule
+                                            are collapsible
                                         </li>
                                         <li>
                                             Your plan will be automatically
