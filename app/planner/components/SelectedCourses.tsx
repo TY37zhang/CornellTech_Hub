@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Select,
     SelectContent,
@@ -21,6 +22,7 @@ interface Course {
     department: string;
     semester: string;
     year: number;
+    taken?: boolean;
 }
 
 interface Requirement {
@@ -34,6 +36,7 @@ interface SelectedCoursesProps {
     requirements: { [key: string]: Requirement };
     onAddToRequirement: (course: Course, requirementKey: string | null) => void;
     coursePlan: { [key: string]: Course[] };
+    onCourseTaken: (course: Course, taken: boolean) => void;
 }
 
 export default function SelectedCourses({
@@ -42,6 +45,7 @@ export default function SelectedCourses({
     requirements,
     onAddToRequirement,
     coursePlan,
+    onCourseTaken,
 }: SelectedCoursesProps) {
     // Find which requirement a course is currently assigned to
     const findCourseAssignment = (courseId: string): string | null => {
@@ -88,6 +92,26 @@ export default function SelectedCourses({
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`taken-${course.id}`}
+                                                checked={course.taken}
+                                                onCheckedChange={(checked) =>
+                                                    onCourseTaken(
+                                                        course,
+                                                        checked as boolean
+                                                    )
+                                                }
+                                            />
+                                            <label
+                                                htmlFor={`taken-${course.id}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                {course.taken
+                                                    ? "Taken"
+                                                    : "Taken?"}
+                                            </label>
+                                        </div>
                                         <Select
                                             value={currentAssignment || "none"}
                                             onValueChange={(value) => {
@@ -131,8 +155,7 @@ export default function SelectedCourses({
                                         </Select>
                                         <Button
                                             variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                            size="sm"
                                             onClick={() =>
                                                 onRemoveCourse(course)
                                             }

@@ -25,6 +25,7 @@ export async function GET(request: Request) {
                 cp.year,
                 cp.status,
                 cp.notes,
+                cp.taken,
                 cp.created_at,
                 cp.updated_at,
                 c.id,
@@ -58,6 +59,7 @@ export async function GET(request: Request) {
                 concentrationCore: plan.concentration_core,
                 concentrationElective: plan.concentration_elective,
                 professorId: plan.professor_id,
+                taken: plan.taken,
             },
             requirementType: plan.requirement_type,
             semester: plan.semester,
@@ -97,6 +99,7 @@ export async function POST(request: Request) {
             year,
             status = "planned",
             notes = "",
+            taken = false,
         } = body;
 
         // Create a new course plan
@@ -108,7 +111,8 @@ export async function POST(request: Request) {
                 semester,
                 year,
                 status,
-                notes
+                notes,
+                taken
             )
             VALUES (
                 ${session.user.id},
@@ -117,7 +121,8 @@ export async function POST(request: Request) {
                 ${semester},
                 ${year},
                 ${status},
-                ${notes}
+                ${notes},
+                ${taken}
             )
             RETURNING id
         `;
@@ -133,6 +138,7 @@ export async function POST(request: Request) {
                 cp.year,
                 cp.status,
                 cp.notes,
+                cp.taken,
                 cp.created_at,
                 cp.updated_at,
                 c.id,
@@ -164,6 +170,7 @@ export async function POST(request: Request) {
                 concentrationCore: createdPlan[0].concentration_core,
                 concentrationElective: createdPlan[0].concentration_elective,
                 professorId: createdPlan[0].professor_id,
+                taken: createdPlan[0].taken,
             },
             requirementType: createdPlan[0].requirement_type,
             semester: createdPlan[0].semester,
@@ -196,7 +203,8 @@ export async function PUT(request: Request) {
         }
 
         const body = await request.json();
-        const { id, requirementType, semester, year, status, notes } = body;
+        const { id, requirementType, semester, year, status, notes, taken } =
+            body;
 
         // Update the course plan
         await sql`
@@ -207,6 +215,7 @@ export async function PUT(request: Request) {
                 year = ${year},
                 status = ${status},
                 notes = ${notes},
+                taken = ${taken},
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ${id} AND user_id = ${session.user.id}
         `;

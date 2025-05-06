@@ -74,7 +74,7 @@ const prisma = {
                     createdAt: row.created_at, // Convert snake_case to camelCase
                 }));
             } catch (error) {
-                console.error("Error in prisma.post.findMany:", error);
+                console.error("Error in post.findMany:", error);
                 throw error;
             }
         },
@@ -93,7 +93,7 @@ const prisma = {
 
                 return { success: true };
             } catch (error) {
-                console.error("Error in prisma.post.delete:", error);
+                console.error("Error in post.delete:", error);
                 throw error;
             }
         },
@@ -181,7 +181,7 @@ const prisma = {
 
                 return reviews;
             } catch (error) {
-                console.error("Error in prisma.review.findMany:", error);
+                console.error("Error in review.findMany:", error);
                 throw error;
             }
         },

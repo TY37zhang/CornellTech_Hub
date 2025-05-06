@@ -31,6 +31,7 @@ interface Course {
     department: string;
     semester: string;
     year: number;
+    taken?: boolean;
 }
 
 interface Requirement {
@@ -595,6 +596,17 @@ export default function PlannerPage() {
             const data = await response.json();
             console.log("Loaded course plans:", data);
 
+            // Always rebuild selectedCourses from backend data to preserve 'taken' property and ensure uniqueness by id
+            const uniqueCoursesMap = new Map();
+            data.forEach((plan: any) => {
+                const existing = uniqueCoursesMap.get(plan.course.id);
+                // Prefer 'taken: true' if any instance is true
+                if (!existing || plan.course.taken) {
+                    uniqueCoursesMap.set(plan.course.id, plan.course);
+                }
+            });
+            setSelectedCourses(Array.from(uniqueCoursesMap.values()));
+
             // Convert the flat list into the coursePlan structure and store plan IDs
             const newCoursePlan: { [key: string]: Course[] } = {};
             const coursePlanIds: { [courseId: string]: string } = {};
@@ -610,21 +622,7 @@ export default function PlannerPage() {
 
             // Store the plan IDs in state
             setCoursePlanIds(coursePlanIds);
-
             setCoursePlan(newCoursePlan);
-
-            // Add courses to selectedCourses if not already there
-            const newSelectedCourses = [...selectedCourses];
-            const existingCourseIds = new Set(
-                newSelectedCourses.map((c) => c.id)
-            );
-            data.forEach((plan: any) => {
-                if (!existingCourseIds.has(plan.course.id)) {
-                    newSelectedCourses.push(plan.course);
-                    existingCourseIds.add(plan.course.id);
-                }
-            });
-            setSelectedCourses(newSelectedCourses);
         } catch (error) {
             console.error("Error loading course plans:", error);
             toast({
@@ -1238,6 +1236,65 @@ export default function PlannerPage() {
         }
     };
 
+    const handleCourseTaken = async (course: Course, taken: boolean) => {
+        try {
+            setSelectedCourses((prevCourses) =>
+                prevCourses.map((c) =>
+                    c.id === course.id ? { ...c, taken } : c
+                )
+            );
+            setCoursePlan((prevPlan) => {
+                const newPlan = { ...prevPlan };
+                for (const key in newPlan) {
+                    newPlan[key] = newPlan[key].map((c) =>
+                        c.id === course.id ? { ...c, taken } : c
+                    );
+                }
+                return newPlan;
+            });
+
+            const planId = coursePlanIds[course.id];
+            if (planId) {
+                // Find the requirementType for this course
+                let planRequirementType = null;
+                for (const [reqKey, courses] of Object.entries(coursePlan)) {
+                    if (courses.some((c) => c.id === course.id)) {
+                        planRequirementType = reqKey;
+                        break;
+                    }
+                }
+                // Use course fields for semester/year, and default status/notes
+                const planSemester = course.semester;
+                const planYear = course.year;
+                const planStatus = "planned";
+                const planNotes = "";
+
+                const response = await fetch(`/api/planner?id=${planId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: planId,
+                        requirementType: planRequirementType,
+                        semester: planSemester,
+                        year: planYear,
+                        status: planStatus,
+                        notes: planNotes,
+                        taken,
+                    }),
+                });
+                if (!response.ok)
+                    throw new Error("Failed to update course status");
+            }
+        } catch (error) {
+            console.error("Error updating course status:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update course status",
+                variant: "destructive",
+            });
+        }
+    };
+
     if (isLoading) {
         return <div className="container mx-auto py-8">Loading...</div>;
     }
@@ -1591,10 +1648,15 @@ export default function PlannerPage() {
                                 }
                                 onAddToRequirement={handleAddToRequirement}
                                 coursePlan={coursePlan}
+                                onCourseTaken={handleCourseTaken}
                             />
                         </div>
 
-                        <CourseSchedule selectedCourses={selectedCourses} />
+                        <CourseSchedule
+                            selectedCourses={selectedCourses.filter(
+                                (course) => !course.taken
+                            )}
+                        />
                     </div>
                 </div>
             </div>
