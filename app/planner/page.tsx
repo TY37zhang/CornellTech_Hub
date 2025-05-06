@@ -12,7 +12,14 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import CourseSelector from "./components/CourseSelector";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Calendar, Search, GraduationCap } from "lucide-react";
+import {
+    BookOpen,
+    Calendar,
+    Search,
+    GraduationCap,
+    HelpCircle,
+    X,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +28,22 @@ import RequirementAssignment from "./components/RequirementAssignment";
 import CourseSchedule from "./components/CourseSchedule";
 import AdditionalQuestions from "./components/AdditionalQuestions";
 import Link from "next/link";
+
+/**
+ * How to Use the Planner:
+ * 1. Select your program from the dropdown menu
+ * 2. Use the course search to find and add courses to your plan
+ * 3. Assign courses to specific requirements by dragging them to the appropriate section
+ * 4. Track your progress through the progress bars and credit counters
+ * 5. Mark courses as "taken" if you've already completed them
+ * 6. Your plan will be automatically saved as you make changes
+ *
+ * Tips:
+ * - Hover over requirement sections to see detailed descriptions
+ * - Use the search bar to quickly find specific courses
+ * - Check the additional requirements section for important program rules
+ * - The progress bars show your completion status for each requirement
+ */
 
 interface Course {
     id: string;
@@ -522,6 +545,7 @@ export default function PlannerPage() {
     const [hasTechie5901, setHasTechie5901] = useState(false);
     const selectedCoursesRef = useRef<HTMLDivElement>(null);
     const coursePlanRef = useRef<HTMLDivElement>(null);
+    const [showHelp, setShowHelp] = useState(true);
 
     // Add scroll position persistence
     useEffect(() => {
@@ -1365,6 +1389,16 @@ export default function PlannerPage() {
 
     return (
         <div>
+            {/* Help Icon Floating Button (when help is hidden) */}
+            {!showHelp && (
+                <button
+                    className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors"
+                    aria-label="Show How to Use the Planner"
+                    onClick={() => setShowHelp(true)}
+                >
+                    <HelpCircle className="h-6 w-6" />
+                </button>
+            )}
             {/* Top Section with Gradient Background */}
             <div className="w-full bg-gradient-to-b from-pink-50 to-white">
                 <div className="container mx-auto p-4">
@@ -1378,7 +1412,6 @@ export default function PlannerPage() {
                             your program requirements.
                         </p>
                     </div>
-
                     {/* Program Info */}
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-3">
@@ -1390,9 +1423,77 @@ export default function PlannerPage() {
                     </div>
                 </div>
             </div>
-
             {/* Main Content */}
             <div className="container mx-auto p-4 space-y-6">
+                {/* Help Section (hidable) */}
+                {showHelp && (
+                    <Card className="relative p-6 bg-blue-50 border-blue-200">
+                        <button
+                            className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
+                            aria-label="Hide How to Use the Planner"
+                            onClick={() => setShowHelp(false)}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        <CardHeader className="pb-0">
+                            <CardTitle className="flex items-center gap-2 justify-center text-center w-full">
+                                <BookOpen className="h-5 w-5 text-blue-600" />
+                                How to Use the Planner
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                                <div className="space-y-2">
+                                    <h3 className="font-medium">
+                                        Getting Started
+                                    </h3>
+                                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                                        <li>
+                                            Select your program from the
+                                            dropdown menu in the settings page
+                                        </li>
+                                        <li>
+                                            Use the course search to find and
+                                            add courses to your plan
+                                        </li>
+                                        <li>
+                                            Assign courses to specific
+                                            requirements using the dropdown menu
+                                            on the right
+                                        </li>
+                                        <li>
+                                            Track your progress through the
+                                            progress bars and credit counters
+                                        </li>
+                                    </ol>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="font-medium">
+                                        Tips & Tricks
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                        <li>
+                                            Hover over requirement sections to
+                                            see detailed descriptions
+                                        </li>
+                                        <li>
+                                            Use the search bar to quickly find
+                                            specific courses
+                                        </li>
+                                        <li>
+                                            Mark courses as "taken" if you've
+                                            already completed them
+                                        </li>
+                                        <li>
+                                            Your plan will be automatically
+                                            saved as you make changes
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
                 {/* Overall Progress */}
                 <Card className="p-6">
                     <div className="space-y-4">
@@ -1412,7 +1513,6 @@ export default function PlannerPage() {
                         />
                     </div>
                 </Card>
-
                 {/* Main Content - Two Column Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Left Column - Categories */}
@@ -1425,7 +1525,7 @@ export default function PlannerPage() {
                         ).map(([key, requirement]) => (
                             <Card
                                 key={key}
-                                className="p-4 hover:shadow-md transition-shadow"
+                                className="p-4 hover:shadow-md transition-shadow group"
                             >
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
@@ -1449,10 +1549,9 @@ export default function PlannerPage() {
                                         )}
                                         className="h-2"
                                     />
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
                                         {requirement.description}
                                     </p>
-
                                     {/* Selected Courses for this category */}
                                     {(coursePlan[key] || []).length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -1482,7 +1581,6 @@ export default function PlannerPage() {
                                 </div>
                             </Card>
                         ))}
-
                         {/* Additional Questions Card */}
                         <AdditionalQuestions
                             onEthicsCourseChange={handleEthicsCourseChange}
@@ -1490,7 +1588,6 @@ export default function PlannerPage() {
                             selectedCourses={selectedCourses}
                             coursePlan={coursePlan}
                         />
-
                         {/* Additional Requirements Card */}
                         {programRequirements[userProgram]
                             .additionalRequirements && (
@@ -1518,7 +1615,6 @@ export default function PlannerPage() {
                             </Card>
                         )}
                     </div>
-
                     {/* Right Column - Course Search and Management */}
                     <div className="md:col-span-8 space-y-6">
                         {/* Search Section */}
@@ -1535,7 +1631,6 @@ export default function PlannerPage() {
                                         className="flex-1"
                                     />
                                 </div>
-
                                 {/* Course Selector */}
                                 <CourseSelector
                                     requirement={{
@@ -1636,7 +1731,6 @@ export default function PlannerPage() {
                                 />
                             </div>
                         </Card>
-
                         {/* Selected Courses List */}
                         <div ref={selectedCoursesRef}>
                             <SelectedCourses
@@ -1651,7 +1745,6 @@ export default function PlannerPage() {
                                 onCourseTaken={handleCourseTaken}
                             />
                         </div>
-
                         <CourseSchedule
                             selectedCourses={selectedCourses.filter(
                                 (course) => !course.taken
