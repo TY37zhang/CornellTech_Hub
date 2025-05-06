@@ -203,6 +203,16 @@ export default function ThreadContent({
         fetchRelatedThreads();
     }, [threadId, threadData.category]);
 
+    // Track post view on mount
+    useEffect(() => {
+        if (!threadId) return;
+        fetch("/api/forum/views", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ post_id: threadId }),
+        });
+    }, [threadId]);
+
     const handleAddComment = async () => {
         if (!session?.user) {
             // Redirect to login if not authenticated
