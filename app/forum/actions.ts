@@ -146,6 +146,8 @@ interface ForumPostResponse {
     like_count: number;
     view_count: number;
     tags: string[];
+    author_post_count: number;
+    author_total_likes: number;
 }
 
 export async function getForumPosts(
@@ -364,7 +366,15 @@ export async function getForumPostById(
                     COUNT(DISTINCT fc2.id) as reply_count,
                     COUNT(DISTINCT fl.id) as like_count,
                     COUNT(DISTINCT fv.id) as view_count,
-                    ARRAY_AGG(DISTINCT fpt.tag) as tags
+                    ARRAY_AGG(DISTINCT fpt.tag) as tags,
+                    (
+                        SELECT COUNT(*) FROM forum_posts fp2 WHERE fp2.author_id = u.id AND fp2.status = 'active'
+                    ) as author_post_count,
+                    (
+                        SELECT COUNT(*) FROM forum_likes fl2
+                        JOIN forum_posts fp2 ON fl2.post_id = fp2.id
+                        WHERE fp2.author_id = u.id
+                    ) as author_total_likes
                 FROM forum_posts fp
                 JOIN users u ON fp.author_id = u.id
                 JOIN forum_categories fc ON fp.category_id = fc.id
@@ -393,7 +403,15 @@ export async function getForumPostById(
                     COUNT(DISTINCT fc2.id) as reply_count,
                     COUNT(DISTINCT fl.id) as like_count,
                     COUNT(DISTINCT fv.id) as view_count,
-                    ARRAY_AGG(DISTINCT fpt.tag) as tags
+                    ARRAY_AGG(DISTINCT fpt.tag) as tags,
+                    (
+                        SELECT COUNT(*) FROM forum_posts fp2 WHERE fp2.author_id = u.id AND fp2.status = 'active'
+                    ) as author_post_count,
+                    (
+                        SELECT COUNT(*) FROM forum_likes fl2
+                        JOIN forum_posts fp2 ON fl2.post_id = fp2.id
+                        WHERE fp2.author_id = u.id
+                    ) as author_total_likes
                 FROM forum_posts fp
                 JOIN users u ON fp.author_id = u.id
                 JOIN forum_categories fc ON fp.category_id = fc.id
@@ -432,6 +450,8 @@ export async function getForumPostById(
             like_count: parseInt(post.like_count),
             view_count: parseInt(post.view_count),
             tags: post.tags.filter(Boolean), // Remove null values from tags array
+            author_post_count: parseInt(post.author_post_count) || 0,
+            author_total_likes: parseInt(post.author_total_likes) || 0,
         };
     } catch (error) {
         console.error("Error fetching forum post:", error);

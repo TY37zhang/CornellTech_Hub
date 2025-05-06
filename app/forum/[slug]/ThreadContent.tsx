@@ -399,12 +399,9 @@ export default function ThreadContent({
                     <p className="text-sm text-red-500 mt-2">{commentError}</p>
                 )}
             </CardContent>
-            <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setNewComment("")}>
-                    Cancel
-                </Button>
+            <CardFooter className="flex justify-end">
                 <Button onClick={handleAddComment} disabled={submitting}>
-                    {submitting ? "Posting..." : "Post Reply"}
+                    {submitting ? "Posting..." : "Post"}
                 </Button>
             </CardFooter>
         </Card>
