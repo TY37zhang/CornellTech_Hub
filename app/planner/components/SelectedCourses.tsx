@@ -12,7 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 
 interface Course {
@@ -62,6 +62,17 @@ export default function SelectedCourses({
     // Collapsible state
     const [collapsed, setCollapsed] = useState(false);
     const [showTakenCourses, setShowTakenCourses] = useState(true);
+
+    // Persist toggle state in localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem("showTakenCourses");
+        if (stored !== null) {
+            setShowTakenCourses(stored === "true");
+        }
+    }, []);
+    useEffect(() => {
+        localStorage.setItem("showTakenCourses", String(showTakenCourses));
+    }, [showTakenCourses]);
 
     return (
         <Card className="p-6 w-full overflow-hidden">
