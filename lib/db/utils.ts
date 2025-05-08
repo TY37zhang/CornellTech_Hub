@@ -15,7 +15,6 @@ export async function executeQuery<T>(
         const result = await pool.query(query, params);
         return result;
     } catch (error) {
-        console.error("Database query error:", error);
         throw error;
     }
 }
@@ -29,7 +28,6 @@ export async function executeServerlessQuery<T>(
         const result = await sql(query, params);
         return result;
     } catch (error) {
-        console.error("Database query error:", error);
         throw error;
     }
 }

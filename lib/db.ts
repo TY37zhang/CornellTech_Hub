@@ -26,10 +26,8 @@ export async function isDatabaseConnected() {
 export async function testDatabaseConnection() {
     try {
         await sql`SELECT 1`;
-        console.log("Database connection successful");
         return true;
     } catch (error) {
-        console.error("Database connection test failed:", error);
         return false;
     }
 }

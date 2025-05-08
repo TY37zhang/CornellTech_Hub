@@ -11,7 +11,6 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        console.log("Received request body:", body);
         const {
             requirementType,
             selectedCourseId,
@@ -39,10 +38,6 @@ export async function POST(req: Request) {
 
         try {
             // First delete any existing requirements of this type for the user
-            console.log("Deleting existing requirement:", {
-                userId: session.user.id,
-                requirementType,
-            });
             await executeQuery(
                 `DELETE FROM course_special_requirements 
                  WHERE user_id = $1 AND requirement_type = $2`,
@@ -51,15 +46,6 @@ export async function POST(req: Request) {
 
             // Then insert the new requirement if it exists
             if (selectedCourseId || deductedFromCategory || addedToCategory) {
-                console.log("Inserting new requirement:", {
-                    userId: session.user.id,
-                    requirementType,
-                    selectedCourseId,
-                    deductedFromCategory,
-                    creditAmount,
-                    addedToCategory,
-                });
-
                 // Validate credit amount
                 if (
                     creditAmount &&
@@ -110,12 +96,10 @@ export async function GET(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        console.log("Fetching requirements for user:", session.user.id);
         const result = await executeQuery(
             `SELECT * FROM course_special_requirements WHERE user_id = $1`,
             [session.user.id]
         );
-        console.log("Found requirements:", result.rows);
 
         return NextResponse.json(result.rows);
     } catch (error) {

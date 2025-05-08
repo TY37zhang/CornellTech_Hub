@@ -665,10 +665,8 @@ export default function PlannerPage() {
         try {
             const response = await fetch("/api/user");
             const data = await response.json();
-            console.log("API response data:", data);
 
             if (!data.program) {
-                console.log("No program found in API response");
                 toast({
                     title: "Program not set",
                     description:
@@ -676,11 +674,9 @@ export default function PlannerPage() {
                     variant: "destructive",
                 });
             } else {
-                console.log("Setting program from API:", data.program);
                 setUserProgram(data.program);
             }
         } catch (error) {
-            console.error("Error fetching user program:", error);
             toast({
                 title: "Error",
                 description: "Failed to load your program information.",

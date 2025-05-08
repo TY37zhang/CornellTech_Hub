@@ -29,11 +29,6 @@ export async function GET() {
 
             return NextResponse.json(result[0]);
         } catch (dbError) {
-            console.error("Database error in GET /api/user:", {
-                error: dbError,
-                email: session.user.email,
-                stack: dbError instanceof Error ? dbError.stack : undefined,
-            });
             return new NextResponse(
                 JSON.stringify({
                     error: "Database error",
@@ -46,10 +41,6 @@ export async function GET() {
             );
         }
     } catch (error) {
-        console.error("Error in GET /api/user:", {
-            error,
-            stack: error instanceof Error ? error.stack : undefined,
-        });
         return new NextResponse(
             JSON.stringify({
                 error: "Server error",
@@ -86,12 +77,6 @@ export async function PATCH(req: Request) {
 
             return NextResponse.json(user[0]);
         } catch (dbError) {
-            console.error("Database error in PATCH /api/user:", {
-                error: dbError,
-                email: session.user.email,
-                data: { name, program },
-                stack: dbError instanceof Error ? dbError.stack : undefined,
-            });
             return new NextResponse(
                 JSON.stringify({
                     error: "Database error",
@@ -104,10 +89,6 @@ export async function PATCH(req: Request) {
             );
         }
     } catch (error) {
-        console.error("Error in PATCH /api/user:", {
-            error,
-            stack: error instanceof Error ? error.stack : undefined,
-        });
         return new NextResponse(
             JSON.stringify({
                 error: "Server error",

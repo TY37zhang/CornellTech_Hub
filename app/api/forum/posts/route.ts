@@ -6,12 +6,8 @@ export async function GET(request: Request) {
     try {
         // Check database connection first
         if (!isDatabaseConnected()) {
-            console.log(
-                "Database connection not detected, testing connection..."
-            );
             const isConnected = await testDatabaseConnection();
             if (!isConnected) {
-                console.error("Database connection test failed");
                 return NextResponse.json(
                     {
                         success: false,
@@ -48,11 +44,6 @@ export async function GET(request: Request) {
             );
         }
 
-        console.log("Fetching forum posts with params:", {
-            search,
-            limit,
-            offset,
-        });
         const postsData = await getForumPosts(search, limit, offset);
 
         if (!postsData || !postsData.posts) {
@@ -65,15 +56,8 @@ export async function GET(request: Request) {
             );
         }
 
-        console.log("Successfully fetched forum posts:", {
-            total: postsData.total,
-            count: postsData.posts.length,
-        });
-
         return NextResponse.json({ success: true, ...postsData });
     } catch (error) {
-        console.error("Error fetching forum posts:", error);
-
         // Determine the appropriate error message and status code
         let errorMessage = "Failed to fetch forum posts";
         let statusCode = 500;
@@ -86,11 +70,6 @@ export async function GET(request: Request) {
                 errorMessage = error.message;
                 statusCode = 400;
             }
-            console.error("Error details:", {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-            });
         }
 
         return NextResponse.json(
