@@ -13,15 +13,14 @@ export async function validateRequest(
         // Clone the request before reading the body
         const clonedRequest = request.clone();
         const body = await clonedRequest.json();
-        let validationSchema;
+        let validationSchema: z.ZodType;
 
         if (subSchema) {
-            validationSchema =
-                schemas[schema][
-                    subSchema as keyof (typeof schemas)[ValidationSchema]
-                ];
+            validationSchema = schemas[schema][
+                subSchema as keyof (typeof schemas)[ValidationSchema]
+            ] as z.ZodType;
         } else {
-            validationSchema = schemas[schema];
+            validationSchema = schemas[schema] as z.ZodType;
         }
 
         if (!validationSchema) {
@@ -83,7 +82,6 @@ export function validationMiddleware(
             referrer: request.referrer,
             referrerPolicy: request.referrerPolicy,
             signal: request.signal,
-            duplex: "half",
         });
 
         // Add validated data to the request

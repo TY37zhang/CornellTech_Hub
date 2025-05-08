@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
 
 interface Course {
     id: string;
@@ -60,31 +61,50 @@ export default function SelectedCourses({
 
     // Collapsible state
     const [collapsed, setCollapsed] = useState(false);
+    const [showTakenCourses, setShowTakenCourses] = useState(true);
 
     return (
         <Card className="p-6 w-full overflow-hidden">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <button
-                            type="button"
-                            aria-label={collapsed ? "Expand" : "Collapse"}
-                            onClick={() => setCollapsed((c) => !c)}
-                            className="focus:outline-none"
-                        >
-                            {collapsed ? (
-                                <ChevronRight className="w-5 h-5" />
-                            ) : (
-                                <ChevronDown className="w-5 h-5" />
-                            )}
-                        </button>
-                        Selected Courses
-                    </h3>
+                    <div className="flex items-center gap-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                            <button
+                                type="button"
+                                aria-label={collapsed ? "Expand" : "Collapse"}
+                                onClick={() => setCollapsed((c) => !c)}
+                                className="focus:outline-none"
+                            >
+                                {collapsed ? (
+                                    <ChevronRight className="w-5 h-5" />
+                                ) : (
+                                    <ChevronDown className="w-5 h-5" />
+                                )}
+                            </button>
+                            Selected Courses
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                            <Switch
+                                id="show-taken-courses"
+                                checked={showTakenCourses}
+                                onCheckedChange={setShowTakenCourses}
+                            />
+                            <label
+                                htmlFor="show-taken-courses"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                Display taken courses
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 {!collapsed && (
                     <div className="grid gap-2">
                         {selectedCourses
                             .slice()
+                            .filter(
+                                (course) => showTakenCourses || !course.taken
+                            )
                             .sort((a, b) => {
                                 // First sort by taken status (untaken first)
                                 if (!!a.taken !== !!b.taken) {
