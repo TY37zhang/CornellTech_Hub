@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,8 +22,63 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
+    // Add state for top courses
+    const [topCourses, setTopCourses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Forum posts state
+    const [forumPosts, setForumPosts] = useState<any[]>([]);
+    const [forumLoading, setForumLoading] = useState(true);
+    const [forumError, setForumError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchTopCourses = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const res = await fetch("/api/courses?sortBy=popular&limit=3");
+                if (!res.ok) throw new Error("Failed to fetch courses");
+                const data = await res.json();
+                setTopCourses(data.courses);
+            } catch (err) {
+                setError(
+                    err instanceof Error ? err.message : "An error occurred"
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTopCourses();
+    }, []);
+
+    useEffect(() => {
+        const fetchForumPosts = async () => {
+            try {
+                setForumLoading(true);
+                setForumError(null);
+                const res = await fetch("/api/forum/posts?limit=3");
+                if (!res.ok) throw new Error("Failed to fetch forum posts");
+                const data = await res.json();
+                if (!data.success)
+                    throw new Error(
+                        data.error || "Failed to fetch forum posts"
+                    );
+                setForumPosts(data.posts);
+            } catch (err) {
+                setForumError(
+                    err instanceof Error ? err.message : "An error occurred"
+                );
+            } finally {
+                setForumLoading(false);
+            }
+        };
+        fetchForumPosts();
+    }, []);
+
     return (
         <div className="flex min-h-screen flex-col">
             <main className="flex-1">
@@ -86,42 +143,39 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent className="pb-2">
                                     <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Machine Learning
-                                            </span>
-                                            <div className="flex items-center">
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 text-muted-foreground" />
+                                        {loading ? (
+                                            <div className="text-muted-foreground text-sm">
+                                                Loading...
                                             </div>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Product Studio
-                                            </span>
-                                            <div className="flex items-center">
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                        ) : error ? (
+                                            <div className="text-red-500 text-sm">
+                                                {error}
                                             </div>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Business Fundamentals
-                                            </span>
-                                            <div className="flex items-center">
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                                <Star className="h-4 w-4 text-muted-foreground" />
-                                            </div>
-                                        </div>
+                                        ) : (
+                                            topCourses.map((course) => (
+                                                <div
+                                                    className="flex items-center justify-between"
+                                                    key={course.id}
+                                                >
+                                                    <Link
+                                                        href={`/courses/${course.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {course.title}
+                                                    </Link>
+                                                    <div className="flex items-center">
+                                                        {[1, 2, 3, 4, 5].map(
+                                                            (i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    className={`h-4 w-4 ${i <= Math.round(course.rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+                                                                />
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </CardContent>
                                 <CardFooter className="flex justify-center">
@@ -149,30 +203,41 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent className="pb-2">
                                     <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Internship Tips
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                12 replies
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Housing in NYC
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                24 replies
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Startup Ideas
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                8 replies
-                                            </span>
-                                        </div>
+                                        {forumLoading ? (
+                                            <div className="text-muted-foreground text-sm">
+                                                Loading...
+                                            </div>
+                                        ) : forumError ? (
+                                            <div className="text-red-500 text-sm">
+                                                {forumError}
+                                            </div>
+                                        ) : (
+                                            forumPosts.map((post) => (
+                                                <div
+                                                    className="flex items-center justify-between"
+                                                    key={post.id}
+                                                >
+                                                    <Link
+                                                        href={`/forum/${post.id}`}
+                                                        className="font-medium hover:underline max-w-[70%] truncate"
+                                                        style={{
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
+                                                            display: "block",
+                                                        }}
+                                                    >
+                                                        {post.title}
+                                                    </Link>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {post.reply_count}{" "}
+                                                        replies
+                                                    </span>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </CardContent>
                                 <CardFooter className="flex justify-center">

@@ -58,7 +58,7 @@
     - **Shared Components:** Navbar, Footer, Sidebar, Cards, Buttons, Modals, Dialogs, Form elements, Toast notifications
     - **Page-Specific Components:**
         - Course Reviews: Review list, review form, rating display, filter/sort controls
-        - Academic Planner: Planner grid, requirement tracker, drag-and-drop course assignment, semester selector
+        - Academic Planner: Planner grid, requirement tracker, course assignment, course scheduling tool
         - Forum: Post list, post detail, comment thread, like/save buttons, tag chips, category navigation
         - User Profile: Profile card, avatar upload, program display, settings
     - **Layout Components:** Responsive containers, grid layouts, flex layouts, section wrappers
@@ -109,7 +109,7 @@
     - No ORM is used; all CRUD operations are implemented with raw SQL
 - **Third-party Integrations:**
     - **Cloudinary:** Image upload and hosting for user avatars and other media
-    - **Resend:** Email notifications (e.g., for forum replies, account actions)
+    - **Resend:** Email notifications (e.g., for forum replies, account actions, feedback/report)
     - **NextAuth.js with Google OAuth:** Secure authentication and session management, restricted to Cornell Google accounts
 - **Validation & Security:**
     - Input validation with Zod (where applicable)
