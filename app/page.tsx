@@ -159,7 +159,15 @@ export default function Dashboard() {
                                                 >
                                                     <Link
                                                         href={`/courses/${course.id}`}
-                                                        className="font-medium hover:underline"
+                                                        className="font-medium hover:underline max-w-[70%] truncate"
+                                                        style={{
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
+                                                            display: "block",
+                                                        }}
                                                     >
                                                         {course.title}
                                                     </Link>
