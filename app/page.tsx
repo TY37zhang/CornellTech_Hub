@@ -91,6 +91,11 @@ export default function Dashboard() {
                                         Cornell Tech Hub
                                     </h1>
                                     <p className="text-sm text-muted-foreground italic">
+                                        Mobile interface is not fully optimized
+                                        yet. Please stay tuned! <b>Best viewed on
+                                        desktop.</b>
+                                    </p>
+                                    <p className="text-sm text-muted-foreground italic">
                                         This is a student-built independent
                                         project and is not officially affiliated
                                         with Cornell Tech.
