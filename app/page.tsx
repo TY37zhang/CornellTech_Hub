@@ -22,7 +22,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function Dashboard() {
     // Add state for top courses
@@ -34,6 +34,10 @@ export default function Dashboard() {
     const [forumPosts, setForumPosts] = useState<any[]>([]);
     const [forumLoading, setForumLoading] = useState(true);
     const [forumError, setForumError] = useState<string | null>(null);
+
+    // Video preview state
+    const [showVideo, setShowVideo] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         const fetchTopCourses = async () => {
@@ -92,8 +96,8 @@ export default function Dashboard() {
                                     </h1>
                                     <p className="text-sm text-muted-foreground italic">
                                         Mobile interface is not fully optimized
-                                        yet. Please stay tuned! <b>Best viewed on
-                                        desktop.</b>
+                                        yet. Please stay tuned!{" "}
+                                        <b>Best viewed on desktop.</b>
                                     </p>
                                     <p className="text-sm text-muted-foreground italic">
                                         This is a student-built independent
@@ -113,15 +117,30 @@ export default function Dashboard() {
                                     </Button>
                                 </div> */}
                             </div>
-                            <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last">
-                                <video
-                                    src="/videos/We%20are%20Cornell%20Tech.mp4"
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
-                                    className="w-full h-full object-cover"
-                                />
+                            <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last relative">
+                                {showVideo ? (
+                                    <video
+                                        ref={videoRef}
+                                        src="/videos/We%20are%20Cornell%20Tech.mp4"
+                                        muted
+                                        playsInline
+                                        autoPlay
+                                        className="w-full h-full object-cover"
+                                        onCanPlay={() =>
+                                            videoRef.current?.play()
+                                        }
+                                        onEnded={() => setShowVideo(false)}
+                                    />
+                                ) : (
+                                    <Image
+                                        src="/images/DJI_0440.jpg"
+                                        alt="Cornell Tech Campus Preview"
+                                        fill
+                                        className="object-cover w-full h-full cursor-pointer"
+                                        style={{ zIndex: 1 }}
+                                        onClick={() => setShowVideo(true)}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
