@@ -153,8 +153,8 @@ export default function Dashboard() {
                         </h2>
                     </div>
                     <div className="mt-6">
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <Card>
+                        <div className="grid gap-6 w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                            <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="flex items-center gap-2">
                                         <BookOpen className="h-5 w-5 text-red-600" />
@@ -222,7 +222,7 @@ export default function Dashboard() {
                                     </Link>
                                 </CardFooter>
                             </Card>
-                            <Card>
+                            <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="flex items-center gap-2">
                                         <MessageSquare className="h-5 w-5 text-red-600" />
@@ -284,7 +284,7 @@ export default function Dashboard() {
                                     </Link>
                                 </CardFooter>
                             </Card>
-                            <Card>
+                            <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="flex items-center gap-2">
                                         <LinkIcon className="h-5 w-5 text-red-600" />
