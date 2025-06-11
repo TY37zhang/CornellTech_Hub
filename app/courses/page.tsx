@@ -260,64 +260,108 @@ export default function CoursesPage() {
                 {/* Tabs + Course Grid */}
                 <section className="container px-4 py-6 md:px-6">
                     <div className="flex w-full items-center justify-between">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Select
-                                value={programFilter}
-                                onValueChange={(value) => {
-                                    setProgramFilter(value);
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="min-w-[200px] whitespace-nowrap">
-                                    <SelectValue placeholder="Select program" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {programOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {/* Sort Dropdown */}
-                            <Select
-                                value={sortBy}
-                                onValueChange={(value) => {
-                                    setSortBy(value);
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="min-w-[200px] whitespace-nowrap">
-                                    <SelectValue placeholder="Sort by" />
-                                </SelectTrigger>
-                                <SelectContent className="min-w-[200px]">
-                                    <SelectItem value="recent">
-                                        Most Recent
-                                    </SelectItem>
-                                    <SelectItem value="popular">
-                                        Most Popular
-                                    </SelectItem>
-                                    <SelectItem value="rating">
-                                        Highest Rated
-                                    </SelectItem>
-                                    <SelectItem value="difficulty">
-                                        Most Difficult
-                                    </SelectItem>
-                                    <SelectItem value="workload">
-                                        Heaviest Workload
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Link href="/courses/new-review">
-                                <Button className="gap-1">
-                                    <PlusCircle className="h-4 w-4" />
-                                    {!isMobile && <span>New Review</span>}
+                        {isMobile ? (
+                            <div className="flex flex-row items-center gap-2 flex-1">
+                                <Select
+                                    value={programFilter}
+                                    onValueChange={(value) => {
+                                        setProgramFilter(value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="min-w-[200px] whitespace-nowrap">
+                                        <SelectValue placeholder="Select program" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {programOptions.map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    aria-label="Sort options"
+                                    onClick={() =>
+                                        alert("Open sort options modal")
+                                    }
+                                >
+                                    <Filter className="h-5 w-5" />
                                 </Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                                <Select
+                                    value={programFilter}
+                                    onValueChange={(value) => {
+                                        setProgramFilter(value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="min-w-[200px] whitespace-nowrap">
+                                        <SelectValue placeholder="Select program" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {programOptions.map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select
+                                    value={sortBy}
+                                    onValueChange={(value) => {
+                                        setSortBy(value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="min-w-[200px] whitespace-nowrap">
+                                        <SelectValue placeholder="Sort by" />
+                                    </SelectTrigger>
+                                    <SelectContent className="min-w-[200px]">
+                                        <SelectItem value="recent">
+                                            Most Recent
+                                        </SelectItem>
+                                        <SelectItem value="popular">
+                                            Most Popular
+                                        </SelectItem>
+                                        <SelectItem value="rating">
+                                            Highest Rated
+                                        </SelectItem>
+                                        <SelectItem value="difficulty">
+                                            Most Difficult
+                                        </SelectItem>
+                                        <SelectItem value="workload">
+                                            Heaviest Workload
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-2 ml-2">
+                            <Link href="/courses/new-review">
+                                {isMobile ? (
+                                    <Button
+                                        size="icon"
+                                        aria-label="Add new review"
+                                    >
+                                        <PlusCircle className="h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <Button className="gap-1">
+                                        <PlusCircle className="h-4 w-4" />
+                                        <span>New Review</span>
+                                    </Button>
+                                )}
                             </Link>
                         </div>
                     </div>
@@ -518,78 +562,135 @@ export default function CoursesPage() {
                         {/* Pagination Controls */}
                         {!isLoading && !error && totalPages > 1 && (
                             <div className="w-full flex justify-center mt-8">
-                                <nav
-                                    className="flex items-center gap-2"
-                                    aria-label="Pagination"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentPage(1)}
-                                        disabled={currentPage === 1}
-                                        aria-label="First page"
-                                        className="w-10 h-10 p-0"
+                                {isMobile ? (
+                                    <nav
+                                        className="flex items-center gap-2"
+                                        aria-label="Pagination"
                                     >
-                                        <ChevronsLeft className="w-5 h-5" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setCurrentPage((prev) =>
-                                                Math.max(1, prev - 1)
-                                            )
-                                        }
-                                        disabled={currentPage === 1}
-                                        aria-label="Previous page"
-                                        className="w-10 h-10 p-0"
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setCurrentPage(
+                                                    Math.max(1, currentPage - 1)
+                                                )
+                                            }
+                                            disabled={currentPage === 1}
+                                            aria-label="Previous page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </Button>
+                                        <div className="flex items-center gap-1 text-base font-medium px-2 min-w-[60px] justify-center">
+                                            {currentPage > 2 && (
+                                                <span>...</span>
+                                            )}
+                                            <span>{currentPage}</span>
+                                            <span className="mx-1">/</span>
+                                            <span>{totalPages}</span>
+                                            {currentPage < totalPages - 1 && (
+                                                <span>...</span>
+                                            )}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setCurrentPage(
+                                                    Math.min(
+                                                        totalPages,
+                                                        currentPage + 1
+                                                    )
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            aria-label="Next page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </Button>
+                                    </nav>
+                                ) : (
+                                    <nav
+                                        className="flex items-center gap-2"
+                                        aria-label="Pagination"
                                     >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </Button>
-                                    <div className="flex items-center gap-1">
-                                        {getVisiblePages(
-                                            currentPage,
-                                            totalPages
-                                        ).map((page: number) => (
-                                            <Button
-                                                key={page}
-                                                variant={
-                                                    currentPage === page
-                                                        ? "default"
-                                                        : "outline"
-                                                }
-                                                onClick={() =>
-                                                    setCurrentPage(page)
-                                                }
-                                                className="w-10 h-10"
-                                            >
-                                                {page}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setCurrentPage((prev) =>
-                                                Math.min(totalPages, prev + 1)
-                                            )
-                                        }
-                                        disabled={currentPage === totalPages}
-                                        aria-label="Next page"
-                                        className="w-10 h-10 p-0"
-                                    >
-                                        <ChevronRight className="w-5 h-5" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setCurrentPage(totalPages)
-                                        }
-                                        disabled={currentPage === totalPages}
-                                        aria-label="Last page"
-                                        className="w-10 h-10 p-0"
-                                    >
-                                        <ChevronsRight className="w-5 h-5" />
-                                    </Button>
-                                </nav>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setCurrentPage(1)}
+                                            disabled={currentPage === 1}
+                                            aria-label="First page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronsLeft className="w-5 h-5" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setCurrentPage((prev) =>
+                                                    Math.max(1, prev - 1)
+                                                )
+                                            }
+                                            disabled={currentPage === 1}
+                                            aria-label="Previous page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            {getVisiblePages(
+                                                currentPage,
+                                                totalPages
+                                            ).map((page: number) => (
+                                                <Button
+                                                    key={page}
+                                                    variant={
+                                                        currentPage === page
+                                                            ? "default"
+                                                            : "outline"
+                                                    }
+                                                    onClick={() =>
+                                                        setCurrentPage(page)
+                                                    }
+                                                    className="w-10 h-10"
+                                                >
+                                                    {page}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setCurrentPage((prev) =>
+                                                    Math.min(
+                                                        totalPages,
+                                                        prev + 1
+                                                    )
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            aria-label="Next page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setCurrentPage(totalPages)
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            aria-label="Last page"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            <ChevronsRight className="w-5 h-5" />
+                                        </Button>
+                                    </nav>
+                                )}
                             </div>
                         )}
                     </div>
