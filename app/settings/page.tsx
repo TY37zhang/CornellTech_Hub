@@ -374,8 +374,11 @@ export default function SettingsPage() {
                                                                 field.onChange
                                                             }
                                                         >
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select your program" />
+                                                            <SelectTrigger className="justify-start text-left w-full truncate">
+                                                                <SelectValue
+                                                                    className="text-left w-full truncate"
+                                                                    placeholder="Select your program"
+                                                                />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {Object.entries(
@@ -392,6 +395,7 @@ export default function SettingsPage() {
                                                                             value={
                                                                                 value
                                                                             }
+                                                                            className="text-left w-full truncate"
                                                                         >
                                                                             {
                                                                                 label
