@@ -18,6 +18,7 @@ import {
     ChevronDown,
     AlertTriangle,
     ChevronRight,
+    Plus,
 } from "lucide-react";
 import {
     Popover,
@@ -667,12 +668,7 @@ export default function CourseSchedule({
                                                             {course.department}
                                                         </span>
                                                         <span>•</span>
-                                                        <span>
-                                                            {course.semester}{" "}
-                                                            {course.year}
-                                                        </span>
-                                                        <span>•</span>
-                                                        <span>
+                                                        <span className="whitespace-nowrap">
                                                             {course.credits}{" "}
                                                             credits
                                                         </span>
@@ -683,9 +679,19 @@ export default function CourseSchedule({
                                                     onClick={() =>
                                                         openAddSlot(course)
                                                     }
-                                                    className="whitespace-nowrap"
+                                                    className="hidden sm:block whitespace-nowrap"
                                                 >
                                                     Add to Schedule
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        openAddSlot(course)
+                                                    }
+                                                    className="block sm:hidden p-2"
+                                                    aria-label="Add to Schedule"
+                                                >
+                                                    <Plus className="h-5 w-5" />
                                                 </Button>
                                             </div>
                                             <Popover
@@ -846,11 +852,25 @@ export default function CourseSchedule({
                                             {sorted.map((course) => (
                                                 <div
                                                     key={course.id}
-                                                    className={`flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
+                                                    className={`relative flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
                                                 >
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-2 right-2 z-10 h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                                        onClick={() =>
+                                                            course.id &&
+                                                            handleDeleteSchedule(
+                                                                course.id
+                                                            )
+                                                        }
+                                                        aria-label="Remove scheduled course"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                         <div className="min-w-0">
-                                                            <h3 className="font-medium truncate">
+                                                            <h3 className="font-medium truncate pt-2">
                                                                 {
                                                                     course.courseName
                                                                 }
@@ -887,7 +907,7 @@ export default function CourseSchedule({
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                        <div className="flex flex-col sm:flex-row gap-2 sm:justify-end w-full sm:w-auto">
                                                             <Popover
                                                                 open={
                                                                     editingCourseId ===
@@ -1160,19 +1180,6 @@ export default function CourseSchedule({
                                                                     </div>
                                                                 </PopoverContent>
                                                             </Popover>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                                                                onClick={() =>
-                                                                    course.id &&
-                                                                    handleDeleteSchedule(
-                                                                        course.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </div>

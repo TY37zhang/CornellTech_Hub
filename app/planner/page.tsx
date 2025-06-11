@@ -546,6 +546,35 @@ export default function PlannerPage() {
     const selectedCoursesRef = useRef<HTMLDivElement>(null);
     const coursePlanRef = useRef<HTMLDivElement>(null);
     const [showHelp, setShowHelp] = useState(true);
+    // Add state for collapsible requirement cards
+    const [expandedRequirements, setExpandedRequirements] = useState<{
+        [key: string]: boolean;
+    }>({});
+    // Add state for collapsible Additional Questions and Additional Requirements
+    const [expandedAdditionalQuestions, setExpandedAdditionalQuestions] =
+        useState(true);
+    const [expandedAdditionalRequirements, setExpandedAdditionalRequirements] =
+        useState(true);
+
+    // Helper: toggle expanded state for a requirement card
+    const toggleRequirement = (key: string) => {
+        setExpandedRequirements((prev) => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+    };
+    // Helper: toggle for Additional Questions
+    const toggleAdditionalQuestions = () => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setExpandedAdditionalQuestions((prev) => !prev);
+        }
+    };
+    // Helper: toggle for Additional Requirements
+    const toggleAdditionalRequirements = () => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setExpandedAdditionalRequirements((prev) => !prev);
+        }
+    };
 
     // Add scroll position persistence
     useEffect(() => {
@@ -1527,95 +1556,238 @@ export default function PlannerPage() {
                     >
                         {Object.entries(
                             programRequirements[userProgram].requirements
-                        ).map(([key, requirement]) => (
-                            <Card
-                                key={key}
-                                className="p-4 hover:shadow-md transition-shadow group"
-                            >
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-medium">
-                                            {key
-                                                .replace(/([A-Z])/g, " $1")
-                                                .trim()}
-                                        </h3>
-                                        <span className="text-sm text-muted-foreground">
-                                            {(coursePlan[key] || []).reduce(
-                                                (sum, course) =>
-                                                    sum + course.credits,
-                                                0
-                                            )}{" "}
-                                            / {requirement.credits} credits
+                        ).map(([key, requirement]) => {
+                            // Responsive: expanded by default on desktop, toggle on mobile
+                            const isMobile =
+                                typeof window !== "undefined" &&
+                                window.innerWidth < 768;
+                            const expanded =
+                                expandedRequirements[key] ?? !isMobile;
+                            return (
+                                <Card
+                                    key={key}
+                                    className="p-0 hover:shadow-md transition-shadow group"
+                                >
+                                    {/* Header as button on mobile, static on desktop */}
+                                    <div
+                                        className={`flex items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                                        onClick={() => {
+                                            if (window.innerWidth < 768)
+                                                toggleRequirement(key);
+                                        }}
+                                        aria-expanded={expanded}
+                                        aria-controls={`requirement-content-${key}`}
+                                        role={isMobile ? "button" : undefined}
+                                        tabIndex={isMobile ? 0 : -1}
+                                    >
+                                        {/* Title and status row */}
+                                        <div className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="font-medium whitespace-nowrap">
+                                                {key
+                                                    .replace(/([A-Z])/g, " $1")
+                                                    .trim()}
+                                            </span>
+                                            <span className="text-sm text-muted-foreground font-normal ml-2 whitespace-nowrap">
+                                                {(coursePlan[key] || []).reduce(
+                                                    (sum, course) =>
+                                                        sum + course.credits,
+                                                    0
+                                                )}{" "}
+                                                / {requirement.credits} credits
+                                            </span>
+                                        </div>
+                                        {/* Chevron for mobile */}
+                                        <span className="ml-2 md:hidden">
+                                            <svg
+                                                className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 5l7 7-7 7"
+                                                />
+                                            </svg>
                                         </span>
                                     </div>
-                                    <Progress
-                                        value={calculateRequirementProgress(
-                                            key
+                                    {/* Collapsible content */}
+                                    <div
+                                        id={`requirement-content-${key}`}
+                                        className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expanded ? "block" : "hidden"} md:block`}
+                                    >
+                                        <Progress
+                                            value={calculateRequirementProgress(
+                                                key
+                                            )}
+                                            className="h-2 mb-3"
+                                        />
+                                        <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
+                                            {requirement.description}
+                                        </p>
+                                        {/* Selected Courses for this category */}
+                                        {(coursePlan[key] || []).length > 0 && (
+                                            <div className="mt-2 space-y-1">
+                                                {coursePlan[key].map(
+                                                    (course) => (
+                                                        <div
+                                                            key={course.id}
+                                                            className="flex justify-between items-center text-sm p-2 rounded bg-muted"
+                                                        >
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium">
+                                                                    {
+                                                                        course.code
+                                                                    }
+                                                                </div>
+                                                                <div className="text-sm text-muted-foreground truncate">
+                                                                    {
+                                                                        course.name
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="ml-2"
+                                                            >
+                                                                {course.credits}{" "}
+                                                                cr
+                                                            </Badge>
+                                                        </div>
+                                                    )
+                                                )}
+                                            </div>
                                         )}
-                                        className="h-2"
-                                    />
-                                    <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
-                                        {requirement.description}
-                                    </p>
-                                    {/* Selected Courses for this category */}
-                                    {(coursePlan[key] || []).length > 0 && (
-                                        <div className="mt-2 space-y-1">
-                                            {coursePlan[key].map((course) => (
-                                                <div
-                                                    key={course.id}
-                                                    className="flex justify-between items-center text-sm p-2 rounded bg-muted"
-                                                >
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium">
-                                                            {course.code}
-                                                        </div>
-                                                        <div className="text-sm text-muted-foreground truncate">
-                                                            {course.name}
-                                                        </div>
-                                                    </div>
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="ml-2"
-                                                    >
-                                                        {course.credits} cr
-                                                    </Badge>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
-                        ))}
-                        {/* Additional Questions Card */}
-                        <AdditionalQuestions
-                            onEthicsCourseChange={handleEthicsCourseChange}
-                            onTechie5901Change={handleTechie5901Change}
-                            selectedCourses={selectedCourses}
-                            coursePlan={coursePlan}
-                        />
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                        {/* Collapsible Additional Questions Card */}
+                        <Card className="p-0 hover:shadow-md transition-shadow group">
+                            <div
+                                className={`flex justify-between items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                                onClick={toggleAdditionalQuestions}
+                                aria-expanded={expandedAdditionalQuestions}
+                                aria-controls="additional-questions-content"
+                                role={
+                                    typeof window !== "undefined" &&
+                                    window.innerWidth < 768
+                                        ? "button"
+                                        : undefined
+                                }
+                                tabIndex={
+                                    typeof window !== "undefined" &&
+                                    window.innerWidth < 768
+                                        ? 0
+                                        : -1
+                                }
+                            >
+                                <h3 className="font-medium">
+                                    Additional Questions
+                                </h3>
+                                {/* Chevron for mobile */}
+                                <span className="ml-2 md:hidden">
+                                    <svg
+                                        className={`w-4 h-4 transition-transform ${expandedAdditionalQuestions ? "rotate-90" : ""}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                </span>
+                            </div>
+                            <div
+                                id="additional-questions-content"
+                                className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalQuestions ? "block" : "hidden"} md:block`}
+                            >
+                                <AdditionalQuestions
+                                    onEthicsCourseChange={
+                                        handleEthicsCourseChange
+                                    }
+                                    onTechie5901Change={handleTechie5901Change}
+                                    selectedCourses={selectedCourses}
+                                    coursePlan={coursePlan}
+                                />
+                            </div>
+                        </Card>
                         {/* Additional Requirements Card */}
                         {programRequirements[userProgram]
                             .additionalRequirements && (
-                            <Card className="p-4 hover:shadow-md transition-shadow">
-                                <div className="space-y-3">
+                            <Card className="p-0 hover:shadow-md transition-shadow group">
+                                <div
+                                    className={`flex justify-between items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                                    onClick={toggleAdditionalRequirements}
+                                    aria-expanded={
+                                        expandedAdditionalRequirements
+                                    }
+                                    aria-controls="additional-requirements-content"
+                                    role={
+                                        typeof window !== "undefined" &&
+                                        window.innerWidth < 768
+                                            ? "button"
+                                            : undefined
+                                    }
+                                    tabIndex={
+                                        typeof window !== "undefined" &&
+                                        window.innerWidth < 768
+                                            ? 0
+                                            : -1
+                                    }
+                                >
                                     <h3 className="font-medium">
                                         Additional Requirements
                                     </h3>
-                                    <ul className="text-sm text-muted-foreground space-y-2">
-                                        {programRequirements[
-                                            userProgram
-                                        ].additionalRequirements.map(
-                                            (requirement, index) => (
-                                                <li
-                                                    key={index}
-                                                    className="flex items-start gap-2"
-                                                >
-                                                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted-foreground"></span>
-                                                    <span>{requirement}</span>
-                                                </li>
-                                            )
-                                        )}
-                                    </ul>
+                                    {/* Chevron for mobile */}
+                                    <span className="ml-2 md:hidden">
+                                        <svg
+                                            className={`w-4 h-4 transition-transform ${expandedAdditionalRequirements ? "rotate-90" : ""}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div
+                                    id="additional-requirements-content"
+                                    className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
+                                >
+                                    <div className="space-y-3">
+                                        <ul className="text-sm text-muted-foreground space-y-2">
+                                            {programRequirements[
+                                                userProgram
+                                            ].additionalRequirements.map(
+                                                (requirement, index) => (
+                                                    <li
+                                                        key={index}
+                                                        className="flex items-start gap-2"
+                                                    >
+                                                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted-foreground"></span>
+                                                        <span>
+                                                            {requirement}
+                                                        </span>
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    </div>
                                 </div>
                             </Card>
                         )}

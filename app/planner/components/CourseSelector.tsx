@@ -137,12 +137,6 @@ export default function CourseSelector({
                                         {course.department}
                                     </Badge>
                                     <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                    >
-                                        {course.semester} {course.year}
-                                    </Badge>
-                                    <Badge
                                         variant="secondary"
                                         className="text-xs"
                                     >

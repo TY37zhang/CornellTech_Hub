@@ -131,27 +131,33 @@ export default function SelectedCourses({
                                 return (
                                     <div
                                         key={course.id}
-                                        className="flex flex-col space-y-2 p-4 border rounded-lg"
+                                        className="relative flex flex-col space-y-2 p-4 border rounded-lg w-full overflow-x-auto sm:overflow-visible"
                                     >
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div className="min-w-0">
-                                                <h4 className="font-medium truncate">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                                onRemoveCourse(course)
+                                            }
+                                            className="absolute top-2 right-2 z-10"
+                                            aria-label="Remove course"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
+                                            <div className="min-w-0 flex-1 w-full">
+                                                <h4 className="font-medium truncate w-full mb-1">
                                                     {course.code}
                                                 </h4>
-                                                <p className="text-sm text-gray-600 truncate">
+                                                <p className="text-sm text-gray-600 truncate w-full mb-2">
                                                     {course.name}
                                                 </p>
-                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 w-full">
                                                     <span>
                                                         {course.department}
                                                     </span>
                                                     <span>•</span>
-                                                    <span>
-                                                        {course.semester}{" "}
-                                                        {course.year}
-                                                    </span>
-                                                    <span>•</span>
-                                                    <span>
+                                                    <span className="whitespace-nowrap">
                                                         {course.credits} credits
                                                     </span>
                                                     <div className="flex items-center space-x-2 ml-2">
@@ -180,75 +186,10 @@ export default function SelectedCourses({
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Select
-                                                    value={
-                                                        currentAssignment ||
-                                                        "none"
-                                                    }
-                                                    onValueChange={(value) => {
-                                                        onAddToRequirement(
-                                                            course,
-                                                            value === "none"
-                                                                ? null
-                                                                : value
-                                                        );
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="w-[200px] h-9">
-                                                        <div className="flex-1 text-left truncate pr-2">
-                                                            <SelectValue />
-                                                        </div>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem
-                                                            value="none"
-                                                            className="text-sm"
-                                                        >
-                                                            No Selection
-                                                        </SelectItem>
-                                                        {Object.entries(
-                                                            requirements
-                                                        ).map(
-                                                            ([
-                                                                key,
-                                                                requirement,
-                                                            ]) => (
-                                                                <SelectItem
-                                                                    key={key}
-                                                                    value={key}
-                                                                    className="text-sm"
-                                                                >
-                                                                    {key
-                                                                        .replace(
-                                                                            /([A-Z])/g,
-                                                                            " $1"
-                                                                        )
-                                                                        .trim()}
-                                                                </SelectItem>
-                                                            )
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        onRemoveCourse(course)
-                                                    }
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </div>
                                         </div>
                                     </div>
                                 );
                             })}
-                        {selectedCourses.length === 0 && (
-                            <div className="text-center text-muted-foreground py-4">
-                                No courses selected
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
