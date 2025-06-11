@@ -20,6 +20,7 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
+    SheetDescription,
 } from "@/components/ui/sheet";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -92,6 +93,9 @@ export function MobileNav() {
             <SheetContent side="right" className="w-[240px] px-0">
                 <SheetHeader className="px-6 border-b pb-6">
                     <SheetTitle>Cornell Tech Hub</SheetTitle>
+                    <SheetDescription className="sr-only">
+                        Navigation menu for Cornell Tech Hub.
+                    </SheetDescription>
                 </SheetHeader>
                 <div className="px-6 py-4">
                     <nav className="flex flex-col gap-4">
