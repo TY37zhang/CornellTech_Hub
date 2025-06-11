@@ -97,7 +97,7 @@ export function MobileNav() {
                         <AnimatePresence>
                             {routes.map((route, i) => (
                                 <motion.div
-                                    key={route.href}
+                                    key={`${route.href}-${i}`}
                                     custom={i}
                                     variants={navItemVariants}
                                     initial="hidden"
@@ -124,6 +124,7 @@ export function MobileNav() {
                         <div className="mt-8 flex flex-col items-center gap-2">
                             <AnimatePresence>
                                 <motion.div
+                                    key="my-posts"
                                     custom={0}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -143,6 +144,7 @@ export function MobileNav() {
                                     </Button>
                                 </motion.div>
                                 <motion.div
+                                    key="settings"
                                     custom={1}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -162,6 +164,7 @@ export function MobileNav() {
                                     </Button>
                                 </motion.div>
                                 <motion.div
+                                    key="feedback"
                                     custom={2}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -186,6 +189,7 @@ export function MobileNav() {
                         <div className="mt-8 flex flex-col items-center gap-2">
                             <AnimatePresence>
                                 <motion.div
+                                    key="signin"
                                     custom={0}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -205,6 +209,7 @@ export function MobileNav() {
                                     </Button>
                                 </motion.div>
                                 <motion.div
+                                    key="signup"
                                     custom={1}
                                     variants={buttonVariants}
                                     initial="hidden"
