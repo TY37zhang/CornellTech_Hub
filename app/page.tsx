@@ -23,8 +23,10 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 export default function Dashboard() {
+    const { data: session, status } = useSession();
     // Add state for top courses
     const [topCourses, setTopCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -400,28 +402,31 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-12 md:px-6">
-                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                Join the Community
-                            </h2>
-                            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
-                                Connect with fellow students, share resources,
-                                and make the most of your Cornell Tech
-                                experience.
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                            <Link href="/auth/signup">
-                                <Button size="lg">Sign Up Now</Button>
-                            </Link>
-                            {/* <Button variant="outline" size="lg">
+                {/* Only show Join the Community if not logged in */}
+                {!session && (
+                    <section className="container px-4 py-12 md:px-6">
+                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                                    Join the Community
+                                </h2>
+                                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
+                                    Connect with fellow students, share
+                                    resources, and make the most of your Cornell
+                                    Tech experience.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                                <Link href="/auth/signup">
+                                    <Button size="lg">Sign Up Now</Button>
+                                </Link>
+                                {/* <Button variant="outline" size="lg">
                                 Learn More
                             </Button> */}
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                )}
             </main>
         </div>
     );
