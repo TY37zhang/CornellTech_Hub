@@ -558,23 +558,88 @@ export default function PlannerPage() {
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
-        setExpandedRequirements((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
+        setExpandedRequirements((prev) => {
+            const newState = { ...prev, [key]: !prev[key] };
+            if (typeof window !== "undefined") {
+                localStorage.setItem(
+                    "plannerExpandedRequirements",
+                    JSON.stringify(newState)
+                );
+            }
+            return newState;
+        });
     };
     // Helper: toggle for Additional Questions
     const toggleAdditionalQuestions = () => {
         if (typeof window !== "undefined" && window.innerWidth < 768) {
-            setExpandedAdditionalQuestions((prev) => !prev);
+            setExpandedAdditionalQuestions((prev) => {
+                const newState = !prev;
+                localStorage.setItem(
+                    "plannerExpandedAdditionalQuestions",
+                    JSON.stringify(newState)
+                );
+                return newState;
+            });
         }
     };
     // Helper: toggle for Additional Requirements
     const toggleAdditionalRequirements = () => {
         if (typeof window !== "undefined" && window.innerWidth < 768) {
-            setExpandedAdditionalRequirements((prev) => !prev);
+            setExpandedAdditionalRequirements((prev) => {
+                const newState = !prev;
+                localStorage.setItem(
+                    "plannerExpandedAdditionalRequirements",
+                    JSON.stringify(newState)
+                );
+                return newState;
+            });
         }
     };
+
+    // Helper: toggle showHelp for How to Use the Planner card
+    const toggleShowHelp = (value: boolean) => {
+        setShowHelp(value);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("plannerShowHelp", JSON.stringify(value));
+        }
+    };
+
+    // Restore expanded/collapsed state from localStorage on mount
+    useEffect(() => {
+        // Restore expanded/collapsed state for requirements
+        if (typeof window !== "undefined") {
+            const savedExpandedRequirements = localStorage.getItem(
+                "plannerExpandedRequirements"
+            );
+            if (savedExpandedRequirements) {
+                setExpandedRequirements(JSON.parse(savedExpandedRequirements));
+            }
+            // Restore Additional Questions
+            const savedAdditionalQuestions = localStorage.getItem(
+                "plannerExpandedAdditionalQuestions"
+            );
+            if (savedAdditionalQuestions !== null) {
+                setExpandedAdditionalQuestions(
+                    JSON.parse(savedAdditionalQuestions)
+                );
+            }
+            // Restore Additional Requirements
+            const savedAdditionalRequirements = localStorage.getItem(
+                "plannerExpandedAdditionalRequirements"
+            );
+            if (savedAdditionalRequirements !== null) {
+                setExpandedAdditionalRequirements(
+                    JSON.parse(savedAdditionalRequirements)
+                );
+            }
+            // Restore How to Use the Planner help card
+            const savedShowHelp = localStorage.getItem("plannerShowHelp");
+            if (savedShowHelp !== null) {
+                setShowHelp(JSON.parse(savedShowHelp));
+            }
+        }
+        // No cleanup needed
+    }, []);
 
     // Add scroll position persistence
     useEffect(() => {
@@ -1419,7 +1484,7 @@ export default function PlannerPage() {
                 <button
                     className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors"
                     aria-label="Show How to Use the Planner"
-                    onClick={() => setShowHelp(true)}
+                    onClick={() => toggleShowHelp(true)}
                 >
                     <HelpCircle className="h-6 w-6" />
                 </button>
@@ -1456,7 +1521,7 @@ export default function PlannerPage() {
                         <button
                             className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
                             aria-label="Hide How to Use the Planner"
-                            onClick={() => setShowHelp(false)}
+                            onClick={() => toggleShowHelp(false)}
                         >
                             <X className="h-5 w-5" />
                         </button>

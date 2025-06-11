@@ -90,15 +90,10 @@ export default function Dashboard() {
                     <div className="container px-4 md:px-6">
                         <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_700px]">
                             <div className="flex flex-col justify-center space-y-4">
-                                <div className="space-y-2">
-                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                <div className="space-y-2 items-center text-center">
+                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center">
                                         Cornell Tech Hub
                                     </h1>
-                                    <p className="text-sm text-muted-foreground italic">
-                                        Mobile interface is not fully optimized
-                                        yet. Please stay tuned!{" "}
-                                        <b>Best viewed on desktop.</b>
-                                    </p>
                                     <p className="text-sm text-muted-foreground italic">
                                         This is a student-built independent
                                         project and is not officially affiliated

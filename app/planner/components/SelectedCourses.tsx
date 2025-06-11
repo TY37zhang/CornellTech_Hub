@@ -77,9 +77,10 @@ export default function SelectedCourses({
     return (
         <Card className="p-6 w-full overflow-hidden">
             <div className="space-y-4">
+                {/* Header Row */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <div className="flex items-center gap-4 w-full">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 whitespace-nowrap truncate">
                             <button
                                 type="button"
                                 aria-label={collapsed ? "Expand" : "Collapse"}
@@ -94,7 +95,8 @@ export default function SelectedCourses({
                             </button>
                             Selected Courses
                         </h3>
-                        <div className="flex items-center space-x-2">
+                        {/* Toggle: Desktop only */}
+                        <div className="hidden md:flex items-center space-x-2 ml-auto">
                             <Switch
                                 id="show-taken-courses"
                                 checked={showTakenCourses}
@@ -109,6 +111,23 @@ export default function SelectedCourses({
                         </div>
                     </div>
                 </div>
+                {/* Toggle: Mobile only, below header, only if expanded */}
+                {!collapsed && (
+                    <div className="flex md:hidden items-center space-x-2 mb-2">
+                        <Switch
+                            id="show-taken-courses-mobile"
+                            checked={showTakenCourses}
+                            onCheckedChange={setShowTakenCourses}
+                        />
+                        <label
+                            htmlFor="show-taken-courses-mobile"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                            Display taken courses
+                        </label>
+                    </div>
+                )}
+                {/* Course List */}
                 {!collapsed && (
                     <div className="grid gap-2">
                         {selectedCourses
