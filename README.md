@@ -112,19 +112,39 @@ The application will be available at `http://localhost:3000`.
 ```
 cornell-tech-hub/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes
+│   ├── api/               # API routes (forum, user, planner, etc.)
 │   ├── auth/              # Authentication pages
-│   ├── components/        # Shared components
+│   ├── components/        # Shared app-level components
 │   ├── courses/           # Course-related pages
 │   ├── forum/             # Forum pages
-│   └── planner/           # Course planner pages
-├── components/            # Global components
+│   ├── planner/           # Course planner pages
+│   ├── settings/          # User settings page
+│   ├── user/              # User profile and posts
+│   ├── my-reviews/        # User's own reviews
+│   ├── reviews/           # Review details
+│   ├── animated-cards/    # Animated cards demo/feature
+│   ├── coming-soon/       # Placeholder page
+│   ├── faq/               # Frequently asked questions
+│   ├── feedback/          # Feedback form/page
+│   ├── contact/           # Contact form/page
+│   ├── terms-of-service/  # Terms of service
+│   ├── privacy-policy/    # Privacy policy
+├── components/            # Global components (with ui/ and providers/)
 ├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions
-├── prisma/                # Database schema and migrations
+├── lib/                   # Utility functions, db/auth/prisma/email helpers, validations
+├── middleware/            # Middleware logic (e.g., validation)
+├── prisma/                # Database schema and migrations (if present)
 ├── public/                # Static assets
-└── styles/                # Global styles
+├── styles/                # Global styles
 ```
+
+- **app/components/**: Shared components used within the app directory.
+- **components/**: Global components, including UI primitives and providers.
+- **middleware/**: Contains middleware logic, such as validation.
+- **lib/**: Utility functions, database/auth/prisma/email helpers, and validations.
+- **prisma/**: Database schema and migrations (ensure this directory exists if using Prisma).
+
+Other directories such as `settings`, `user`, `my-reviews`, `reviews`, `animated-cards`, `coming-soon`, `faq`, `feedback`, `contact`, `terms-of-service`, and `privacy-policy` provide additional features and static/info pages.
 
 ## Database Schema
 
@@ -138,7 +158,6 @@ The application uses a PostgreSQL database with the following main entities:
 - Forum Posts
 - Forum Comments
 - Forum Categories
-- Marketplace Items
 
 ## Contributing
 
@@ -147,8 +166,3 @@ The application uses a PostgreSQL database with the following main entities:
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## Acknowledgments
-
-- Cornell Tech for providing the course data
-- All contributors who have helped build this platform
