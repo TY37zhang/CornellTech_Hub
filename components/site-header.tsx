@@ -47,7 +47,7 @@ export function SiteHeader() {
             transition={{ duration: 0.3 }}
             className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         >
-            <div className="flex h-14 items-center justify-between px-6 md:px-8">
+            <div className="flex h-14 items-center justify-between px-2 md:px-8">
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}

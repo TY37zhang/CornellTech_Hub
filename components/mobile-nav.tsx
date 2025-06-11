@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { signOut } from "next-auth/react";
 
 const navItemVariants = {
     hidden: { opacity: 0, x: -20 },
@@ -181,6 +182,24 @@ export function MobileNav() {
                                         >
                                             Feedback
                                         </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    key="logout"
+                                    custom={3}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Button
+                                        variant="destructive"
+                                        className="w-[180px]"
+                                        onClick={() => {
+                                            setOpen(false);
+                                            signOut();
+                                        }}
+                                    >
+                                        Log Out
                                     </Button>
                                 </motion.div>
                             </AnimatePresence>
