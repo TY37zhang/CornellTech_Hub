@@ -66,7 +66,8 @@ export async function POST(request: Request) {
                 workload,
                 rating,
                 overall_rating,
-                content
+                content,
+                grade
             )
             VALUES (
                 ${courseId},
@@ -75,7 +76,8 @@ export async function POST(request: Request) {
                 ${validatedData.workload},
                 ${validatedData.value},
                 ${validatedData.overall_rating},
-                ${validatedData.review}
+                ${validatedData.review},
+                ${validatedData.grade}
             )
             RETURNING *
         `;

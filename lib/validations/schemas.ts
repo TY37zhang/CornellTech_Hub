@@ -30,6 +30,7 @@ export const courseReviewSchema = z.object({
     overall_rating: z.number().min(1).max(5),
     review: z.string().min(10, "Review must be at least 10 characters"),
     courseId: z.string().min(1, "Course ID is required"),
+    grade: z.string().nullable().optional(),
 });
 
 // Feedback schemas

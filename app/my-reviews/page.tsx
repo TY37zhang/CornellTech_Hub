@@ -34,6 +34,7 @@ interface Review {
     difficulty?: number;
     workload?: number;
     value?: number;
+    grade?: string;
     createdAt: string;
     courseId: string;
     courseName: string;
@@ -369,11 +370,22 @@ export default function MyReviewsPage() {
                                                                     {review.value?.toFixed(
                                                                         1
                                                                     )}
-                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     )}
+                                                </div>
+                                                <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                                                    <span className="mr-2">
+                                                        Grade:
+                                                    </span>
+                                                    <span>
+                                                        {review.grade &&
+                                                        review.grade.trim() !==
+                                                            ""
+                                                            ? review.grade
+                                                            : "N/A"}
+                                                    </span>
                                                 </div>
                                                 <p className="mt-4 text-sm whitespace-pre-wrap break-words text-muted-foreground">
                                                     {review.content}

@@ -39,6 +39,7 @@ interface Review {
     createdAt: string;
     author: string;
     avatarUrl: string | null;
+    grade?: string;
 }
 
 interface Course {
@@ -576,6 +577,23 @@ export default function CourseDetailPage() {
                                                             </span>
                                                             <span className="text-sm text-muted-foreground">
                                                                 {review.value}/5
+                                                            </span>
+                                                            <span
+                                                                className="text-sm font-medium"
+                                                                style={{
+                                                                    marginLeft:
+                                                                        "1.5rem",
+                                                                }}
+                                                            >
+                                                                Grade:
+                                                            </span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {review.grade !==
+                                                                    undefined &&
+                                                                review.grade !==
+                                                                    null
+                                                                    ? review.grade
+                                                                    : "N/A"}
                                                             </span>
                                                         </div>
                                                     </div>

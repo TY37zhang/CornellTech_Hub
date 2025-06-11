@@ -26,6 +26,7 @@ export async function GET() {
                     cr.created_at,
                     cr.updated_at,
                     cr.overall_rating as rating,
+                    cr.grade,
                     c.name as course_name,
                     c.code as course_code,
                     c.department as category,
@@ -46,6 +47,7 @@ export async function GET() {
             GROUP BY 
                 rd.id, rd.course_id, rd.value, rd.difficulty, rd.workload, 
                 rd.content, rd.created_at, rd.updated_at, rd.rating, 
+                rd.grade,
                 rd.course_name, rd.course_code, rd.category, rd.professor_id,
                 rd.semester, rd.year, rd.credits
             ORDER BY rd.created_at DESC
@@ -65,6 +67,7 @@ export async function GET() {
             value: Number(review.value) || 0,
             difficulty: Number(review.difficulty) || 0,
             workload: Number(review.workload) || 0,
+            grade: review.grade || undefined,
             // Additional course information
             professor: review.professor_id || "Unknown Professor",
             semester: review.semester,

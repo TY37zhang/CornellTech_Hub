@@ -64,6 +64,7 @@ export async function GET(
                 cr.difficulty,
                 cr.workload,
                 cr.rating as value,
+                cr.grade,
                 cr.created_at,
                 u.name as author,
                 u.avatar_url
@@ -97,6 +98,7 @@ export async function GET(
                 difficulty: Number(review.difficulty) || 0,
                 workload: Number(review.workload) || 0,
                 value: Number(review.value) || 0,
+                grade: review.grade || undefined,
                 createdAt: review.created_at,
                 author: review.author,
                 avatarUrl: review.avatar_url,

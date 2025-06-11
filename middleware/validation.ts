@@ -73,6 +73,7 @@ export function validationMiddleware(
             method: request.method,
             headers: headers,
             body: request.body,
+            duplex: "half",
             cache: request.cache,
             credentials: request.credentials,
             integrity: request.integrity,

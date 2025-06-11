@@ -27,6 +27,7 @@ interface Review {
     value: number;
     courseName: string;
     courseCode: string;
+    grade?: string | null;
 }
 
 export default function EditReviewPage({
@@ -71,6 +72,32 @@ export default function EditReviewPage({
             newErrors.content = "Review must be at least 10 characters";
         }
 
+        const validGrades = [
+            "A+",
+            "A",
+            "A-",
+            "B+",
+            "B",
+            "B-",
+            "C+",
+            "C",
+            "C-",
+            "D+",
+            "D",
+            "D-",
+            "F",
+            "S",
+            "U",
+            "HH",
+            "H",
+            "Dropped",
+            "", // allow blank (optional)
+            "none", // allow 'Not wish to share' option
+        ];
+        if (formData.grade && !validGrades.includes(formData.grade)) {
+            newErrors.grade = "Invalid grade selected";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -96,6 +123,7 @@ export default function EditReviewPage({
                     overall_rating: formData.overall_rating,
                     value: formData.value,
                     content: formData.content,
+                    grade: formData.grade === "none" ? null : formData.grade,
                 }),
             });
 
@@ -232,6 +260,50 @@ export default function EditReviewPage({
                                 <div className="text-sm text-muted-foreground">
                                     Current value: {formData.value}
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="grade">Grade</Label>
+                                <select
+                                    id="grade"
+                                    value={formData.grade ?? "none"}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            grade: e.target.value,
+                                        })
+                                    }
+                                    className={`w-full border rounded px-3 py-2 ${errors.grade ? "border-red-500" : ""}`}
+                                >
+                                    <option value="none">
+                                        Not wish to share
+                                    </option>
+                                    <option value="A+">A+</option>
+                                    <option value="A">A</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B">B</option>
+                                    <option value="B-">B-</option>
+                                    <option value="C+">C+</option>
+                                    <option value="C">C</option>
+                                    <option value="C-">C-</option>
+                                    <option value="D+">D+</option>
+                                    <option value="D">D</option>
+                                    <option value="D-">D-</option>
+                                    <option value="F">F</option>
+                                    <option value="S">S (Satisfactory)</option>
+                                    <option value="U">
+                                        U (Unsatisfactory)
+                                    </option>
+                                    <option value="HH">HH (High Honors)</option>
+                                    <option value="H">H (Honors)</option>
+                                    <option value="Dropped">Dropped</option>
+                                </select>
+                                {errors.grade && (
+                                    <p className="text-sm text-red-500">
+                                        {errors.grade}
+                                    </p>
+                                )}
                             </div>
                         </div>
 

@@ -79,6 +79,7 @@ export async function PUT(
             content: z
                 .string()
                 .min(10, "Review must be at least 10 characters"),
+            grade: z.string().nullable().optional(),
         });
 
         const validatedData = requestSchema.parse(body);
@@ -107,6 +108,7 @@ export async function PUT(
                 rating = ${validatedData.value},
                 overall_rating = ${validatedData.overall_rating},
                 content = ${validatedData.content},
+                grade = ${validatedData.grade},
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ${reviewId}
             RETURNING *

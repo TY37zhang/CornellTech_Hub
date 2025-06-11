@@ -65,6 +65,7 @@ export default function NewReviewPage() {
         review: "",
         courseId: "",
         courseCode: "",
+        grade: "",
     });
 
     useEffect(() => {
@@ -138,6 +139,32 @@ export default function NewReviewPage() {
             newErrors.review = "Review must be at least 10 characters";
         }
 
+        const validGrades = [
+            "A+",
+            "A",
+            "A-",
+            "B+",
+            "B",
+            "B-",
+            "C+",
+            "C",
+            "C-",
+            "D+",
+            "D",
+            "D-",
+            "F",
+            "S",
+            "U",
+            "HH",
+            "H",
+            "Dropped",
+            "", // allow blank (optional)
+            "none", // allow 'Not wish to share' option
+        ];
+        if (formData.grade && !validGrades.includes(formData.grade)) {
+            newErrors.grade = "Invalid grade selected";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -159,6 +186,7 @@ export default function NewReviewPage() {
                 },
                 body: JSON.stringify({
                     ...formData,
+                    grade: formData.grade === "none" ? null : formData.grade,
                     courseId: formData.courseCode || formData.courseId,
                     category: formData.categories.join(", "),
                 }),
@@ -407,6 +435,66 @@ export default function NewReviewPage() {
                                 <div className="text-sm text-muted-foreground">
                                     Current value: {formData.value}
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="grade">Grade</Label>
+                                <Select
+                                    value={formData.grade}
+                                    onValueChange={(value) =>
+                                        setFormData({
+                                            ...formData,
+                                            grade: value,
+                                        })
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="grade"
+                                        className={
+                                            errors.grade ? "border-red-500" : ""
+                                        }
+                                    >
+                                        <SelectValue placeholder="Select grade (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            Not wish to share
+                                        </SelectItem>
+                                        <SelectItem value="A+">A+</SelectItem>
+                                        <SelectItem value="A">A</SelectItem>
+                                        <SelectItem value="A-">A-</SelectItem>
+                                        <SelectItem value="B+">B+</SelectItem>
+                                        <SelectItem value="B">B</SelectItem>
+                                        <SelectItem value="B-">B-</SelectItem>
+                                        <SelectItem value="C+">C+</SelectItem>
+                                        <SelectItem value="C">C</SelectItem>
+                                        <SelectItem value="C-">C-</SelectItem>
+                                        <SelectItem value="D+">D+</SelectItem>
+                                        <SelectItem value="D">D</SelectItem>
+                                        <SelectItem value="D-">D-</SelectItem>
+                                        <SelectItem value="F">F</SelectItem>
+                                        <SelectItem value="S">
+                                            S (Satisfactory)
+                                        </SelectItem>
+                                        <SelectItem value="U">
+                                            U (Unsatisfactory)
+                                        </SelectItem>
+                                        <SelectItem value="HH">
+                                            HH (High Honors)
+                                        </SelectItem>
+                                        <SelectItem value="H">
+                                            H (Honors)
+                                        </SelectItem>
+                                        <SelectItem value="Dropped">
+                                            Dropped
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.grade && (
+                                    <p className="text-sm text-red-500">
+                                        {errors.grade}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
