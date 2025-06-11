@@ -508,9 +508,9 @@ export default function ForumPage() {
                                                             >
                                                                 <Card className="hover:bg-muted/50 transition-colors overflow-hidden">
                                                                     <CardHeader className="p-4">
-                                                                        <div className="flex items-start justify-between gap-4 flex-wrap">
-                                                                            <div className="flex items-start gap-4">
-                                                                                <Avatar className="h-8 w-8">
+                                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 flex-wrap">
+                                                                            <div className="flex flex-row sm:flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
+                                                                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                                                     <AvatarImage
                                                                                         src={
                                                                                             thread
@@ -531,13 +531,13 @@ export default function ForumPage() {
                                                                                         }
                                                                                     </AvatarFallback>
                                                                                 </Avatar>
-                                                                                <div className="space-y-1">
-                                                                                    <CardTitle className="text-lg font-semibold truncate-title">
+                                                                                <div className="flex flex-col min-w-0">
+                                                                                    <CardTitle className="text-base sm:text-lg font-semibold truncate-title truncate max-w-[90vw] sm:max-w-[30ch]">
                                                                                         {
                                                                                             thread.title
                                                                                         }
                                                                                     </CardTitle>
-                                                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                                                    <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">
                                                                                         <span>
                                                                                             {
                                                                                                 thread
@@ -556,11 +556,11 @@ export default function ForumPage() {
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                            <div className="flex flex-row flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
                                                                                 {thread.isNew && (
                                                                                     <Badge
                                                                                         variant="new"
-                                                                                        className="px-2 py-0.5"
+                                                                                        className="px-2 py-0.5 text-xs sm:text-sm"
                                                                                     >
                                                                                         🌟
                                                                                         New
@@ -570,7 +570,7 @@ export default function ForumPage() {
                                                                                     thread.hotScore && (
                                                                                         <Badge
                                                                                             variant="hot"
-                                                                                            className="px-3 py-0.5"
+                                                                                            className="px-3 py-0.5 text-xs sm:text-sm"
                                                                                         >
                                                                                             🔥{" "}
                                                                                             {thread.hotScore >
@@ -586,6 +586,7 @@ export default function ForumPage() {
                                                                                     variant={
                                                                                         thread.category.toLowerCase() as any
                                                                                     }
+                                                                                    className="text-xs sm:text-sm"
                                                                                 >
                                                                                     {
                                                                                         thread.category
@@ -593,7 +594,7 @@ export default function ForumPage() {
                                                                                 </Badge>
                                                                             </div>
                                                                         </div>
-                                                                        <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">
+                                                                        <p className="text-xs sm:text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words line-clamp-2 sm:line-clamp-none">
                                                                             {thread
                                                                                 .content
                                                                                 .length >
@@ -607,8 +608,8 @@ export default function ForumPage() {
                                                                         </p>
                                                                     </CardHeader>
                                                                     <CardFooter className="p-4 pt-0">
-                                                                        <div className="flex flex-col gap-4">
-                                                                            <div className="flex items-center gap-4">
+                                                                        <div className="flex flex-col gap-2 sm:gap-4 w-full">
+                                                                            <div className="flex flex-wrap items-center gap-1 sm:gap-4">
                                                                                 {thread.tags.map(
                                                                                     (
                                                                                         tag
@@ -618,7 +619,7 @@ export default function ForumPage() {
                                                                                                 tag
                                                                                             }
                                                                                             variant="tag"
-                                                                                            className="text-xs font-normal"
+                                                                                            className="text-[10px] sm:text-xs font-normal"
                                                                                         >
                                                                                             {
                                                                                                 tag
@@ -627,35 +628,33 @@ export default function ForumPage() {
                                                                                     )
                                                                                 )}
                                                                             </div>
-                                                                            <div className="flex items-center justify-between">
-                                                                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                                                    <div className="flex items-center gap-1">
-                                                                                        <MessageSquare className="h-4 w-4" />
-                                                                                        <span>
-                                                                                            {
-                                                                                                thread.replies
-                                                                                            }{" "}
-                                                                                            replies
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div className="flex items-center gap-1">
-                                                                                        <ThumbsUp className="h-4 w-4" />
-                                                                                        <span>
-                                                                                            {
-                                                                                                thread.likes
-                                                                                            }{" "}
-                                                                                            likes
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div className="flex items-center gap-1">
-                                                                                        <Users className="h-4 w-4" />
-                                                                                        <span>
-                                                                                            {
-                                                                                                thread.views
-                                                                                            }{" "}
-                                                                                            views
-                                                                                        </span>
-                                                                                    </div>
+                                                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground w-full">
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <MessageSquare className="h-4 w-4" />
+                                                                                    <span>
+                                                                                        {
+                                                                                            thread.replies
+                                                                                        }{" "}
+                                                                                        replies
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <ThumbsUp className="h-4 w-4" />
+                                                                                    <span>
+                                                                                        {
+                                                                                            thread.likes
+                                                                                        }{" "}
+                                                                                        likes
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <Users className="h-4 w-4" />
+                                                                                    <span>
+                                                                                        {
+                                                                                            thread.views
+                                                                                        }{" "}
+                                                                                        views
+                                                                                    </span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
