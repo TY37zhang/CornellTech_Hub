@@ -653,7 +653,7 @@ export default function CourseSchedule({
                                     .map((course) => (
                                         <Card
                                             key={course.id}
-                                            className="flex flex-col justify-between p-4"
+                                            className="flex flex-col justify-between p-4 [container-type:inline-size]"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div className="space-y-2">
@@ -679,7 +679,7 @@ export default function CourseSchedule({
                                                     onClick={() =>
                                                         openAddSlot(course)
                                                     }
-                                                    className="hidden sm:block whitespace-nowrap"
+                                                    className="hidden lg:block whitespace-nowrap"
                                                 >
                                                     Add to Schedule
                                                 </Button>
@@ -688,7 +688,7 @@ export default function CourseSchedule({
                                                     onClick={() =>
                                                         openAddSlot(course)
                                                     }
-                                                    className="block sm:hidden p-2"
+                                                    className="block lg:hidden p-2"
                                                     aria-label="Add to Schedule"
                                                 >
                                                     <Plus className="h-5 w-5" />

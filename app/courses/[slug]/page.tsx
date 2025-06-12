@@ -347,20 +347,12 @@ export default function CourseDetailPage() {
                                                     ? "s"
                                                     : ""}
                                             </span>
-                                            <Calendar className="h-4 w-4 ml-2" />
-                                            <span>
-                                                {course.semester} {course.year}{" "}
-                                                •{" "}
-                                                {getRelativeTimeString(
-                                                    course.updatedAt
-                                                )}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
                                 <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle>
+                                    <CardHeader className="pb-3 flex items-center justify-center">
+                                        <CardTitle className="text-center w-full">
                                             Course Rating Summary
                                         </CardTitle>
                                     </CardHeader>
@@ -452,11 +444,6 @@ export default function CourseDetailPage() {
                                             </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter>
-                                        <Button onClick={handleWriteReview}>
-                                            Write a Review
-                                        </Button>
-                                    </CardFooter>
                                 </Card>
                             </div>
                         </div>
@@ -465,7 +452,7 @@ export default function CourseDetailPage() {
 
                 <section className="container px-4 py-6 md:px-6">
                     <Tabs defaultValue="reviews" className="w-full">
-                        <TabsList className="inline-flex h-10 items-center gap-6 justify-start rounded-none border-b bg-transparent p-0">
+                        <TabsList className="inline-flex h-10 items-center gap-6 justify-start rounded-none border-b bg-transparent p-0 w-screen max-w-none -mx-4 md:w-full md:max-w-full md:mx-0">
                             <TabsTrigger
                                 value="reviews"
                                 className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
@@ -548,46 +535,42 @@ export default function CourseDetailPage() {
                                                     <p className="text-sm text-muted-foreground">
                                                         {review.content}
                                                     </p>
-                                                    <div className="mt-4 flex flex-wrap gap-4">
-                                                        <div className="flex items-center space-x-1">
-                                                            <span className="text-sm font-medium">
+                                                    <div className="mt-4 grid grid-cols-2 gap-y-1 gap-x-4 text-sm md:flex md:flex-row md:flex-wrap md:items-center md:gap-x-6 md:gap-y-1">
+                                                        <div>
+                                                            <span className="font-semibold">
                                                                 Difficulty:
                                                             </span>
-                                                            <span className="text-sm text-muted-foreground">
+                                                            <span className="ml-1 font-normal">
                                                                 {
                                                                     review.difficulty
                                                                 }
                                                                 /5
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <span className="text-sm font-medium">
+                                                        <div>
+                                                            <span className="font-semibold">
+                                                                Value:
+                                                            </span>
+                                                            <span className="ml-1 font-normal">
+                                                                {review.value}/5
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="font-semibold">
                                                                 Workload:
                                                             </span>
-                                                            <span className="text-sm text-muted-foreground">
+                                                            <span className="ml-1 font-normal">
                                                                 {
                                                                     review.workload
                                                                 }
                                                                 /5
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <span className="text-sm font-medium">
-                                                                Value:
-                                                            </span>
-                                                            <span className="text-sm text-muted-foreground">
-                                                                {review.value}/5
-                                                            </span>
-                                                            <span
-                                                                className="text-sm font-medium"
-                                                                style={{
-                                                                    marginLeft:
-                                                                        "1.5rem",
-                                                                }}
-                                                            >
+                                                        <div>
+                                                            <span className="font-semibold">
                                                                 Grade:
                                                             </span>
-                                                            <span className="text-sm text-muted-foreground">
+                                                            <span className="ml-1 font-normal">
                                                                 {review.grade !==
                                                                     undefined &&
                                                                 review.grade !==

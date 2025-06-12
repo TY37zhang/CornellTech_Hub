@@ -546,6 +546,7 @@ export default function PlannerPage() {
     const selectedCoursesRef = useRef<HTMLDivElement>(null);
     const coursePlanRef = useRef<HTMLDivElement>(null);
     const [showHelp, setShowHelp] = useState(true);
+    const [showHelpModal, setShowHelpModal] = useState(false); // new state for modal
     // Add state for collapsible requirement cards
     const [expandedRequirements, setExpandedRequirements] = useState<{
         [key: string]: boolean;
@@ -1484,10 +1485,90 @@ export default function PlannerPage() {
                 <button
                     className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors"
                     aria-label="Show How to Use the Planner"
-                    onClick={() => toggleShowHelp(true)}
+                    onClick={() => setShowHelpModal(true)}
                 >
                     <HelpCircle className="h-6 w-6" />
                 </button>
+            )}
+            {/* Modal Popup for Help */}
+            {showHelpModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <Card className="relative w-full max-w-2xl mx-4 p-6 bg-blue-50 border-blue-200 shadow-xl">
+                        <button
+                            className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
+                            aria-label="Close How to Use the Planner"
+                            onClick={() => setShowHelpModal(false)}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        <CardHeader className="pb-0">
+                            <CardTitle className="flex items-center gap-2 justify-center text-center w-full">
+                                <BookOpen className="h-5 w-5 text-blue-600" />
+                                How to Use the Planner
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                                <div className="space-y-2">
+                                    <h3 className="font-medium">
+                                        Getting Started
+                                    </h3>
+                                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                                        <li>
+                                            Select your program from the
+                                            dropdown menu in the settings page
+                                        </li>
+                                        <li>
+                                            Use the course search to find and
+                                            add courses to your plan
+                                        </li>
+                                        <li>
+                                            Assign courses to specific
+                                            requirements using the dropdown menu
+                                            on the right
+                                        </li>
+                                        <li>
+                                            Track your progress through the
+                                            progress bars and credit counters
+                                        </li>
+                                        <li>
+                                            Add your courses to the Course
+                                            Schedule section to plan your weekly
+                                            timetable
+                                        </li>
+                                    </ol>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="font-medium">
+                                        Tips & Tricks
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                        <li>
+                                            Hover over requirement sections to
+                                            see detailed descriptions
+                                        </li>
+                                        <li>
+                                            Use the search bar to quickly find
+                                            specific courses
+                                        </li>
+                                        <li>
+                                            Mark courses as "taken" if you've
+                                            already completed them
+                                        </li>
+                                        <li>
+                                            Selected Courses and Course Schedule
+                                            are collapsible
+                                        </li>
+                                        <li>
+                                            Your plan will be automatically
+                                            saved as you make changes
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             )}
             {/* Top Section with Gradient Background */}
             <div className="w-full bg-gradient-to-b from-pink-50 to-white">
@@ -1516,7 +1597,7 @@ export default function PlannerPage() {
             {/* Main Content */}
             <div className="container mx-auto p-4 space-y-6">
                 {/* Help Section (hidable) */}
-                {showHelp && (
+                {showHelp && !showHelpModal && (
                     <Card className="relative p-6 bg-blue-50 border-blue-200">
                         <button
                             className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
@@ -1635,7 +1716,7 @@ export default function PlannerPage() {
                                 >
                                     {/* Header as button on mobile, static on desktop */}
                                     <div
-                                        className={`flex items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                                        className={`flex flex-wrap items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
                                         onClick={() => {
                                             if (window.innerWidth < 768)
                                                 toggleRequirement(key);
@@ -1646,19 +1727,19 @@ export default function PlannerPage() {
                                         tabIndex={isMobile ? 0 : -1}
                                     >
                                         {/* Title and status row */}
-                                        <div className="flex-1 flex items-center justify-between gap-2">
-                                            <span className="font-medium whitespace-nowrap">
+                                        <div className="flex-1 flex flex-col items-start gap-y-1 min-w-0">
+                                            <span className="font-medium truncate">
                                                 {key
                                                     .replace(/([A-Z])/g, " $1")
                                                     .trim()}
                                             </span>
-                                            <span className="text-sm text-muted-foreground font-normal ml-2 whitespace-nowrap">
+                                            <span className="text-sm text-muted-foreground font-normal">
                                                 {(coursePlan[key] || []).reduce(
                                                     (sum, course) =>
                                                         sum + course.credits,
                                                     0
                                                 )}{" "}
-                                                / {requirement.credits} credits
+                                                / {requirement.credits} cr
                                             </span>
                                         </div>
                                         {/* Chevron for mobile */}

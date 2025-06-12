@@ -47,7 +47,7 @@ export function SiteHeader() {
             transition={{ duration: 0.3 }}
             className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         >
-            <div className="flex h-14 items-center justify-between px-2 md:px-8">
+            <div className="flex h-14 items-center justify-between px-1 md:px-2">
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -62,7 +62,7 @@ export function SiteHeader() {
                             height={32}
                             className="rounded-md"
                         />
-                        <span className="text-sm sm:text-base md:text-xl font-bold whitespace-nowrap">
+                        <span className="text-base sm:text-lg md:text-lg font-bold whitespace-nowrap">
                             Cornell Tech Hub
                         </span>
                     </Link>

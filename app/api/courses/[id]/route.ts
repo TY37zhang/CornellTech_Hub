@@ -48,9 +48,9 @@ export async function GET(
 
         // Aggregate codes and departments
         const codes = crossListResult.map((c: any) => c.code);
-        const departments = [
-            ...new Set(crossListResult.map((c: any) => c.category)),
-        ];
+        const departments = Array.from(
+            new Set(crossListResult.map((c: any) => c.category))
+        );
         // Use the first course as the primary
         const course = crossListResult[0];
 
@@ -79,9 +79,9 @@ export async function GET(
             id: codes[0],
             title: course.title,
             professor: course.professor || "Unknown Professor",
-            departments: [
-                ...new Set(crossListResult.map((c: any) => c.category)),
-            ],
+            departments: Array.from(
+                new Set(crossListResult.map((c: any) => c.category))
+            ),
             semester: course.semester,
             year: course.year,
             credits: course.credits,

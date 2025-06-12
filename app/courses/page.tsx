@@ -102,6 +102,15 @@ const programOptions = [
     { value: "tpcm", label: "TPCM" },
 ];
 
+// Sort options (shared for desktop and mobile)
+const sortOptions = [
+    { value: "recent", label: "Most Recent" },
+    { value: "popular", label: "Most Popular" },
+    { value: "rating", label: "Highest Rated" },
+    { value: "difficulty", label: "Most Difficult" },
+    { value: "workload", label: "Heaviest Workload" },
+];
+
 // Helper function to get category color
 function getCategoryColor(category: string): string {
     const colors: { [key: string]: string } = {
@@ -154,6 +163,9 @@ export default function CoursesPage() {
     // Courses state
     const [courses, setCourses] = useState<Course[]>([]);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+
+    // Modal state
+    const [showSortModal, setShowSortModal] = useState(false);
 
     // Fetch courses from API
     useEffect(() => {
@@ -287,15 +299,50 @@ export default function CoursesPage() {
                                     variant="outline"
                                     size="icon"
                                     aria-label="Sort options"
-                                    onClick={() =>
-                                        alert("Open sort options modal")
-                                    }
+                                    onClick={() => setShowSortModal(true)}
                                 >
                                     <Filter className="h-5 w-5" />
                                 </Button>
+                                {showSortModal && (
+                                    <div
+                                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                                        onClick={() => setShowSortModal(false)}
+                                    >
+                                        <div
+                                            className="bg-white dark:bg-background rounded-lg shadow-lg p-4 w-56"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <h3 className="font-bold text-lg mb-2 text-center">
+                                                Sort by
+                                            </h3>
+                                            <ul className="space-y-2">
+                                                {sortOptions.map((option) => (
+                                                    <li key={option.value}>
+                                                        <button
+                                                            className={`w-full text-center px-3 py-2 rounded hover:bg-muted ${sortBy === option.value ? "bg-muted font-bold" : ""}`}
+                                                            onClick={() => {
+                                                                setSortBy(
+                                                                    option.value
+                                                                );
+                                                                setCurrentPage(
+                                                                    1
+                                                                );
+                                                                setShowSortModal(
+                                                                    false
+                                                                );
+                                                            }}
+                                                        >
+                                                            {option.label}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                            <div className="flex flex-row items-center gap-4">
                                 <Select
                                     value={programFilter}
                                     onValueChange={(value) => {
