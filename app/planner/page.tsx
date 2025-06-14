@@ -1515,8 +1515,8 @@ export default function PlannerPage() {
                                     </h3>
                                     <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
                                         <li>
-                                            Select your program from the
-                                            dropdown menu in the settings page
+                                            Select your program in the{" "}
+                                            <b>settings</b> page
                                         </li>
                                         <li>
                                             Use the course search to find and
@@ -1621,7 +1621,10 @@ export default function PlannerPage() {
                                     <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
                                         <li>
                                             Select your program from the
-                                            dropdown menu in the settings page
+                                            <b>
+                                                dropdown menu in the settings
+                                                page
+                                            </b>
                                         </li>
                                         <li>
                                             Use the course search to find and

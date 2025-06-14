@@ -205,6 +205,52 @@ export default function SelectedCourses({
                                                     </div>
                                                 </div>
                                             </div>
+                                            {/* Requirement Assignment Dropdown - right side */}
+                                            <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-4 sm:mt-0">
+                                                <Select
+                                                    value={
+                                                        currentAssignment ||
+                                                        "unassigned"
+                                                    }
+                                                    onValueChange={(value) =>
+                                                        onAddToRequirement(
+                                                            course,
+                                                            value ===
+                                                                "unassigned"
+                                                                ? null
+                                                                : value
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Assign to requirement" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="unassigned">
+                                                            Unassigned
+                                                        </SelectItem>
+                                                        {Object.entries(
+                                                            requirements
+                                                        ).map(
+                                                            ([reqKey, req]) => (
+                                                                <SelectItem
+                                                                    key={reqKey}
+                                                                    value={
+                                                                        reqKey
+                                                                    }
+                                                                >
+                                                                    {reqKey
+                                                                        .replace(
+                                                                            /([A-Z])/g,
+                                                                            " $1"
+                                                                        )
+                                                                        .trim()}
+                                                                </SelectItem>
+                                                            )
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                     </div>
                                 );
