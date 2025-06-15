@@ -24,8 +24,21 @@ export async function GET(
         }
         const { name, professor_id } = baseResult[0];
 
-        // Fetch all cross-listed courses (same name and professor)
+        // Fetch all cross-listed courses with review information
         const crossListResult = await sql`
+            WITH course_reviews_summary AS (
+                SELECT 
+                    c.id,
+                    COUNT(cr.id) as review_count,
+                    ROUND(AVG(cr.overall_rating)::numeric, 1) as avg_rating,
+                    ROUND(AVG(cr.difficulty)::numeric, 1) as avg_difficulty,
+                    ROUND(AVG(cr.workload)::numeric, 1) as avg_workload,
+                    MAX(cr.created_at) as latest_review_date
+                FROM courses c
+                LEFT JOIN course_reviews cr ON c.id = cr.course_id
+                WHERE c.name = ${name} AND c.professor_id = ${professor_id}
+                GROUP BY c.id
+            )
             SELECT 
                 c.id,
                 c.code,
@@ -35,15 +48,16 @@ export async function GET(
                 c.semester,
                 c.year,
                 c.credits,
-                COUNT(cr.id) as review_count,
-                ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
-                ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
-                ROUND(AVG(cr.workload)::numeric, 1) as workload,
-                ROUND(AVG(cr.rating)::numeric, 1) as value
+                c.description,
+                crs.review_count,
+                crs.avg_rating,
+                crs.avg_difficulty,
+                crs.avg_workload,
+                crs.latest_review_date
             FROM courses c
-            LEFT JOIN course_reviews cr ON c.id = cr.course_id
+            LEFT JOIN course_reviews_summary crs ON c.id = crs.id
             WHERE c.name = ${name} AND c.professor_id = ${professor_id}
-            GROUP BY c.id, c.code, c.name, c.department, c.professor_id, c.semester, c.year, c.credits
+            ORDER BY c.code ASC
         `;
 
         // Aggregate codes and departments
@@ -51,8 +65,27 @@ export async function GET(
         const departments = Array.from(
             new Set(crossListResult.map((c: any) => c.category))
         );
-        // Use the first course as the primary
-        const course = crossListResult[0];
+
+        // Calculate aggregated review statistics
+        const totalReviews = crossListResult.reduce(
+            (sum: number, c: any) => sum + (c.review_count || 0),
+            0
+        );
+        const avgRating =
+            crossListResult.reduce(
+                (sum: number, c: any) => sum + (c.avg_rating || 0),
+                0
+            ) / crossListResult.length;
+        const avgDifficulty =
+            crossListResult.reduce(
+                (sum: number, c: any) => sum + (c.avg_difficulty || 0),
+                0
+            ) / crossListResult.length;
+        const avgWorkload =
+            crossListResult.reduce(
+                (sum: number, c: any) => sum + (c.avg_workload || 0),
+                0
+            ) / crossListResult.length;
 
         // Fetch reviews for all cross-listed courses
         const courseIds = crossListResult.map((c: any) => c.id);
@@ -77,19 +110,18 @@ export async function GET(
         // Transform the data
         const transformedCourse = {
             id: codes[0],
-            title: course.title,
-            professor: course.professor || "Unknown Professor",
-            departments: Array.from(
-                new Set(crossListResult.map((c: any) => c.category))
-            ),
-            semester: course.semester,
-            year: course.year,
-            credits: course.credits,
-            rating: Number(course.rating) || 0,
-            reviewCount: Number(course.review_count) || 0,
-            difficulty: Number(course.difficulty) || 0,
-            workload: Number(course.workload) || 0,
-            value: Number(course.value) || 0,
+            title: crossListResult[0].title,
+            professor: crossListResult[0].professor || "Unknown Professor",
+            departments: departments,
+            semester: crossListResult[0].semester,
+            year: crossListResult[0].year,
+            credits: crossListResult[0].credits,
+            description: crossListResult[0].description,
+            rating: Number(avgRating) || 0,
+            reviewCount: totalReviews,
+            difficulty: Number(avgDifficulty) || 0,
+            workload: Number(avgWorkload) || 0,
+            value: Number(avgRating) || 0,
             categoryColor: getCategoryColor(departments[0]?.toLowerCase()),
             reviews: reviewsResult.map((review: any) => ({
                 id: review.id,

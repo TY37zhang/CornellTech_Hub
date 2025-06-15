@@ -9,7 +9,7 @@ import {
     ChatCompletionContentPart,
     ChatCompletionContentPartRefusal,
 } from "openai/resources/chat/completions";
-import { DatabaseService } from "../services/DatabaseService";
+import { DatabaseService, CourseReview } from "./DatabaseService";
 import { SearchService } from "../services/SearchService";
 
 // TypeScript interfaces
@@ -74,102 +74,28 @@ interface SearchResult {
     timestamp: string;
 }
 
-// Update system prompt with search routing logic
-const SYSTEM_PROMPT = `You are a helpful assistant for Cornell Tech students with access to multiple information sources. You can intelligently route queries to the most appropriate source:
+interface CourseOffering {
+    semester: string;
+    year: number;
+    professor: string;
+}
 
-1. Course Information (Database Priority):
-   - Course details, reviews, schedules
-   - Program requirements
-   - Course planning
-   - Use format "**Course Code: Course Title**" in bold
-
-2. Current Events (Web Search Priority):
-   - Recent developments
-   - News and updates
-   - Latest information
-   - Cite sources with timestamps
-
-3. Academic Questions (Hybrid Approach):
-   - Combine database and web search
-   - Prioritize academic sources
-   - Include both historical and current information
-   - Cross-reference multiple sources
-
-4. Technical Questions (Web Search Priority):
-   - Latest programming information
-   - Technical documentation
-   - Best practices
-   - Cite official documentation
-
-Search Routing Rules:
-1. Course/Review Queries:
-   - Check database first
-   - Fall back to web search if needed
-   - Always verify course codes
-
-2. Current Events:
-   - Use web search for recent information
-   - Verify source credibility
-   - Include timestamps
-
-3. Academic Questions:
-   - Start with database
-   - Supplement with web search
-   - Cross-reference sources
-   - Prioritize academic sources
-
-4. Technical Questions:
-   - Use web search for latest info
-   - Include official documentation
-   - Cite version numbers
-   - Link to resources
-
-Source Attribution:
-- Database sources: "According to Cornell Tech records..."
-- Web sources: "According to [Source Name] (accessed [Date])..."
-- Academic sources: "According to [Author/Institution] (Year)..."
-- Technical sources: "According to [Documentation] (Version)..."
-
-Fallback Strategy:
-1. If database search fails:
-   - Try web search
-   - Use cached results if available
-   - Inform user of limitations
-
-2. If web search fails:
-   - Use database as fallback
-   - Check cached results
-   - Provide general information
-
-3. If both fail:
-   - Use general knowledge
-   - Be transparent about limitations
-   - Suggest alternative approaches
-
-Remember:
-- Always verify information accuracy
-- Cross-reference multiple sources
-- Be transparent about source limitations
-- Provide context for information
-- Include relevant timestamps
-- Format course information properly
-
-You have access to the following database tables:
-- users: User information and profiles
-- user_token_usage: Token usage tracking for users
-- courses: Course information including code, name, description, credits, department, etc.
-- course_special_requirements: Special requirements for courses
-- course_schedules: Course scheduling information
-- course_reviews: Course reviews and ratings
-- course_planner: Course planning and requirements tracking
-- course_category_junction: Course category relationships
-- course_categories: Course category definitions
-- chat_messages: Chat conversation history
-- chat_conversations: Chat conversation metadata
-
-You can search and retrieve information from these tables to provide accurate and helpful responses.
-
-Remember: When mentioning any course, ALWAYS use the format "**Course Code: Course Title**" in bold. For example: "**CS 5785: Applied Machine Learning**" or "**INFO 5100: Application Programming and Design**".`;
+interface CourseWithReviews {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    credits: number;
+    department: string;
+    professor_id: string;
+    reviews: CourseReview[];
+    reviewCount: number;
+    avgRating: number;
+    avgDifficulty: number;
+    avgWorkload: number;
+    codes: Set<string>;
+    departments: Set<string>;
+}
 
 // Function definitions for database access
 export const functionDefinitions: ChatFunctionDefinition[] = [
@@ -350,45 +276,6 @@ export const functionDefinitions: ChatFunctionDefinition[] = [
                     type: "string",
                     description: "Search query for the web",
                 },
-            },
-            required: ["query"],
-        },
-    },
-    {
-        name: "search_courses_database",
-        description: "Search Cornell Tech courses in the database",
-        parameters: {
-            type: "object",
-            properties: {
-                query: {
-                    type: "string",
-                    description: "Search query for courses",
-                },
-                filters: {
-                    type: "object",
-                    properties: {
-                        department: { type: "string" },
-                        semester: { type: "string" },
-                        year: { type: "number" },
-                        minCredits: { type: "number" },
-                        maxCredits: { type: "number" },
-                        category: { type: "string" },
-                    },
-                },
-            },
-            required: ["query"],
-        },
-    },
-    {
-        name: "search_web",
-        description: "Search the web for current information",
-        parameters: {
-            type: "object",
-            properties: {
-                query: {
-                    type: "string",
-                    description: "Search query",
-                },
                 maxResults: {
                     type: "number",
                     description: "Maximum number of results",
@@ -401,8 +288,9 @@ export const functionDefinitions: ChatFunctionDefinition[] = [
                     type: "array",
                     items: {
                         type: "string",
-                        enum: ["academic", "news", "technical", "general"],
+                        enum: ["news", "academic", "technical", "general"],
                     },
+                    description: "Types of sources to include",
                 },
             },
             required: ["query"],
@@ -467,57 +355,86 @@ const openai = new OpenAI({
 // Helper function for exponential backoff
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Update system prompt to reflect tools API
+const SYSTEM_PROMPT = `You are a helpful assistant for Cornell Tech students with access to multiple information sources. You can use tools to search and retrieve information:
+
+1. Course Information (Database Priority):
+   - Use search_courses to find courses
+   - Use get_course_details for specific course information
+   - Use get_course_reviews for course reviews
+   - Use get_course_schedule for scheduling information
+   - Use get_course_requirements for prerequisites
+   - Use get_course_categories for course categories
+
+2. Web Search:
+   - Use web_search for current information
+   - Use hybrid_search to combine database and web results
+
+When using tools:
+1. For course queries:
+   - Start with search_courses
+   - Use get_course_details for specific courses
+   - Add get_course_reviews for student feedback
+   - Check get_course_schedule for availability
+
+2. For current information:
+   - Use web_search with appropriate source types
+   - Include maxResults and minRelevance parameters
+   - Specify sourceTypes when relevant
+
+3. For academic queries:
+   - Use hybrid_search to combine sources
+   - Set appropriate filters for both database and web
+   - Prioritize academic sources
+
+4. For technical queries:
+   - Use web_search with technical source types
+   - Include version numbers when relevant
+   - Link to official documentation
+
+Remember:
+- Always verify information accuracy
+- Cross-reference multiple sources
+- Be transparent about source limitations
+- Provide context for information
+- Include relevant timestamps
+- Format course information properly
+
+When mentioning any course, ALWAYS use the format "**Course Code: Course Title**" in bold. For example: "**CS 5785: Applied Machine Learning**" or "**INFO 5100: Application Programming and Design**".`;
+
 export class OpenAIService {
     static getSystemPrompt(): ChatCompletionMessageParam {
         return {
             role: "system",
             content: `You are an intelligent and helpful assistant for Cornell Tech students. Your primary goal is to provide accurate, relevant, and helpful information about courses and academic matters. You should:
 
-1. Think step by step:
-   - First, understand the user's question or request
-   - Then, determine what information you need to provide a complete answer
-   - Finally, use the appropriate functions to gather that information
+1. Always use the appropriate functions to search for information:
+   - For course searches, ALWAYS use search_courses first
+   - For specific course details, use get_course_details
+   - For reviews, use get_course_reviews
+   - For schedules, use get_course_schedule
+   - For requirements, use get_course_requirements
 
-2. Be proactive and thorough:
-   - Don't just answer the immediate question, but anticipate follow-up questions
-   - Provide context and explanations when needed
-   - Suggest related information that might be helpful
+2. When searching for courses:
+   - Include relevant filters (department, semester, etc.)
+   - Format course information with proper course codes in bold
+   - Provide context and explanations for recommendations
+   - Consider program-specific requirements
 
-3. Use your functions intelligently:
-   - When searching for courses, use relevant filters to narrow down results
-   - When getting course details, also fetch reviews and requirements
-   - When appropriate, combine information from multiple functions
-
-4. For course recommendations:
+3. For course recommendations:
    - Consider the user's program and background
    - Look at course reviews and ratings
    - Check prerequisites and requirements
    - Consider course schedules and availability
    - Suggest complementary courses
 
-5. For product management related queries:
-   - Focus on courses that develop product management skills
-   - Consider both technical and business aspects
-   - Look for practical, hands-on components
-   - Pay attention to user-centered design and market analysis
-
-6. Always be helpful and friendly:
+4. Always be helpful and friendly:
    - Provide clear, well-structured responses
    - Use examples and specific details
    - Be honest about limitations
    - Suggest alternatives when appropriate
 
-You have access to the following functions:
-1. search_courses: Search for courses with advanced filtering
-2. get_course_details: Get comprehensive course information
-3. get_course_reviews: Get course reviews with filtering
-4. get_course_schedule: Get schedule information
-5. get_course_requirements: Get prerequisites and requirements
-6. get_course_categories: Get all course categories
-7. get_user_info: Get non-sensitive user information
-8. web_search: Search the web for up-to-date information
-
-Use these functions thoughtfully to provide the most helpful responses possible.`,
+Remember to ALWAYS use the search_courses function when looking for courses, and format course codes in bold (e.g., **CS 5785: Applied Machine Learning**).`,
         };
     }
 
@@ -560,7 +477,16 @@ Use these functions thoughtfully to provide the most helpful responses possible.
 
         // Add search context to system prompt if available
         let systemPrompt = program
-            ? `You are an intelligent and helpful assistant for Cornell Tech students. The user is in the ${program} program. Your primary goal is to provide accurate, relevant, and helpful information about courses and academic matters.`
+            ? `You are an intelligent and helpful assistant for Cornell Tech students. The user is in the ${program} program. Your primary goal is to provide accurate, relevant, and helpful information about courses and academic matters.
+
+When suggesting courses for the ${program} program:
+1. ALWAYS use the search_courses function first
+2. Consider program-specific requirements and recommendations
+3. Look for courses that align with the program's focus
+4. Include both required and elective courses
+5. Consider the user's background and interests
+
+Remember to format course codes in bold (e.g., **CS 5785: Applied Machine Learning**).`
             : this.getSystemPrompt();
 
         if (searchContext) {
@@ -574,7 +500,12 @@ Use these functions thoughtfully to provide the most helpful responses possible.
 
             // Add specific guidance based on query type
             if (searchContext.queryType === "course") {
-                contextPrompt += `\nFor course-related queries, prioritize database information and include course codes in bold format (e.g., **CS 5785: Applied Machine Learning**).`;
+                contextPrompt += `\nFor course-related queries, ALWAYS use the search_courses function first with appropriate filters. If no specific filters are mentioned, use a broad search to find relevant courses. Include course codes in bold format (e.g., **CS 5785: Applied Machine Learning**).`;
+
+                // Add program-specific guidance if available
+                if (program) {
+                    contextPrompt += `\nSince the user is in the ${program} program, make sure to consider program-specific requirements and recommendations when suggesting courses.`;
+                }
             } else if (searchContext.queryType === "current") {
                 contextPrompt += `\nFor current events, focus on recent information and include timestamps for all sources.`;
             } else if (searchContext.queryType === "academic") {
@@ -608,6 +539,11 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                         messages,
                         model,
                         stream: true,
+                        tools: functions.map((func) => ({
+                            type: "function",
+                            function: func,
+                        })),
+                        tool_choice: "auto",
                         user: userId,
                     };
                     const streamRes = await openai.chat.completions.create(req);
@@ -634,18 +570,22 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                     const req: ChatCompletionCreateParamsNonStreaming = {
                         messages,
                         model,
-                        functions,
-                        function_call: "auto",
+                        tools: functions.map((func) => ({
+                            type: "function",
+                            function: func,
+                        })),
+                        tool_choice: "auto",
                         user: userId,
                     };
                     const res = await openai.chat.completions.create(req);
 
                     // Handle function calls
                     const message = res.choices[0]?.message;
-                    if (message?.function_call) {
-                        const functionName = message.function_call.name;
+                    if (message?.tool_calls) {
+                        const toolCall = message.tool_calls[0];
+                        const functionName = toolCall.function.name;
                         const functionArgs = JSON.parse(
-                            message.function_call.arguments || "{}"
+                            toolCall.function.arguments || "{}"
                         );
 
                         let functionResult;
@@ -657,10 +597,15 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                                     functionName === "search_courses"
                                 ) {
                                     // Prioritize database search for course queries
+                                    const searchArgs = {
+                                        ...functionArgs,
+                                        // Add program-specific filters if available
+                                        ...(program ? { program } : {}),
+                                    };
                                     functionResult =
                                         await this.searchCoursesDatabase(
-                                            functionArgs.query,
-                                            functionArgs
+                                            searchArgs.query,
+                                            searchArgs
                                         );
                                 } else if (
                                     searchContext.queryType === "current" &&
@@ -687,6 +632,7 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                                                 department:
                                                     functionArgs.department,
                                                 category: functionArgs.category,
+                                                ...(program ? { program } : {}),
                                             },
                                             webFilters: {
                                                 maxResults: 3,
@@ -717,26 +663,23 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                                 } else {
                                     // Fall back to original function handling
                                     functionResult =
-                                        await this.handleFunctionCall(
-                                            message.function_call
-                                        );
+                                        await this.handleFunctionCall(toolCall);
                                 }
                             } else {
                                 // No search context, use original function handling
-                                functionResult = await this.handleFunctionCall(
-                                    message.function_call
-                                );
+                                functionResult =
+                                    await this.handleFunctionCall(toolCall);
                             }
 
                             // Add function result to messages and get a new response
                             messages.push({
                                 role: "assistant",
                                 content: null,
-                                function_call: message.function_call,
+                                tool_calls: [toolCall],
                             });
                             messages.push({
-                                role: "function",
-                                name: functionName,
+                                role: "tool",
+                                tool_call_id: toolCall.id,
                                 content: functionResult || "{}",
                             });
 
@@ -745,7 +688,11 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                                 await openai.chat.completions.create({
                                     messages,
                                     model,
-                                    functions,
+                                    tools: functions.map((func) => ({
+                                        type: "function",
+                                        function: func,
+                                    })),
+                                    tool_choice: "auto",
                                     user: userId,
                                 });
 
@@ -778,25 +725,99 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                                 error: `Error executing ${functionName}: ${error.message}`,
                             });
                         }
+                    } else if (message?.content) {
+                        // If there's a direct response without tool calls, return it
+                        return {
+                            response: res,
+                            costLog: {
+                                model,
+                                promptTokens: res.usage?.prompt_tokens || 0,
+                                completionTokens:
+                                    res.usage?.completion_tokens || 0,
+                                totalTokens: res.usage?.total_tokens || 0,
+                                cost:
+                                    ((res.usage?.total_tokens || 0) / 1000) *
+                                    modelCost,
+                                timestamp,
+                            },
+                        };
+                    } else {
+                        // If there's no content and no tool calls, try to force a tool call
+                        const forcedResponse =
+                            await openai.chat.completions.create({
+                                messages: [
+                                    ...messages,
+                                    {
+                                        role: "system",
+                                        content:
+                                            "Please use the search_courses tool to search for courses.",
+                                    },
+                                ],
+                                model,
+                                tools: functions.map((func) => ({
+                                    type: "function",
+                                    function: func,
+                                })),
+                                tool_choice: {
+                                    type: "function",
+                                    function: { name: "search_courses" },
+                                },
+                                user: userId,
+                            });
+
+                        if (forcedResponse.choices[0]?.message?.tool_calls) {
+                            const toolCall =
+                                forcedResponse.choices[0].message.tool_calls[0];
+                            const functionResult =
+                                await this.handleFunctionCall(toolCall);
+
+                            messages.push({
+                                role: "assistant",
+                                content: null,
+                                tool_calls: [toolCall],
+                            });
+                            messages.push({
+                                role: "tool",
+                                tool_call_id: toolCall.id,
+                                content: functionResult || "{}",
+                            });
+
+                            const finalResponse =
+                                await openai.chat.completions.create({
+                                    messages,
+                                    model,
+                                    tools: functions.map((func) => ({
+                                        type: "function",
+                                        function: func,
+                                    })),
+                                    tool_choice: "auto",
+                                    user: userId,
+                                });
+
+                            return {
+                                response: finalResponse,
+                                costLog: {
+                                    model,
+                                    promptTokens:
+                                        finalResponse.usage?.prompt_tokens || 0,
+                                    completionTokens:
+                                        finalResponse.usage
+                                            ?.completion_tokens || 0,
+                                    totalTokens:
+                                        finalResponse.usage?.total_tokens || 0,
+                                    cost:
+                                        ((finalResponse.usage?.total_tokens ||
+                                            0) /
+                                            1000) *
+                                        modelCost,
+                                    timestamp,
+                                },
+                            };
+                        }
                     }
 
-                    // Get exact token counts from the API response
-                    const promptTokens = res.usage?.prompt_tokens || 0;
-                    const completionTokens = res.usage?.completion_tokens || 0;
-                    const totalTokens = res.usage?.total_tokens || 0;
-                    const cost = (totalTokens / 1000) * modelCost;
-
-                    return {
-                        response: res,
-                        costLog: {
-                            model,
-                            promptTokens,
-                            completionTokens,
-                            totalTokens,
-                            cost,
-                            timestamp,
-                        },
-                    };
+                    // If we get here, something went wrong
+                    throw new Error("Failed to generate a response");
                 }
             } catch (error: any) {
                 lastError = error;
@@ -1046,8 +1067,143 @@ Use these functions thoughtfully to provide the most helpful responses possible.
         filters?: any
     ): Promise<string> {
         try {
-            const results = await DatabaseService.searchCourses(query, filters);
-            return this.formatCourseResponse(results);
+            // Always query the database first
+            const results = await DatabaseService.searchCourses(
+                query,
+                filters?.department,
+                filters?.semester,
+                filters?.year,
+                filters?.minCredits,
+                filters?.maxCredits,
+                filters?.category
+            );
+
+            if (results.length === 0) {
+                return (
+                    "I couldn't find any courses matching your query. Please try:\n" +
+                    "1. Using the course code (e.g., CS5112)\n" +
+                    "2. Using a shorter search term\n" +
+                    "3. Checking the spelling of the course name"
+                );
+            }
+
+            // Get detailed review information for each course
+            const coursesWithReviews = await Promise.all(
+                results.map(async (course) => {
+                    const reviews = await DatabaseService.getCourseReviews(
+                        course.id
+                    );
+                    return {
+                        ...course,
+                        reviews,
+                        reviewCount: reviews.length,
+                        avgRating:
+                            reviews.length > 0
+                                ? reviews.reduce(
+                                      (acc: number, r: CourseReview) =>
+                                          acc + r.overall_rating,
+                                      0
+                                  ) / reviews.length
+                                : 0,
+                        avgDifficulty:
+                            reviews.length > 0
+                                ? reviews.reduce(
+                                      (acc: number, r: CourseReview) =>
+                                          acc + r.difficulty,
+                                      0
+                                  ) / reviews.length
+                                : 0,
+                        avgWorkload:
+                            reviews.length > 0
+                                ? reviews.reduce(
+                                      (acc: number, r: CourseReview) =>
+                                          acc + r.workload,
+                                      0
+                                  ) / reviews.length
+                                : 0,
+                    };
+                })
+            );
+
+            // Group results by course name and professor
+            const courseMap = new Map<string, CourseWithReviews>();
+            coursesWithReviews.forEach((course) => {
+                const key = `${course.name.toLowerCase()}_${course.professor_id}`;
+                if (!courseMap.has(key)) {
+                    courseMap.set(key, {
+                        ...course,
+                        codes: new Set([course.code]),
+                        departments: new Set([course.department]),
+                    });
+                } else {
+                    const existingCourse = courseMap.get(key)!;
+                    existingCourse.codes.add(course.code);
+                    existingCourse.departments.add(course.department);
+                    // Merge reviews
+                    existingCourse.reviews = [
+                        ...existingCourse.reviews,
+                        ...course.reviews,
+                    ];
+                    existingCourse.reviewCount += course.reviewCount;
+                    // Recalculate averages
+                    existingCourse.avgRating =
+                        existingCourse.reviews.reduce(
+                            (acc: number, r: CourseReview) =>
+                                acc + r.overall_rating,
+                            0
+                        ) / existingCourse.reviews.length;
+                    existingCourse.avgDifficulty =
+                        existingCourse.reviews.reduce(
+                            (acc: number, r: CourseReview) =>
+                                acc + r.difficulty,
+                            0
+                        ) / existingCourse.reviews.length;
+                    existingCourse.avgWorkload =
+                        existingCourse.reviews.reduce(
+                            (acc: number, r: CourseReview) => acc + r.workload,
+                            0
+                        ) / existingCourse.reviews.length;
+                }
+            });
+
+            // Format the response
+            return Array.from(courseMap.values())
+                .map((course) => {
+                    let response = `**${Array.from(course.codes).join(", ")}: ${course.name}**\n`;
+
+                    if (course.description) {
+                        response += `${course.description}\n`;
+                    }
+
+                    response += `Credits: ${course.credits}\n`;
+                    response += `Department(s): ${Array.from(course.departments).join(", ")}\n`;
+
+                    // Add review information
+                    if (course.reviewCount > 0) {
+                        response += `\nReviews (${course.reviewCount}):\n`;
+                        response += `- Average Rating: ${course.avgRating.toFixed(1)}/5.0\n`;
+                        response += `- Average Difficulty: ${course.avgDifficulty.toFixed(1)}/5.0\n`;
+                        response += `- Average Workload: ${course.avgWorkload.toFixed(1)}/5.0\n\n`;
+
+                        // Add individual reviews
+                        response += "Recent Reviews:\n";
+                        course.reviews
+                            .sort(
+                                (a: CourseReview, b: CourseReview) =>
+                                    new Date(b.created_at).getTime() -
+                                    new Date(a.created_at).getTime()
+                            )
+                            .slice(0, 3)
+                            .forEach((review: CourseReview) => {
+                                response += `- "${review.content}" (Rating: ${review.overall_rating}/5.0)\n`;
+                            });
+                    } else {
+                        response += `\nNo reviews available yet. Be the first to review this course!\n`;
+                    }
+
+                    return response;
+                })
+                .join("\n\n");
         } catch (error) {
             console.error("Database search error:", error);
             throw error;
@@ -1129,6 +1285,7 @@ Use these functions thoughtfully to provide the most helpful responses possible.
             /prerequisite|corequisite|requirement/i,
             /professor|instructor|faculty/i,
             /syllabus|curriculum|program/i,
+            /find|search|list|show|what|which/i, // Add general search terms
         ];
 
         const currentEventPatterns = [
@@ -1233,6 +1390,20 @@ Use these functions thoughtfully to provide the most helpful responses possible.
         const primaryType = sortedTypes[0] as SearchContext["queryType"];
         const secondaryType = sortedTypes[1] as SearchContext["queryType"];
 
+        // For general queries without specific context, default to course search
+        if (
+            query.toLowerCase().includes("what") ||
+            query.toLowerCase().includes("find") ||
+            query.toLowerCase().includes("show")
+        ) {
+            return {
+                queryType: "course",
+                confidence: 0.8,
+                sources: ["database"],
+                timestamp: new Date().toISOString(),
+            };
+        }
+
         // Determine sources based on query types and confidence
         const sources = new Set<string>();
         if (normalizedScores[primaryType] > 0.6) {
@@ -1273,66 +1444,166 @@ Use these functions thoughtfully to provide the most helpful responses possible.
         };
     }
 
-    // Update the handleFunctionCall method to handle the new return types
-    static async handleFunctionCall(functionCall: any): Promise<string> {
-        const { name, arguments: args } = functionCall;
+    // Update the handleFunctionCall method to handle the new tool call format
+    static async handleFunctionCall(toolCall: any): Promise<string> {
+        const {
+            function: { name, arguments: args },
+        } = toolCall;
         const parsedArgs = JSON.parse(args);
 
-        switch (name) {
-            // ... existing cases ...
-            case "search_courses_database":
-                return await this.searchCoursesDatabase(
-                    parsedArgs.query,
-                    parsedArgs.filters
-                );
-            case "search_web":
-                return await this.searchWeb(parsedArgs.query, {
-                    maxResults: parsedArgs.maxResults,
-                    minRelevance: parsedArgs.minRelevance,
-                    sourceTypes: parsedArgs.sourceTypes,
-                });
-            case "hybrid_search":
-                return await this.hybridSearch(parsedArgs.query, {
-                    databaseFilters: parsedArgs.databaseFilters,
-                    webFilters: parsedArgs.webFilters,
-                });
-            default:
-                throw new Error(`Unknown function: ${name}`);
+        try {
+            switch (name) {
+                case "search_courses":
+                    // Ensure we have a query, even if it's empty
+                    const query = parsedArgs.query || "";
+                    // Add default filters if none provided
+                    const filters = {
+                        ...parsedArgs,
+                        query,
+                        // Add default filters for better results
+                        minCredits: parsedArgs.minCredits || 0,
+                        maxCredits: parsedArgs.maxCredits || 6,
+                    };
+                    return await this.searchCoursesDatabase(query, filters);
+                case "web_search":
+                    return await this.searchWeb(parsedArgs.query, {
+                        maxResults: parsedArgs.maxResults || 5,
+                        minRelevance: parsedArgs.minRelevance || 0.7,
+                        sourceTypes: parsedArgs.sourceTypes || [
+                            "news",
+                            "current",
+                        ],
+                    });
+                case "hybrid_search":
+                    return await this.hybridSearch(parsedArgs.query, {
+                        databaseFilters: parsedArgs.databaseFilters || {},
+                        webFilters: parsedArgs.webFilters || {
+                            maxResults: 3,
+                            minRelevance: 0.8,
+                            sourceTypes: ["academic", "research"],
+                        },
+                    });
+                case "get_course_details":
+                    return await this.searchCoursesDatabase(
+                        parsedArgs.courseId,
+                        {
+                            exactMatch: true,
+                            includeReviews: true,
+                            includeRequirements: true,
+                        }
+                    );
+                case "get_course_reviews":
+                    return await this.searchCoursesDatabase(
+                        parsedArgs.courseId,
+                        {
+                            includeReviews: true,
+                            minRating: parsedArgs.minRating || 0,
+                            maxRating: parsedArgs.maxRating || 5,
+                        }
+                    );
+                case "get_course_schedule":
+                    return await this.searchCoursesDatabase(
+                        parsedArgs.courseId,
+                        {
+                            semester: parsedArgs.semester,
+                            year: parsedArgs.year,
+                            includeSchedule: true,
+                        }
+                    );
+                case "get_course_requirements":
+                    return await this.searchCoursesDatabase(
+                        parsedArgs.courseId,
+                        {
+                            includeRequirements: true,
+                        }
+                    );
+                case "get_course_categories":
+                    return await this.searchCoursesDatabase("", {
+                        listCategories: true,
+                    });
+                default:
+                    throw new Error(`Unknown function: ${name}`);
+            }
+        } catch (error: any) {
+            console.error(`Error executing ${name}:`, error);
+            // Provide a more helpful error message
+            if (name === "search_courses") {
+                return "I encountered an error while searching for courses. Please try again with a different search term or more specific criteria.";
+            }
+            return `Error executing ${name}: ${error.message}`;
         }
     }
 
     // Add response formatting functions
     static formatCourseResponse(results: any[]): string {
         if (!results.length) {
-            return "I couldn't find any courses matching your query.";
+            return "I couldn't find any courses matching your query. Please try a different search term or check the spelling.";
         }
 
         return results
             .map((course) => {
                 const code = course.code || "";
                 const title = course.title || course.name || "No Title";
-                return (
-                    `**${code}: ${title}**\n` +
-                    `${course.description ? course.description + "\n" : ""}` +
-                    `Credits: ${course.credits}\n` +
-                    `Department: ${course.department}\n`
-                );
+                let response = `**${code}: ${title}**\n`;
+
+                if (course.description) {
+                    response += `${course.description}\n`;
+                }
+
+                response += `Credits: ${course.credits}\n`;
+                response += `Department: ${course.department}\n`;
+
+                if (course.prerequisites) {
+                    response += `Prerequisites: ${course.prerequisites}\n`;
+                }
+
+                if (course.semester) {
+                    response += `Offered: ${course.semester}\n`;
+                }
+
+                if (course.instructor) {
+                    response += `Instructor: ${course.instructor}\n`;
+                }
+
+                if (course.reviews && course.reviews.length > 0) {
+                    const avgRating =
+                        course.reviews.reduce(
+                            (acc: number, review: any) => acc + review.rating,
+                            0
+                        ) / course.reviews.length;
+                    response += `Average Rating: ${avgRating.toFixed(1)}/5.0\n`;
+                }
+
+                return response;
             })
             .join("\n");
     }
 
     static formatWebResponse(results: any[]): string {
         if (!results.length) {
-            return "I couldn't find any recent information matching your query.";
+            return "I couldn't find any recent information matching your query. Please try a different search term or check the spelling.";
         }
 
         return results
-            .map(
-                (result) =>
-                    `According to ${result.source} (accessed ${new Date().toLocaleDateString()}):\n` +
-                    `${result.snippet}\n` +
-                    `Source: ${result.link}\n`
-            )
+            .map((result) => {
+                const source = result.source || "Unknown Source";
+                const date = new Date().toLocaleDateString();
+                let response = `According to ${source} (accessed ${date}):\n`;
+
+                if (result.snippet) {
+                    response += `${result.snippet}\n`;
+                }
+
+                if (result.link) {
+                    response += `Source: ${result.link}\n`;
+                }
+
+                if (result.relevance) {
+                    response += `Relevance: ${(result.relevance * 100).toFixed(0)}%\n`;
+                }
+
+                return response;
+            })
             .join("\n");
     }
 
@@ -1353,24 +1624,38 @@ Use these functions thoughtfully to provide the most helpful responses possible.
                 this.formatWebResponse(webResults.content);
         }
 
-        return (
-            response ||
-            "I couldn't find any relevant information from either source."
-        );
+        if (!response) {
+            return "I couldn't find any relevant information from either source. Please try a different search term or check the spelling.";
+        }
+
+        return response;
     }
 
     static formatTechnicalResponse(results: any[]): string {
         if (!results.length) {
-            return "I couldn't find any technical documentation matching your query.";
+            return "I couldn't find any technical documentation matching your query. Please try a different search term or check the spelling.";
         }
 
         return results
-            .map(
-                (result) =>
-                    `According to ${result.source} (${result.version || "latest"}):\n` +
-                    `${result.snippet}\n` +
-                    `Documentation: ${result.link}\n`
-            )
+            .map((result) => {
+                const source = result.source || "Unknown Source";
+                const version = result.version || "latest";
+                let response = `According to ${source} (${version}):\n`;
+
+                if (result.snippet) {
+                    response += `${result.snippet}\n`;
+                }
+
+                if (result.link) {
+                    response += `Documentation: ${result.link}\n`;
+                }
+
+                if (result.relevance) {
+                    response += `Relevance: ${(result.relevance * 100).toFixed(0)}%\n`;
+                }
+
+                return response;
+            })
             .join("\n");
     }
 }

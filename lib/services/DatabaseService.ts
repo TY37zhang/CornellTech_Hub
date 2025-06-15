@@ -18,6 +18,11 @@ export interface Course {
     concentration_elective: string | null;
     created_at: string;
     updated_at: string;
+    review_count?: number;
+    avg_rating?: number;
+    avg_difficulty?: number;
+    avg_workload?: number;
+    latest_review_date?: string;
 }
 
 export interface CourseReview {
@@ -170,27 +175,47 @@ export class DatabaseService {
             const cached = this.cache.get<Course[]>(cacheKey);
             if (cached) return cached;
 
+            // Split query into words for more flexible matching
+            const searchTerms = query
+                .toLowerCase()
+                .split(/\s+/)
+                .filter((term) => term.length > 0);
+
             const conditions = [];
             const params = [];
             let paramIndex = 1;
 
-            // Base search condition
-            conditions.push(`(
-                c.code ILIKE $${paramIndex} OR
-                c.name ILIKE $${paramIndex} OR
-                c.description ILIKE $${paramIndex}
-            )`);
-            params.push(`%${query}%`);
-            paramIndex++;
+            // Check if query matches a course code pattern
+            const codeMatch = query.match(/^[A-Z]{2,4}\s*\d{4}$/i);
+            if (codeMatch) {
+                conditions.push(`LOWER(c.code) = LOWER($${paramIndex})`);
+                params.push(codeMatch[0].replace(/\s+/g, ""));
+                paramIndex++;
+            } else {
+                // Base search condition with more flexible matching
+                if (searchTerms.length > 0) {
+                    const searchConditions = searchTerms.map((term) => {
+                        const conditions = [
+                            `LOWER(c.code) LIKE $${paramIndex}`,
+                            `LOWER(c.name) LIKE $${paramIndex}`,
+                            `LOWER(c.description) LIKE $${paramIndex}`,
+                        ];
+                        params.push(`%${term}%`);
+                        paramIndex++;
+                        return `(${conditions.join(" OR ")})`;
+                    });
+                    conditions.push(`(${searchConditions.join(" AND ")})`);
+                }
+            }
 
             // Add filters
             if (department) {
-                conditions.push(`c.department = $${paramIndex}`);
+                conditions.push(`LOWER(c.department) = LOWER($${paramIndex})`);
                 params.push(department);
                 paramIndex++;
             }
             if (semester) {
-                conditions.push(`c.semester = $${paramIndex}`);
+                conditions.push(`LOWER(c.semester) = LOWER($${paramIndex})`);
                 params.push(semester);
                 paramIndex++;
             }
@@ -210,7 +235,7 @@ export class DatabaseService {
                 paramIndex++;
             }
             if (category) {
-                conditions.push(`cc.slug = $${paramIndex}`);
+                conditions.push(`LOWER(cc.slug) = LOWER($${paramIndex})`);
                 params.push(category);
                 paramIndex++;
             }
@@ -220,43 +245,82 @@ export class DatabaseService {
                     ? `WHERE ${conditions.join(" AND ")}`
                     : "";
 
-            // First get all matching courses
+            // Get courses with review information
             const sqlQuery = `
-                SELECT c.*
+                WITH course_reviews_summary AS (
+                    SELECT 
+                        c.id,
+                        COUNT(cr.id) as review_count,
+                        ROUND(AVG(cr.overall_rating)::numeric, 1) as avg_rating,
+                        ROUND(AVG(cr.difficulty)::numeric, 1) as avg_difficulty,
+                        ROUND(AVG(cr.workload)::numeric, 1) as avg_workload,
+                        MAX(cr.created_at) as latest_review_date
+                    FROM courses c
+                    LEFT JOIN course_reviews cr ON c.id = cr.course_id
+                    GROUP BY c.id
+                )
+                SELECT 
+                    c.*,
+                    crs.review_count,
+                    crs.avg_rating,
+                    crs.avg_difficulty,
+                    crs.avg_workload,
+                    crs.latest_review_date
                 FROM courses c
                 LEFT JOIN course_category_junction ccj ON c.id = ccj.course_id
                 LEFT JOIN course_categories cc ON ccj.category_id = cc.id
+                LEFT JOIN course_reviews_summary crs ON c.id = crs.id
                 ${whereClause}
-                ORDER BY c.name ASC, c.code ASC
+                ORDER BY 
+                    CASE 
+                        WHEN LOWER(c.name) = LOWER($1) THEN 1
+                        WHEN LOWER(c.name) LIKE LOWER($1) || '%' THEN 2
+                        WHEN LOWER(c.name) LIKE '%' || LOWER($1) || '%' THEN 3
+                        ELSE 4
+                    END,
+                    c.name ASC, 
+                    c.code ASC
             `;
 
             const allCourses = await executeQuery<Course>(sqlQuery, params);
 
-            // Group courses by name only
+            // Group courses by name and professor
             const courseMap = new Map<string, Course>();
             allCourses.forEach((course) => {
-                const key = course.name.toLowerCase(); // Use lowercase for case-insensitive matching
+                const key = `${course.name.toLowerCase()}_${course.professor_id}`;
                 if (courseMap.has(key)) {
-                    // If course exists, append the code and department
                     const existingCourse = courseMap.get(key)!;
-                    // Only append if the code is not already included and matches course code pattern
-                    if (
-                        !existingCourse.code.includes(course.code) &&
-                        /^[A-Z]{2,4}\s*\d{4}$/.test(course.code)
-                    ) {
+                    if (!existingCourse.code.includes(course.code)) {
                         existingCourse.code = `${existingCourse.code}, ${course.code}`;
                     }
-                    // Only append if the department is not already included
                     if (
                         !existingCourse.department.includes(course.department)
                     ) {
                         existingCourse.department = `${existingCourse.department}, ${course.department}`;
                     }
-                } else {
-                    // Only include valid course codes
-                    if (!/^[A-Z]{2,4}\s*\d{4}$/.test(course.code)) {
-                        return;
+                    // Update review statistics
+                    existingCourse.review_count =
+                        (existingCourse.review_count || 0) +
+                        (course.review_count || 0);
+                    if (course.avg_rating) {
+                        existingCourse.avg_rating =
+                            ((existingCourse.avg_rating || 0) +
+                                course.avg_rating) /
+                            2;
                     }
+                    if (course.avg_difficulty) {
+                        existingCourse.avg_difficulty =
+                            ((existingCourse.avg_difficulty || 0) +
+                                course.avg_difficulty) /
+                            2;
+                    }
+                    if (course.avg_workload) {
+                        existingCourse.avg_workload =
+                            ((existingCourse.avg_workload || 0) +
+                                course.avg_workload) /
+                            2;
+                    }
+                } else {
                     courseMap.set(key, { ...course });
                 }
             });
@@ -265,6 +329,7 @@ export class DatabaseService {
             this.cache.set(cacheKey, courses);
             return courses;
         } catch (err) {
+            console.error("Error in searchCourses:", err);
             return this.handleDatabaseError(err, "searchCourses");
         }
     }
@@ -287,43 +352,77 @@ export class DatabaseService {
             const cached = this.cache.get<CourseReview[]>(cacheKey);
             if (cached) return cached;
 
-            let sqlQuery = sql`
-                SELECT cr.*, u.name as author_name, u.image as author_image
-                FROM course_reviews cr
-                JOIN users u ON cr.author_id = u.id
-                WHERE cr.course_id = ${courseId}
-            `;
+            // Build the base query with parameterized values
+            let queryParts = [
+                `SELECT cr.*, u.name as author_name, u.avatar_url as author_image`,
+                `FROM course_reviews cr`,
+                `JOIN users u ON cr.author_id = u.id`,
+                `WHERE cr.course_id = $1`,
+            ];
+            const queryParams: (string | number)[] = [courseId];
+            let paramIndex = 2;
 
-            if (minRating) {
-                sqlQuery = sql`${sqlQuery} AND cr.overall_rating >= ${minRating}`;
+            // Add filters with parameterized values
+            if (minRating !== undefined) {
+                queryParts.push(`AND cr.overall_rating >= $${paramIndex}`);
+                queryParams.push(minRating);
+                paramIndex++;
             }
-            if (maxRating) {
-                sqlQuery = sql`${sqlQuery} AND cr.overall_rating <= ${maxRating}`;
+            if (maxRating !== undefined) {
+                queryParts.push(`AND cr.overall_rating <= $${paramIndex}`);
+                queryParams.push(maxRating);
+                paramIndex++;
             }
-            if (minDifficulty) {
-                sqlQuery = sql`${sqlQuery} AND cr.difficulty >= ${minDifficulty}`;
+            if (minDifficulty !== undefined) {
+                queryParts.push(`AND cr.difficulty >= $${paramIndex}`);
+                queryParams.push(minDifficulty);
+                paramIndex++;
             }
-            if (maxDifficulty) {
-                sqlQuery = sql`${sqlQuery} AND cr.difficulty <= ${maxDifficulty}`;
+            if (maxDifficulty !== undefined) {
+                queryParts.push(`AND cr.difficulty <= $${paramIndex}`);
+                queryParams.push(maxDifficulty);
+                paramIndex++;
             }
-            if (minWorkload) {
-                sqlQuery = sql`${sqlQuery} AND cr.workload >= ${minWorkload}`;
+            if (minWorkload !== undefined) {
+                queryParts.push(`AND cr.workload >= $${paramIndex}`);
+                queryParams.push(minWorkload);
+                paramIndex++;
             }
-            if (maxWorkload) {
-                sqlQuery = sql`${sqlQuery} AND cr.workload <= ${maxWorkload}`;
+            if (maxWorkload !== undefined) {
+                queryParts.push(`AND cr.workload <= $${paramIndex}`);
+                queryParams.push(maxWorkload);
+                paramIndex++;
             }
 
-            // Add sorting
+            // Add sorting with safe column names
             const sortField = sortBy || "date";
             const order = sortOrder || "desc";
             const sortColumn = sortField === "date" ? "created_at" : sortField;
-            sqlQuery = sql`${sqlQuery} ORDER BY cr.${sortColumn} ${order}`;
 
-            if (limit) {
-                sqlQuery = sql`${sqlQuery} LIMIT ${limit}`;
+            // Validate sort column to prevent SQL injection
+            const validSortColumns = [
+                "created_at",
+                "overall_rating",
+                "difficulty",
+                "workload",
+            ];
+            const safeSortColumn = validSortColumns.includes(sortColumn)
+                ? sortColumn
+                : "created_at";
+            const safeOrder = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
+
+            // Add ORDER BY clause with validated column name
+            queryParts.push(`ORDER BY cr.${safeSortColumn} ${safeOrder}`);
+
+            // Add limit with parameterized value
+            if (limit !== undefined) {
+                queryParts.push(`LIMIT $${paramIndex}`);
+                queryParams.push(limit);
             }
 
-            const result = await sqlQuery;
+            // Construct the final query
+            const query = queryParts.join(" ");
+            const result = await sql(query, queryParams);
             const reviews = result as CourseReview[];
             this.cache.set(cacheKey, reviews);
             return reviews;

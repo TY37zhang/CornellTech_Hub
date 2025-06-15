@@ -53,9 +53,6 @@ export async function isDatabaseConnected() {
             error,
             message: error instanceof Error ? error.message : "Unknown error",
             code: (error as any).code,
-            type: error instanceof ErrorEvent ? error.type : "unknown",
-            timestamp:
-                error instanceof ErrorEvent ? error.timeStamp : undefined,
         });
         isConnected = false;
         return false;
@@ -76,9 +73,6 @@ export async function testDatabaseConnection() {
             error,
             message: error instanceof Error ? error.message : "Unknown error",
             code: (error as any).code,
-            type: error instanceof ErrorEvent ? error.type : "unknown",
-            timestamp:
-                error instanceof ErrorEvent ? error.timeStamp : undefined,
         });
         return false;
     }
@@ -88,6 +82,11 @@ export async function executeQuery<T>(
     query: string,
     params: any[] = []
 ): Promise<T[]> {
+    if (params && params.some((p) => p === undefined)) {
+        throw new Error(
+            `SQL query parameter is undefined. Query: ${query}, Params: ${JSON.stringify(params)}`
+        );
+    }
     let retries = 0;
     let lastError: unknown;
 
@@ -128,11 +127,6 @@ export async function executeQuery<T>(
                             ? error.message
                             : "Unknown error",
                     code: (error as any).code,
-                    type: error instanceof ErrorEvent ? error.type : "unknown",
-                    timestamp:
-                        error instanceof ErrorEvent
-                            ? error.timeStamp
-                            : undefined,
                     query,
                     params,
                 }
