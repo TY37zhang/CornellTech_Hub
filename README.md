@@ -10,13 +10,15 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 - Course reviews and ratings
 - Course planning and scheduling
 - Course categories and filtering
+- Advanced search functionality
 
 ### Academic Planning
 
-- Course planner with semester-by-semester planning
+- Interactive course planner with drag-and-drop functionality
 - Schedule management with day/time organization
 - Requirement tracking
 - Notes and status tracking for planned courses
+- Visual semester-by-semester planning
 
 ### Community Features
 
@@ -25,35 +27,39 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 - Like and view tracking
 - Saved posts and notifications
 - Tag system for better organization
+- User reputation system
 
 ### User Management
 
 - User profiles with program information
-- Avatar support
-- Authentication system
+- Avatar support with Cloudinary integration
+- Authentication system with NextAuth.js
 - Personalized settings
+- Email notifications via Resend
 
 ## Tech Stack
 
 ### Frontend
 
-- Next.js 15.3.1
-- React 18.3.1
+- Next.js
+- React
 - TypeScript
 - Tailwind CSS
 - Radix UI components
 - Framer Motion for animations
 - React Hook Form for form management
 - Zod for validation
+- DND Kit for drag-and-drop functionality
+- Sonner for toast notifications
 
 ### Backend
 
 - Next.js API routes
-- Prisma ORM
-- PostgreSQL database
+- Neon Database (PostgreSQL)
 - NextAuth.js for authentication
 - Cloudinary for media storage
 - Resend for email functionality
+- bcryptjs for password hashing
 
 ### Development Tools
 
@@ -61,13 +67,15 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 - TypeScript for type safety
 - PostCSS for CSS processing
 - Tailwind CSS for styling
+- next-sitemap for SEO optimization
+- Vercel Analytics and Speed Insights
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (latest LTS version)
-- PostgreSQL database
+- Neon Database account
 - Environment variables (see `.env.example`)
 
 ### Installation
@@ -109,10 +117,10 @@ The application will be available at `http://localhost:3000`.
 
 ## Project Structure
 
-```
+```plaintext
 cornell-tech-hub/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes (forum, user, planner, etc.)
+│   ├── api/               # API routes
 │   ├── auth/              # Authentication pages
 │   ├── components/        # Shared app-level components
 │   ├── courses/           # Course-related pages
@@ -129,26 +137,19 @@ cornell-tech-hub/
 │   ├── contact/           # Contact form/page
 │   ├── terms-of-service/  # Terms of service
 │   ├── privacy-policy/    # Privacy policy
-├── components/            # Global components (with ui/ and providers/)
+│   └── search-test/       # Search functionality testing
+├── components/            # Global components
 ├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions, db/auth/prisma/email helpers, validations
-├── middleware/            # Middleware logic (e.g., validation)
-├── prisma/                # Database schema and migrations (if present)
+├── lib/                   # Utility functions and helpers
+├── middleware/            # Middleware logic
 ├── public/                # Static assets
 ├── styles/                # Global styles
+└── db-info/              # Database related files
 ```
-
-- **app/components/**: Shared components used within the app directory.
-- **components/**: Global components, including UI primitives and providers.
-- **middleware/**: Contains middleware logic, such as validation.
-- **lib/**: Utility functions, database/auth/prisma/email helpers, and validations.
-- **prisma/**: Database schema and migrations (ensure this directory exists if using Prisma).
-
-Other directories such as `settings`, `user`, `my-reviews`, `reviews`, `animated-cards`, `coming-soon`, `faq`, `feedback`, `contact`, `terms-of-service`, and `privacy-policy` provide additional features and static/info pages.
 
 ## Database Schema
 
-The application uses a PostgreSQL database with the following main entities:
+The application uses Neon Database (PostgreSQL) with the following main entities:
 
 - Users
 - Courses
@@ -158,6 +159,8 @@ The application uses a PostgreSQL database with the following main entities:
 - Forum Posts
 - Forum Comments
 - Forum Categories
+- User Settings
+- Notifications
 
 ## Contributing
 
@@ -166,3 +169,7 @@ The application uses a PostgreSQL database with the following main entities:
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
