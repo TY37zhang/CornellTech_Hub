@@ -1,0 +1,162 @@
+"table_schema","table_name","column_name","data_type","character_maximum_length","numeric_precision","numeric_scale","is_nullable","column_default","ordinal_position"
+"public","chat_conversations","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","chat_conversations","user_id","uuid",,,,"NO",,2
+"public","chat_conversations","title","text",,,,"YES",,3
+"public","chat_conversations","created_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",4
+"public","chat_conversations","updated_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",5
+"public","chat_messages","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","chat_messages","conversation_id","uuid",,,,"NO",,2
+"public","chat_messages","user_id","uuid",,,,"YES",,3
+"public","chat_messages","role","character varying",16,,,"NO",,4
+"public","chat_messages","content","text",,,,"NO",,5
+"public","chat_messages","tokens","integer",,32,0,"NO","0",6
+"public","chat_messages","error","boolean",,,,"NO","false",7
+"public","chat_messages","created_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",8
+"public","comment_votes","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","comment_votes","comment_id","uuid",,,,"NO",,2
+"public","comment_votes","user_id","uuid",,,,"NO",,3
+"public","comment_votes","action_type","USER-DEFINED",,,,"NO",,4
+"public","comment_votes","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",5
+"public","comment_votes","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",6
+"public","course_categories","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","course_categories","name","character varying",50,,,"NO",,2
+"public","course_categories","slug","character varying",50,,,"NO",,3
+"public","course_categories","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",4
+"public","course_category_junction","course_id","uuid",,,,"NO",,1
+"public","course_category_junction","category_id","uuid",,,,"NO",,2
+"public","course_category_junction","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",3
+"public","course_planner","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","course_planner","user_id","uuid",,,,"NO",,2
+"public","course_planner","course_id","uuid",,,,"NO",,3
+"public","course_planner","requirement_type","character varying",32,,,"YES",,4
+"public","course_planner","semester","character varying",20,,,"YES",,5
+"public","course_planner","year","integer",,32,0,"YES",,6
+"public","course_planner","status","character varying",20,,,"YES","'planned'::character varying",7
+"public","course_planner","notes","text",,,,"YES",,8
+"public","course_planner","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",9
+"public","course_planner","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",10
+"public","course_planner","taken","boolean",,,,"YES","false",11
+"public","course_reviews","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","course_reviews","course_id","uuid",,,,"NO",,2
+"public","course_reviews","author_id","uuid",,,,"NO",,3
+"public","course_reviews","rating","integer",,32,0,"NO",,4
+"public","course_reviews","difficulty","integer",,32,0,"NO",,5
+"public","course_reviews","workload","integer",,32,0,"NO",,6
+"public","course_reviews","content","text",,,,"NO",,7
+"public","course_reviews","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",8
+"public","course_reviews","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",9
+"public","course_reviews","overall_rating","numeric",,2,1,"NO",,10
+"public","course_reviews","grade","character varying",8,,,"YES",,12
+"public","course_schedules","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","course_schedules","user_id","uuid",,,,"NO",,2
+"public","course_schedules","course_id","uuid",,,,"NO",,3
+"public","course_schedules","day","character varying",20,,,"NO",,4
+"public","course_schedules","start_time","character varying",10,,,"NO",,5
+"public","course_schedules","end_time","character varying",10,,,"NO",,6
+"public","course_schedules","created_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",7
+"public","course_schedules","updated_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",8
+"public","course_special_requirements","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","course_special_requirements","user_id","uuid",,,,"NO",,2
+"public","course_special_requirements","requirement_type","USER-DEFINED",,,,"NO",,3
+"public","course_special_requirements","selected_course_id","character varying",255,,,"YES",,4
+"public","course_special_requirements","deducted_from_category","character varying",255,,,"YES",,5
+"public","course_special_requirements","credit_amount","integer",,32,0,"NO","'-1'::integer",6
+"public","course_special_requirements","added_to_category","character varying",255,,,"YES",,7
+"public","course_special_requirements","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",8
+"public","course_special_requirements","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",9
+"public","courses","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","courses","code","character varying",20,,,"NO",,2
+"public","courses","name","character varying",255,,,"NO",,3
+"public","courses","description","text",,,,"YES",,4
+"public","courses","credits","integer",,32,0,"NO",,5
+"public","courses","department","character varying",100,,,"NO",,6
+"public","courses","semester","character varying",20,,,"NO",,7
+"public","courses","year","integer",,32,0,"NO",,8
+"public","courses","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",10
+"public","courses","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",11
+"public","courses","professor_id","character varying",255,,,"NO","'Unknown Professor'::character varying",12
+"public","courses","full_code","character varying",32,,,"YES",,13
+"public","courses","concentration_core","character varying",32,,,"YES",,14
+"public","courses","concentration_elective","character varying",32,,,"YES",,15
+"public","feedback","id","integer",,32,0,"NO","nextval('feedback_id_seq'::regclass)",1
+"public","feedback","user_id","uuid",,,,"NO",,2
+"public","feedback","type","text",,,,"NO",,3
+"public","feedback","message","text",,,,"NO",,4
+"public","feedback","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",5
+"public","feedback","status","text",,,,"NO","'pending'::text",6
+"public","feedback","admin_notes","text",,,,"YES",,7
+"public","forum_categories","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","forum_categories","name","character varying",100,,,"NO",,2
+"public","forum_categories","description","text",,,,"YES",,3
+"public","forum_categories","slug","character varying",100,,,"NO",,4
+"public","forum_categories","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",5
+"public","forum_comments","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","forum_comments","content","text",,,,"NO",,2
+"public","forum_comments","post_id","uuid",,,,"NO",,3
+"public","forum_comments","author_id","uuid",,,,"NO",,4
+"public","forum_comments","parent_id","uuid",,,,"YES",,5
+"public","forum_comments","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",6
+"public","forum_comments","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",7
+"public","forum_comments","like_count","integer",,32,0,"NO","0",8
+"public","forum_comments","dislike_count","integer",,32,0,"NO","0",9
+"public","forum_likes","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","forum_likes","post_id","uuid",,,,"NO",,2
+"public","forum_likes","user_id","uuid",,,,"NO",,3
+"public","forum_likes","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",4
+"public","forum_notification_preferences","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","forum_notification_preferences","post_id","uuid",,,,"NO",,2
+"public","forum_notification_preferences","user_id","uuid",,,,"NO",,3
+"public","forum_notification_preferences","notify_on_reply","boolean",,,,"NO","false",4
+"public","forum_notification_preferences","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",5
+"public","forum_notification_preferences","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",6
+"public","forum_post_tags","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","forum_post_tags","post_id","uuid",,,,"NO",,2
+"public","forum_post_tags","tag","character varying",100,,,"NO",,3
+"public","forum_post_tags","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",4
+"public","forum_posts","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","forum_posts","title","character varying",255,,,"NO",,2
+"public","forum_posts","content","text",,,,"NO",,3
+"public","forum_posts","author_id","uuid",,,,"NO",,4
+"public","forum_posts","category_id","uuid",,,,"NO",,5
+"public","forum_posts","status","character varying",50,,,"NO","'active'::character varying",6
+"public","forum_posts","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",7
+"public","forum_posts","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",8
+"public","forum_posts","notify_on_reply","boolean",,,,"NO","false",9
+"public","forum_saved","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","forum_saved","user_id","uuid",,,,"NO",,2
+"public","forum_saved","post_id","uuid",,,,"NO",,3
+"public","forum_saved","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",4
+"public","forum_views","id","uuid",,,,"NO","gen_random_uuid()",1
+"public","forum_views","post_id","uuid",,,,"NO",,2
+"public","forum_views","user_id","uuid",,,,"YES",,3
+"public","forum_views","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",4
+"public","marketplace_items","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","marketplace_items","title","character varying",255,,,"NO",,2
+"public","marketplace_items","description","text",,,,"NO",,3
+"public","marketplace_items","price","numeric",,10,2,"NO",,4
+"public","marketplace_items","category","character varying",100,,,"NO",,5
+"public","marketplace_items","condition","character varying",50,,,"NO",,6
+"public","marketplace_items","image_url","text",,,,"YES",,7
+"public","marketplace_items","seller_id","uuid",,,,"NO",,8
+"public","marketplace_items","status","character varying",50,,,"NO","'active'::character varying",9
+"public","marketplace_items","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",10
+"public","marketplace_items","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",11
+"public","search_cache","query","text",,,,"NO",,1
+"public","search_cache","results","jsonb",,,,"NO",,2
+"public","search_cache","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",3
+"public","search_costs","id","integer",,32,0,"NO","nextval('search_costs_id_seq'::regclass)",1
+"public","search_costs","cost","numeric",,10,4,"NO",,2
+"public","search_costs","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",3
+"public","user_token_usage","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","user_token_usage","user_id","uuid",,,,"NO",,2
+"public","user_token_usage","month_year","character varying",7,,,"NO",,3
+"public","user_token_usage","tokens_used","integer",,32,0,"NO","0",4
+"public","user_token_usage","created_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",5
+"public","user_token_usage","updated_at","timestamp with time zone",,,,"NO","CURRENT_TIMESTAMP",6
+"public","users","id","uuid",,,,"NO","uuid_generate_v4()",1
+"public","users","email","character varying",255,,,"NO",,2
+"public","users","name","character varying",255,,,"NO",,3
+"public","users","avatar_url","text",,,,"YES",,4
+"public","users","created_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",5
+"public","users","updated_at","timestamp with time zone",,,,"YES","CURRENT_TIMESTAMP",6
+"public","users","program","character varying",20,,,"YES",,7
