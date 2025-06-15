@@ -208,7 +208,7 @@ export async function POST(req: Request) {
             // Get assistant response from OpenAIService
             const { response, costLog } = await OpenAIService.chat(
                 openaiMessages,
-                "gpt-3.5-turbo",
+                "gpt-4.1-mini",
                 false,
                 session.user.id,
                 session.user.program
