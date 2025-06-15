@@ -11,11 +11,25 @@ export async function executeQuery<T>(
     query: string,
     params?: any[]
 ): Promise<QueryResult<T>> {
+    let client;
     try {
-        const result = await pool.query(query, params);
+        client = await pool.connect();
+        const result = await client.query(query, params);
         return result;
     } catch (error) {
+        console.error("Database query error:", error);
+        if (error.code === "ECONNREFUSED") {
+            throw new Error(
+                "Database connection refused. Please try again later."
+            );
+        } else if (error.code === "ETIMEDOUT") {
+            throw new Error("Database connection timed out. Please try again.");
+        }
         throw error;
+    } finally {
+        if (client) {
+            client.release();
+        }
     }
 }
 
@@ -28,6 +42,14 @@ export async function executeServerlessQuery<T>(
         const result = await sql(query, params);
         return result;
     } catch (error) {
+        console.error("Serverless query error:", error);
+        if (error.code === "ECONNREFUSED") {
+            throw new Error(
+                "Database connection refused. Please try again later."
+            );
+        } else if (error.code === "ETIMEDOUT") {
+            throw new Error("Database connection timed out. Please try again.");
+        }
         throw error;
     }
 }

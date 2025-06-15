@@ -74,45 +74,59 @@ export async function GET(request) {
 
         // Get courses with filters - group by name and professor
         const coursesQuery = `
-            WITH course_data AS (
-                SELECT 
+            WITH unique_courses AS (
+                -- First get unique courses based on code, name, and professor
+                SELECT DISTINCT ON (c.code, c.name, c.professor_id)
+                    c.id,
+                    c.code,
                     c.name,
                     c.professor_id,
-                    STRING_AGG(DISTINCT c.code, ', ' ORDER BY c.code) as codes,
-                    STRING_AGG(DISTINCT c.department, ', ' ORDER BY c.department) as departments,
-                    COUNT(DISTINCT cr.id) as review_count,
+                    c.department,
+                    c.credits,
+                    c.semester,
+                    c.year,
+                    c.description
+                FROM courses c
+                ${whereClause}
+                ORDER BY c.code, c.name, c.professor_id, c.id
+            ),
+            course_reviews_summary AS (
+                -- Then get review information for these courses
+                SELECT 
+                    uc.id as course_id,
+                    COUNT(cr.id) as review_count,
                     ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
                     ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
                     ROUND(AVG(cr.workload)::numeric, 1) as workload,
                     ROUND(AVG(cr.rating)::numeric, 1) as value,
-                    MAX(cr.created_at) as MAX_CREATED_AT,
                     (
                         SELECT content 
                         FROM course_reviews 
-                        WHERE course_id IN (
-                            SELECT id FROM courses 
-                            WHERE name = c.name AND professor_id = c.professor_id
-                        )
+                        WHERE course_id = uc.id
                         ORDER BY created_at DESC 
                         LIMIT 1
                     ) as latest_review
-                FROM courses c
-                LEFT JOIN course_reviews cr ON c.id = cr.course_id
-                ${whereClause}
-                GROUP BY c.name, c.professor_id
+                FROM unique_courses uc
+                LEFT JOIN course_reviews cr ON uc.id = cr.course_id
+                GROUP BY uc.id
             )
             SELECT 
-                codes as code,
-                name as title,
-                professor_id as professor,
-                departments as category,
-                review_count,
-                rating,
-                difficulty,
-                workload,
-                value,
-                latest_review
-            FROM course_data
+                uc.code,
+                uc.name as title,
+                uc.professor_id as professor,
+                uc.department as category,
+                uc.credits,
+                uc.semester,
+                uc.year,
+                uc.description,
+                crs.review_count,
+                crs.rating,
+                crs.difficulty,
+                crs.workload,
+                crs.value,
+                crs.latest_review
+            FROM unique_courses uc
+            LEFT JOIN course_reviews_summary crs ON uc.id = crs.course_id
             ${orderByClause}
             LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `;
@@ -121,35 +135,25 @@ export async function GET(request) {
 
         // Transform the data to match the frontend interface
         const transformedCourses = courses.map((course) => {
-            // For category color, use the first department in the list
-            const primaryCategory = course.category
-                .split(",")[0]
-                .trim()
-                .toLowerCase();
+            // For category color, use the department
+            const category = course.category.toLowerCase();
 
             return {
-                id: course.code.split(",")[0].trim(), // Use the first code as the primary ID
+                id: course.code,
                 title: course.title,
                 professor: course.professor || "Unknown Professor",
-                category: primaryCategory,
+                category: category,
                 rating: Number(course.rating) || 0,
                 reviewCount: Number(course.review_count) || 0,
                 difficulty: Number(course.difficulty) || 0,
                 workload: Number(course.workload) || 0,
                 value: Number(course.value) || 0,
                 review: course.latest_review || "No reviews yet",
-                categoryColor: getCategoryColor(primaryCategory),
-                // Add additional fields for cross-listed information
-                crossListed: course.code.includes(",")
-                    ? {
-                          codes: course.code
-                              .split(",")
-                              .map((code) => code.trim()),
-                          departments: course.category
-                              .split(",")
-                              .map((dept) => dept.trim()),
-                      }
-                    : null,
+                categoryColor: getCategoryColor(category),
+                credits: course.credits,
+                semester: course.semester,
+                year: course.year,
+                description: course.description,
             };
         });
 

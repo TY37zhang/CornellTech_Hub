@@ -28,6 +28,7 @@ import RequirementAssignment from "./components/RequirementAssignment";
 import CourseSchedule from "./components/CourseSchedule";
 import AdditionalQuestions from "./components/AdditionalQuestions";
 import Link from "next/link";
+import { FloatingChatButton } from "@/components/FloatingChatButton";
 
 /**
  * How to Use the Planner:
@@ -1490,6 +1491,8 @@ export default function PlannerPage() {
                     <HelpCircle className="h-6 w-6" />
                 </button>
             )}
+            {/* Chat Button */}
+            <FloatingChatButton />
             {/* Modal Popup for Help */}
             {showHelpModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
