@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
-
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 // Define the request schema
 const updateProfileSchema = z.object({
@@ -25,20 +22,19 @@ export async function GET() {
         }
 
         // Get user profile from database
-        const result = await sql`
-            SELECT id, name, email, avatar_url
-            FROM users
-            WHERE email = ${session.user.email}
-        `;
+        const user = await prisma.users.findUnique({
+            where: { email: session.user.email },
+            select: { id: true, name: true, email: true, avatar_url: true },
+        });
 
-        if (result.length === 0) {
+        if (!user) {
             return NextResponse.json(
                 { error: "User not found" },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json(result[0]);
+        return NextResponse.json(user);
     } catch (error) {
         console.error("Error fetching user profile:", error);
         return NextResponse.json(
@@ -65,21 +61,13 @@ export async function PATCH(request: NextRequest) {
         const validatedData = updateProfileSchema.parse(body);
 
         // Update user profile in database
-        const result = await sql`
-            UPDATE users
-            SET name = ${validatedData.name}
-            WHERE email = ${session.user.email}
-            RETURNING id, name, email, avatar_url
-        `;
+        const updatedUser = await prisma.users.update({
+            where: { email: session.user.email },
+            data: { name: validatedData.name },
+            select: { id: true, name: true, email: true, avatar_url: true },
+        });
 
-        if (result.length === 0) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(result[0]);
+        return NextResponse.json(updatedUser);
     } catch (error) {
         console.error("Error updating user profile:", error);
 

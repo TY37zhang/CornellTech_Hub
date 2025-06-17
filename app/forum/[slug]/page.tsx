@@ -10,11 +10,9 @@ import {
     ThumbsUp,
     SortAsc,
 } from "lucide-react";
-import { neon } from "@neondatabase/serverless";
-import { getForumPostById, getForumComments } from "../actions";
+import { prisma } from "@/lib/db/prisma";
 import ThreadContent from "./ThreadContent";
 import { notFound } from "next/navigation";
-import { getThreadData } from "./actions";
 
 // Helper function to format date
 function formatDate(dateStr: string): string {
@@ -43,51 +41,106 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function getThreadData(slug: string) {
-    const post = await getForumPostById(slug);
+    const post = await prisma.forum_posts.findUnique({
+        where: { id: slug },
+        include: {
+            users: {
+                select: {
+                    id: true,
+                    name: true,
+                    avatar_url: true,
+                },
+            },
+            forum_categories: {
+                select: {
+                    name: true,
+                },
+            },
+            forum_post_tags: {
+                select: {
+                    tag: true,
+                },
+            },
+            forum_likes: {
+                select: { id: true },
+            },
+            forum_views: {
+                select: { id: true },
+            },
+            forum_comments: {
+                include: {
+                    users: {
+                        select: {
+                            name: true,
+                            avatar_url: true,
+                        },
+                    },
+                    comment_votes: {
+                        select: {
+                            action_type: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
     if (!post) {
         return null;
     }
-
-    const comments = await getForumComments(slug);
 
     // Format the thread data
     const threadData = {
         id: post.id,
         title: post.title,
         content: post.content,
-        category: post.category_name,
+        category: post.forum_categories.name,
         createdAt: formatDate(post.created_at),
         author: {
-            name: post.author_name,
-            avatar: post.author_avatar || "/placeholder.svg?height=40&width=40",
+            name: post.users.name,
+            avatar:
+                post.users.avatar_url || "/placeholder.svg?height=40&width=40",
             program: "Student",
             joinDate: formatDate(post.created_at),
-            postCount: post.author_post_count || 0,
-            totalLikes: post.author_total_likes || 0,
+            postCount: await prisma.forum_posts.count({
+                where: { author_id: post.users.id, status: "active" },
+            }),
+            totalLikes: await prisma.forum_likes.count({
+                where: { forum_posts: { author_id: post.users.id } },
+            }),
         },
-        tags: post.tags || [],
+        tags: post.forum_post_tags.map((tag) => tag.tag),
         stats: {
-            replies: comments.length,
-            likes: post.like_count || 0,
-            views: post.view_count || 0,
+            replies: post.forum_comments.length,
+            likes: post.forum_likes.length,
+            views: post.forum_views.length,
         },
     };
 
     // Format the comments
-    const formattedComments = comments.map((comment) => ({
-        id: comment.id,
-        content: comment.content,
-        createdAt: formatDate(comment.created_at),
-        like_count: comment.like_count || 0,
-        dislike_count: comment.dislike_count || 0,
-        author: {
-            name: comment.author_name,
-            avatar:
-                comment.author_avatar || "/placeholder.svg?height=40&width=40",
-            program: "Student",
-            joinDate: formatDate(comment.created_at),
-        },
-    }));
+    const formattedComments = post.forum_comments.map((comment) => {
+        const likeCount = comment.comment_votes.filter(
+            (v) => v.action_type === "upvote"
+        ).length;
+        const dislikeCount = comment.comment_votes.filter(
+            (v) => v.action_type === "downvote"
+        ).length;
+
+        return {
+            id: comment.id,
+            content: comment.content,
+            createdAt: formatDate(comment.created_at),
+            like_count: likeCount,
+            dislike_count: dislikeCount,
+            author: {
+                name: comment.users.name,
+                avatar:
+                    comment.users.avatar_url ||
+                    "/placeholder.svg?height=40&width=40",
+                program: "Student",
+                joinDate: formatDate(comment.created_at),
+            },
+        };
+    });
 
     return {
         threadData,

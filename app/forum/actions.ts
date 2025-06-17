@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { neon } from "@neondatabase/serverless";
 import { sendForumReplyNotification } from "@/lib/email/forum-notifications";
-import { sql } from "@/lib/db/config";
+import { prisma } from "@/lib/db/prisma";
+
+// Helper to extract UUID from slug or return original if already UUID
+function extractUUID(id: string): string {
+    const match = id.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+    );
+    return match ? match[0] : id;
+}
 
 export async function createThread({
     title,
@@ -21,7 +28,7 @@ export async function createThread({
     notifyOnReply: boolean;
 }) {
     try {
-        // Validate UUID format
+        // Validate UUID format for author
         if (
             !authorId.match(
                 /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -30,89 +37,73 @@ export async function createThread({
             throw new Error("Invalid author ID format");
         }
 
-        // First, ensure the forum_categories table exists and has the category
-        const categoryQuery = `
-            INSERT INTO forum_categories (name, slug, description)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (slug) DO NOTHING
-            RETURNING id
-        `;
-        const categoryName =
-            category.charAt(0).toUpperCase() + category.slice(1);
-        const categoryResult = await sql(categoryQuery, [
-            categoryName,
-            category,
-            `Discussions about ${category}`,
-        ]);
+        // Perform all DB writes atomically
+        const newPostId = await prisma.$transaction(async (tx) => {
+            // 1. Ensure category exists (upsert)
+            const categoryName =
+                category.charAt(0).toUpperCase() + category.slice(1);
 
-        if (!categoryResult || !categoryResult[0]?.id) {
-            // If no result from insert, try to get existing category
-            const existingCategoryQuery = `
-                SELECT id FROM forum_categories WHERE slug = $1
-            `;
-            const existingCategory = await sql(existingCategoryQuery, [
-                category,
-            ]);
-            if (!existingCategory || !existingCategory[0]?.id) {
-                throw new Error(
-                    `Failed to create or find category: ${category}`
-                );
+            const categoryRecord = await tx.forum_categories.upsert({
+                where: { slug: category },
+                update: {},
+                create: {
+                    name: categoryName,
+                    slug: category,
+                    description: `Discussions about ${category}`,
+                },
+            });
+
+            // 2. Create the post
+            const post = await tx.forum_posts.create({
+                data: {
+                    title,
+                    content,
+                    author_id: authorId,
+                    category_id: categoryRecord.id,
+                    status: "active",
+                    notify_on_reply: notifyOnReply,
+                },
+            });
+
+            // 3. Tags
+            if (tags.length > 0) {
+                await tx.forum_post_tags.createMany({
+                    data: tags.map((tag) => ({
+                        post_id: post.id,
+                        tag,
+                        created_at: new Date(),
+                    })),
+                    skipDuplicates: true,
+                });
             }
-            categoryResult[0] = existingCategory[0];
-        }
 
-        const categoryId = categoryResult[0].id;
+            // 4. Notification preference
+            if (notifyOnReply) {
+                await tx.forum_notification_preferences.upsert({
+                    where: {
+                        post_id_user_id: {
+                            post_id: post.id,
+                            user_id: authorId,
+                        },
+                    },
+                    update: {
+                        notify_on_reply: true,
+                    },
+                    create: {
+                        post_id: post.id,
+                        user_id: authorId,
+                        notify_on_reply: true,
+                    },
+                });
+            }
 
-        // Insert the thread into forum_posts table
-        const postQuery = `
-            INSERT INTO forum_posts (title, content, author_id, category_id, status, notify_on_reply)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id
-        `;
-        const postResult = await sql(postQuery, [
-            title,
-            content,
-            authorId,
-            categoryId,
-            "active",
-            notifyOnReply,
-        ]);
+            return post.id;
+        });
 
-        if (!postResult || !postResult[0]?.id) {
-            throw new Error("Failed to create forum post");
-        }
-
-        const postId = postResult[0].id;
-
-        // Insert tags for the post
-        if (tags.length > 0) {
-            const tagValues = tags
-                .map((_, index) => `($1, $${index + 2}, $${tags.length + 2})`)
-                .join(", ");
-            const tagQuery = `
-                INSERT INTO forum_post_tags (post_id, tag, created_at)
-                VALUES ${tagValues}
-                ON CONFLICT (post_id, tag) DO NOTHING
-            `;
-            const tagParams = [postId, ...tags, new Date()];
-            await sql(tagQuery, tagParams);
-        }
-
-        // Store notification preference if needed
-        if (notifyOnReply) {
-            const notificationQuery = `
-                INSERT INTO forum_notification_preferences (post_id, user_id, notify_on_reply)
-                VALUES ($1, $2, true)
-                ON CONFLICT (post_id, user_id) DO UPDATE
-                SET notify_on_reply = true
-            `;
-            await sql(notificationQuery, [postId, authorId]);
-        }
-
-        // Revalidate the forum page to show the new thread
+        // Revalidate path so the new thread appears
         revalidatePath("/forum");
 
-        return { success: true, threadId: postId };
+        return { success: true, threadId: newPostId };
     } catch (error) {
         console.error("Error creating thread:", error);
         if (error instanceof Error) {
@@ -162,86 +153,115 @@ export async function getForumPosts(
             offset,
         });
 
-        // Build the search condition
-        let searchCondition = "";
-        let params: any[] = [];
-        if (search) {
-            searchCondition = `
-                AND (
-                    fp.title ILIKE $1
-                    OR fp.content ILIKE $1
-                    OR u.name ILIKE $1
-                )
-            `;
-            params.push(`%${search}%`);
-        }
+        const total = await prisma.forum_posts.count({
+            where: {
+                status: "active",
+                OR: search
+                    ? [
+                          { title: { contains: search, mode: "insensitive" } },
+                          {
+                              content: {
+                                  contains: search,
+                                  mode: "insensitive",
+                              },
+                          },
+                          {
+                              users: {
+                                  name: {
+                                      contains: search,
+                                      mode: "insensitive",
+                                  },
+                              },
+                          },
+                      ]
+                    : undefined,
+            },
+        });
 
-        // Get total count
-        const countQuery = `
-            SELECT COUNT(DISTINCT fp.id) as total
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            WHERE fp.status = 'active'
-            ${searchCondition}
-        `;
-        const countResult = await sql(countQuery, params);
-        const total = parseInt(countResult[0].total);
-
-        // Get posts with all related data
-        const postsQuery = `
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count,
-                ARRAY_AGG(DISTINCT fpt.tag) as tags
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-            WHERE fp.status = 'active'
-            ${searchCondition}
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-            ORDER BY fp.created_at DESC
-            LIMIT $${params.length + 1} OFFSET $${params.length + 2}
-        `;
-        params.push(limit, offset);
-        const posts = await sql(postsQuery, params);
-
-        // Format the response
-        const formattedPosts: ForumPostResponse[] = posts.map((post) => ({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            created_at:
-                post.created_at?.toISOString() || new Date().toISOString(),
-            updated_at:
-                post.updated_at?.toISOString() || new Date().toISOString(),
-            category_name: post.category_name,
-            category_slug: post.category_slug,
-            author_name: post.author_name,
-            author_avatar: post.author_avatar,
-            author_id: post.author_id,
-            reply_count: parseInt(post.reply_count),
-            like_count: parseInt(post.like_count),
-            view_count: parseInt(post.view_count),
-            tags: post.tags.filter(Boolean), // Remove null values from tags array
-        }));
+        const posts = await prisma.forum_posts.findMany({
+            where: {
+                status: "active",
+                OR: search
+                    ? [
+                          { title: { contains: search, mode: "insensitive" } },
+                          {
+                              content: {
+                                  contains: search,
+                                  mode: "insensitive",
+                              },
+                          },
+                          {
+                              users: {
+                                  name: {
+                                      contains: search,
+                                      mode: "insensitive",
+                                  },
+                              },
+                          },
+                      ]
+                    : undefined,
+            },
+            include: {
+                users: {
+                    select: {
+                        name: true,
+                        avatar_url: true,
+                        id: true,
+                    },
+                },
+                forum_categories: {
+                    select: {
+                        name: true,
+                        slug: true,
+                    },
+                },
+                forum_comments: {
+                    select: {
+                        id: true,
+                    },
+                },
+                forum_likes: {
+                    select: {
+                        id: true,
+                    },
+                },
+                forum_views: {
+                    select: {
+                        id: true,
+                    },
+                },
+                forum_post_tags: {
+                    select: {
+                        tag: true,
+                    },
+                },
+            },
+            orderBy: { created_at: "desc" },
+            take: limit,
+            skip: offset,
+        });
 
         return {
-            posts: formattedPosts,
+            posts: posts.map((post) => ({
+                id: post.id,
+                title: post.title,
+                content: post.content,
+                created_at:
+                    post.created_at?.toISOString() || new Date().toISOString(),
+                updated_at:
+                    post.updated_at?.toISOString() || new Date().toISOString(),
+                category_name: post.forum_categories.name,
+                category_slug: post.forum_categories.slug,
+                author_name: post.users.name,
+                author_avatar: post.users.avatar_url,
+                author_id: post.users.id,
+                reply_count: post.forum_comments.length,
+                like_count: post.forum_likes.length,
+                view_count: post.forum_views.length,
+                tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
+                author_post_count: 0, // Not available in Prisma query
+                author_total_likes: 0, // Not available in Prisma query
+            })),
             total,
         };
     } catch (error) {
@@ -262,65 +282,53 @@ export async function getForumPostsByCategory(
     offset = 0
 ): Promise<{ posts: ForumPostResponse[]; total: number }> {
     try {
-        // Get total count
-        const countQuery = `
-            SELECT COUNT(DISTINCT fp.id) as total
-            FROM forum_posts fp
-            JOIN forum_categories fc ON fp.category_id = fc.id
-            WHERE fp.status = 'active' AND fc.slug = $1
-        `;
-        const countResult = await sql(countQuery, [categorySlug]);
-        const total = parseInt(countResult[0].total);
+        const [total, posts] = await Promise.all([
+            prisma.forum_posts.count({
+                where: {
+                    status: "active",
+                    forum_categories: { slug: categorySlug },
+                },
+            }),
+            prisma.forum_posts.findMany({
+                where: {
+                    status: "active",
+                    forum_categories: { slug: categorySlug },
+                },
+                include: {
+                    users: {
+                        select: { name: true, avatar_url: true, id: true },
+                    },
+                    forum_categories: { select: { name: true, slug: true } },
+                    forum_comments: { select: { id: true } },
+                    forum_likes: { select: { id: true } },
+                    forum_views: { select: { id: true } },
+                    forum_post_tags: { select: { tag: true } },
+                },
+                orderBy: { created_at: "desc" },
+                take: limit,
+                skip: offset,
+            }),
+        ]);
 
-        // Get posts with all related data
-        const postsQuery = `
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count,
-                ARRAY_AGG(DISTINCT fpt.tag) as tags
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-            WHERE fp.status = 'active' AND fc.slug = $1
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-            ORDER BY fp.created_at DESC
-            LIMIT $2 OFFSET $3
-        `;
-        const posts = await sql(postsQuery, [categorySlug, limit, offset]);
-
-        // Format the response
         const formattedPosts: ForumPostResponse[] = posts.map((post) => ({
             id: post.id,
             title: post.title,
             content: post.content,
             created_at:
-                post.created_at?.toISOString() || new Date().toISOString(),
+                post.created_at?.toISOString() ?? new Date().toISOString(),
             updated_at:
-                post.updated_at?.toISOString() || new Date().toISOString(),
-            category_name: post.category_name,
-            category_slug: post.category_slug,
-            author_name: post.author_name,
-            author_avatar: post.author_avatar,
-            author_id: post.author_id,
-            reply_count: parseInt(post.reply_count) || 0,
-            like_count: parseInt(post.like_count) || 0,
-            view_count: parseInt(post.view_count) || 0,
-            tags: post.tags.filter(Boolean),
+                post.updated_at?.toISOString() ?? new Date().toISOString(),
+            category_name: post.forum_categories.name,
+            category_slug: post.forum_categories.slug,
+            author_name: post.users.name,
+            author_avatar: post.users.avatar_url,
+            author_id: post.users.id,
+            reply_count: post.forum_comments.length,
+            like_count: post.forum_likes.length,
+            view_count: post.forum_views.length,
+            tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
+            author_post_count: 0,
+            author_total_likes: 0,
         }));
 
         return { posts: formattedPosts, total };
@@ -334,124 +342,97 @@ export async function getForumPostById(
     id: string
 ): Promise<ForumPostResponse | null> {
     try {
-        // Extract UUID from slug if it contains one
-        const uuidMatch = id.match(
-            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
-        );
-        const postId = uuidMatch ? uuidMatch[0] : id;
+        // Identify if the provided identifier is a UUID
+        const uuidRegex =
+            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+        const uuidMatch = id.match(uuidRegex);
+        const postIdOrSlug = uuidMatch ? uuidMatch[0] : id;
+        const isUUID = uuidRegex.test(postIdOrSlug);
 
-        // Check if we found a UUID
-        const isUUID =
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-                postId
-            );
-
-        let query: string;
-        let params: any[];
+        let postRecord: any;
 
         if (isUUID) {
-            // If it's a UUID, query by post ID
-            query = `
-                SELECT 
-                    fp.id,
-                    fp.title,
-                    fp.content,
-                    fp.created_at,
-                    fp.updated_at,
-                    fc.name as category_name,
-                    fc.slug as category_slug,
-                    u.name as author_name,
-                    u.avatar_url as author_avatar,
-                    u.id as author_id,
-                    COUNT(DISTINCT fc2.id) as reply_count,
-                    COUNT(DISTINCT fl.id) as like_count,
-                    COUNT(DISTINCT fv.id) as view_count,
-                    ARRAY_AGG(DISTINCT fpt.tag) as tags,
-                    (
-                        SELECT COUNT(*) FROM forum_posts fp2 WHERE fp2.author_id = u.id AND fp2.status = 'active'
-                    ) as author_post_count,
-                    (
-                        SELECT COUNT(*) FROM forum_likes fl2
-                        JOIN forum_posts fp2 ON fl2.post_id = fp2.id
-                        WHERE fp2.author_id = u.id
-                    ) as author_total_likes
-                FROM forum_posts fp
-                JOIN users u ON fp.author_id = u.id
-                JOIN forum_categories fc ON fp.category_id = fc.id
-                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-                LEFT JOIN forum_views fv ON fp.id = fv.post_id
-                LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-                WHERE fp.id = $1 AND fp.status = 'active'
-                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-            `;
-            params = [postId];
+            // Fetch directly by post id
+            postRecord = await prisma.forum_posts.findFirst({
+                where: {
+                    id: postIdOrSlug,
+                    status: "active",
+                },
+                include: {
+                    forum_categories: {
+                        select: { name: true, slug: true },
+                    },
+                    users: {
+                        select: { name: true, avatar_url: true, id: true },
+                    },
+                    forum_comments: { select: { id: true } },
+                    forum_likes: { select: { id: true } },
+                    forum_views: { select: { id: true } },
+                    forum_post_tags: { select: { tag: true } },
+                },
+            });
         } else {
-            // If it's not a UUID, assume it's a category slug and get the first post from that category
-            query = `
-                SELECT 
-                    fp.id,
-                    fp.title,
-                    fp.content,
-                    fp.created_at,
-                    fp.updated_at,
-                    fc.name as category_name,
-                    fc.slug as category_slug,
-                    u.name as author_name,
-                    u.avatar_url as author_avatar,
-                    u.id as author_id,
-                    COUNT(DISTINCT fc2.id) as reply_count,
-                    COUNT(DISTINCT fl.id) as like_count,
-                    COUNT(DISTINCT fv.id) as view_count,
-                    ARRAY_AGG(DISTINCT fpt.tag) as tags,
-                    (
-                        SELECT COUNT(*) FROM forum_posts fp2 WHERE fp2.author_id = u.id AND fp2.status = 'active'
-                    ) as author_post_count,
-                    (
-                        SELECT COUNT(*) FROM forum_likes fl2
-                        JOIN forum_posts fp2 ON fl2.post_id = fp2.id
-                        WHERE fp2.author_id = u.id
-                    ) as author_total_likes
-                FROM forum_posts fp
-                JOIN users u ON fp.author_id = u.id
-                JOIN forum_categories fc ON fp.category_id = fc.id
-                LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-                LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-                LEFT JOIN forum_views fv ON fp.id = fv.post_id
-                LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-                WHERE fc.slug = $1 AND fp.status = 'active'
-                GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-                ORDER BY fp.created_at DESC
-                LIMIT 1
-            `;
-            params = [id];
+            // Treat it as a category slug and fetch the latest post in that category
+            postRecord = await prisma.forum_posts.findFirst({
+                where: {
+                    status: "active",
+                    forum_categories: {
+                        slug: postIdOrSlug,
+                    },
+                },
+                orderBy: { created_at: "desc" },
+                include: {
+                    forum_categories: {
+                        select: { name: true, slug: true },
+                    },
+                    users: {
+                        select: { name: true, avatar_url: true, id: true },
+                    },
+                    forum_comments: { select: { id: true } },
+                    forum_likes: { select: { id: true } },
+                    forum_views: { select: { id: true } },
+                    forum_post_tags: { select: { tag: true } },
+                },
+            });
         }
 
-        const result = await sql(query, params);
-        if (!result || result.length === 0) {
-            return null;
-        }
+        if (!postRecord) return null;
 
-        const post = result[0];
+        // Additional author stats
+        const [author_post_count, author_total_likes] =
+            await prisma.$transaction([
+                prisma.forum_posts.count({
+                    where: {
+                        author_id: postRecord.author_id,
+                        status: "active",
+                    },
+                }),
+                prisma.forum_likes.count({
+                    where: {
+                        forum_posts: {
+                            author_id: postRecord.author_id,
+                        },
+                    },
+                }),
+            ]);
+
         return {
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            created_at:
-                post.created_at?.toISOString() || new Date().toISOString(),
-            updated_at:
-                post.updated_at?.toISOString() || new Date().toISOString(),
-            category_name: post.category_name,
-            category_slug: post.category_slug,
-            author_name: post.author_name,
-            author_avatar: post.author_avatar,
-            author_id: post.author_id,
-            reply_count: parseInt(post.reply_count),
-            like_count: parseInt(post.like_count),
-            view_count: parseInt(post.view_count),
-            tags: post.tags.filter(Boolean), // Remove null values from tags array
-            author_post_count: parseInt(post.author_post_count) || 0,
-            author_total_likes: parseInt(post.author_total_likes) || 0,
+            id: postRecord.id,
+            title: postRecord.title,
+            content: postRecord.content,
+            created_at: postRecord.created_at?.toISOString() ?? "",
+            updated_at: postRecord.updated_at?.toISOString() ?? "",
+            category_name: postRecord.forum_categories.name,
+            category_slug: postRecord.forum_categories.slug,
+            author_name: postRecord.users.name,
+            author_avatar: postRecord.users.avatar_url,
+            author_id: postRecord.users.id,
+            reply_count: postRecord.forum_comments.length,
+            like_count: postRecord.forum_likes.length,
+            view_count: postRecord.forum_views.length,
+            tags: postRecord.forum_post_tags.map((t: { tag: string }) => t.tag),
+            author_post_count,
+            author_total_likes,
         };
     } catch (error) {
         console.error("Error fetching forum post:", error);
@@ -474,63 +455,60 @@ export async function getForumComments(
     postId: string
 ): Promise<ForumCommentResponse[]> {
     try {
-        // Check if the input is a valid UUID
+        // Determine if the provided id is a UUID or a category slug
         const isUUID =
             /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
                 postId
             );
 
-        let actualPostId = postId;
+        let actualPostId: string | null = postId;
 
         if (!isUUID) {
-            // If it's not a UUID, assume it's a category slug and get the first post from that category
-            const postQuery = `
-                SELECT fp.id
-                FROM forum_posts fp
-                JOIN forum_categories fc ON fp.category_id = fc.id
-                WHERE fc.slug = $1 AND fp.status = 'active'
-                ORDER BY fp.created_at DESC
-                LIMIT 1
-            `;
-            const postResult = await sql(postQuery, [postId]);
-            if (!postResult || postResult.length === 0) {
+            // Treat it as a category slug and fetch the latest post in that category
+            const latestPost = await prisma.forum_posts.findFirst({
+                where: {
+                    status: "active",
+                    forum_categories: {
+                        slug: postId,
+                    },
+                },
+                orderBy: { created_at: "desc" },
+                select: { id: true },
+            });
+            if (!latestPost) {
                 return [];
             }
-            actualPostId = postResult[0].id;
+            actualPostId = latestPost.id;
         }
 
-        // Get comments with author information and counts
-        const commentsQuery = `
-            SELECT 
-                fc.id,
-                fc.content,
-                fc.created_at,
-                fc.like_count,
-                fc.dislike_count,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id
-            FROM forum_comments fc
-            JOIN users u ON fc.author_id = u.id
-            WHERE fc.post_id = $1
-            ORDER BY fc.created_at ASC
-        `;
-        const comments = await sql(commentsQuery, [actualPostId]);
+        // Fetch comments for the resolved post id
+        const comments = await prisma.forum_comments.findMany({
+            where: { post_id: actualPostId },
+            orderBy: { created_at: "asc" },
+            include: {
+                users: {
+                    select: {
+                        name: true,
+                        avatar_url: true,
+                        id: true,
+                    },
+                },
+            },
+        });
 
         return comments.map((comment) => ({
             id: comment.id,
             content: comment.content,
-            created_at:
-                comment.created_at?.toISOString() || new Date().toISOString(),
-            author_name: comment.author_name,
-            author_avatar: comment.author_avatar,
-            author_id: comment.author_id,
-            like_count: parseInt(comment.like_count) || 0,
-            dislike_count: parseInt(comment.dislike_count) || 0,
+            created_at: comment.created_at?.toISOString() ?? "",
+            author_name: comment.users.name,
+            author_avatar: comment.users.avatar_url,
+            author_id: comment.users.id,
+            like_count: comment.like_count,
+            dislike_count: comment.dislike_count,
         }));
     } catch (error) {
         console.error("Error fetching forum comments:", error);
-        throw error;
+        return [];
     }
 }
 
@@ -544,27 +522,28 @@ export async function createForumComment({
     authorId: string;
 }) {
     try {
-        // Insert the comment into forum_comments table
-        const commentQuery = `
-            INSERT INTO forum_comments (content, post_id, author_id, created_at, updated_at)
-            VALUES ($1, $2, $3, NOW(), NOW())
-            RETURNING id
-        `;
-        const result = await sql(commentQuery, [content, postId, authorId]);
+        // Insert the comment into forum_comments table using Prisma
+        const comment = await prisma.forum_comments.create({
+            data: {
+                content,
+                post_id: postId,
+                author_id: authorId,
+            },
+            select: {
+                id: true,
+            },
+        });
 
-        if (!result || !result[0]?.id) {
-            throw new Error("Failed to create comment");
-        }
-
-        const commentId = result[0].id;
+        const commentId = comment.id;
 
         // Send notification
         await sendForumReplyNotification(postId, commentId, authorId);
 
         // Revalidate the thread page to show the new comment
         revalidatePath(`/forum/${postId}`);
+        revalidatePath("/forum");
 
-        return { success: true, commentId: result[0].id };
+        return { success: true, commentId };
     } catch (error) {
         console.error("Error creating comment:", error);
         if (error instanceof Error) {
@@ -586,62 +565,40 @@ export async function createForumComment({
 
 export async function toggleForumLike(postId: string, userId: string) {
     try {
-        // Check if the user has already liked the post
-        const checkLikeQuery = `
-            SELECT id FROM forum_likes
-            WHERE post_id = $1 AND user_id = $2
-        `;
-        const existingLike = await sql(checkLikeQuery, [postId, userId]);
+        // Check if a like already exists
+        const actualId = extractUUID(postId);
+        const existing = await prisma.forum_likes.findFirst({
+            where: { post_id: actualId, user_id: userId },
+            select: { id: true },
+        });
 
-        if (existingLike && existingLike.length > 0) {
-            // Unlike: Remove the like record
-            const deleteLikeQuery = `
-                DELETE FROM forum_likes
-                WHERE id = $1
-            `;
-            await sql(deleteLikeQuery, [existingLike[0].id]);
+        if (existing) {
+            // Unlike – remove record
+            await prisma.forum_likes.delete({ where: { id: existing.id } });
 
             revalidatePath(`/forum/${postId}`);
+            revalidatePath("/forum");
 
-            // Get the new like count
-            const countQuery = `
-                SELECT COUNT(*) as count
-                FROM forum_likes
-                WHERE post_id = $1
-            `;
-            const countResult = await sql(countQuery, [postId]);
-            const likeCount = parseInt(countResult[0].count);
+            const likeCount = await prisma.forum_likes.count({
+                where: { post_id: actualId },
+            });
 
-            return {
-                success: true,
-                action: "unliked",
-                newCount: likeCount,
-            };
-        } else {
-            // Like: Create new like record
-            const createLikeQuery = `
-                INSERT INTO forum_likes (post_id, user_id, created_at)
-                VALUES ($1, $2, NOW())
-            `;
-            await sql(createLikeQuery, [postId, userId]);
-
-            revalidatePath(`/forum/${postId}`);
-
-            // Get the new like count
-            const countQuery = `
-                SELECT COUNT(*) as count
-                FROM forum_likes
-                WHERE post_id = $1
-            `;
-            const countResult = await sql(countQuery, [postId]);
-            const likeCount = parseInt(countResult[0].count);
-
-            return {
-                success: true,
-                action: "liked",
-                newCount: likeCount,
-            };
+            return { success: true, action: "unliked", newCount: likeCount };
         }
+
+        // Like – create new record
+        await prisma.forum_likes.create({
+            data: { post_id: actualId, user_id: userId },
+        });
+
+        revalidatePath(`/forum/${postId}`);
+        revalidatePath("/forum");
+
+        const likeCount = await prisma.forum_likes.count({
+            where: { post_id: actualId },
+        });
+
+        return { success: true, action: "liked", newCount: likeCount };
     } catch (error) {
         console.error("Error toggling forum like:", error);
         return {
@@ -651,25 +608,51 @@ export async function toggleForumLike(postId: string, userId: string) {
     }
 }
 
+export async function checkUserLikeStatus(
+    postId: string,
+    userId: string
+): Promise<{ hasLiked: boolean }> {
+    try {
+        const actualId = extractUUID(postId);
+        const record = await prisma.forum_likes.findFirst({
+            where: { post_id: actualId, user_id: userId },
+            select: { id: true },
+        });
+        return { hasLiked: !!record };
+    } catch (error) {
+        console.error("Error checking user like status:", error);
+        return { hasLiked: false };
+    }
+}
+
 export async function getForumStats() {
     try {
-        const statsQuery = `
-            SELECT 
-                (SELECT COUNT(*) FROM forum_posts WHERE status = 'active') as total_threads,
-                (SELECT COUNT(*) FROM forum_comments) as total_comments,
-                (SELECT COUNT(*) FROM forum_posts 
-                 WHERE status = 'active' 
-                 AND created_at >= CURRENT_DATE) as new_today
-        `;
+        // Calculate midnight for the current day in the server timezone
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
-        const result = await sql(statsQuery);
-        const stats = result[0];
+        const [totalThreads, totalComments, newToday] =
+            await prisma.$transaction([
+                prisma.forum_posts.count({
+                    where: {
+                        status: "active",
+                    },
+                }),
+                prisma.forum_comments.count(),
+                prisma.forum_posts.count({
+                    where: {
+                        status: "active",
+                        created_at: {
+                            gte: todayStart,
+                        },
+                    },
+                }),
+            ]);
 
         return {
-            totalThreads: parseInt(stats.total_threads),
-            totalPosts:
-                parseInt(stats.total_threads) + parseInt(stats.total_comments),
-            newToday: parseInt(stats.new_today),
+            totalThreads,
+            totalPosts: totalThreads + totalComments,
+            newToday,
         };
     } catch (error) {
         console.error("Error fetching forum stats:", error);
@@ -690,34 +673,59 @@ interface TopContributor {
 
 export async function getTopContributors(): Promise<TopContributor[]> {
     try {
-        const contributorsQuery = `
-            WITH user_contributions AS (
-                SELECT 
-                    u.id,
-                    u.name,
-                    u.avatar_url,
-                    (SELECT COUNT(*) FROM forum_posts WHERE author_id = u.id) as posts_count,
-                    (SELECT COUNT(*) FROM forum_comments WHERE author_id = u.id) as comments_count
-                FROM users u
-            )
-            SELECT 
+        // Get post counts per author
+        const postCounts = await prisma.forum_posts.groupBy({
+            by: ["author_id"],
+            _count: { _all: true },
+        });
+
+        // Get comment counts per author
+        const commentCounts = await prisma.forum_comments.groupBy({
+            by: ["author_id"],
+            _count: { _all: true },
+        });
+
+        // Merge counts into a single map<userId, count>
+        const contributionMap = new Map<string, number>();
+
+        postCounts.forEach((pc) => {
+            contributionMap.set(pc.author_id, pc._count._all);
+        });
+
+        commentCounts.forEach((cc) => {
+            contributionMap.set(
+                cc.author_id,
+                (contributionMap.get(cc.author_id) || 0) + cc._count._all
+            );
+        });
+
+        // Sort by total contributions desc and take top 3
+        const topEntries = Array.from(contributionMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+        if (topEntries.length === 0) return [];
+
+        const userIds = topEntries.map(([id]) => id);
+        const users = await prisma.users.findMany({
+            where: { id: { in: userIds } },
+            select: {
+                id: true,
+                name: true,
+                avatar_url: true,
+            },
+        });
+
+        // Build response preserving ranking order
+        return topEntries.map(([id, count]) => {
+            const user = users.find((u) => u.id === id);
+            return {
                 id,
-                name,
-                avatar_url,
-                (posts_count + comments_count) as post_count
-            FROM user_contributions
-            ORDER BY post_count DESC
-            LIMIT 3
-        `;
-
-        const contributors = await sql(contributorsQuery);
-
-        return contributors.map((contributor) => ({
-            id: contributor.id,
-            name: contributor.name,
-            avatar_url: contributor.avatar_url,
-            post_count: parseInt(contributor.post_count),
-        }));
+                name: user?.name || "Unknown",
+                avatar_url: user?.avatar_url || null,
+                post_count: count,
+            } as TopContributor;
+        });
     } catch (error) {
         console.error("Error fetching top contributors:", error);
         return [];
@@ -729,62 +737,86 @@ export async function toggleForumCommentLike(
     userId: string
 ) {
     try {
-        // Check if the user has already liked the comment
-        const checkLikeQuery = `
-            SELECT id FROM forum_comment_likes
-            WHERE comment_id = $1 AND user_id = $2
-        `;
-        const existingLike = await sql(checkLikeQuery, [commentId, userId]);
+        // Perform all checks and updates atomically
+        const result = await prisma.$transaction(async (tx) => {
+            // Check if the user already up-voted this comment
+            const existingUpvote = await tx.comment_votes.findFirst({
+                where: {
+                    comment_id: commentId,
+                    user_id: userId,
+                    action_type: "upvote",
+                },
+                select: { id: true },
+            });
 
-        if (existingLike && existingLike.length > 0) {
-            // Unlike: Remove the like record
-            const deleteLikeQuery = `
-                DELETE FROM forum_comment_likes
-                WHERE id = $1
-            `;
-            await sql(deleteLikeQuery, [existingLike[0].id]);
+            if (existingUpvote) {
+                // User is un-liking ⇒ remove the vote & decrement like_count
+                await tx.comment_votes.delete({
+                    where: { id: existingUpvote.id },
+                });
+                await tx.forum_comments.update({
+                    where: { id: commentId },
+                    data: { like_count: { decrement: 1 } },
+                });
 
-            revalidatePath(`/forum/${commentId}`);
+                const { like_count } =
+                    await tx.forum_comments.findUniqueOrThrow({
+                        where: { id: commentId },
+                        select: { like_count: true },
+                    });
 
-            // Get the new like count
-            const countQuery = `
-                SELECT COUNT(*) as count
-                FROM forum_comment_likes
-                WHERE comment_id = $1
-            `;
-            const countResult = await sql(countQuery, [commentId]);
-            const likeCount = parseInt(countResult[0].count);
+                return { action: "unliked" as const, newCount: like_count };
+            }
 
-            return {
-                success: true,
-                action: "unliked",
-                newCount: likeCount,
-            };
-        } else {
-            // Like: Create new like record
-            const createLikeQuery = `
-                INSERT INTO forum_comment_likes (comment_id, user_id, created_at)
-                VALUES ($1, $2, NOW())
-            `;
-            await sql(createLikeQuery, [commentId, userId]);
+            // If the user previously down-voted, remove that downvote first
+            const existingDownvote = await tx.comment_votes.findFirst({
+                where: {
+                    comment_id: commentId,
+                    user_id: userId,
+                    action_type: "downvote",
+                },
+                select: { id: true },
+            });
+            if (existingDownvote) {
+                await tx.comment_votes.delete({
+                    where: { id: existingDownvote.id },
+                });
+                await tx.forum_comments.update({
+                    where: { id: commentId },
+                    data: { dislike_count: { decrement: 1 } },
+                });
+            }
 
-            revalidatePath(`/forum/${commentId}`);
+            // Add the up-vote & increment like_count
+            await tx.comment_votes.create({
+                data: {
+                    comment_id: commentId,
+                    user_id: userId,
+                    action_type: "upvote",
+                },
+            });
+            await tx.forum_comments.update({
+                where: { id: commentId },
+                data: { like_count: { increment: 1 } },
+            });
 
-            // Get the new like count
-            const countQuery = `
-                SELECT COUNT(*) as count
-                FROM forum_comment_likes
-                WHERE comment_id = $1
-            `;
-            const countResult = await sql(countQuery, [commentId]);
-            const likeCount = parseInt(countResult[0].count);
+            const { like_count } = await tx.forum_comments.findUniqueOrThrow({
+                where: { id: commentId },
+                select: { like_count: true },
+            });
 
-            return {
-                success: true,
-                action: "liked",
-                newCount: likeCount,
-            };
-        }
+            return { action: "liked" as const, newCount: like_count };
+        });
+
+        // Revalidate paths so UI updates
+        revalidatePath(`/forum/${commentId}`);
+        revalidatePath("/forum");
+
+        return {
+            success: true,
+            action: result.action,
+            newCount: result.newCount,
+        };
     } catch (error) {
         console.error("Error toggling forum comment like:", error);
         return {
@@ -800,63 +832,48 @@ export async function getRelatedPosts(
     limit = 5
 ): Promise<ForumPostResponse[]> {
     try {
-        // Extract UUID from slug if it contains one
-        const uuidMatch = postId.match(
-            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
-        );
+        const uuidRegex =
+            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+        const uuidMatch = postId.match(uuidRegex);
         const actualPostId = uuidMatch ? uuidMatch[0] : postId;
 
-        const query = `
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count,
-                ARRAY_AGG(DISTINCT fpt.tag) as tags
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-            WHERE fp.status = 'active' 
-            AND fc.slug = $1
-            AND fp.id != $2
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id
-            ORDER BY fp.created_at DESC
-            LIMIT $3
-        `;
+        const related = await prisma.forum_posts.findMany({
+            where: {
+                status: "active",
+                id: { not: actualPostId },
+                forum_categories: {
+                    slug: category,
+                },
+            },
+            orderBy: { created_at: "desc" },
+            take: limit,
+            include: {
+                forum_categories: { select: { name: true, slug: true } },
+                users: { select: { name: true, avatar_url: true, id: true } },
+                forum_comments: { select: { id: true } },
+                forum_likes: { select: { id: true } },
+                forum_views: { select: { id: true } },
+                forum_post_tags: { select: { tag: true } },
+            },
+        });
 
-        const posts = await sql(query, [category, actualPostId, limit]);
-
-        // Format the response
-        return posts.map((post) => ({
+        return related.map((post) => ({
             id: post.id,
             title: post.title,
             content: post.content,
-            created_at:
-                post.created_at?.toISOString() || new Date().toISOString(),
-            updated_at:
-                post.updated_at?.toISOString() || new Date().toISOString(),
-            category_name: post.category_name,
-            category_slug: post.category_slug,
-            author_name: post.author_name,
-            author_avatar: post.author_avatar,
-            author_id: post.author_id,
-            reply_count: parseInt(post.reply_count) || 0,
-            like_count: parseInt(post.like_count) || 0,
-            view_count: parseInt(post.view_count) || 0,
-            tags: post.tags.filter(Boolean),
+            created_at: post.created_at?.toISOString() ?? "",
+            updated_at: post.updated_at?.toISOString() ?? "",
+            category_name: post.forum_categories.name,
+            category_slug: post.forum_categories.slug,
+            author_name: post.users.name,
+            author_avatar: post.users.avatar_url,
+            author_id: post.users.id,
+            reply_count: post.forum_comments.length,
+            like_count: post.forum_likes.length,
+            view_count: post.forum_views.length,
+            tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
+            author_post_count: 0, // Not needed for related list
+            author_total_likes: 0,
         }));
     } catch (error) {
         console.error("Error fetching related posts:", error);
@@ -864,35 +881,14 @@ export async function getRelatedPosts(
     }
 }
 
-export async function checkUserLikeStatus(
-    postId: string,
-    userId: string
-): Promise<{ hasLiked: boolean }> {
-    try {
-        const query = `
-            SELECT EXISTS (
-                SELECT 1 FROM forum_likes
-                WHERE post_id = $1 AND user_id = $2
-            ) as has_liked
-        `;
-        const result = await sql(query, [postId, userId]);
-        return { hasLiked: result[0]?.has_liked || false };
-    } catch (error) {
-        console.error("Error checking user like status:", error);
-        return { hasLiked: false };
-    }
-}
-
 export async function checkUserSaveStatus(postId: string, userId: string) {
     try {
-        const query = `
-            SELECT EXISTS (
-                SELECT 1 FROM forum_saved
-                WHERE post_id = $1 AND user_id = $2
-            ) as has_saved
-        `;
-        const result = await sql(query, [postId, userId]);
-        return result[0]?.has_saved || false;
+        const actualId = extractUUID(postId);
+        const record = await prisma.forum_saved.findFirst({
+            where: { post_id: actualId, user_id: userId },
+            select: { id: true },
+        });
+        return !!record;
     } catch (error) {
         console.error("Error checking user save status:", error);
         return false;
@@ -901,44 +897,31 @@ export async function checkUserSaveStatus(postId: string, userId: string) {
 
 export async function toggleForumSave(postId: string, userId: string) {
     try {
-        // Check if the user has already saved the post
-        const checkSaveQuery = `
-            SELECT id FROM forum_saved
-            WHERE post_id = $1 AND user_id = $2
-        `;
-        const existingSave = await sql(checkSaveQuery, [postId, userId]);
+        const actualId = extractUUID(postId);
+        const existing = await prisma.forum_saved.findFirst({
+            where: { post_id: actualId, user_id: userId },
+            select: { id: true },
+        });
 
-        if (existingSave && existingSave.length > 0) {
-            // Unsave: Remove the save record
-            const deleteSaveQuery = `
-                DELETE FROM forum_saved
-                WHERE id = $1
-            `;
-            await sql(deleteSaveQuery, [existingSave[0].id]);
+        if (existing) {
+            // Unsave
+            await prisma.forum_saved.delete({ where: { id: existing.id } });
 
             revalidatePath(`/forum/${postId}`);
-            revalidatePath("/forum/saved");
+            revalidatePath("/forum");
 
-            return {
-                success: true,
-                action: "unsaved",
-            };
-        } else {
-            // Save: Create new save record
-            const createSaveQuery = `
-                INSERT INTO forum_saved (post_id, user_id, created_at)
-                VALUES ($1, $2, NOW())
-            `;
-            await sql(createSaveQuery, [postId, userId]);
-
-            revalidatePath(`/forum/${postId}`);
-            revalidatePath("/forum/saved");
-
-            return {
-                success: true,
-                action: "saved",
-            };
+            return { success: true, action: "unsaved" };
         }
+
+        // Save
+        await prisma.forum_saved.create({
+            data: { post_id: actualId, user_id: userId },
+        });
+
+        revalidatePath(`/forum/${postId}`);
+        revalidatePath("/forum");
+
+        return { success: true, action: "saved" };
     } catch (error) {
         console.error("Error toggling forum save:", error);
         return {
@@ -950,13 +933,13 @@ export async function toggleForumSave(postId: string, userId: string) {
 
 export async function getCommentVoteStatus(commentId: string, userId: string) {
     try {
-        const query = `
-            SELECT action_type as vote_type
-            FROM comment_votes
-            WHERE comment_id = $1 AND user_id = $2
-        `;
-        const result = await sql(query, [commentId, userId]);
-        return { voteType: result[0]?.vote_type || null };
+        const record = await prisma.comment_votes.findFirst({
+            where: { comment_id: commentId, user_id: userId },
+            select: { action_type: true },
+        });
+        return {
+            voteType: (record?.action_type as "upvote" | "downvote") ?? null,
+        };
     } catch (error) {
         console.error("Error getting vote status:", error);
         return { voteType: null };
@@ -969,63 +952,44 @@ export async function toggleCommentLike(
     voteType: "upvote" | "downvote"
 ) {
     try {
-        // Check if user has already voted on this comment
-        const existingVoteQuery = `
-            SELECT id, action_type
-            FROM comment_votes
-            WHERE comment_id = $1 AND user_id = $2
-        `;
-        const existingVote = await sql(existingVoteQuery, [commentId, userId]);
+        // Check for existing vote
+        const existing = await prisma.comment_votes.findFirst({
+            where: { comment_id: commentId, user_id: userId },
+            select: { id: true, action_type: true },
+        });
 
-        if (existingVote && existingVote.length > 0) {
-            if (existingVote[0].action_type === voteType) {
-                // Remove vote if clicking the same button
-                const deleteQuery = `
-                    DELETE FROM comment_votes
-                    WHERE id = $1
-                `;
-                await sql(deleteQuery, [existingVote[0].id]);
+        if (existing) {
+            if (existing.action_type === voteType) {
+                // Remove vote
+                await prisma.comment_votes.delete({
+                    where: { id: existing.id },
+                });
 
-                // Get updated counts
                 const updatedCounts = await getCommentVoteCounts(commentId);
-                return {
-                    success: true,
-                    action: "removed",
-                    ...updatedCounts,
-                };
-            } else {
-                // Update vote if changing vote type
-                const updateQuery = `
-                    UPDATE comment_votes
-                    SET action_type = $1, updated_at = NOW()
-                    WHERE id = $2
-                `;
-                await sql(updateQuery, [voteType, existingVote[0].id]);
-
-                // Get updated counts
-                const updatedCounts = await getCommentVoteCounts(commentId);
-                return {
-                    success: true,
-                    action: "changed",
-                    ...updatedCounts,
-                };
+                return { success: true, action: "removed", ...updatedCounts };
             }
-        } else {
-            // Create new vote
-            const insertQuery = `
-                INSERT INTO comment_votes (comment_id, user_id, action_type)
-                VALUES ($1, $2, $3)
-            `;
-            await sql(insertQuery, [commentId, userId, voteType]);
 
-            // Get updated counts
+            // Change vote type
+            await prisma.comment_votes.update({
+                where: { id: existing.id },
+                data: { action_type: voteType, updated_at: new Date() },
+            });
+
             const updatedCounts = await getCommentVoteCounts(commentId);
-            return {
-                success: true,
-                action: "added",
-                ...updatedCounts,
-            };
+            return { success: true, action: "changed", ...updatedCounts };
         }
+
+        // Add new vote
+        await prisma.comment_votes.create({
+            data: {
+                comment_id: commentId,
+                user_id: userId,
+                action_type: voteType,
+            },
+        });
+
+        const updatedCounts = await getCommentVoteCounts(commentId);
+        return { success: true, action: "added", ...updatedCounts };
     } catch (error) {
         console.error("Error voting on comment:", error);
         return {
@@ -1039,15 +1003,14 @@ export async function toggleCommentLike(
 }
 
 async function getCommentVoteCounts(commentId: string) {
-    const query = `
-        SELECT like_count, dislike_count
-        FROM forum_comments
-        WHERE id = $1
-    `;
-    const result = await sql(query, [commentId]);
+    const actualId = extractUUID(commentId);
+    const comment = await prisma.forum_comments.findUnique({
+        where: { id: actualId },
+        select: { like_count: true, dislike_count: true },
+    });
     return {
-        likeCount: parseInt(result[0].like_count) || 0,
-        dislikeCount: parseInt(result[0].dislike_count) || 0,
+        likeCount: comment?.like_count ?? 0,
+        dislikeCount: comment?.dislike_count ?? 0,
     };
 }
 
@@ -1055,55 +1018,50 @@ export async function getUserSavedPosts(
     userId: string
 ): Promise<ForumPostResponse[]> {
     try {
-        const query = `
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.created_at,
-                fp.updated_at,
-                fc.name as category_name,
-                fc.slug as category_slug,
-                u.name as author_name,
-                u.avatar_url as author_avatar,
-                u.id as author_id,
-                COUNT(DISTINCT fc2.id) as reply_count,
-                COUNT(DISTINCT fl.id) as like_count,
-                COUNT(DISTINCT fv.id) as view_count,
-                ARRAY_AGG(DISTINCT fpt.tag) as tags
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            JOIN forum_categories fc ON fp.category_id = fc.id
-            LEFT JOIN forum_comments fc2 ON fp.id = fc2.post_id
-            LEFT JOIN forum_likes fl ON fp.id = fl.post_id
-            LEFT JOIN forum_views fv ON fp.id = fv.post_id
-            LEFT JOIN forum_post_tags fpt ON fp.id = fpt.post_id
-            JOIN forum_saved fs ON fp.id = fs.post_id
-            WHERE fs.user_id = $1 AND fp.status = 'active'
-            GROUP BY fp.id, fc.name, fc.slug, u.name, u.avatar_url, u.id, fs.created_at
-            ORDER BY fs.created_at DESC
-        `;
+        const saved = await prisma.forum_saved.findMany({
+            where: { user_id: userId },
+            orderBy: { created_at: "desc" },
+            include: {
+                forum_posts: {
+                    include: {
+                        users: {
+                            select: { name: true, avatar_url: true, id: true },
+                        },
+                        forum_categories: {
+                            select: { name: true, slug: true },
+                        },
+                        forum_comments: { select: { id: true } },
+                        forum_likes: { select: { id: true } },
+                        forum_views: { select: { id: true } },
+                        forum_post_tags: { select: { tag: true } },
+                    },
+                },
+            },
+        });
 
-        const posts = await sql(query, [userId]);
-
-        return posts.map((post) => ({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            created_at:
-                post.created_at?.toISOString() || new Date().toISOString(),
-            updated_at:
-                post.updated_at?.toISOString() || new Date().toISOString(),
-            category_name: post.category_name,
-            category_slug: post.category_slug,
-            author_name: post.author_name,
-            author_avatar: post.author_avatar,
-            author_id: post.author_id,
-            reply_count: parseInt(post.reply_count),
-            like_count: parseInt(post.like_count),
-            view_count: parseInt(post.view_count),
-            tags: post.tags.filter(Boolean),
-        }));
+        return saved.map((s) => {
+            const post = s.forum_posts;
+            return {
+                id: post.id,
+                title: post.title,
+                content: post.content,
+                created_at:
+                    post.created_at?.toISOString() ?? new Date().toISOString(),
+                updated_at:
+                    post.updated_at?.toISOString() ?? new Date().toISOString(),
+                category_name: post.forum_categories.name,
+                category_slug: post.forum_categories.slug,
+                author_name: post.users.name,
+                author_avatar: post.users.avatar_url,
+                author_id: post.users.id,
+                reply_count: post.forum_comments.length,
+                like_count: post.forum_likes.length,
+                view_count: post.forum_views.length,
+                tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
+                author_post_count: 0,
+                author_total_likes: 0,
+            } as ForumPostResponse;
+        });
     } catch (error) {
         console.error("Error in getUserSavedPosts:", error);
         throw error;

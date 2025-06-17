@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model chat_conversations {
+  id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String          @db.Uuid
+  title         String?
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  users         users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  chat_messages chat_messages[]
+
+  @@index([user_id], map: "idx_chat_conversations_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model chat_messages {
+  id                 String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  conversation_id    String             @db.Uuid
+  user_id            String?            @db.Uuid
+  role               String             @db.VarChar(16)
+  content            String
+  tokens             Int                @default(0)
+  error              Boolean            @default(false)
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  chat_conversations chat_conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users              users?             @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([conversation_id], map: "idx_chat_messages_conversation")
+  @@index([user_id], map: "idx_chat_messages_user")
+}
+
+model comment_votes {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  comment_id     String         @db.Uuid
+  user_id        String         @db.Uuid
+  action_type    vote_action
+  created_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  forum_comments forum_comments @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comment_votes_comment")
+  users          users          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comment_votes_user")
+
+  @@unique([comment_id, user_id])
+}
+
+model course_categories {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String                     @unique @db.VarChar(50)
+  slug                     String                     @unique @db.VarChar(50)
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  course_category_junction course_category_junction[]
+}
+
+model course_category_junction {
+  course_id         String            @db.Uuid
+  category_id       String            @db.Uuid
+  created_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  course_categories course_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  courses           courses           @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([course_id, category_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model course_planner {
+  id               String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String    @db.Uuid
+  course_id        String    @db.Uuid
+  requirement_type String?   @db.VarChar(32)
+  semester         String?   @db.VarChar(20)
+  year             Int?
+  status           String?   @default("planned") @db.VarChar(20)
+  notes            String?
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime? @default(now()) @db.Timestamptz(6)
+  taken            Boolean?  @default(false)
+  courses          courses   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  users            users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, course_id, semester, year], map: "unique_user_course_semester")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model course_reviews {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id      String    @db.Uuid
+  author_id      String    @db.Uuid
+  rating         Int
+  difficulty     Int
+  workload       Int
+  content        String
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  overall_rating Decimal   @db.Decimal(2, 1)
+  grade          String?   @db.VarChar(8)
+  users          users     @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  courses        courses   @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([author_id], map: "idx_course_reviews_author")
+  @@index([author_id], map: "idx_course_reviews_author_id")
+  @@index([course_id], map: "idx_course_reviews_course")
+  @@index([course_id], map: "idx_course_reviews_course_id")
+}
+
+model course_schedules {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String   @db.Uuid
+  course_id  String   @db.Uuid
+  day        String   @db.VarChar(20)
+  start_time String   @db.VarChar(10)
+  end_time   String   @db.VarChar(10)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  courses    courses  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model course_special_requirements {
+  id                     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String           @db.Uuid
+  requirement_type       requirement_type
+  selected_course_id     String?          @db.VarChar(255)
+  deducted_from_category String?          @db.VarChar(255)
+  credit_amount          Int              @default(-1)
+  added_to_category      String?          @db.VarChar(255)
+  created_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  users                  users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_course_special_requirements_user_id")
+}
+
+model courses {
+  id                       String                     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  code                     String                     @db.VarChar(20)
+  name                     String                     @db.VarChar(255)
+  description              String?
+  credits                  Int
+  department               String                     @db.VarChar(100)
+  semester                 String                     @db.VarChar(20)
+  year                     Int
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  professor_id             String                     @default("Unknown Professor") @db.VarChar(255)
+  full_code                String?                    @db.VarChar(32)
+  concentration_core       String?                    @db.VarChar(32)
+  concentration_elective   String?                    @db.VarChar(32)
+  course_category_junction course_category_junction[]
+  course_planner           course_planner[]
+  course_reviews           course_reviews[]
+  course_schedules         course_schedules[]
+
+  @@unique([code, semester, year])
+  @@index([code], map: "idx_courses_code")
+  @@index([department], map: "idx_courses_department")
+  @@index([semester, year], map: "idx_courses_semester_year")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model feedback {
+  id          Int       @id @default(autoincrement())
+  user_id     String    @db.Uuid
+  type        String
+  message     String
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  status      String    @default("pending")
+  admin_notes String?
+  users       users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([created_at])
+  @@index([user_id])
+}
+
+model forum_categories {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String        @db.VarChar(100)
+  description String?
+  slug        String        @unique @db.VarChar(100)
+  created_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  forum_posts forum_posts[]
+}
+
+model forum_comments {
+  id                   String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  content              String
+  post_id              String           @db.Uuid
+  author_id            String           @db.Uuid
+  parent_id            String?          @db.Uuid
+  created_at           DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?        @default(now()) @db.Timestamptz(6)
+  like_count           Int              @default(0)
+  dislike_count        Int              @default(0)
+  comment_votes        comment_votes[]
+  users                users            @relation(fields: [author_id], references: [id])
+  forum_comments       forum_comments?  @relation("forum_commentsToforum_comments", fields: [parent_id], references: [id])
+  other_forum_comments forum_comments[] @relation("forum_commentsToforum_comments")
+  forum_posts          forum_posts      @relation(fields: [post_id], references: [id])
+}
+
+model forum_likes {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id     String      @db.Uuid
+  user_id     String      @db.Uuid
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  forum_posts forum_posts @relation(fields: [post_id], references: [id])
+  users       users       @relation(fields: [user_id], references: [id])
+
+  @@unique([post_id, user_id])
+}
+
+model forum_notification_preferences {
+  id              String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  post_id         String      @db.Uuid
+  user_id         String      @db.Uuid
+  notify_on_reply Boolean     @default(false)
+  created_at      DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?   @default(now()) @db.Timestamptz(6)
+  forum_posts     forum_posts @relation(fields: [post_id], references: [id])
+  users           users       @relation(fields: [user_id], references: [id])
+
+  @@unique([post_id, user_id])
+}
+
+model forum_post_tags {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id     String      @db.Uuid
+  tag         String      @db.VarChar(100)
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  forum_posts forum_posts @relation(fields: [post_id], references: [id])
+
+  @@unique([post_id, tag])
+}
+
+model forum_posts {
+  id                             String                           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                          String                           @db.VarChar(255)
+  content                        String
+  author_id                      String                           @db.Uuid
+  category_id                    String                           @db.Uuid
+  status                         String                           @default("active") @db.VarChar(50)
+  created_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
+  notify_on_reply                Boolean                          @default(false)
+  forum_comments                 forum_comments[]
+  forum_likes                    forum_likes[]
+  forum_notification_preferences forum_notification_preferences[]
+  forum_post_tags                forum_post_tags[]
+  users                          users                            @relation(fields: [author_id], references: [id])
+  forum_categories               forum_categories                 @relation(fields: [category_id], references: [id])
+  forum_saved                    forum_saved[]
+  forum_views                    forum_views[]
+}
+
+model forum_saved {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String      @db.Uuid
+  post_id     String      @db.Uuid
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  forum_posts forum_posts @relation(fields: [post_id], references: [id])
+  users       users       @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, post_id])
+  @@index([post_id], map: "idx_forum_saved_post_id")
+  @@index([user_id], map: "idx_forum_saved_user_id")
+}
+
+model forum_views {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id     String      @db.Uuid
+  user_id     String?     @db.Uuid
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  forum_posts forum_posts @relation(fields: [post_id], references: [id])
+  users       users?      @relation(fields: [user_id], references: [id], onDelete: Restrict)
+
+  @@unique([post_id, user_id])
+}
+
+model marketplace_items {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String
+  price       Decimal   @db.Decimal(10, 2)
+  category    String    @db.VarChar(100)
+  condition   String    @db.VarChar(50)
+  image_url   String?
+  seller_id   String    @db.Uuid
+  status      String    @default("active") @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  users       users     @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model search_cache {
+  query      String    @id
+  results    Json
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_search_cache_created_at")
+}
+
+model search_costs {
+  id         Int       @id @default(autoincrement())
+  cost       Decimal   @db.Decimal(10, 4)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_search_costs_created_at")
+}
+
+model user_token_usage {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String   @db.Uuid
+  month_year  String   @db.VarChar(7)
+  tokens_used Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, month_year], map: "user_token_usage_unique")
+  @@index([user_id, month_year], map: "idx_user_token_usage_user_month")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                             String                           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                          String                           @unique @db.VarChar(255)
+  name                           String                           @db.VarChar(255)
+  avatar_url                     String?
+  created_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
+  program                        String?                          @db.VarChar(20)
+  chat_conversations             chat_conversations[]
+  chat_messages                  chat_messages[]
+  comment_votes                  comment_votes[]
+  course_planner                 course_planner[]
+  course_reviews                 course_reviews[]
+  course_schedules               course_schedules[]
+  course_special_requirements    course_special_requirements[]
+  feedback                       feedback[]
+  forum_comments                 forum_comments[]
+  forum_likes                    forum_likes[]
+  forum_notification_preferences forum_notification_preferences[]
+  forum_posts                    forum_posts[]
+  forum_saved                    forum_saved[]
+  forum_views                    forum_views[]
+  marketplace_items              marketplace_items[]
+  user_token_usage               user_token_usage[]
+}
+
+enum requirement_type {
+  ethics_course
+  techie_5901
+}
+
+enum vote_action {
+  upvote
+  downvote
+}

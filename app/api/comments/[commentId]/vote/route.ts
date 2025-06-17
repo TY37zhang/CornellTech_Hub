@@ -1,6 +1,6 @@
-import { sql } from "@vercel/postgres";
-import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
 import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
 
 export async function POST(
     request: Request,
@@ -16,112 +16,89 @@ export async function POST(
             );
         }
 
-        // Check if user has already voted
-        const existingVote = await sql`
-            SELECT action
-            FROM comment_votes
-            WHERE comment_id = ${params.commentId}
-            AND user_id = ${userId}
-        `;
+        // Use Prisma transaction for consistency
+        const result = await prisma.$transaction(async (tx) => {
+            const commentId = params.commentId;
+            const voteValue = action === "like" ? "upvote" : "downvote";
 
-        // Get the parent post ID for revalidation
-        const postResult = await sql`
-            SELECT post_id
-            FROM forum_comments
-            WHERE id = ${params.commentId}
-        `;
+            // Find existing vote
+            const existing = await tx.comment_votes.findFirst({
+                where: { comment_id: commentId, user_id: userId },
+            });
 
-        const postId = postResult.rows[0]?.post_id;
+            let likeIncrement = 0;
+            let dislikeIncrement = 0;
 
-        if (existingVote.rows.length > 0) {
-            const currentAction = existingVote.rows[0].action;
-
-            if (currentAction === action) {
-                // Remove the vote if clicking the same action
-                await sql`
-                    DELETE FROM comment_votes
-                    WHERE comment_id = ${params.commentId}
-                    AND user_id = ${userId}
-                `;
-
-                // Update counts
-                if (action === "like") {
-                    await sql`
-                        UPDATE forum_comments
-                        SET like_count = like_count - 1
-                        WHERE id = ${params.commentId}
-                    `;
+            if (existing) {
+                if (existing.action_type === voteValue) {
+                    // Remove vote
+                    await tx.comment_votes.delete({
+                        where: { id: existing.id },
+                    });
+                    if (voteValue === "upvote") likeIncrement = -1;
+                    else dislikeIncrement = -1;
                 } else {
-                    await sql`
-                        UPDATE forum_comments
-                        SET dislike_count = dislike_count - 1
-                        WHERE id = ${params.commentId}
-                    `;
+                    // Change vote
+                    await tx.comment_votes.update({
+                        where: { id: existing.id },
+                        data: {
+                            action_type: voteValue,
+                            updated_at: new Date(),
+                        },
+                    });
+                    if (voteValue === "upvote") {
+                        likeIncrement = 1;
+                        dislikeIncrement = -1;
+                    } else {
+                        likeIncrement = -1;
+                        dislikeIncrement = 1;
+                    }
                 }
             } else {
-                // Change vote from like to dislike or vice versa
-                await sql`
-                    UPDATE comment_votes
-                    SET action = ${action}
-                    WHERE comment_id = ${params.commentId}
-                    AND user_id = ${userId}
-                `;
-
-                // Update counts
-                if (action === "like") {
-                    await sql`
-                        UPDATE forum_comments
-                        SET like_count = like_count + 1,
-                            dislike_count = dislike_count - 1
-                        WHERE id = ${params.commentId}
-                    `;
-                } else {
-                    await sql`
-                        UPDATE forum_comments
-                        SET like_count = like_count - 1,
-                            dislike_count = dislike_count + 1
-                        WHERE id = ${params.commentId}
-                    `;
-                }
+                // Add new vote
+                await tx.comment_votes.create({
+                    data: {
+                        comment_id: commentId,
+                        user_id: userId,
+                        action_type: voteValue,
+                    },
+                });
+                if (voteValue === "upvote") likeIncrement = 1;
+                else dislikeIncrement = 1;
             }
-        } else {
-            // Add new vote
-            await sql`
-                INSERT INTO comment_votes (comment_id, user_id, action)
-                VALUES (${params.commentId}, ${userId}, ${action})
-            `;
 
-            // Update counts
-            if (action === "like") {
-                await sql`
-                    UPDATE forum_comments
-                    SET like_count = like_count + 1
-                    WHERE id = ${params.commentId}
-                `;
-            } else {
-                await sql`
-                    UPDATE forum_comments
-                    SET dislike_count = dislike_count + 1
-                    WHERE id = ${params.commentId}
-                `;
+            // Update counts if needed
+            if (likeIncrement !== 0 || dislikeIncrement !== 0) {
+                await tx.forum_comments.update({
+                    where: { id: commentId },
+                    data: {
+                        like_count: { increment: likeIncrement },
+                        dislike_count: { increment: dislikeIncrement },
+                    },
+                });
             }
-        }
 
-        // Get updated counts
-        const updatedCounts = await sql`
-            SELECT like_count, dislike_count
-            FROM forum_comments
-            WHERE id = ${params.commentId}
-        `;
+            // Fetch updated counts & post id for revalidation
+            const updatedComment = await tx.forum_comments.findUnique({
+                where: { id: commentId },
+                select: {
+                    like_count: true,
+                    dislike_count: true,
+                    post_id: true,
+                },
+            });
 
-        if (postId) {
-            revalidatePath(`/forum/${postId}`);
+            return updatedComment;
+        });
+
+        if (result?.post_id) {
+            revalidatePath(`/forum/${result.post_id}`);
         }
 
         return NextResponse.json({
             success: true,
-            likeCount: updatedCounts.rows[0].like_count,
-            dislikeCount: updatedCounts.rows[0].dislike_count,
+            likeCount: result?.like_count ?? 0,
+            dislikeCount: result?.dislike_count ?? 0,
         });
     } catch (error) {
         console.error("Error processing vote:", error);

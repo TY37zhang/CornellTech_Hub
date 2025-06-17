@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
-
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(
     request: Request,
@@ -12,39 +9,104 @@ export async function GET(
         const resolvedParams = await Promise.resolve(params);
         const courseId = resolvedParams.id;
 
-        // Fetch the course's name and professor by code
-        const baseResult = await sql`
-            SELECT name, professor_id FROM courses WHERE code = ${courseId} LIMIT 1
-        `;
-        if (baseResult.length === 0) {
+        // Fetch the course's name and professor by code using Prisma
+        const base = await prisma.courses.findFirst({
+            where: { code: courseId },
+            select: { name: true, professor_id: true },
+        });
+        if (!base) {
             return NextResponse.json(
                 { error: "Course not found" },
                 { status: 404 }
             );
         }
-        const { name, professor_id } = baseResult[0];
+        const { name, professor_id } = base;
 
-        // Fetch all cross-listed courses (same name and professor)
-        const crossListResult = await sql`
-            SELECT 
-                c.id,
-                c.code,
-                c.name as title,
-                c.department as category,
-                c.professor_id as professor,
-                c.semester,
-                c.year,
-                c.credits,
-                COUNT(cr.id) as review_count,
-                ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
-                ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
-                ROUND(AVG(cr.workload)::numeric, 1) as workload,
-                ROUND(AVG(cr.rating)::numeric, 1) as value
-            FROM courses c
-            LEFT JOIN course_reviews cr ON c.id = cr.course_id
-            WHERE c.name = ${name} AND c.professor_id = ${professor_id}
-            GROUP BY c.id, c.code, c.name, c.department, c.professor_id, c.semester, c.year, c.credits
-        `;
+        const crossListCourses = await prisma.courses.findMany({
+            where: { name, professor_id },
+            select: {
+                id: true,
+                code: true,
+                name: true,
+                department: true,
+                professor_id: true,
+                semester: true,
+                year: true,
+                credits: true,
+                course_reviews: {
+                    select: {
+                        overall_rating: true,
+                        difficulty: true,
+                        workload: true,
+                        rating: true,
+                    },
+                },
+            },
+        });
+
+        if (crossListCourses.length === 0) {
+            return NextResponse.json(
+                { error: "Course not found" },
+                { status: 404 }
+            );
+        }
+
+        // Compute aggregates for each course record
+        const crossListResult = crossListCourses.map((course) => {
+            const reviews = course.course_reviews;
+            const reviewCount = reviews.length;
+            const avg = (arr: number[]) =>
+                arr.length === 0
+                    ? null
+                    : Math.round(
+                          (arr.reduce((a, b) => a + b, 0) / arr.length) * 10
+                      ) / 10;
+
+            const rating = avg(
+                reviews
+                    .map((r) =>
+                        r.overall_rating !== null &&
+                        r.overall_rating !== undefined
+                            ? Number(r.overall_rating)
+                            : (r.rating ?? null)
+                    )
+                    .filter((n): n is number => n !== null)
+            );
+
+            const difficulty = avg(
+                reviews
+                    .map((r) => r.difficulty)
+                    .filter((n): n is number => n !== null)
+            );
+
+            const workload = avg(
+                reviews
+                    .map((r) => r.workload)
+                    .filter((n): n is number => n !== null)
+            );
+
+            const value = avg(
+                reviews
+                    .map((r) => r.rating)
+                    .filter((n): n is number => n !== null)
+            );
+
+            return {
+                id: course.id,
+                code: course.code,
+                title: course.name,
+                category: course.department,
+                professor: course.professor_id,
+                semester: course.semester,
+                year: course.year,
+                credits: course.credits,
+                review_count: reviewCount,
+                rating,
+                difficulty,
+                workload,
+                value,
+            };
+        });
 
         // Aggregate codes and departments
         const codes = crossListResult.map((c: any) => c.code);
@@ -56,23 +118,13 @@ export async function GET(
 
         // Fetch reviews for all cross-listed courses
         const courseIds = crossListResult.map((c: any) => c.id);
-        const reviewsResult = await sql`
-            SELECT 
-                cr.id,
-                cr.content,
-                cr.overall_rating as rating,
-                cr.difficulty,
-                cr.workload,
-                cr.rating as value,
-                cr.grade,
-                cr.created_at,
-                u.name as author,
-                u.avatar_url
-            FROM course_reviews cr
-            JOIN users u ON cr.author_id = u.id
-            WHERE cr.course_id = ANY(${courseIds})
-            ORDER BY cr.created_at DESC
-        `;
+        const reviewsResult = await prisma.course_reviews.findMany({
+            where: { course_id: { in: courseIds } },
+            include: {
+                users: { select: { name: true, avatar_url: true } },
+            },
+            orderBy: { created_at: "desc" },
+        });
 
         // Transform the data
         const transformedCourse = {
@@ -94,14 +146,14 @@ export async function GET(
             reviews: reviewsResult.map((review: any) => ({
                 id: review.id,
                 content: review.content,
-                rating: Number(review.rating) || 0,
+                rating: Number(review.overall_rating ?? review.rating) || 0,
                 difficulty: Number(review.difficulty) || 0,
                 workload: Number(review.workload) || 0,
-                value: Number(review.value) || 0,
-                grade: review.grade || undefined,
+                value: Number(review.rating) || 0,
+                grade: (review as any).grade ?? undefined,
                 createdAt: review.created_at,
-                author: review.author,
-                avatarUrl: review.avatar_url,
+                author: review.users?.name ?? "Anonymous",
+                avatarUrl: review.users?.avatar_url ?? null,
             })),
         };
 

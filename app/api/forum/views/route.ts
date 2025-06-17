@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
+
+// Extract UUID from a slug or return as-is if already a UUID
+const extractUUID = (id: string): string =>
+    id.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+    )?.[0] ?? id;
 
 export async function POST(request: Request) {
     try {
@@ -13,13 +19,15 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        const user_id = session?.user?.id || null;
-        // Insert view, allow user_id to be null for anonymous
-        await sql`
-            INSERT INTO forum_views (post_id, user_id)
-            VALUES (${post_id}, ${user_id})
-            ON CONFLICT (post_id, user_id) DO NOTHING
-        `;
+
+        const user_id: string | null = session?.user?.id ?? null;
+        const actualPostId = extractUUID(post_id);
+
+        // Insert view (skipDuplicates handles logged-in duplicate case; anonymous duplicates are OK)
+        await prisma.forum_views.createMany({
+            data: [{ post_id: actualPostId, user_id }],
+            skipDuplicates: true,
+        });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error recording forum view:", error);
