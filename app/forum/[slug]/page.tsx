@@ -71,6 +71,7 @@ async function getThreadData(slug: string) {
                 include: {
                     users: {
                         select: {
+                            id: true,
                             name: true,
                             avatar_url: true,
                         },
@@ -132,6 +133,7 @@ async function getThreadData(slug: string) {
             like_count: likeCount,
             dislike_count: dislikeCount,
             author: {
+                id: comment.users.id,
                 name: comment.users.name,
                 avatar:
                     comment.users.avatar_url ||
