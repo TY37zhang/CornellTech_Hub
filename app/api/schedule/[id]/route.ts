@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 
 export async function PATCH(req: Request, context: { params: { id: string } }) {
     try {
@@ -18,24 +18,26 @@ export async function PATCH(req: Request, context: { params: { id: string } }) {
             return new NextResponse("Missing required fields", { status: 400 });
         }
 
-        // Update the schedule using SQL
-        const result = await sql`
-            UPDATE course_schedules
-            SET 
-                day = ${day},
-                start_time = ${startTime},
-                end_time = ${endTime},
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ${id}
-            AND user_id = ${session.user.id}
-            RETURNING *
-        `;
+        // Ensure the schedule belongs to the current user
+        const existing = await prisma.course_schedules.findUnique({
+            where: { id },
+        });
 
-        if (!result || result.length === 0) {
+        if (!existing || existing.user_id !== session.user.id) {
             return new NextResponse("Schedule not found", { status: 404 });
         }
 
-        return NextResponse.json(result[0]);
+        const updatedSchedule = await prisma.course_schedules.update({
+            where: { id },
+            data: {
+                day,
+                start_time: startTime,
+                end_time: endTime,
+                updated_at: new Date(),
+            },
+        });
+
+        return NextResponse.json(updatedSchedule);
     } catch (error) {
         console.error("[SCHEDULE_PATCH]", error);
         return new NextResponse("Internal Error", { status: 500 });

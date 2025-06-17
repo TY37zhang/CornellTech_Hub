@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
 import { cloudinary } from "@/lib/cloudinary";
-
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 // Define the request schema
 const updateAvatarSchema = z.object({
@@ -54,22 +51,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const dbResult = await sql`
-            UPDATE users
-            SET avatar_url = ${result.secure_url}
-            WHERE email = ${session.user.email}
-            RETURNING id, name, email, avatar_url
-        `;
+        const updatedUser = await prisma.users.update({
+            where: { email: session.user.email },
+            data: { avatar_url: result.secure_url },
+            select: { id: true, name: true, email: true, avatar_url: true },
+        });
 
-        if (dbResult.length === 0) {
-            console.error("No user found with email:", session.user.email);
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            );
-        }
-
-        const updatedUser = dbResult[0];
         return NextResponse.json(updatedUser);
     } catch (error) {
         console.error("Error updating user avatar:", error);

@@ -119,11 +119,13 @@ function CourseTimeCard({
 
     return (
         <Card className="group relative hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
+            <CardContent className="px-4 pt-3 pb-4">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="font-medium">{course.courseName}</h3>
-                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                        <h3 className="font-medium text-lg leading-snug">
+                            {course.courseName}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 text-base text-gray-600">
                             <Clock className="h-4 w-4" />
                             <span>
                                 {course.startTime} - {course.endTime}
@@ -140,7 +142,7 @@ function CourseTimeCard({
                     </Button>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-6 flex flex-wrap gap-2">
                     <Popover open={isEditing} onOpenChange={setIsEditing}>
                         <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="h-8">
@@ -870,12 +872,12 @@ export default function CourseSchedule({
                                                     </Button>
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                         <div className="min-w-0">
-                                                            <h3 className="font-medium truncate pt-2">
+                                                            <h3 className="font-medium text-lg truncate">
                                                                 {
                                                                     course.courseName
                                                                 }
                                                             </h3>
-                                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                                                            <div className="flex items-center gap-2 mt-1 text-base text-gray-600">
                                                                 <Clock className="h-4 w-4 flex-shrink-0" />
                                                                 <span className="truncate">
                                                                     {

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
 import { z } from "zod";
-
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 export async function DELETE(
     req: Request,
@@ -22,26 +20,20 @@ export async function DELETE(
 
         const { id: reviewId } = await params;
 
-        // First verify the review belongs to the user
-        const review = await sql`
-            SELECT id 
-            FROM course_reviews 
-            WHERE id = ${reviewId} 
-            AND author_id = ${session.user.id}
-        `;
+        const review = await prisma.course_reviews.findUnique({
+            where: { id: reviewId, author_id: session.user.id },
+        });
 
-        if (!review || review.length === 0) {
+        if (!review) {
             return NextResponse.json(
                 { error: "Review not found or unauthorized" },
                 { status: 404 }
             );
         }
 
-        // Delete the review
-        await sql`
-            DELETE FROM course_reviews 
-            WHERE id = ${reviewId}
-        `;
+        await prisma.course_reviews.delete({
+            where: { id: reviewId },
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -84,37 +76,31 @@ export async function PUT(
 
         const validatedData = requestSchema.parse(body);
 
-        // First verify the review belongs to the user
-        const review = await sql`
-            SELECT id 
-            FROM course_reviews 
-            WHERE id = ${reviewId} 
-            AND author_id = ${session.user.id}
-        `;
+        const review = await prisma.course_reviews.findUnique({
+            where: { id: reviewId, author_id: session.user.id },
+        });
 
-        if (!review || review.length === 0) {
+        if (!review) {
             return NextResponse.json(
                 { error: "Review not found or unauthorized" },
                 { status: 404 }
             );
         }
 
-        // Update the review
-        const updatedReview = await sql`
-            UPDATE course_reviews 
-            SET 
-                difficulty = ${validatedData.difficulty},
-                workload = ${validatedData.workload},
-                rating = ${validatedData.value},
-                overall_rating = ${validatedData.overall_rating},
-                content = ${validatedData.content},
-                grade = ${validatedData.grade},
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ${reviewId}
-            RETURNING *
-        `;
+        const updatedReview = await prisma.course_reviews.update({
+            where: { id: reviewId },
+            data: {
+                difficulty: validatedData.difficulty,
+                workload: validatedData.workload,
+                rating: validatedData.value,
+                overall_rating: validatedData.overall_rating,
+                content: validatedData.content,
+                grade: validatedData.grade,
+                updated_at: new Date(),
+            },
+        });
 
-        return NextResponse.json(updatedReview[0]);
+        return NextResponse.json(updatedReview);
     } catch (error) {
         console.error("Error updating review:", error);
         if (error instanceof z.ZodError) {
@@ -146,31 +132,24 @@ export async function GET(
 
         const { id: reviewId } = params;
 
-        // Fetch the review with course details
-        const reviewResult = await sql`
-            SELECT 
-                cr.id,
-                cr.content,
-                cr.overall_rating,
-                cr.difficulty,
-                cr.workload,
-                cr.rating as value,
-                c.name as course_name,
-                c.code as course_code
-            FROM course_reviews cr
-            JOIN courses c ON cr.course_id = c.id
-            WHERE cr.id = ${reviewId} 
-            AND cr.author_id = ${session.user.id}
-        `;
+        const review = await prisma.course_reviews.findUnique({
+            where: { id: reviewId, author_id: session.user.id },
+            include: {
+                courses: {
+                    select: {
+                        name: true,
+                        code: true,
+                    },
+                },
+            },
+        });
 
-        if (!reviewResult || reviewResult.length === 0) {
+        if (!review) {
             return NextResponse.json(
                 { error: "Review not found or unauthorized" },
                 { status: 404 }
             );
         }
-
-        const review = reviewResult[0];
 
         return NextResponse.json({
             id: review.id,
@@ -178,9 +157,9 @@ export async function GET(
             overall_rating: Number(review.overall_rating),
             difficulty: Number(review.difficulty),
             workload: Number(review.workload),
-            value: Number(review.value),
-            courseName: review.course_name,
-            courseCode: review.course_code,
+            value: Number(review.rating),
+            courseName: review.courses.name,
+            courseCode: review.courses.code,
         });
     } catch (error) {
         console.error("Error fetching review:", error);

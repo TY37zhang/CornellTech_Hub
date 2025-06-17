@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { prisma } from "@/lib/db/prisma";
 
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
-
-export async function GET(request) {
+export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get("search") || "";
@@ -13,150 +10,177 @@ export async function GET(request) {
         const offset = parseInt(searchParams.get("offset") || "0", 10);
         const sortBy = searchParams.get("sortBy") || "rating";
 
-        let courses;
-        let totalCount;
+        // 1. Fetch courses matching filters (no pagination yet)
+        const coursesRaw = await prisma.courses.findMany({
+            where: {
+                AND: [
+                    search
+                        ? {
+                              OR: [
+                                  {
+                                      name: {
+                                          contains: search,
+                                          mode: "insensitive",
+                                      },
+                                  },
+                                  {
+                                      professor_id: {
+                                          contains: search,
+                                          mode: "insensitive",
+                                      },
+                                  },
+                                  {
+                                      code: {
+                                          contains: search,
+                                          mode: "insensitive",
+                                      },
+                                  },
+                                  {
+                                      department: {
+                                          contains: search,
+                                          mode: "insensitive",
+                                      },
+                                  },
+                              ],
+                          }
+                        : {},
+                    category
+                        ? {
+                              department: {
+                                  contains: category,
+                                  mode: "insensitive",
+                              },
+                          }
+                        : {},
+                ],
+            },
+            include: {
+                course_reviews: {
+                    select: {
+                        overall_rating: true,
+                        rating: true, // value
+                        difficulty: true,
+                        workload: true,
+                        content: true,
+                        created_at: true,
+                    },
+                },
+            },
+        });
 
-        // Build the WHERE clause based on search and category filters
-        let whereClause = "";
-        let params = [];
+        // 2. Group by name + professor_id to mimic DISTINCT ON behaviour
+        // type CourseGroup = {
+        //     name: string;
+        //     professor_id: string;
+        //     courses: typeof coursesRaw;
+        // };
 
-        if (search) {
-            whereClause = `
-                WHERE c.name ILIKE $1
-                   OR c.professor_id ILIKE $1
-                   OR c.code ILIKE $1
-                   OR c.department ILIKE $1
-            `;
-            params.push(`%${search}%`);
-        }
-
-        if (category) {
-            if (whereClause) {
-                whereClause += ` AND c.department ILIKE $${params.length + 1}`;
-            } else {
-                whereClause = `WHERE c.department ILIKE $1`;
+        const groupMap = new Map<string, typeof coursesRaw>();
+        for (const course of coursesRaw) {
+            const key = `${course.name}|${course.professor_id}`;
+            if (!groupMap.has(key)) {
+                groupMap.set(key, [] as any);
             }
-            params.push(category);
+            (groupMap.get(key) as any).push(course);
         }
 
-        // Get total count for pagination - count unique course name + professor combinations
-        const countQuery = `
-            SELECT COUNT(*) as count
-            FROM (
-                SELECT DISTINCT c.name, c.professor_id
-                FROM courses c
-                ${whereClause}
-            ) as unique_courses
-        `;
+        const groups = Array.from(groupMap.values());
 
-        const countResult = await sql(countQuery, params);
-        totalCount = countResult[0].count;
+        // Helper to compute averages rounded to 1 decimal place
+        const avg = (nums: number[]) => {
+            if (nums.length === 0) return 0;
+            const sum = nums.reduce((a, b) => a + b, 0);
+            return Math.round((sum / nums.length) * 10) / 10;
+        };
 
-        // Determine ORDER BY clause based on sortBy
-        let orderByClause = "ORDER BY rating DESC NULLS LAST";
-        switch (sortBy) {
-            case "recent":
-                orderByClause = "ORDER BY MAX_CREATED_AT DESC NULLS LAST";
-                break;
-            case "popular":
-                orderByClause = "ORDER BY review_count DESC NULLS LAST";
-                break;
-            case "rating":
-                orderByClause = "ORDER BY rating DESC NULLS LAST";
-                break;
-            case "difficulty":
-                orderByClause = "ORDER BY difficulty DESC NULLS LAST";
-                break;
-            case "workload":
-                orderByClause = "ORDER BY workload DESC NULLS LAST";
-                break;
-        }
+        // 3. Build aggregated data for each group
+        const aggregated = groups.map((group) => {
+            // Flatten reviews across all courses in the group
+            const reviews = group.flatMap((c) => c.course_reviews);
 
-        // Get courses with filters - group by name and professor
-        const coursesQuery = `
-            WITH course_data AS (
-                SELECT 
-                    c.name,
-                    c.professor_id,
-                    STRING_AGG(DISTINCT c.code, ', ' ORDER BY c.code) as codes,
-                    STRING_AGG(DISTINCT c.department, ', ' ORDER BY c.department) as departments,
-                    COUNT(DISTINCT cr.id) as review_count,
-                    ROUND(AVG(cr.overall_rating)::numeric, 1) as rating,
-                    ROUND(AVG(cr.difficulty)::numeric, 1) as difficulty,
-                    ROUND(AVG(cr.workload)::numeric, 1) as workload,
-                    ROUND(AVG(cr.rating)::numeric, 1) as value,
-                    MAX(cr.created_at) as MAX_CREATED_AT,
-                    (
-                        SELECT content 
-                        FROM course_reviews 
-                        WHERE course_id IN (
-                            SELECT id FROM courses 
-                            WHERE name = c.name AND professor_id = c.professor_id
-                        )
-                        ORDER BY created_at DESC 
-                        LIMIT 1
-                    ) as latest_review
-                FROM courses c
-                LEFT JOIN course_reviews cr ON c.id = cr.course_id
-                ${whereClause}
-                GROUP BY c.name, c.professor_id
-            )
-            SELECT 
-                codes as code,
-                name as title,
-                professor_id as professor,
-                departments as category,
-                review_count,
-                rating,
-                difficulty,
-                workload,
-                value,
-                latest_review
-            FROM course_data
-            ${orderByClause}
-            LIMIT $${params.length + 1} OFFSET $${params.length + 2}
-        `;
+            const reviewCount = reviews.length;
 
-        courses = await sql(coursesQuery, [...params, limit, offset]);
+            // Extract numeric arrays for each metric, coalescing overall_rating vs rating
+            const ratings = reviews
+                .map((r) =>
+                    r.overall_rating !== null && r.overall_rating !== undefined
+                        ? Number(r.overall_rating)
+                        : (r.rating ?? null)
+                )
+                .filter((n): n is number => n !== null);
 
-        // Transform the data to match the frontend interface
-        const transformedCourses = courses.map((course) => {
-            // For category color, use the first department in the list
-            const primaryCategory = course.category
-                .split(",")[0]
-                .trim()
-                .toLowerCase();
+            const difficulties = reviews
+                .map((r) => r.difficulty)
+                .filter((n): n is number => n !== null);
+            const workloads = reviews
+                .map((r) => r.workload)
+                .filter((n): n is number => n !== null);
+            const values = reviews
+                .map((r) => r.rating)
+                .filter((n): n is number => n !== null);
+
+            // Latest review content/time
+            const latestReview = reviews.sort(
+                (a, b) =>
+                    (b.created_at?.getTime() || 0) -
+                    (a.created_at?.getTime() || 0)
+            )[0];
+
+            // Build list of codes & departments
+            const codes = group.map((c) => c.code).sort();
+            const departments = Array.from(
+                new Set(group.map((c) => c.department))
+            ).sort();
+
+            const primaryCourse = group[0];
 
             return {
-                id: course.code.split(",")[0].trim(), // Use the first code as the primary ID
-                title: course.title,
-                professor: course.professor || "Unknown Professor",
-                category: primaryCategory,
-                rating: Number(course.rating) || 0,
-                reviewCount: Number(course.review_count) || 0,
-                difficulty: Number(course.difficulty) || 0,
-                workload: Number(course.workload) || 0,
-                value: Number(course.value) || 0,
-                review: course.latest_review || "No reviews yet",
-                categoryColor: getCategoryColor(primaryCategory),
-                // Add additional fields for cross-listed information
-                crossListed: course.code.includes(",")
-                    ? {
-                          codes: course.code
-                              .split(",")
-                              .map((code) => code.trim()),
-                          departments: course.category
-                              .split(",")
-                              .map((dept) => dept.trim()),
-                      }
-                    : null,
-            };
+                id: codes[0], // primary ID
+                title: primaryCourse.name,
+                professor: primaryCourse.professor_id || "Unknown Professor",
+                category: departments[0]?.toLowerCase() || "",
+                rating: avg(ratings),
+                reviewCount,
+                difficulty: avg(difficulties),
+                workload: avg(workloads),
+                value: avg(values),
+                review: latestReview?.content || "No reviews yet",
+                categoryColor: getCategoryColor(departments[0]?.toLowerCase()),
+                crossListed:
+                    codes.length > 1
+                        ? {
+                              codes,
+                              departments,
+                          }
+                        : null,
+                // Additional fields used for sorting
+                _sortKeys: {
+                    recent: latestReview?.created_at ?? new Date(0),
+                    popular: reviewCount,
+                },
+            } as any;
         });
 
-        return NextResponse.json({
-            courses: transformedCourses,
-            total: totalCount,
-        });
+        // 4. Sorting
+        const sortStrategies: Record<string, (a: any, b: any) => number> = {
+            recent: (a, b) =>
+                (b._sortKeys.recent as Date).getTime() -
+                (a._sortKeys.recent as Date).getTime(),
+            popular: (a, b) => b.reviewCount - a.reviewCount,
+            rating: (a, b) => b.rating - a.rating,
+            difficulty: (a, b) => b.difficulty - a.difficulty,
+            workload: (a, b) => b.workload - a.workload,
+        };
+
+        const sortFn = sortStrategies[sortBy] ?? sortStrategies["rating"];
+
+        aggregated.sort(sortFn);
+
+        // 5. Pagination
+        const totalCount = aggregated.length;
+        const paginated = aggregated.slice(offset, offset + limit);
+
+        return NextResponse.json({ courses: paginated, total: totalCount });
     } catch (error) {
         console.error("Error fetching courses:", error);
         return NextResponse.json(

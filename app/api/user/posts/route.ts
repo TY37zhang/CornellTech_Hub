@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(request: Request) {
     try {
@@ -12,41 +12,39 @@ export async function GET(request: Request) {
         }
 
         // Fetch user's posts from the database
-        const posts = await sql`
-            SELECT 
-                fp.id,
-                fp.title,
-                fp.content,
-                fp.author_id,
-                fp.category_id,
-                fp.status,
-                fp.created_at,
-                fp.updated_at,
-                fp.notify_on_reply,
-                fc.name as category_name,
-                CONCAT(
-                    LOWER(REGEXP_REPLACE(fp.title, '[^a-zA-Z0-9]+', '-', 'g')),
-                    '-',
-                    fp.id
-                ) as slug
-            FROM forum_posts fp
-            LEFT JOIN forum_categories fc ON fp.category_id = fc.id
-            WHERE fp.author_id = ${session.user.id}
-            ORDER BY fp.created_at DESC
-        `;
+        const posts = await prisma.forum_posts.findMany({
+            where: { author_id: session.user.id },
+            include: {
+                forum_categories: { select: { name: true } },
+                forum_comments: { select: { id: true } },
+                forum_likes: { select: { id: true } },
+                forum_views: { select: { id: true } },
+                forum_post_tags: { select: { tag: true } },
+            },
+            orderBy: { created_at: "desc" },
+        });
 
-        // Transform the data to match the expected format
+        const slugify = (title: string, id: string) =>
+            `${title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "")}-${id}`;
+
         const transformedPosts = posts.map((post) => ({
             id: post.id,
             title: post.title,
             content: post.content,
             authorId: post.author_id,
-            category: post.category_name,
+            category: post.forum_categories?.name ?? null,
             status: post.status,
             createdAt: post.created_at,
             updatedAt: post.updated_at,
             notifyOnReply: post.notify_on_reply,
-            slug: post.slug,
+            slug: slugify(post.title, post.id),
+            replyCount: post.forum_comments.length,
+            likeCount: post.forum_likes.length,
+            viewCount: post.forum_views.length,
+            tags: post.forum_post_tags.map((t) => t.tag),
         }));
 
         return NextResponse.json(transformedPosts);

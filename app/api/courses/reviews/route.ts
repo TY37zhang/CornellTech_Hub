@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { neon } from "@neondatabase/serverless";
 import { validationMiddleware } from "@/middleware/validation";
 import { schemas } from "@/lib/validations/schemas";
-
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 export async function POST(request: Request) {
     try {
@@ -30,59 +27,58 @@ export async function POST(request: Request) {
         const validatedData = (validatedRequest as any).validatedData;
 
         // Create or update the course with all departments
-        const courseResult = await sql`
-            INSERT INTO courses (
-                code,
-                name,
-                professor_id,
-                department,
-                semester,
-                year,
-                credits
-            ) VALUES (
-                ${validatedData.courseId.substring(0, 20)},
-                ${validatedData.title},
-                ${validatedData.professor},
-                ${validatedData.category},
-                'Spring',
-                2024,
-                3
-            )
-            ON CONFLICT (code, semester, year) DO UPDATE
-            SET name = EXCLUDED.name,
-                professor_id = EXCLUDED.professor_id,
-                department = EXCLUDED.department
-            RETURNING id
-        `;
+        const course = await prisma.courses.upsert({
+            where: {
+                code_semester_year: {
+                    code: validatedData.courseId.substring(0, 20),
+                    semester: "Spring",
+                    year: 2024,
+                },
+            },
+            update: {
+                name: validatedData.title,
+                professor_id: validatedData.professor,
+                department: validatedData.category,
+            },
+            create: {
+                code: validatedData.courseId.substring(0, 20),
+                name: validatedData.title,
+                professor_id: validatedData.professor,
+                department: validatedData.category,
+                semester: "Spring",
+                year: 2024,
+                credits: 3,
+            },
+        });
 
-        const courseId = courseResult[0].id;
+        const courseId = course.id;
 
         // Then create the review
-        const reviewResult = await sql`
-            INSERT INTO course_reviews (
-                course_id,
-                author_id,
-                difficulty,
-                workload,
-                rating,
-                overall_rating,
-                content,
-                grade
-            )
-            VALUES (
-                ${courseId},
-                (SELECT id FROM users WHERE email = ${session.user.email}),
-                ${validatedData.difficulty},
-                ${validatedData.workload},
-                ${validatedData.value},
-                ${validatedData.overall_rating},
-                ${validatedData.review},
-                ${validatedData.grade}
-            )
-            RETURNING *
-        `;
+        const user = await prisma.users.findUnique({
+            where: { email: session.user.email },
+        });
 
-        return NextResponse.json(reviewResult[0]);
+        if (!user) {
+            return NextResponse.json(
+                { error: "User not found" },
+                { status: 404 }
+            );
+        }
+
+        const review = await prisma.course_reviews.create({
+            data: {
+                course_id: courseId,
+                author_id: user.id,
+                difficulty: validatedData.difficulty,
+                workload: validatedData.workload,
+                rating: validatedData.value,
+                overall_rating: validatedData.overall_rating,
+                content: validatedData.review,
+                grade: validatedData.grade,
+            },
+        });
+
+        return NextResponse.json(review);
     } catch (error) {
         console.error("Error creating course review:", error);
         return NextResponse.json(

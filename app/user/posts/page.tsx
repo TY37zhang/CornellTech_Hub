@@ -50,9 +50,13 @@ interface Post {
     id: string;
     title: string;
     content: string;
-    createdAt: string;
+    createdAt: string | Date;
     category: string;
     slug: string;
+    replyCount: number;
+    likeCount: number;
+    viewCount: number;
+    tags: string[];
 }
 
 export default function UserPostsPage() {
@@ -273,13 +277,30 @@ export default function UserPostsPage() {
                                             <p className="text-muted-foreground line-clamp-2">
                                                 {post.content}
                                             </p>
+                                            {post.tags?.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mt-4">
+                                                    {post.tags.map((tag) => (
+                                                        <Badge
+                                                            key={tag}
+                                                            variant="secondary"
+                                                            className="text-xs"
+                                                        >
+                                                            {tag}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </CardContent>
                                     </Link>
-                                    <CardFooter className="flex justify-end pt-0">
+                                    <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground pt-0">
+                                        <span>{post.replyCount} replies</span>
+                                        <span>{post.likeCount} likes</span>
+                                        <span>{post.viewCount} views</span>
+
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-muted-foreground hover:text-destructive"
+                                            className="ml-auto text-muted-foreground hover:text-destructive"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();

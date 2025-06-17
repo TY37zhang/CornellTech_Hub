@@ -1,10 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { neon } from "@neondatabase/serverless";
+import { prisma } from "@/lib/db/prisma";
 import { DefaultSession } from "next-auth";
-
-// Initialize the Neon client
-const sql = neon(process.env.DATABASE_URL || "");
 
 // Default profile picture URL
 const DEFAULT_PROFILE_PICTURE =
@@ -58,34 +55,30 @@ export const authOptions: NextAuthOptions = {
             // If using Google provider, check if user exists in our database
             if (account?.provider === "google") {
                 try {
-                    const result = await sql`
-                        SELECT * FROM users WHERE email = ${user.email}
-                    `;
+                    const existing = await prisma.users.findUnique({
+                        where: { email: user.email },
+                    });
 
-                    // If user doesn't exist, create them
-                    if (result.length === 0) {
+                    if (!existing) {
                         console.log(
                             "Creating new user with Cornell email:",
                             user.email
                         );
-                        const newUser = await sql`
-                            INSERT INTO users (name, email, avatar_url, program)
-                            VALUES (${user.name}, ${user.email}, ${DEFAULT_PROFILE_PICTURE}, NULL)
-                            RETURNING id, name, email, avatar_url, program
-                        `;
-                        console.log("New user created:", newUser[0]);
-
-                        // Update the user object with the new user's ID and avatar
-                        user.id = newUser[0].id;
-                        user.image = newUser[0].avatar_url;
-                    } else {
-                        // Update the user object with the existing user's data
-                        console.log("Found existing user:", result[0]);
-                        user.id = result[0].id;
-                        user.name = result[0].name;
-                        // Use the avatar_url from our database
+                        const newUser = await prisma.users.create({
+                            data: {
+                                name: user.name!,
+                                email: user.email,
+                                avatar_url: DEFAULT_PROFILE_PICTURE,
+                            },
+                        });
+                        user.id = newUser.id;
                         user.image =
-                            result[0].avatar_url || DEFAULT_PROFILE_PICTURE;
+                            newUser.avatar_url || DEFAULT_PROFILE_PICTURE;
+                    } else {
+                        user.id = existing.id;
+                        user.name = existing.name;
+                        user.image =
+                            existing.avatar_url || DEFAULT_PROFILE_PICTURE;
                     }
                 } catch (error) {
                     console.error("Error during Google sign in:", error);
@@ -108,25 +101,19 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string;
 
                 // Get the latest user data from database
-                const result = await sql`
-                    SELECT name, avatar_url, program FROM users WHERE id = ${token.id}
-                `;
+                const dbUser = await prisma.users.findUnique({
+                    where: { id: token.id as string },
+                    select: { name: true, avatar_url: true, program: true },
+                });
 
-                if (!result || result.length === 0) {
+                if (!dbUser) {
                     return session;
                 }
 
-                if (result.length > 0) {
-                    session.user.name = result[0].name;
-                    session.user.program = result[0].program;
-
-                    // Always use the avatar_url from the database
-                    if (result[0].avatar_url) {
-                        session.user.image = result[0].avatar_url;
-                    } else {
-                        session.user.image = DEFAULT_PROFILE_PICTURE;
-                    }
-                }
+                session.user.name = dbUser.name;
+                session.user.program = dbUser.program;
+                session.user.image =
+                    dbUser.avatar_url || DEFAULT_PROFILE_PICTURE;
             }
             return session;
         },

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
+import { prisma } from "@/lib/db/prisma";
 import { Resend } from "resend";
 
-const sql = neon(process.env.DATABASE_URL || "");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -22,20 +21,16 @@ export async function POST(req: Request) {
         const { type, message } = body;
 
         // Store feedback in database
-        const result = await sql`
-            INSERT INTO feedback (
-                user_id,
+        const feedbackEntry = await prisma.feedback.create({
+            data: {
+                user_id: session.user.id,
                 type,
                 message,
-                created_at
-            ) VALUES (
-                ${session.user.id},
-                ${type},
-                ${message},
-                NOW()
-            )
-            RETURNING id
-        `;
+            },
+            select: {
+                id: true,
+            },
+        });
 
         // Send email notification
         const emailSubject = type === "bug" ? "New Bug Report" : "New Feedback";
@@ -47,7 +42,7 @@ export async function POST(req: Request) {
                 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; margin: 15px 0;">
                     <p style="white-space: pre-wrap;">${message}</p>
                 </div>
-                <p style="color: #666; font-size: 14px;">Feedback ID: ${result[0].id}</p>
+                <p style="color: #666; font-size: 14px;">Feedback ID: ${feedbackEntry.id}</p>
                 <p style="color: #666; font-size: 14px;">User ID: ${session.user.id}</p>
             </div>
         `;

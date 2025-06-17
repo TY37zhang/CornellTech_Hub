@@ -1,5 +1,5 @@
-import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(request: Request) {
     try {
@@ -10,51 +10,56 @@ export async function GET(request: Request) {
             return NextResponse.json([]);
         }
 
-        const searchPattern = `%${query}%`;
-        const { rows } = await sql`
-            WITH base_courses AS (
-                SELECT DISTINCT ON (name, professor_id) 
-                    id,
-                    name,
-                    professor_id,
-                    credits,
-                    semester,
-                    year,
-                    description
-                FROM courses
-                WHERE 
-                    credits IS NOT NULL AND
-                    (
-                        LOWER(code) LIKE LOWER(${searchPattern}) OR 
-                        LOWER(name) LIKE LOWER(${searchPattern})
-                    )
-                ORDER BY name, professor_id, code
-                LIMIT 10
-            )
-            SELECT 
-                bc.id,
-                (
-                    SELECT STRING_AGG(c.code, ', ' ORDER BY c.code)
-                    FROM courses c 
-                    WHERE c.name = bc.name AND c.professor_id = bc.professor_id
-                ) as code,
-                bc.name,
-                bc.credits,
-                bc.description,
-                (
-                    SELECT STRING_AGG(DISTINCT c.department, ', ' ORDER BY c.department)
-                    FROM courses c 
-                    WHERE c.name = bc.name AND c.professor_id = bc.professor_id
-                ) as department,
-                bc.semester,
-                bc.year,
-                bc.professor_id
-            FROM base_courses bc
-            ORDER BY bc.name
-        `;
+        const rowsRaw = await prisma.courses.findMany({
+            where: {
+                OR: [
+                    { code: { contains: query, mode: "insensitive" } },
+                    { name: { contains: query, mode: "insensitive" } },
+                ],
+            },
+            orderBy: [
+                { name: "asc" },
+                { professor_id: "asc" },
+                { code: "asc" },
+            ],
+            take: 100, // fetch extra for grouping, will slice later
+        });
 
-        // Transform the data to handle cross-listed information
-        const transformedRows = rows.map((row) => ({
+        // Group by name+professor to mimic DISTINCT ON behavior
+        const groupMap = new Map<string, Array<(typeof rowsRaw)[number]>>();
+        for (const course of rowsRaw) {
+            const key = `${course.name}|${course.professor_id}`;
+            if (!groupMap.has(key)) {
+                groupMap.set(key, [] as any);
+            }
+            (groupMap.get(key) as any[]).push(course);
+        }
+
+        const groups = Array.from(groupMap.values())
+            .slice(0, 10) // limit 10 groups
+            .map((group) => {
+                const first = group[0];
+                return {
+                    id: first.id,
+                    code: group
+                        .map((c) => c.code)
+                        .sort()
+                        .join(", "),
+                    name: first.name,
+                    credits: first.credits,
+                    description: first.description,
+                    department: Array.from(
+                        new Set(group.map((c) => c.department))
+                    )
+                        .sort()
+                        .join(", "),
+                    semester: first.semester,
+                    year: first.year,
+                    professor_id: first.professor_id,
+                };
+            });
+
+        const transformedRows = groups.map((row) => ({
             ...row,
             codes: row.code.split(", "),
             departments: row.department.split(", "),

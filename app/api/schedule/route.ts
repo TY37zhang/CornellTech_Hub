@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(request: Request) {
     try {
@@ -11,55 +11,58 @@ export async function GET(request: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const schedules = await sql`
-            SELECT 
-                cs.id,
-                cs.user_id,
-                cs.course_id,
-                cs.day,
-                cs.start_time,
-                cs.end_time,
-                cs.created_at,
-                cs.updated_at,
-                c.code,
-                c.name,
-                c.description,
-                c.credits,
-                c.department
-            FROM course_schedules cs
-            JOIN courses c ON cs.course_id = c.id
-            WHERE cs.user_id = ${session.user.id}
-            ORDER BY 
-                CASE 
-                    WHEN cs.day = 'Monday' THEN 1
-                    WHEN cs.day = 'Tuesday' THEN 2
-                    WHEN cs.day = 'Wednesday' THEN 3
-                    WHEN cs.day = 'Thursday' THEN 4
-                    WHEN cs.day = 'Friday' THEN 5
-                    ELSE 6
-                END,
-                cs.start_time
-        `;
-
-        // Transform the data to match the expected format
-        const transformedSchedules = schedules.map((schedule) => ({
-            id: schedule.id,
-            userId: schedule.user_id,
-            courseId: schedule.course_id,
-            course: {
-                id: schedule.course_id,
-                code: schedule.code,
-                name: schedule.name,
-                description: schedule.description,
-                credits: schedule.credits,
-                department: schedule.department,
+        const schedules = await prisma.course_schedules.findMany({
+            where: { user_id: session.user.id },
+            include: {
+                courses: {
+                    select: {
+                        id: true,
+                        code: true,
+                        name: true,
+                        description: true,
+                        credits: true,
+                        department: true,
+                    },
+                },
             },
-            day: schedule.day,
-            startTime: schedule.start_time,
-            endTime: schedule.end_time,
-            createdAt: schedule.created_at,
-            updatedAt: schedule.updated_at,
-        }));
+            orderBy: [{ start_time: "asc" }], // will refine day order on client side below
+        });
+
+        // Custom sort for weekday order (Monday -> Sunday)
+        const dayOrder: Record<string, number> = {
+            Monday: 1,
+            Tuesday: 2,
+            Wednesday: 3,
+            Thursday: 4,
+            Friday: 5,
+            Saturday: 6,
+            Sunday: 7,
+        };
+
+        const transformedSchedules = schedules
+            .map((schedule) => ({
+                id: schedule.id,
+                userId: schedule.user_id,
+                courseId: schedule.course_id,
+                course: {
+                    id: schedule.courses.id,
+                    code: schedule.courses.code,
+                    name: schedule.courses.name,
+                    description: schedule.courses.description,
+                    credits: schedule.courses.credits,
+                    department: schedule.courses.department,
+                },
+                day: schedule.day,
+                startTime: schedule.start_time,
+                endTime: schedule.end_time,
+                createdAt: schedule.created_at,
+                updatedAt: schedule.updated_at,
+            }))
+            .sort((a, b) => {
+                const dayDiff = (dayOrder[a.day] || 8) - (dayOrder[b.day] || 8);
+                if (dayDiff !== 0) return dayDiff;
+                return a.startTime.localeCompare(b.startTime);
+            });
 
         return NextResponse.json(transformedSchedules);
     } catch (error) {
@@ -82,25 +85,18 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { courseId, day, startTime, endTime } = body;
 
-        const result = await sql`
-            INSERT INTO course_schedules (
-                user_id,
-                course_id,
+        const newSchedule = await prisma.course_schedules.create({
+            data: {
+                user_id: session.user.id,
+                course_id: courseId,
                 day,
-                start_time,
-                end_time
-            )
-            VALUES (
-                ${session.user.id},
-                ${courseId},
-                ${day},
-                ${startTime},
-                ${endTime}
-            )
-            RETURNING id
-        `;
+                start_time: startTime,
+                end_time: endTime,
+            },
+            select: { id: true },
+        });
 
-        return NextResponse.json({ id: result[0].id });
+        return NextResponse.json({ id: newSchedule.id });
     } catch (error) {
         console.error("Error creating schedule:", error);
         return NextResponse.json(
@@ -130,16 +126,20 @@ export async function DELETE(request: Request) {
 
         if (id) {
             // Delete a specific schedule by ID
-            await sql`
-                DELETE FROM course_schedules
-                WHERE id = ${id} AND user_id = ${session.user.id}
-            `;
+            await prisma.course_schedules.deleteMany({
+                where: {
+                    id,
+                    user_id: session.user.id,
+                },
+            });
         } else if (courseId) {
             // Delete all schedules for a specific course
-            await sql`
-                DELETE FROM course_schedules
-                WHERE course_id = ${courseId} AND user_id = ${session.user.id}
-            `;
+            await prisma.course_schedules.deleteMany({
+                where: {
+                    course_id: courseId,
+                    user_id: session.user.id,
+                },
+            });
         }
 
         return new NextResponse(null, { status: 204 });

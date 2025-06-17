@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { executeQuery } from "@/lib/db/utils";
+import { prisma } from "@/lib/db/prisma";
 
 export async function POST(req: Request) {
     try {
@@ -33,82 +33,66 @@ export async function POST(req: Request) {
             });
         }
 
-        // Start transaction
-        await executeQuery("BEGIN");
+        // Perform the upsert logic in a single transaction for safety
+        await prisma.$transaction(async (tx) => {
+            // Delete any existing requirement of this type for the user
+            await tx.course_special_requirements.deleteMany({
+                where: {
+                    user_id: session.user.id,
+                    requirement_type: requirementType,
+                },
+            });
 
-        try {
-            // First delete any existing requirements of this type for the user
-            await executeQuery(
-                `DELETE FROM course_special_requirements 
-                 WHERE user_id = $1 AND requirement_type = $2`,
-                [session.user.id, requirementType]
-            );
-
-            // Then insert the new requirement if it exists
+            // Insert a new row only if any of these fields are provided
             if (selectedCourseId || deductedFromCategory || addedToCategory) {
-                // Validate credit amount
+                // Validate credit amount when provided and non-zero
                 if (
-                    creditAmount &&
+                    creditAmount !== undefined &&
                     (typeof creditAmount !== "number" || creditAmount === 0)
                 ) {
                     throw new Error("Invalid credit amount");
                 }
 
-                await executeQuery(
-                    `INSERT INTO course_special_requirements 
-                     (user_id, requirement_type, selected_course_id, deducted_from_category, credit_amount, added_to_category)
-                     VALUES ($1, $2, $3, $4, $5, $6)`,
-                    [
-                        session.user.id,
-                        requirementType,
-                        selectedCourseId,
-                        deductedFromCategory,
-                        creditAmount,
-                        addedToCategory,
-                    ]
-                );
+                await tx.course_special_requirements.create({
+                    data: {
+                        user_id: session.user.id,
+                        requirement_type: requirementType,
+                        selected_course_id: selectedCourseId,
+                        deducted_from_category: deductedFromCategory,
+                        credit_amount: creditAmount ?? undefined,
+                        added_to_category: addedToCategory,
+                    },
+                });
             }
+        });
 
-            // Commit transaction
-            await executeQuery("COMMIT");
-            return new NextResponse("Success", { status: 200 });
-        } catch (error) {
-            // Rollback transaction on error
-            await executeQuery("ROLLBACK");
-            throw error;
-        }
+        return new NextResponse("Success", { status: 200 });
     } catch (error) {
         console.error("Error saving course special requirement:", error);
-        // Return the error message to the client for better debugging
         return new NextResponse(
             error instanceof Error ? error.message : "Internal Server Error",
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const result = await executeQuery(
-            `SELECT * FROM course_special_requirements WHERE user_id = $1`,
-            [session.user.id]
-        );
+        const requirements = await prisma.course_special_requirements.findMany({
+            where: { user_id: session.user.id },
+        });
 
-        return NextResponse.json(result.rows);
+        return NextResponse.json(requirements);
     } catch (error) {
         console.error("Error fetching course special requirements:", error);
         return new NextResponse(
             error instanceof Error ? error.message : "Internal Server Error",
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

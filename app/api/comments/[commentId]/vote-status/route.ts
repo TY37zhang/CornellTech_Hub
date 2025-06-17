@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { sql } from "@/lib/db/config";
 import { getCommentVoteStatus } from "@/app/forum/actions";
 
 export async function GET(

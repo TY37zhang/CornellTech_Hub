@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(request: Request) {
     try {
@@ -14,61 +14,58 @@ export async function GET(request: Request) {
             );
         }
 
-        // Fetch the user's course plans from the database
-        const coursePlans = await sql`
-            SELECT 
-                cp.id as plan_id,
-                cp.user_id,
-                cp.course_id,
-                cp.requirement_type,
-                cp.semester,
-                cp.year,
-                cp.status,
-                cp.notes,
-                cp.taken,
-                cp.created_at,
-                cp.updated_at,
-                c.id,
-                c.code,
-                c.name,
-                c.description,
-                c.credits,
-                c.department,
-                c.full_code,
-                c.concentration_core,
-                c.concentration_elective,
-                c.professor_id
-            FROM course_planner cp
-            JOIN courses c ON cp.course_id = c.id
-            WHERE cp.user_id = ${session.user.id}
-            ORDER BY cp.year, cp.semester
-        `;
-
-        // Transform the data to match the expected format
-        const transformedPlans = coursePlans.map((plan) => ({
-            id: plan.plan_id,
-            userId: plan.user_id,
-            course: {
-                id: plan.id, // course id
-                code: plan.code,
-                name: plan.name,
-                description: plan.description,
-                credits: plan.credits,
-                department: plan.department,
-                fullCode: plan.full_code,
-                concentrationCore: plan.concentration_core,
-                concentrationElective: plan.concentration_elective,
-                professorId: plan.professor_id,
-                taken: plan.taken,
+        const plans = await prisma.course_planner.findMany({
+            where: { user_id: session.user.id },
+            include: {
+                courses: {
+                    select: {
+                        id: true,
+                        code: true,
+                        name: true,
+                        description: true,
+                        credits: true,
+                        department: true,
+                        full_code: true,
+                        concentration_core: true,
+                        concentration_elective: true,
+                        professor_id: true,
+                    },
+                },
             },
-            requirementType: plan.requirement_type,
-            semester: plan.semester,
-            year: plan.year,
-            status: plan.status,
-            notes: plan.notes,
-            createdAt: plan.created_at,
-            updatedAt: plan.updated_at,
-        }));
+        });
+
+        const transformedPlans = plans
+            .map((plan) => ({
+                id: plan.id,
+                userId: plan.user_id,
+                course: {
+                    id: plan.courses.id,
+                    code: plan.courses.code,
+                    name: plan.courses.name,
+                    description: plan.courses.description,
+                    credits: plan.courses.credits,
+                    department: plan.courses.department,
+                    fullCode: plan.courses.full_code,
+                    concentrationCore: plan.courses.concentration_core,
+                    concentrationElective: plan.courses.concentration_elective,
+                    professorId: plan.courses.professor_id,
+                    taken: plan.taken,
+                },
+                requirementType: plan.requirement_type,
+                semester: plan.semester,
+                year: plan.year,
+                status: plan.status,
+                notes: plan.notes,
+                createdAt: plan.created_at,
+                updatedAt: plan.updated_at,
+            }))
+            .sort((a, b) => {
+                const yearDiff = (a.year ?? 0) - (b.year ?? 0);
+                if (yearDiff !== 0) return yearDiff;
+                const semA = a.semester ?? "";
+                const semB = b.semester ?? "";
+                return semA.localeCompare(semB);
+            });
 
         return NextResponse.json(transformedPlans);
     } catch (error) {
@@ -102,83 +99,58 @@ export async function POST(request: Request) {
             taken = false,
         } = body;
 
-        // Create a new course plan
-        const coursePlan = await sql`
-            INSERT INTO course_planner (
-                user_id,
-                course_id,
-                requirement_type,
+        const created = await prisma.course_planner.create({
+            data: {
+                user_id: session.user.id,
+                course_id: courseId,
+                requirement_type: requirementType,
                 semester,
                 year,
                 status,
                 notes,
-                taken
-            )
-            VALUES (
-                ${session.user.id},
-                ${courseId},
-                ${requirementType},
-                ${semester},
-                ${year},
-                ${status},
-                ${notes},
-                ${taken}
-            )
-            RETURNING id
-        `;
-
-        // Fetch the created plan with course details
-        const createdPlan = await sql`
-            SELECT 
-                cp.id as plan_id,
-                cp.user_id,
-                cp.course_id,
-                cp.requirement_type,
-                cp.semester,
-                cp.year,
-                cp.status,
-                cp.notes,
-                cp.taken,
-                cp.created_at,
-                cp.updated_at,
-                c.id,
-                c.code,
-                c.name,
-                c.description,
-                c.credits,
-                c.department,
-                c.full_code,
-                c.concentration_core,
-                c.concentration_elective,
-                c.professor_id
-            FROM course_planner cp
-            JOIN courses c ON cp.course_id = c.id
-            WHERE cp.id = ${coursePlan[0].id}
-        `;
+                taken,
+            },
+            include: {
+                courses: {
+                    select: {
+                        id: true,
+                        code: true,
+                        name: true,
+                        description: true,
+                        credits: true,
+                        department: true,
+                        full_code: true,
+                        concentration_core: true,
+                        concentration_elective: true,
+                        professor_id: true,
+                    },
+                },
+            },
+        });
 
         const transformedPlan = {
-            id: createdPlan[0].plan_id,
-            userId: createdPlan[0].user_id,
+            id: created.id,
+            userId: created.user_id,
             course: {
-                id: createdPlan[0].id,
-                code: createdPlan[0].code,
-                name: createdPlan[0].name,
-                description: createdPlan[0].description,
-                credits: createdPlan[0].credits,
-                department: createdPlan[0].department,
-                fullCode: createdPlan[0].full_code,
-                concentrationCore: createdPlan[0].concentration_core,
-                concentrationElective: createdPlan[0].concentration_elective,
-                professorId: createdPlan[0].professor_id,
-                taken: createdPlan[0].taken,
+                id: created.courses.id,
+                code: created.courses.code,
+                name: created.courses.name,
+                description: created.courses.description,
+                credits: created.courses.credits,
+                department: created.courses.department,
+                fullCode: created.courses.full_code,
+                concentrationCore: created.courses.concentration_core,
+                concentrationElective: created.courses.concentration_elective,
+                professorId: created.courses.professor_id,
+                taken: created.taken,
             },
-            requirementType: createdPlan[0].requirement_type,
-            semester: createdPlan[0].semester,
-            year: createdPlan[0].year,
-            status: createdPlan[0].status,
-            notes: createdPlan[0].notes,
-            createdAt: createdPlan[0].created_at,
-            updatedAt: createdPlan[0].updated_at,
+            requirementType: created.requirement_type,
+            semester: created.semester,
+            year: created.year,
+            status: created.status,
+            notes: created.notes,
+            createdAt: created.created_at,
+            updatedAt: created.updated_at,
         };
 
         return NextResponse.json(transformedPlan);
@@ -206,19 +178,21 @@ export async function PUT(request: Request) {
         const { id, requirementType, semester, year, status, notes, taken } =
             body;
 
-        // Update the course plan
-        await sql`
-            UPDATE course_planner
-            SET 
-                requirement_type = ${requirementType},
-                semester = ${semester},
-                year = ${year},
-                status = ${status},
-                notes = ${notes},
-                taken = ${taken},
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ${id} AND user_id = ${session.user.id}
-        `;
+        await prisma.course_planner.updateMany({
+            where: {
+                id,
+                user_id: session.user.id,
+            },
+            data: {
+                requirement_type: requirementType,
+                semester,
+                year,
+                status,
+                notes,
+                taken,
+                updated_at: new Date(),
+            },
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -251,19 +225,20 @@ export async function DELETE(request: Request) {
             });
         }
 
-        // Delete the course plan(s)
         if (id) {
-            // Delete a specific plan by ID
-            await sql`
-                DELETE FROM course_planner
-                WHERE id = ${id} AND user_id = ${session.user.id}
-            `;
+            await prisma.course_planner.deleteMany({
+                where: {
+                    id,
+                    user_id: session.user.id,
+                },
+            });
         } else if (courseId) {
-            // Delete all plans for a specific course
-            await sql`
-                DELETE FROM course_planner
-                WHERE course_id = ${courseId} AND user_id = ${session.user.id}
-            `;
+            await prisma.course_planner.deleteMany({
+                where: {
+                    course_id: courseId,
+                    user_id: session.user.id,
+                },
+            });
         }
 
         return new NextResponse(null, { status: 204 });

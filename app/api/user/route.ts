@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
-
-const sql = neon(process.env.DATABASE_URL || "");
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET() {
     try {
@@ -17,17 +15,16 @@ export async function GET() {
         }
 
         try {
-            const result = await sql`
-                SELECT name, email, program
-                FROM users
-                WHERE email = ${session.user.email}
-            `;
+            const user = await prisma.users.findUnique({
+                where: { email: session.user.email },
+                select: { name: true, email: true, program: true },
+            });
 
-            if (!result || result.length === 0) {
+            if (!user) {
                 return new NextResponse("User not found", { status: 404 });
             }
 
-            return NextResponse.json(result[0]);
+            return NextResponse.json(user);
         } catch (dbError) {
             return new NextResponse(
                 JSON.stringify({
@@ -64,18 +61,13 @@ export async function PATCH(req: Request) {
         const { name, program } = body;
 
         try {
-            const user = await sql`
-                UPDATE users
-                SET name = ${name}, program = ${program}
-                WHERE email = ${session.user.email}
-                RETURNING name, email, program
-            `;
+            const updatedUser = await prisma.users.update({
+                where: { email: session.user.email },
+                data: { name, program },
+                select: { name: true, email: true, program: true },
+            });
 
-            if (!user || user.length === 0) {
-                return new NextResponse("User not found", { status: 404 });
-            }
-
-            return NextResponse.json(user[0]);
+            return NextResponse.json(updatedUser);
         } catch (dbError) {
             return new NextResponse(
                 JSON.stringify({

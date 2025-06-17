@@ -1,8 +1,7 @@
-import { neon } from "@neondatabase/serverless";
+import { prisma } from "@/lib/db/prisma";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const sql = neon(process.env.DATABASE_URL || "");
 
 export async function sendForumReplyNotification(
     postId: string,
@@ -11,54 +10,55 @@ export async function sendForumReplyNotification(
 ) {
     try {
         // Get post details and author info
-        const postResult = await sql`
-            SELECT fp.id, fp.title, u.email, u.name as author_name, fp.author_id
-            FROM forum_posts fp
-            JOIN users u ON fp.author_id = u.id
-            WHERE fp.id = ${postId}
-        `;
+        const post = await prisma.forum_posts.findUnique({
+            where: { id: postId },
+            select: {
+                id: true,
+                title: true,
+                author_id: true,
+                users: { select: { email: true, name: true } },
+            },
+        });
 
-        if (!postResult || postResult.length === 0) {
+        if (!post) {
             console.error("Post not found for notification:", postId);
             return;
         }
 
-        const post = postResult[0];
         console.log("Found post for notification:", {
             postId,
             authorId: post.author_id,
             title: post.title,
         });
 
-        const commentResult = await sql`
-            SELECT fc.id, u.name as author_name
-            FROM forum_comments fc
-            JOIN users u ON fc.author_id = u.id
-            WHERE fc.id = ${commentId}
-        `;
+        const comment = await prisma.forum_comments.findUnique({
+            where: { id: commentId },
+            select: {
+                id: true,
+                users: { select: { name: true } },
+            },
+        });
 
-        if (!commentResult || commentResult.length === 0) {
+        if (!comment) {
             console.error("Comment not found for notification:", commentId);
             return;
         }
 
-        const comment = commentResult[0];
-
         // Check if author wants notifications
-        const notificationResult = await sql`
-            SELECT notify_on_reply
-            FROM forum_notification_preferences
-            WHERE post_id = ${postId} AND user_id = ${post.author_id}
-        `;
+        const notificationPref =
+            await prisma.forum_notification_preferences.findFirst({
+                where: { post_id: postId, user_id: post.author_id },
+                select: { notify_on_reply: true },
+            });
 
-        if (!notificationResult || !notificationResult[0]?.notify_on_reply) {
+        if (!notificationPref?.notify_on_reply) {
             console.log(
                 "No notification preference found or notifications disabled for post:",
                 postId,
                 "user:",
                 post.author_id,
-                "notification result:",
-                notificationResult
+                "notification preference:",
+                notificationPref
             );
             return; // Author doesn't want notifications
         }
@@ -67,7 +67,7 @@ export async function sendForumReplyNotification(
             "Sending notification email for post:",
             postId,
             "to:",
-            post.email
+            post.users.email
         );
 
         // Get the app URL from environment variables or use a default
@@ -78,13 +78,13 @@ export async function sendForumReplyNotification(
         // Send email notification
         await resend.emails.send({
             from: `Cornell Tech Hub <notifications@${process.env.EMAIL_DOMAIN || "cornelltechhub@resend.dev"}>`,
-            to: post.email,
+            to: post.users.email,
             subject: `New reply to your forum post: ${post.title}`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #1a73e8;">New Reply to Your Forum Post</h2>
-                    <p>Hello ${post.author_name},</p>
-                    <p><strong>${comment.author_name}</strong> has replied to your forum post <strong>"${post.title}"</strong>.</p>
+                    <p>Hello ${post.users.name},</p>
+                    <p><strong>${comment.users.name}</strong> has replied to your forum post <strong>"${post.title}"</strong>.</p>
                     <div style="margin: 25px 0;">
                         <a href="${postUrl}" style="background-color: #1a73e8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">View Reply</a>
                     </div>

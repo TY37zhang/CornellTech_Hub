@@ -14,6 +14,7 @@ import {
     ThumbsDown,
     ThumbsUp,
     SortAsc,
+    Trash2,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -48,6 +49,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface ThreadContentProps {
     threadData: any;
@@ -102,6 +114,7 @@ async function getSortedComments(postId: string, sortBy: string) {
             like_count: comment.like_count || 0,
             dislike_count: comment.dislike_count || 0,
             author: {
+                id: comment.author_id,
                 name: comment.author_name,
                 avatar:
                     comment.author_avatar ||
@@ -250,6 +263,7 @@ export default function ThreadContent({
                     like_count: comment.like_count || 0,
                     dislike_count: comment.dislike_count || 0,
                     author: {
+                        id: comment.author_id,
                         name: comment.author_name,
                         avatar:
                             comment.author_avatar ||
@@ -378,6 +392,54 @@ export default function ThreadContent({
     useEffect(() => {
         handleSort("recent");
     }, []);
+
+    // Delete a comment
+    const handleDeleteComment = async (commentId: string) => {
+        if (!session?.user?.id) {
+            router.push("/auth/signin");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: session.user.id }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remove comment locally
+                setSortedComments((prev) =>
+                    prev.filter((c) => c.id !== commentId)
+                );
+                // Decrement reply count in thread stats
+                setThreadData((prev: any) => ({
+                    ...prev,
+                    stats: {
+                        ...prev.stats,
+                        replies: (prev.stats.replies || 1) - 1,
+                    },
+                }));
+
+                toast({ title: "Comment deleted" });
+            } else {
+                toast({
+                    title: "Error",
+                    description: data.error || "Failed to delete comment.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error deleting comment:", error);
+            toast({
+                title: "Error",
+                description: "Failed to delete comment.",
+                variant: "destructive",
+            });
+        }
+    };
 
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
@@ -694,6 +756,60 @@ export default function ThreadContent({
                                                             }
                                                         />
                                                     </div>
+                                                    {session?.user?.id ===
+                                                        reply.author.id && (
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-destructive hover:bg-destructive/10"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>
+                                                                        Delete
+                                                                        comment
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This
+                                                                        action
+                                                                        cannot
+                                                                        be
+                                                                        undone.
+                                                                        This
+                                                                        will
+                                                                        permanently
+                                                                        remove
+                                                                        your
+                                                                        comment
+                                                                        from the
+                                                                        thread.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>
+                                                                        Cancel
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                        onClick={() =>
+                                                                            handleDeleteComment(
+                                                                                reply.id
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Delete
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    )}
                                                 </CardFooter>
                                             </Card>
                                         ))}

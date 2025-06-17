@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(
     request: Request,
@@ -15,25 +15,25 @@ export async function GET(
         }
 
         // Fetch the specific post from the database
-        const post = await sql`
-            SELECT 
-                p.id,
-                p.title,
-                p.content,
-                p.created_at,
-                p.updated_at,
-                p.category,
-                p.slug,
-                p.author_id
-            FROM forum_posts p
-            WHERE p.id = ${params.id} AND p.author_id = ${session.user.id}
-        `;
+        const post = await prisma.forum_posts.findFirst({
+            where: { id: params.id, author_id: session.user.id },
+            include: { forum_categories: { select: { name: true } } },
+        });
 
-        if (!post || post.length === 0) {
+        if (!post) {
             return new NextResponse("Post not found", { status: 404 });
         }
 
-        return NextResponse.json(post[0]);
+        return NextResponse.json({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            created_at: post.created_at,
+            updated_at: post.updated_at,
+            category: post.forum_categories?.name ?? null,
+            slug: post.slug ?? null,
+            author_id: post.author_id,
+        });
     } catch (error) {
         console.error("Error fetching post:", error);
         return NextResponse.json(
@@ -55,44 +55,27 @@ export async function DELETE(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // First delete all notification preferences
-        await sql`
-            DELETE FROM forum_notification_preferences
-            WHERE post_id = ${postId}
-        `;
+        // Perform cascading deletes manually in a transaction
+        const deleteResult = await prisma.$transaction(async (tx) => {
+            await tx.forum_notification_preferences.deleteMany({
+                where: { post_id: postId },
+            });
 
-        // Then delete all saved posts
-        await sql`
-            DELETE FROM forum_saved
-            WHERE post_id = ${postId}
-        `;
+            await tx.forum_saved.deleteMany({ where: { post_id: postId } });
 
-        // Then delete all post tags
-        await sql`
-            DELETE FROM forum_post_tags
-            WHERE post_id = ${postId}
-        `;
+            await tx.forum_post_tags.deleteMany({ where: { post_id: postId } });
 
-        // Then delete all likes associated with the post
-        await sql`
-            DELETE FROM forum_likes
-            WHERE post_id = ${postId}
-        `;
+            await tx.forum_likes.deleteMany({ where: { post_id: postId } });
 
-        // Then delete all comments associated with the post
-        await sql`
-            DELETE FROM forum_comments
-            WHERE post_id = ${postId}
-        `;
+            await tx.forum_comments.deleteMany({ where: { post_id: postId } });
 
-        // Finally delete the post
-        const result = await sql`
-            DELETE FROM forum_posts
-            WHERE id = ${postId} AND author_id = ${session.user.id}
-            RETURNING id
-        `;
+            const res = await tx.forum_posts.deleteMany({
+                where: { id: postId, author_id: session.user.id },
+            });
+            return res.count;
+        });
 
-        if (!result || result.length === 0) {
+        if (deleteResult === 0) {
             return new NextResponse("Post not found", { status: 404 });
         }
 
