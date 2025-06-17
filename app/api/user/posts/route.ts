@@ -16,6 +16,10 @@ export async function GET(request: Request) {
             where: { author_id: session.user.id },
             include: {
                 forum_categories: { select: { name: true } },
+                forum_comments: { select: { id: true } },
+                forum_likes: { select: { id: true } },
+                forum_views: { select: { id: true } },
+                forum_post_tags: { select: { tag: true } },
             },
             orderBy: { created_at: "desc" },
         });
@@ -37,6 +41,10 @@ export async function GET(request: Request) {
             updatedAt: post.updated_at,
             notifyOnReply: post.notify_on_reply,
             slug: slugify(post.title, post.id),
+            replyCount: post.forum_comments.length,
+            likeCount: post.forum_likes.length,
+            viewCount: post.forum_views.length,
+            tags: post.forum_post_tags.map((t) => t.tag),
         }));
 
         return NextResponse.json(transformedPosts);

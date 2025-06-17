@@ -628,7 +628,7 @@ export default function ForumPage() {
                                                                                     )
                                                                                 )}
                                                                             </div>
-                                                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground w-full">
+                                                                            <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                                                                                 <div className="flex items-center gap-1">
                                                                                     <MessageSquare className="h-4 w-4" />
                                                                                     <span>

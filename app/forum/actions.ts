@@ -139,6 +139,11 @@ interface ForumPostResponse {
     tags: string[];
     author_post_count: number;
     author_total_likes: number;
+    /**
+     * The timestamp (ISO string) of when the currently authenticated user saved the post.
+     * This will only be populated when fetching a user's saved posts.
+     */
+    saved_at?: string;
 }
 
 export async function getForumPosts(
@@ -1060,6 +1065,9 @@ export async function getUserSavedPosts(
                 tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
                 author_post_count: 0,
                 author_total_likes: 0,
+                // Timestamp of when the user saved the post (used on /forum/saved page)
+                saved_at:
+                    s.created_at?.toISOString() ?? new Date().toISOString(),
             } as ForumPostResponse;
         });
     } catch (error) {
