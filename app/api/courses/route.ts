@@ -223,3 +223,6 @@ function getCategoryColor(category: string): string {
         "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
     );
 }
+
+export const revalidate = 60;
+export const dynamic = "force-dynamic";

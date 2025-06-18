@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import CourseSelector from "./components/CourseSelector";
+import dynamic from "next/dynamic";
 import { useToast } from "@/components/ui/use-toast";
 import {
     BookOpen,
@@ -23,10 +23,6 @@ import {
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import SelectedCourses from "./components/SelectedCourses";
-import RequirementAssignment from "./components/RequirementAssignment";
-import CourseSchedule from "./components/CourseSchedule";
-import AdditionalQuestions from "./components/AdditionalQuestions";
 import Link from "next/link";
 
 /**
@@ -527,6 +523,32 @@ const programRequirements: ProgramRequirements = {
         ],
     },
 };
+
+const CourseSelector = dynamic(() => import("./components/CourseSelector"), {
+    ssr: false,
+});
+
+const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
+    ssr: false,
+});
+
+const RequirementAssignment = dynamic(
+    () => import("./components/RequirementAssignment"),
+    {
+        ssr: false,
+    }
+);
+
+const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
+    ssr: false,
+});
+
+const AdditionalQuestions = dynamic(
+    () => import("./components/AdditionalQuestions"),
+    {
+        ssr: false,
+    }
+);
 
 export default function PlannerPage() {
     const { data: session } = useSession();
