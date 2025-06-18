@@ -120,15 +120,15 @@ export default async function Dashboard() {
                                     <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center">
                                         Cornell Tech Hub
                                     </h1>
-                                    <p className="text-sm text-muted-foreground italic">
-                                        This is a student-built independent
-                                        project and is not officially affiliated
-                                        with Cornell Tech.
-                                    </p>
                                     <p className="max-w-[600px] text-muted-foreground md:text-xl">
                                         Connect with peers, share course
                                         reviews, and discover resources for your
                                         Cornell Tech journey.
+                                    </p>
+                                    <p className="text-sm text-muted-foreground italic">
+                                        This is a student-built independent
+                                        project and is not officially affiliated
+                                        with Cornell Tech.
                                     </p>
                                 </div>
                             </div>

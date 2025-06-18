@@ -135,8 +135,10 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
 
     // Modal
     const [showSortModal, setShowSortModal] = useState(false);
+    const isFirstRender = useRef(true);
 
-    // Fetch courses when dependencies change
+    // Fetch courses whenever any dependency changes (search, filters, sort, or page).
+    // Skip the very first render so we don't duplicate the server-side request.
     useEffect(() => {
         const fetchCourses = async () => {
             try {
@@ -167,15 +169,12 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
             }
         };
 
-        // Only refetch after first render or when filters change
-        if (
-            searchQuery !== "" ||
-            programFilter !== "all" ||
-            currentPage !== 1 ||
-            sortBy !== "popular"
-        ) {
-            fetchCourses();
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
         }
+
+        fetchCourses();
     }, [searchQuery, programFilter, currentPage, sortBy]);
 
     // Handle responsive
