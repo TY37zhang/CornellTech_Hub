@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import { getAggregatedCourses } from "@/lib/services/courses";
 
 export async function GET(request: Request) {
     try {
@@ -8,179 +8,23 @@ export async function GET(request: Request) {
         const category = searchParams.get("category") || "";
         const limit = parseInt(searchParams.get("limit") || "5", 10);
         const offset = parseInt(searchParams.get("offset") || "0", 10);
-        const sortBy = searchParams.get("sortBy") || "rating";
+        const sortBy =
+            (searchParams.get("sortBy") as
+                | "recent"
+                | "popular"
+                | "rating"
+                | "difficulty"
+                | "workload") || "rating";
 
-        // 1. Fetch courses matching filters (no pagination yet)
-        const coursesRaw = await prisma.courses.findMany({
-            where: {
-                AND: [
-                    search
-                        ? {
-                              OR: [
-                                  {
-                                      name: {
-                                          contains: search,
-                                          mode: "insensitive",
-                                      },
-                                  },
-                                  {
-                                      professor_id: {
-                                          contains: search,
-                                          mode: "insensitive",
-                                      },
-                                  },
-                                  {
-                                      code: {
-                                          contains: search,
-                                          mode: "insensitive",
-                                      },
-                                  },
-                                  {
-                                      department: {
-                                          contains: search,
-                                          mode: "insensitive",
-                                      },
-                                  },
-                              ],
-                          }
-                        : {},
-                    category
-                        ? {
-                              department: {
-                                  contains: category,
-                                  mode: "insensitive",
-                              },
-                          }
-                        : {},
-                ],
-            },
-            include: {
-                course_reviews: {
-                    select: {
-                        overall_rating: true,
-                        rating: true, // value
-                        difficulty: true,
-                        workload: true,
-                        content: true,
-                        created_at: true,
-                    },
-                },
-            },
+        const { courses, total } = await getAggregatedCourses({
+            search,
+            category,
+            limit,
+            offset,
+            sortBy,
         });
 
-        // 2. Group by name + professor_id to mimic DISTINCT ON behaviour
-        // type CourseGroup = {
-        //     name: string;
-        //     professor_id: string;
-        //     courses: typeof coursesRaw;
-        // };
-
-        const groupMap = new Map<string, typeof coursesRaw>();
-        for (const course of coursesRaw) {
-            const key = `${course.name}|${course.professor_id}`;
-            if (!groupMap.has(key)) {
-                groupMap.set(key, [] as any);
-            }
-            (groupMap.get(key) as any).push(course);
-        }
-
-        const groups = Array.from(groupMap.values());
-
-        // Helper to compute averages rounded to 1 decimal place
-        const avg = (nums: number[]) => {
-            if (nums.length === 0) return 0;
-            const sum = nums.reduce((a, b) => a + b, 0);
-            return Math.round((sum / nums.length) * 10) / 10;
-        };
-
-        // 3. Build aggregated data for each group
-        const aggregated = groups.map((group) => {
-            // Flatten reviews across all courses in the group
-            const reviews = group.flatMap((c) => c.course_reviews);
-
-            const reviewCount = reviews.length;
-
-            // Extract numeric arrays for each metric, coalescing overall_rating vs rating
-            const ratings = reviews
-                .map((r) =>
-                    r.overall_rating !== null && r.overall_rating !== undefined
-                        ? Number(r.overall_rating)
-                        : (r.rating ?? null)
-                )
-                .filter((n): n is number => n !== null);
-
-            const difficulties = reviews
-                .map((r) => r.difficulty)
-                .filter((n): n is number => n !== null);
-            const workloads = reviews
-                .map((r) => r.workload)
-                .filter((n): n is number => n !== null);
-            const values = reviews
-                .map((r) => r.rating)
-                .filter((n): n is number => n !== null);
-
-            // Latest review content/time
-            const latestReview = reviews.sort(
-                (a, b) =>
-                    (b.created_at?.getTime() || 0) -
-                    (a.created_at?.getTime() || 0)
-            )[0];
-
-            // Build list of codes & departments
-            const codes = group.map((c) => c.code).sort();
-            const departments = Array.from(
-                new Set(group.map((c) => c.department))
-            ).sort();
-
-            const primaryCourse = group[0];
-
-            return {
-                id: codes[0], // primary ID
-                title: primaryCourse.name,
-                professor: primaryCourse.professor_id || "Unknown Professor",
-                category: departments[0]?.toLowerCase() || "",
-                rating: avg(ratings),
-                reviewCount,
-                difficulty: avg(difficulties),
-                workload: avg(workloads),
-                value: avg(values),
-                review: latestReview?.content || "No reviews yet",
-                categoryColor: getCategoryColor(departments[0]?.toLowerCase()),
-                crossListed:
-                    codes.length > 1
-                        ? {
-                              codes,
-                              departments,
-                          }
-                        : null,
-                // Additional fields used for sorting
-                _sortKeys: {
-                    recent: latestReview?.created_at ?? new Date(0),
-                    popular: reviewCount,
-                },
-            } as any;
-        });
-
-        // 4. Sorting
-        const sortStrategies: Record<string, (a: any, b: any) => number> = {
-            recent: (a, b) =>
-                (b._sortKeys.recent as Date).getTime() -
-                (a._sortKeys.recent as Date).getTime(),
-            popular: (a, b) => b.reviewCount - a.reviewCount,
-            rating: (a, b) => b.rating - a.rating,
-            difficulty: (a, b) => b.difficulty - a.difficulty,
-            workload: (a, b) => b.workload - a.workload,
-        };
-
-        const sortFn = sortStrategies[sortBy] ?? sortStrategies["rating"];
-
-        aggregated.sort(sortFn);
-
-        // 5. Pagination
-        const totalCount = aggregated.length;
-        const paginated = aggregated.slice(offset, offset + limit);
-
-        return NextResponse.json({ courses: paginated, total: totalCount });
+        return NextResponse.json({ courses, total });
     } catch (error) {
         console.error("Error fetching courses:", error);
         return NextResponse.json(
