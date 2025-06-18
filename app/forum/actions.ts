@@ -158,7 +158,7 @@ export async function getForumPosts(
             offset,
         });
 
-        const total = await prisma.forum_posts.count({
+        const totalPromise = prisma.forum_posts.count({
             where: {
                 status: "active",
                 OR: search
@@ -183,7 +183,7 @@ export async function getForumPosts(
             },
         });
 
-        const posts = await prisma.forum_posts.findMany({
+        const postsPromise = prisma.forum_posts.findMany({
             where: {
                 status: "active",
                 OR: search
@@ -208,43 +208,26 @@ export async function getForumPosts(
             },
             include: {
                 users: {
-                    select: {
-                        name: true,
-                        avatar_url: true,
-                        id: true,
-                    },
+                    select: { name: true, avatar_url: true, id: true },
                 },
                 forum_categories: {
-                    select: {
-                        name: true,
-                        slug: true,
-                    },
+                    select: { name: true, slug: true },
                 },
-                forum_comments: {
+                forum_post_tags: { select: { tag: true } },
+                _count: {
                     select: {
-                        id: true,
-                    },
-                },
-                forum_likes: {
-                    select: {
-                        id: true,
-                    },
-                },
-                forum_views: {
-                    select: {
-                        id: true,
-                    },
-                },
-                forum_post_tags: {
-                    select: {
-                        tag: true,
+                        forum_comments: true,
+                        forum_likes: true,
+                        forum_views: true,
                     },
                 },
             },
             orderBy: { created_at: "desc" },
-            take: limit,
+            take: limit * 3,
             skip: offset,
         });
+
+        const [total, posts] = await Promise.all([totalPromise, postsPromise]);
 
         return {
             posts: posts.map((post) => ({
@@ -260,9 +243,9 @@ export async function getForumPosts(
                 author_name: post.users.name,
                 author_avatar: post.users.avatar_url,
                 author_id: post.users.id,
-                reply_count: post.forum_comments.length,
-                like_count: post.forum_likes.length,
-                view_count: post.forum_views.length,
+                reply_count: post._count.forum_comments,
+                like_count: post._count.forum_likes,
+                view_count: post._count.forum_views,
                 tags: post.forum_post_tags.map((t: { tag: string }) => t.tag),
                 author_post_count: 0, // Not available in Prisma query
                 author_total_likes: 0, // Not available in Prisma query

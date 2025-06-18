@@ -78,3 +78,7 @@ export async function GET(request: Request) {
         );
     }
 }
+
+export const revalidate = 60; // cache response for 60 seconds on the server
+
+export const dynamic = "force-dynamic";
