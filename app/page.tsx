@@ -1,14 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import Image from "next/image";
+import HeroVideo from "./components/HeroVideo";
 import {
     BookOpen,
     Calendar,
     MessageSquare,
     ShoppingBag,
     Star,
-    TrendingUp,
     Link as LinkIcon,
 } from "lucide-react";
 
@@ -21,69 +18,40 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect, useState, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export default function Dashboard() {
-    const { data: session, status } = useSession();
-    // Add state for top courses
-    const [topCourses, setTopCourses] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+// Cache generated HTML at the edge for 60 s (Incremental Static Regeneration)
+export const revalidate = 60;
 
-    // Forum posts state
-    const [forumPosts, setForumPosts] = useState<any[]>([]);
-    const [forumLoading, setForumLoading] = useState(true);
-    const [forumError, setForumError] = useState<string | null>(null);
+export default async function Dashboard() {
+    const sessionPromise = getServerSession(authOptions);
 
-    // Video preview state
-    const [showVideo, setShowVideo] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
+    let topCourses: any[] = [];
+    let forumPosts: any[] = [];
+    let topCourseError: string | null = null;
+    let forumError: string | null = null;
 
-    useEffect(() => {
-        const fetchTopCourses = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const res = await fetch("/api/courses?sortBy=popular&limit=3");
-                if (!res.ok) throw new Error("Failed to fetch courses");
-                const data = await res.json();
-                setTopCourses(data.courses);
-            } catch (err) {
-                setError(
-                    err instanceof Error ? err.message : "An error occurred"
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTopCourses();
-    }, []);
+    try {
+        const { courses } = await (
+            await import("@/lib/services/courses")
+        ).getAggregatedCourses({ sortBy: "popular", limit: 3 });
+        topCourses = courses;
+    } catch (err) {
+        console.error("Error loading courses", err);
+        topCourseError = "Failed to load courses";
+    }
 
-    useEffect(() => {
-        const fetchForumPosts = async () => {
-            try {
-                setForumLoading(true);
-                setForumError(null);
-                const res = await fetch("/api/forum/posts?limit=3");
-                if (!res.ok) throw new Error("Failed to fetch forum posts");
-                const data = await res.json();
-                if (!data.success)
-                    throw new Error(
-                        data.error || "Failed to fetch forum posts"
-                    );
-                setForumPosts(data.posts);
-            } catch (err) {
-                setForumError(
-                    err instanceof Error ? err.message : "An error occurred"
-                );
-            } finally {
-                setForumLoading(false);
-            }
-        };
-        fetchForumPosts();
-    }, []);
+    try {
+        const { getForumPosts } = await import("@/app/forum/actions");
+        const { posts } = await getForumPosts("", 3, 0);
+        forumPosts = posts;
+    } catch (err) {
+        console.error("Error loading forum posts", err);
+        forumError = "Failed to load forum posts";
+    }
+
+    const session = await sessionPromise;
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -107,38 +75,9 @@ export default function Dashboard() {
                                         Cornell Tech journey.
                                     </p>
                                 </div>
-                                {/* <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                                    <Button size="lg">Explore Resources</Button>
-                                    <Button variant="outline" size="lg">
-                                        Learn More
-                                    </Button>
-                                </div> */}
                             </div>
-                            <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last relative">
-                                {showVideo ? (
-                                    <video
-                                        ref={videoRef}
-                                        src="/videos/We%20are%20Cornell%20Tech.mp4"
-                                        muted
-                                        playsInline
-                                        autoPlay
-                                        className="w-full h-full object-cover"
-                                        onCanPlay={() =>
-                                            videoRef.current?.play()
-                                        }
-                                        onEnded={() => setShowVideo(false)}
-                                    />
-                                ) : (
-                                    <Image
-                                        src="/images/DJI_0440.jpg"
-                                        alt="Cornell Tech Campus Preview"
-                                        fill
-                                        className="object-cover w-full h-full cursor-pointer"
-                                        style={{ zIndex: 1 }}
-                                        onClick={() => setShowVideo(true)}
-                                    />
-                                )}
-                            </div>
+                            {/* Client-side only: video preview interaction */}
+                            <HeroVideo />
                         </div>
                     </div>
                 </section>
@@ -164,13 +103,9 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent className="pb-2">
                                     <div className="space-y-2">
-                                        {loading ? (
-                                            <div className="text-muted-foreground text-sm">
-                                                Loading...
-                                            </div>
-                                        ) : error ? (
+                                        {topCourseError ? (
                                             <div className="text-red-500 text-sm">
-                                                {error}
+                                                {topCourseError}
                                             </div>
                                         ) : (
                                             topCourses.map((course) => (
@@ -232,11 +167,7 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent className="pb-2">
                                     <div className="space-y-2">
-                                        {forumLoading ? (
-                                            <div className="text-muted-foreground text-sm">
-                                                Loading...
-                                            </div>
-                                        ) : forumError ? (
+                                        {forumError ? (
                                             <div className="text-red-500 text-sm">
                                                 {forumError}
                                             </div>
@@ -345,59 +276,6 @@ export default function Dashboard() {
                                     </Link>
                                 </CardFooter>
                             </Card>
-                            {/* Marketplace Card - Temporarily Disabled
-                            <Card>
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <ShoppingBag className="h-5 w-5 text-red-600" />
-                                        Marketplace
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Buy and sell items within the Cornell
-                                        Tech community
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="pb-2">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                MacBook Pro (2022)
-                                            </span>
-                                            <span className="text-xs font-medium">
-                                                $1,200
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Textbooks Bundle
-                                            </span>
-                                            <span className="text-xs font-medium">
-                                                $85
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Desk Chair
-                                            </span>
-                                            <span className="text-xs font-medium">
-                                                $50
-                                            </span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="flex justify-center">
-                                    <Link href="/marketplace">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full"
-                                        >
-                                            Browse Marketplace
-                                        </Button>
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-                            */}
                         </div>
                     </div>
                 </section>
@@ -420,9 +298,6 @@ export default function Dashboard() {
                                 <Link href="/auth/signup">
                                     <Button size="lg">Sign Up Now</Button>
                                 </Link>
-                                {/* <Button variant="outline" size="lg">
-                                Learn More
-                            </Button> */}
                             </div>
                         </div>
                     </section>
