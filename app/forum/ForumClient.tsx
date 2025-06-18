@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
     BookOpen,
@@ -138,20 +138,80 @@ const getVisiblePages = (current: number, total: number): number[] => {
     return pages;
 };
 
-export default function ForumClient() {
-    const [threads, setThreads] = useState<Thread[]>([]);
-    const [forumStats, setForumStats] = useState<any>(null);
-    const [topContributors, setTopContributors] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+interface ForumClientProps {
+    initialPosts?: any[]; // raw posts from server API
+    initialStats?: any;
+    initialContributors?: any[];
+    initialTotalPages?: number;
+}
+
+export default function ForumClient({
+    initialPosts = [],
+    initialStats = null,
+    initialContributors = [],
+    initialTotalPages = 1,
+}: ForumClientProps) {
+    const [threads, setThreads] = useState<Thread[]>(() => {
+        // If we have posts passed from the server, transform them immediately
+        if (initialPosts.length > 0) {
+            return initialPosts
+                .map((post: any) => {
+                    if (!post || typeof post !== "object") return null;
+                    const hotStatus = calculateHotScore({
+                        likes: post.like_count || 0,
+                        replies: post.reply_count || 0,
+                        views: post.view_count || 0,
+                        createdAt: post.created_at || new Date().toISOString(),
+                    });
+                    return {
+                        id: post.id || "",
+                        title: post.title || "",
+                        author: {
+                            name: post.author_name || "Anonymous",
+                            avatar:
+                                post.author_avatar ||
+                                "/placeholder.svg?height=32&width=32",
+                            initials: getInitials(
+                                post.author_name || "Anonymous"
+                            ),
+                        },
+                        category: post.category_name || "Uncategorized",
+                        categoryColor: getCategoryColor(
+                            post.category_name || "Uncategorized"
+                        ),
+                        content: post.content || "",
+                        tags: Array.isArray(post.tags) ? post.tags : [],
+                        replies: post.reply_count || 0,
+                        likes: post.like_count || 0,
+                        views: post.view_count || 0,
+                        createdAt: formatDate(
+                            post.created_at || new Date().toISOString()
+                        ),
+                        isHot: hotStatus.isHot,
+                        hotScore: hotStatus.score,
+                        isNew:
+                            new Date(post.created_at || Date.now()).getTime() >
+                            Date.now() - 7 * 24 * 60 * 60 * 1000,
+                    } as Thread;
+                })
+                .filter(Boolean) as Thread[];
+        }
+        return [];
+    });
+    const [forumStats, setForumStats] = useState<any>(initialStats);
+    const [topContributors, setTopContributors] =
+        useState<any[]>(initialContributors);
+    const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [totalPages, setTotalPages] = useState(initialTotalPages);
     const threadsPerPage = 10;
     const [activeTab, setActiveTab] = useState("all");
     const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
     const [isMobile, setIsMobile] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const firstLoadRef = useRef(true);
 
     const fetchData = async () => {
         try {
@@ -234,6 +294,11 @@ export default function ForumClient() {
     };
 
     useEffect(() => {
+        // Skip fetching on the very first render when we already have server data
+        if (firstLoadRef.current) {
+            firstLoadRef.current = false;
+            return;
+        }
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery, currentPage]);
@@ -287,7 +352,6 @@ export default function ForumClient() {
                     <button
                         onClick={() => {
                             setError(null);
-                            setLoading(true);
                             fetchData();
                         }}
                         className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
