@@ -64,7 +64,7 @@ export const metadata: Metadata = {
         images: ["/images/logo/logo.png"],
     },
     alternates: {
-        canonical: "/",
+        canonical: "https://www.cornelltechhub.info/",
     },
     robots: {
         index: true,

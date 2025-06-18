@@ -25,6 +25,7 @@ export const viewport = {
 };
 
 export const metadata = {
+    metadataBase: new URL("https://www.cornelltechhub.info"),
     title: "Cornell Tech Hub",
     description: "A community for Cornell Tech students",
     generator: "v0.dev",
