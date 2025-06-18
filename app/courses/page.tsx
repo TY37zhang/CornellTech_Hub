@@ -12,16 +12,27 @@ async function getInitialCourses() {
             ? `https://${process.env.VERCEL_URL}`
             : "http://localhost:3000");
 
-    const res = await fetch(`${baseUrl}/api/courses?limit=${limit}&offset=0`, {
-        // Cache at build time and revalidate per the setting above
-        next: { revalidate: 1800 },
-    });
+    try {
+        const res = await fetch(
+            `${baseUrl}/api/courses?limit=${limit}&offset=0`,
+            {
+                // Cache at build time and revalidate per the setting above
+                next: { revalidate: 1800 },
+            }
+        );
 
-    if (!res.ok) {
-        throw new Error("Failed to fetch initial courses");
+        if (!res.ok) {
+            throw new Error("Response not ok");
+        }
+
+        return (await res.json()) as { courses: any[]; total: number };
+    } catch (error) {
+        // When building statically (e.g. on Vercel), the internal API route may
+        // not be reachable, which would previously cause the build to fail.
+        // Fall back to an empty list so the page can still be generated.
+        console.error("Failed to fetch initial courses: ", error);
+        return { courses: [], total: 0 };
     }
-
-    return (await res.json()) as { courses: any[]; total: number };
 }
 
 export default async function CoursesPage() {
