@@ -28,6 +28,7 @@ export default function HeroVideo() {
                     placeholder="blur"
                     priority
                     sizes="(max-width: 1024px) 100vw, 700px"
+                    quality={70}
                     className="object-cover w-full h-full cursor-pointer"
                     style={{ objectPosition: "center" }}
                     onClick={() => setShowVideo(true)}

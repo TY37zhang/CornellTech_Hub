@@ -27,7 +27,8 @@ const nextConfig = {
                 hostname: "**",
             },
         ],
-        unoptimized: true,
+        unoptimized: false,
+        formats: ["image/avif", "image/webp"],
     },
     serverExternalPackages: ["@neondatabase/serverless"],
     // No custom webpack alias to avoid runtime issues with components that

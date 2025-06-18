@@ -20,9 +20,57 @@ import {
 } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { Metadata } from "next";
 
 // Cache generated HTML at the edge for 60 s (Incremental Static Regeneration)
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+    title: {
+        default: "Cornell Tech Hub | Student Community & Resources",
+        template: "%s | Cornell Tech Hub",
+    },
+    description:
+        "Cornell Tech Hub is a student-run community where you can connect with peers, share course reviews, and discover resources for your Cornell Tech journey.",
+    keywords: [
+        "Cornell Tech",
+        "Course Reviews",
+        "Student Forum",
+        "Graduate School",
+        "NYC Campus",
+    ],
+    openGraph: {
+        title: "Cornell Tech Hub",
+        description:
+            "Connect with peers, share reviews, and discover resources for your Cornell Tech journey.",
+        url: "https://cornell-tech-hub.com/",
+        siteName: "Cornell Tech Hub",
+        images: [
+            {
+                url: "/images/logo/logo.png",
+                width: 1200,
+                height: 630,
+                alt: "Cornell Tech Hub logo",
+            },
+        ],
+        locale: "en_US",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Cornell Tech Hub",
+        description:
+            "Connect with peers, share reviews, and discover resources for your Cornell Tech journey.",
+        images: ["/images/logo/logo.png"],
+    },
+    alternates: {
+        canonical: "/",
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
 
 export default async function Dashboard() {
     const sessionPromise = getServerSession(authOptions);
@@ -33,22 +81,30 @@ export default async function Dashboard() {
     let forumError: string | null = null;
 
     try {
-        const { courses } = await (
-            await import("@/lib/services/courses")
-        ).getAggregatedCourses({ sortBy: "popular", limit: 3 });
-        topCourses = courses;
-    } catch (err) {
-        console.error("Error loading courses", err);
-        topCourseError = "Failed to load courses";
-    }
+        const [coursesRes, forumRes] = await Promise.allSettled([
+            import("@/lib/services/courses").then(({ getAggregatedCourses }) =>
+                getAggregatedCourses({ sortBy: "popular", limit: 3 })
+            ),
+            import("@/app/forum/actions").then(({ getForumPosts }) =>
+                getForumPosts("", 3, 0)
+            ),
+        ]);
 
-    try {
-        const { getForumPosts } = await import("@/app/forum/actions");
-        const { posts } = await getForumPosts("", 3, 0);
-        forumPosts = posts;
+        if (coursesRes.status === "fulfilled") {
+            topCourses = coursesRes.value.courses;
+        } else {
+            console.error("Error loading courses", coursesRes.reason);
+            topCourseError = "Failed to load courses";
+        }
+
+        if (forumRes.status === "fulfilled") {
+            forumPosts = forumRes.value.posts;
+        } else {
+            console.error("Error loading forum posts", forumRes.reason);
+            forumError = "Failed to load forum posts";
+        }
     } catch (err) {
-        console.error("Error loading forum posts", err);
-        forumError = "Failed to load forum posts";
+        console.error("Unexpected error fetching homepage data", err);
     }
 
     const session = await sessionPromise;
