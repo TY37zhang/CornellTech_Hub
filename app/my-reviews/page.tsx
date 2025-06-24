@@ -370,6 +370,7 @@ export default function MyReviewsPage() {
                                                                     {review.value?.toFixed(
                                                                         1
                                                                     )}
+                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>
