@@ -27,6 +27,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 // Define course type
 interface Review {
@@ -40,12 +47,27 @@ interface Review {
     author: string;
     avatarUrl: string | null;
     grade?: string;
+    professor?: string;
+    term?: string;
+}
+
+interface Professor {
+    name: string;
+    reviewCount: number;
+    rating: number | null;
+    difficulty: number | null;
+    workload: number | null;
+    value: number | null;
+    terms: string[];
 }
 
 interface Course {
     id: string;
+    code?: string;
+    codes?: string[];
     title: string;
     professor: string;
+    professors?: Professor[];
     category: string;
     semester: string;
     year: number;
@@ -61,6 +83,7 @@ interface Course {
     syllabus?: string;
     ratings?: Record<string, number>;
     departments?: string[];
+    terms?: string[];
     updatedAt: string;
 }
 
@@ -163,6 +186,11 @@ export default function CourseDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // New filtering states
+    const [selectedProfessor, setSelectedProfessor] = useState<string>("all");
+    const [selectedTerm, setSelectedTerm] = useState<string>("all");
+    const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
+
     useEffect(() => {
         const fetchCourse = async () => {
             try {
@@ -207,17 +235,48 @@ export default function CourseDetailPage() {
     // Add this after setting the course state in useEffect
     useEffect(() => {
         if (course?.reviews) {
-            const averages = calculateAverages(course.reviews);
-            setCourse((prev) => ({
-                ...prev!,
-                rating: averages.rating,
-                difficulty: averages.difficulty,
-                workload: averages.workload,
-                value: averages.value,
-                reviewCount: course.reviews.length,
-            }));
+            // Filter reviews based on selected professor and term
+            let filtered = course.reviews;
+
+            if (selectedProfessor !== "all") {
+                filtered = filtered.filter(
+                    (review) => review.professor === selectedProfessor
+                );
+            }
+
+            if (selectedTerm !== "all") {
+                filtered = filtered.filter(
+                    (review) => review.term === selectedTerm
+                );
+            }
+
+            setFilteredReviews(filtered);
+
+            // Update course metrics based on filtered reviews
+            if (filtered.length > 0) {
+                const averages = calculateAverages(filtered);
+                setCourse((prev) => ({
+                    ...prev!,
+                    rating: averages.rating,
+                    difficulty: averages.difficulty,
+                    workload: averages.workload,
+                    value: averages.value,
+                    reviewCount: filtered.length,
+                }));
+            } else {
+                // Reset to original values if no reviews match filter
+                const originalAverages = calculateAverages(course.reviews);
+                setCourse((prev) => ({
+                    ...prev!,
+                    rating: originalAverages.rating,
+                    difficulty: originalAverages.difficulty,
+                    workload: originalAverages.workload,
+                    value: originalAverages.value,
+                    reviewCount: course.reviews.length,
+                }));
+            }
         }
-    }, [course?.reviews]);
+    }, [course?.reviews, selectedProfessor, selectedTerm]);
 
     // Helper to render stars
     const renderStars = (rating: number) => {
@@ -342,7 +401,12 @@ export default function CourseDetailPage() {
                                             </span>
                                             <BookOpen className="h-4 w-4 ml-2" />
                                             <span>
-                                                {course.credits || 0} Credit
+                                                {course.codes &&
+                                                course.codes.length > 1
+                                                    ? course.codes.join(", ")
+                                                    : course.code ||
+                                                      course.id}{" "}
+                                                • {course.credits || 0} Credit
                                                 {course.credits !== 1
                                                     ? "s"
                                                     : ""}
@@ -356,7 +420,7 @@ export default function CourseDetailPage() {
                                             Course Rating Summary
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="pb-3">
+                                    <CardContent className="pb-6">
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
@@ -481,17 +545,100 @@ export default function CourseDetailPage() {
                         </TabsContent>
                         <TabsContent value="reviews" className="pt-6">
                             <div className="space-y-6">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <h2 className="text-2xl font-bold tracking-tight">
                                         Course Reviews
                                     </h2>
-                                    <Button onClick={handleWriteReview}>
-                                        Write a Review
-                                    </Button>
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                        {/* Professor Filter */}
+                                        {course.professors &&
+                                            course.professors.length > 1 && (
+                                                <div className="flex items-center gap-2">
+                                                    <Select
+                                                        value={
+                                                            selectedProfessor
+                                                        }
+                                                        onValueChange={
+                                                            setSelectedProfessor
+                                                        }
+                                                    >
+                                                        <SelectTrigger className="w-48">
+                                                            <SelectValue placeholder="All Professors" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">
+                                                                All Professors (
+                                                                {
+                                                                    course.reviewCount
+                                                                }{" "}
+                                                                reviews)
+                                                            </SelectItem>
+                                                            {course.professors
+                                                                .filter(
+                                                                    (prof) =>
+                                                                        prof.name !==
+                                                                        "Unknown Professor"
+                                                                )
+                                                                .map((prof) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            prof.name
+                                                                        }
+                                                                        value={
+                                                                            prof.name
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            prof.name
+                                                                        }{" "}
+                                                                        (
+                                                                        {
+                                                                            prof.reviewCount
+                                                                        }{" "}
+                                                                        reviews)
+                                                                        {prof.rating && (
+                                                                            <span className="ml-2 text-yellow-600">
+                                                                                ⭐{" "}
+                                                                                {prof.rating.toFixed(
+                                                                                    1
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                    </SelectItem>
+                                                                ))}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    {selectedProfessor !==
+                                                        "all" && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setSelectedProfessor(
+                                                                    "all"
+                                                                );
+                                                            }}
+                                                            className="whitespace-nowrap"
+                                                        >
+                                                            Clear
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        <Button onClick={handleWriteReview}>
+                                            Write a Review
+                                        </Button>
+                                    </div>
                                 </div>
-                                {course.reviews.length > 0 ? (
+
+                                {filteredReviews.length > 0 ||
+                                course.reviews.length > 0 ? (
                                     <div className="space-y-6">
-                                        {course.reviews.map((review) => (
+                                        {(filteredReviews.length > 0
+                                            ? filteredReviews
+                                            : course.reviews
+                                        ).map((review) => (
                                             <Card key={review.id}>
                                                 <CardHeader>
                                                     <div className="flex items-start justify-between">
@@ -521,6 +668,23 @@ export default function CourseDetailPage() {
                                                                     {new Date(
                                                                         review.createdAt
                                                                     ).toLocaleDateString()}
+                                                                    {review.professor && (
+                                                                        <span className="ml-2">
+                                                                            •
+                                                                            Prof.{" "}
+                                                                            {
+                                                                                review.professor
+                                                                            }
+                                                                        </span>
+                                                                    )}
+                                                                    {review.term && (
+                                                                        <span className="ml-2">
+                                                                            •{" "}
+                                                                            {
+                                                                                review.term
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -583,6 +747,29 @@ export default function CourseDetailPage() {
                                                 </CardContent>
                                             </Card>
                                         ))}
+
+                                        {filteredReviews.length === 0 &&
+                                            selectedProfessor !== "all" && (
+                                                <div className="flex flex-col items-center justify-center space-y-4 py-8 border-2 border-dashed rounded-lg">
+                                                    <p className="text-center text-muted-foreground">
+                                                        No reviews found for the
+                                                        selected filters.
+                                                    </p>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            setSelectedProfessor(
+                                                                "all"
+                                                            );
+                                                            setSelectedTerm(
+                                                                "all"
+                                                            );
+                                                        }}
+                                                    >
+                                                        Clear Filters
+                                                    </Button>
+                                                </div>
+                                            )}
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center space-y-4 py-12">

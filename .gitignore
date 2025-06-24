@@ -29,3 +29,14 @@ next-env.d.ts
 .DS_Store
 
 /lib/generated/prisma
+
+# database exports
+db-info/
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+*.venv

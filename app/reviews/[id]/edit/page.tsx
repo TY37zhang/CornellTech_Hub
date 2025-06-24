@@ -14,9 +14,17 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface Review {
     id: string;
@@ -27,7 +35,13 @@ interface Review {
     value: number;
     courseName: string;
     courseCode: string;
+    professor: string;
     grade?: string | null;
+}
+
+interface Professor {
+    id: string;
+    name: string;
 }
 
 export default function EditReviewPage({
@@ -42,6 +56,10 @@ export default function EditReviewPage({
     const [formData, setFormData] = useState<Review | null>(null);
     const { id: reviewId } = use(params);
 
+    // Professor selection state
+    const [professors, setProfessors] = useState<Professor[]>([]);
+    const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
+
     useEffect(() => {
         const fetchReview = async () => {
             try {
@@ -51,6 +69,11 @@ export default function EditReviewPage({
                 }
                 const data = await response.json();
                 setFormData(data);
+
+                // Fetch professors for this course
+                if (data.courseName) {
+                    fetchProfessorsForCourse(data.courseName);
+                }
             } catch (error) {
                 console.error("Error fetching review:", error);
                 toast.error("Failed to load review");
@@ -62,6 +85,29 @@ export default function EditReviewPage({
 
         fetchReview();
     }, [reviewId, router]);
+
+    const fetchProfessorsForCourse = async (courseName: string) => {
+        if (!courseName) return;
+
+        setIsLoadingProfessors(true);
+        try {
+            const response = await fetch(
+                `/api/courses/${encodeURIComponent(courseName)}/professors`
+            );
+            if (response.ok) {
+                const professors = await response.json();
+                setProfessors(professors);
+            } else {
+                console.error("Failed to fetch professors");
+                setProfessors([]);
+            }
+        } catch (error) {
+            console.error("Error fetching professors:", error);
+            setProfessors([]);
+        } finally {
+            setIsLoadingProfessors(false);
+        }
+    };
 
     const validateForm = () => {
         if (!formData) return false;
@@ -124,6 +170,7 @@ export default function EditReviewPage({
                     value: formData.value,
                     content: formData.content,
                     grade: formData.grade === "none" ? null : formData.grade,
+                    professor: formData.professor,
                 }),
             });
 
@@ -185,6 +232,86 @@ export default function EditReviewPage({
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-6">
+                        {/* Professor Selection */}
+                        <div className="space-y-2">
+                            <Label htmlFor="professor">Professor</Label>
+                            {isLoadingProfessors ? (
+                                <div className="flex items-center space-x-2">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
+                                    <span className="text-sm text-muted-foreground">
+                                        Loading professors...
+                                    </span>
+                                </div>
+                            ) : professors.length > 0 &&
+                              !professors.every(
+                                  (prof) => prof.name === "Unknown Professor"
+                              ) ? (
+                                <Select
+                                    value={formData.professor}
+                                    onValueChange={(value) =>
+                                        setFormData({
+                                            ...formData,
+                                            professor: value,
+                                        })
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="professor"
+                                        className={
+                                            errors.professor
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    >
+                                        <SelectValue placeholder="Select a professor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {professors.map((prof) => (
+                                            <SelectItem
+                                                key={prof.id}
+                                                value={prof.id}
+                                            >
+                                                {prof.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Input
+                                        id="professor"
+                                        placeholder="Enter professor name (optional)"
+                                        value={
+                                            formData.professor ===
+                                            "Unknown Professor"
+                                                ? ""
+                                                : formData.professor
+                                        }
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                professor: e.target.value,
+                                            })
+                                        }
+                                        className={
+                                            errors.professor
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    />
+                                    <p className="text-sm text-muted-foreground">
+                                        No professors found. You can enter the
+                                        professor's name manually.
+                                    </p>
+                                </div>
+                            )}
+                            {errors.professor && (
+                                <p className="text-sm text-red-500">
+                                    {errors.professor}
+                                </p>
+                            )}
+                        </div>
+
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Overall Rating (1-5)</Label>
@@ -264,41 +391,57 @@ export default function EditReviewPage({
 
                             <div className="space-y-2">
                                 <Label htmlFor="grade">Grade</Label>
-                                <select
-                                    id="grade"
+                                <Select
                                     value={formData.grade ?? "none"}
-                                    onChange={(e) =>
+                                    onValueChange={(value) =>
                                         setFormData({
                                             ...formData,
-                                            grade: e.target.value,
+                                            grade: value,
                                         })
                                     }
-                                    className={`w-full border rounded px-3 py-2 ${errors.grade ? "border-red-500" : ""}`}
                                 >
-                                    <option value="none">
-                                        Not wish to share
-                                    </option>
-                                    <option value="A+">A+</option>
-                                    <option value="A">A</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B">B</option>
-                                    <option value="B-">B-</option>
-                                    <option value="C+">C+</option>
-                                    <option value="C">C</option>
-                                    <option value="C-">C-</option>
-                                    <option value="D+">D+</option>
-                                    <option value="D">D</option>
-                                    <option value="D-">D-</option>
-                                    <option value="F">F</option>
-                                    <option value="S">S (Satisfactory)</option>
-                                    <option value="U">
-                                        U (Unsatisfactory)
-                                    </option>
-                                    <option value="HH">HH (High Honors)</option>
-                                    <option value="H">H (Honors)</option>
-                                    <option value="Dropped">Dropped</option>
-                                </select>
+                                    <SelectTrigger
+                                        id="grade"
+                                        className={
+                                            errors.grade ? "border-red-500" : ""
+                                        }
+                                    >
+                                        <SelectValue placeholder="Select grade (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            Not wish to share
+                                        </SelectItem>
+                                        <SelectItem value="A+">A+</SelectItem>
+                                        <SelectItem value="A">A</SelectItem>
+                                        <SelectItem value="A-">A-</SelectItem>
+                                        <SelectItem value="B+">B+</SelectItem>
+                                        <SelectItem value="B">B</SelectItem>
+                                        <SelectItem value="B-">B-</SelectItem>
+                                        <SelectItem value="C+">C+</SelectItem>
+                                        <SelectItem value="C">C</SelectItem>
+                                        <SelectItem value="C-">C-</SelectItem>
+                                        <SelectItem value="D+">D+</SelectItem>
+                                        <SelectItem value="D">D</SelectItem>
+                                        <SelectItem value="D-">D-</SelectItem>
+                                        <SelectItem value="F">F</SelectItem>
+                                        <SelectItem value="S">
+                                            S (Satisfactory)
+                                        </SelectItem>
+                                        <SelectItem value="U">
+                                            U (Unsatisfactory)
+                                        </SelectItem>
+                                        <SelectItem value="HH">
+                                            HH (High Honors)
+                                        </SelectItem>
+                                        <SelectItem value="H">
+                                            H (Honors)
+                                        </SelectItem>
+                                        <SelectItem value="Dropped">
+                                            Dropped
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 {errors.grade && (
                                     <p className="text-sm text-red-500">
                                         {errors.grade}

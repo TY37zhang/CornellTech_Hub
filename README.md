@@ -41,8 +41,12 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 - React 18.3.1
 - TypeScript
 - Tailwind CSS
-- Radix UI components
+- Radix UI primitives
 - Framer Motion for animations
+- DnD Kit for drag-and-drop interactions
+- Lucide React for iconography
+- Styled-components for styled helpers
+- Sonner for toast notifications
 - React Hook Form for form management
 - Zod for validation
 
@@ -50,10 +54,10 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 
 - Next.js API routes
 - Prisma ORM
-- PostgreSQL database
+- PostgreSQL (local or Neon serverless)
 - NextAuth.js for authentication
 - Cloudinary for media storage
-- Resend for email functionality
+- Resend for transactional email
 
 ### Development Tools
 
@@ -68,7 +72,7 @@ A comprehensive platform for Cornell Tech students to manage their academic jour
 
 - Node.js (latest LTS version)
 - PostgreSQL database
-- Environment variables (see `.env.example`)
+- Environment variables (see **Environment Variables** section below)
 
 ### Installation
 
@@ -87,11 +91,7 @@ npm install
 
 3. Set up environment variables:
 
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` with your configuration values.
+Create a `.env.local` file in the project root and populate it with the variables listed in the **Environment Variables** section below.
 
 4. Set up the database:
 
@@ -136,6 +136,8 @@ cornell-tech-hub/
 ├── prisma/                # Database schema and migrations (if present)
 ├── public/                # Static assets
 ├── styles/                # Global styles
+├── db-info/               # Database ER diagrams / docs
+├── misc/                  # Miscellaneous scripts and utilities
 ```
 
 - **app/components/**: Shared components used within the app directory.
@@ -143,8 +145,38 @@ cornell-tech-hub/
 - **middleware/**: Contains middleware logic, such as validation.
 - **lib/**: Utility functions, database/auth/prisma/email helpers, and validations.
 - **prisma/**: Database schema and migrations (ensure this directory exists if using Prisma).
+- **db-info/**: Supplemental database documentation or ER diagrams.
+- **misc/**: Miscellaneous scripts, experiments, or one-off utilities.
 
 Other directories such as `settings`, `user`, `my-reviews`, `reviews`, `animated-cards`, `coming-soon`, `faq`, `feedback`, `contact`, `terms-of-service`, and `privacy-policy` provide additional features and static/info pages.
+
+## Environment Variables
+
+Add the following keys to `.env.local` (values shown are examples):
+
+```env
+# Database
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-cloudinary-key"
+CLOUDINARY_API_SECRET="your-cloudinary-secret"
+
+# Resend Email
+RESEND_API_KEY="your-resend-api-key"
+ADMIN_EMAIL="admin@yourdomain.com"      # Receives contact & feedback emails
+EMAIL_DOMAIN="yourdomain.com"            # Optional — custom sending domain
+
+# Application
+APP_URL="http://localhost:3000"          # Base URL of the application
+```
+
+> **Tip**: If you deploy to Vercel, set these variables in the project settings.
 
 ## Database Schema
 

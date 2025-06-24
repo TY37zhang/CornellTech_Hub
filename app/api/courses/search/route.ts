@@ -25,10 +25,10 @@ export async function GET(request: Request) {
             take: 100, // fetch extra for grouping, will slice later
         });
 
-        // Group by name+professor to mimic DISTINCT ON behavior
+        // Group by name only to combine courses with different professors
         const groupMap = new Map<string, Array<(typeof rowsRaw)[number]>>();
         for (const course of rowsRaw) {
-            const key = `${course.name}|${course.professor_id}`;
+            const key = course.name;
             if (!groupMap.has(key)) {
                 groupMap.set(key, [] as any);
             }
@@ -55,7 +55,13 @@ export async function GET(request: Request) {
                         .join(", "),
                     semester: first.semester,
                     year: first.year,
-                    professor_id: first.professor_id,
+                    professor_id: Array.from(
+                        new Set(
+                            group.map((c) => c.professor_id).filter(Boolean)
+                        )
+                    )
+                        .sort()
+                        .join(", "),
                 };
             });
 

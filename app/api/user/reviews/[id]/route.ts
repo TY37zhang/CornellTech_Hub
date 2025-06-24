@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -47,7 +47,7 @@ export async function DELETE(
 
 export async function PUT(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -59,7 +59,7 @@ export async function PUT(
             );
         }
 
-        const { id: reviewId } = params;
+        const { id: reviewId } = await params;
         const body = await req.json();
 
         // Validate the request body
@@ -72,6 +72,7 @@ export async function PUT(
                 .string()
                 .min(10, "Review must be at least 10 characters"),
             grade: z.string().nullable().optional(),
+            professor: z.string().optional(),
         });
 
         const validatedData = requestSchema.parse(body);
@@ -85,6 +86,16 @@ export async function PUT(
                 { error: "Review not found or unauthorized" },
                 { status: 404 }
             );
+        }
+
+        // First update the course if professor is provided
+        if (validatedData.professor) {
+            await prisma.courses.update({
+                where: { id: review.course_id },
+                data: {
+                    professor_id: validatedData.professor,
+                },
+            });
         }
 
         const updatedReview = await prisma.course_reviews.update({
@@ -118,7 +129,7 @@ export async function PUT(
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
@@ -130,7 +141,7 @@ export async function GET(
             );
         }
 
-        const { id: reviewId } = params;
+        const { id: reviewId } = await params;
 
         const review = await prisma.course_reviews.findUnique({
             where: { id: reviewId, author_id: session.user.id },
@@ -139,6 +150,7 @@ export async function GET(
                     select: {
                         name: true,
                         code: true,
+                        professor_id: true,
                     },
                 },
             },
@@ -160,6 +172,7 @@ export async function GET(
             value: Number(review.rating),
             courseName: review.courses.name,
             courseCode: review.courses.code,
+            professor: review.courses.professor_id || "",
         });
     } catch (error) {
         console.error("Error fetching review:", error);
