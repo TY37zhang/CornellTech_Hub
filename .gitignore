@@ -40,3 +40,9 @@ ENV/
 .venv/
 .env/
 *.venv
+
+# Scraper output files
+scraper/output/
+scraper/*.json
+scraper/*.csv
+scraper/*.html

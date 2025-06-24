@@ -2,7 +2,7 @@
 """
 Cornell Tech Course Scraper v2
 Improved scraper specifically designed for Cornell's course roster HTML structure
-Saves data locally as JSON and CSV files
+Saves data locally as JSON and CSV files in an output directory
 """
 
 import requests
@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class CornellCourseScraperV2:
-    def __init__(self, term=None):
+    def __init__(self, term=None, output_dir='output'):
         self.base_url = "https://classes.cornell.edu"
         
         # Get term from environment variable or use default
@@ -32,6 +32,10 @@ class CornellCourseScraperV2:
         
         self.term = term
         self.search_url = f"https://classes.cornell.edu/search/roster/{term}?q=&days-type=any&campus%5B%5D=NYT&crseAttrs-type=any&breadthDistr-type=any&pi="
+        
+        # Set up output directory
+        self.output_dir = output_dir
+        self._ensure_output_dir()
         
         # Parse term to get semester and year
         self.semester, self.year = self._parse_term(term)
@@ -44,6 +48,16 @@ class CornellCourseScraperV2:
             'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive'
         })
+    
+    def _ensure_output_dir(self):
+        """Create output directory if it doesn't exist"""
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+            logger.info(f"Created output directory: {self.output_dir}")
+    
+    def _get_output_path(self, filename):
+        """Get full path for output file"""
+        return os.path.join(self.output_dir, filename)
     
     def _parse_term(self, term):
         """Parse term code (e.g., 'FA25') into semester name and year"""
@@ -326,7 +340,7 @@ class CornellCourseScraperV2:
             response.raise_for_status()
             
             # Save the HTML for debugging
-            with open('cornell_page.html', 'w', encoding='utf-8') as f:
+            with open(self._get_output_path('cornell_page.html'), 'w', encoding='utf-8') as f:
                 f.write(response.text)
             
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -492,9 +506,9 @@ class CornellCourseScraperV2:
             return
             
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(self._get_output_path(filename), 'w', encoding='utf-8') as f:
                 json.dump(courses, f, indent=2, ensure_ascii=False)
-            logger.info(f"Courses saved to {filename}")
+            logger.info(f"Courses saved to {self._get_output_path(filename)}")
         except Exception as e:
             logger.error(f"Failed to save JSON: {e}")
             raise
@@ -510,7 +524,7 @@ class CornellCourseScraperV2:
             headers = ['code', 'name', 'department', 'credits', 'professor_id', 
                       'semester', 'year', 'full_code', 'description', 'scraped_at']
             
-            with open(filename, 'w', newline='', encoding='utf-8') as f:
+            with open(self._get_output_path(filename), 'w', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, fieldnames=headers)
                 writer.writeheader()
                 
@@ -521,7 +535,7 @@ class CornellCourseScraperV2:
                         row[header] = course.get(header, '')
                     writer.writerow(row)
                     
-            logger.info(f"Courses saved to {filename}")
+            logger.info(f"Courses saved to {self._get_output_path(filename)}")
         except Exception as e:
             logger.error(f"Failed to save CSV: {e}")
             raise
@@ -613,9 +627,10 @@ def main():
             scraper.save_to_csv(courses, 'cornell_courses.csv')
             
             logger.info(f"✅ Scraping completed successfully!")
-            logger.info(f"📁 Data saved to:")
-            logger.info(f"   - cornell_courses.json ({len(courses)} courses)")
-            logger.info(f"   - cornell_courses.csv ({len(courses)} courses)")
+            logger.info(f"📁 Data saved to output directory:")
+            logger.info(f"   - output/cornell_courses.json ({len(courses)} courses)")
+            logger.info(f"   - output/cornell_courses.csv ({len(courses)} courses)")
+            logger.info(f"   - output/cornell_page.html (HTML source for debugging)")
             
             # Database insertion commented out - use separate script
             # scraper.insert_courses_to_db(courses)

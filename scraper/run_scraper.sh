@@ -223,9 +223,9 @@ fi
 # Check if scraping was successful and files contain data
 check_files_have_data() {
     # Check if JSON file exists and has content (more than just empty array)
-    if [ -f "cornell_courses.json" ]; then
-        local json_size=$(wc -c < "cornell_courses.json" 2>/dev/null || echo "0")
-        local json_content=$(head -c 20 "cornell_courses.json" 2>/dev/null || echo "")
+    if [ -f "output/cornell_courses.json" ]; then
+        local json_size=$(wc -c < "output/cornell_courses.json" 2>/dev/null || echo "0")
+        local json_content=$(head -c 20 "output/cornell_courses.json" 2>/dev/null || echo "")
         
         # Check if file is larger than minimal empty array "[]" and doesn't start with empty array
         if [ "$json_size" -gt 5 ] && [[ ! "$json_content" =~ ^\s*\[\s*\]\s*$ ]]; then
@@ -235,19 +235,20 @@ check_files_have_data() {
     return 1  # No data or file doesn't exist
 }
 
-if [ "$SCRAPER_SUCCESS" = true ] && [ -f "cornell_courses.json" ] && [ -f "cornell_courses.csv" ] && check_files_have_data; then
+if [ "$SCRAPER_SUCCESS" = true ] && [ -f "output/cornell_courses.json" ] && [ -f "output/cornell_courses.csv" ] && check_files_have_data; then
     echo ""
     echo "✅ Scraping completed successfully!"
-    echo "📁 Files generated:"
-    echo "   - cornell_courses.json"
-    echo "   - cornell_courses.csv"
+    echo "📁 Files generated in output directory:"
+    echo "   - output/cornell_courses.json"
+    echo "   - output/cornell_courses.csv"
+    echo "   - output/cornell_page.html"
     echo ""
     # Automatically update database if DATABASE_URL is set
     if [ -n "$DATABASE_URL" ]; then
         echo "🔄 Updating $DATABASE_CHOICE database..."
         
         # Capture the output to check for errors
-        DB_OUTPUT=$(python3 scripts/update_database.py cornell_courses.json 2>&1)
+        DB_OUTPUT=$(python3 scripts/update_database.py output/cornell_courses.json 2>&1)
         DB_EXIT_CODE=$?
         
         # Display the output
@@ -283,8 +284,8 @@ if [ "$SCRAPER_SUCCESS" = true ] && [ -f "cornell_courses.json" ] && [ -f "corne
     else
         echo "🔄 To update your database manually, run:"
         echo "   export DATABASE_URL='your_postgresql_connection_string'"
-        echo "   python3 scripts/update_database.py cornell_courses.json --preview  # Preview changes"
-        echo "   python3 scripts/update_database.py cornell_courses.json           # Update database"
+        echo "   python3 scripts/update_database.py output/cornell_courses.json --preview  # Preview changes"
+        echo "   python3 scripts/update_database.py output/cornell_courses.json           # Update database"
     fi
 else
     echo ""
