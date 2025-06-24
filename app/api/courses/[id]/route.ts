@@ -9,10 +9,10 @@ export async function GET(
         const resolvedParams = await Promise.resolve(params);
         const courseId = resolvedParams.id;
 
-        // Fetch the course's name and professor by code using Prisma
+        // Fetch the course's name by code using Prisma
         const base = await prisma.courses.findFirst({
             where: { code: courseId },
-            select: { name: true, professor_id: true },
+            select: { name: true },
         });
         if (!base) {
             return NextResponse.json(
@@ -20,10 +20,11 @@ export async function GET(
                 { status: 404 }
             );
         }
-        const { name, professor_id } = base;
+        const { name } = base;
 
-        const crossListCourses = await prisma.courses.findMany({
-            where: { name, professor_id },
+        // Fetch ALL courses with this name (across all professors and terms)
+        const allCourseInstances = await prisma.courses.findMany({
+            where: { name: { equals: name, mode: "insensitive" } },
             select: {
                 id: true,
                 code: true,
@@ -39,110 +40,166 @@ export async function GET(
                         difficulty: true,
                         workload: true,
                         rating: true,
+                        created_at: true,
                     },
                 },
             },
         });
 
-        if (crossListCourses.length === 0) {
+        if (allCourseInstances.length === 0) {
             return NextResponse.json(
                 { error: "Course not found" },
                 { status: 404 }
             );
         }
 
-        // Compute aggregates for each course record
-        const crossListResult = crossListCourses.map((course) => {
-            const reviews = course.course_reviews;
-            const reviewCount = reviews.length;
-            const avg = (arr: number[]) =>
-                arr.length === 0
-                    ? null
-                    : Math.round(
-                          (arr.reduce((a, b) => a + b, 0) / arr.length) * 10
-                      ) / 10;
+        // Helper function for averaging
+        const avg = (arr: number[]) =>
+            arr.length === 0
+                ? null
+                : Math.round(
+                      (arr.reduce((a, b) => a + b, 0) / arr.length) * 10
+                  ) / 10;
 
-            const rating = avg(
-                reviews
-                    .map((r) =>
-                        r.overall_rating !== null &&
-                        r.overall_rating !== undefined
-                            ? Number(r.overall_rating)
-                            : (r.rating ?? null)
-                    )
-                    .filter((n): n is number => n !== null)
-            );
+        // Aggregate data across ALL professors and terms
+        const allReviews = allCourseInstances.flatMap(
+            (course) => course.course_reviews
+        );
+        const codes = [...new Set(allCourseInstances.map((c) => c.code))];
+        const departments = [
+            ...new Set(allCourseInstances.map((c) => c.department)),
+        ];
 
-            const difficulty = avg(
-                reviews
-                    .map((r) => r.difficulty)
-                    .filter((n): n is number => n !== null)
-            );
+        // Debug logging
+        console.log(
+            `Course "${name}" - Found ${allCourseInstances.length} instances`
+        );
+        console.log(
+            "Course instances:",
+            allCourseInstances.map((c) => ({ code: c.code, name: c.name }))
+        );
+        console.log("All codes:", codes);
+        console.log("All departments:", departments);
+        const professors = [
+            ...new Set(
+                allCourseInstances.map((c) => c.professor_id).filter(Boolean)
+            ),
+        ];
+        const terms = [
+            ...new Set(
+                allCourseInstances.map((c) => `${c.semester} ${c.year}`)
+            ),
+        ];
 
-            const workload = avg(
-                reviews
-                    .map((r) => r.workload)
-                    .filter((n): n is number => n !== null)
-            );
+        // Calculate overall aggregated metrics
+        const overallRating = avg(
+            allReviews
+                .map((r) =>
+                    r.overall_rating !== null && r.overall_rating !== undefined
+                        ? Number(r.overall_rating)
+                        : (r.rating ?? null)
+                )
+                .filter((n): n is number => n !== null)
+        );
 
-            const value = avg(
-                reviews
-                    .map((r) => r.rating)
-                    .filter((n): n is number => n !== null)
+        const overallDifficulty = avg(
+            allReviews
+                .map((r) => r.difficulty)
+                .filter((n): n is number => n !== null)
+        );
+
+        const overallWorkload = avg(
+            allReviews
+                .map((r) => r.workload)
+                .filter((n): n is number => n !== null)
+        );
+
+        const overallValue = avg(
+            allReviews
+                .map((r) => r.rating)
+                .filter((n): n is number => n !== null)
+        );
+
+        // Group by professor for detailed breakdown
+        const professorData = professors.map((prof) => {
+            const profCourses = allCourseInstances.filter(
+                (c) => c.professor_id === prof
             );
+            const profReviews = profCourses.flatMap((c) => c.course_reviews);
+            const profTerms = [
+                ...new Set(profCourses.map((c) => `${c.semester} ${c.year}`)),
+            ];
 
             return {
-                id: course.id,
-                code: course.code,
-                title: course.name,
-                category: course.department,
-                professor: course.professor_id,
-                semester: course.semester,
-                year: course.year,
-                credits: course.credits,
-                review_count: reviewCount,
-                rating,
-                difficulty,
-                workload,
-                value,
+                name: prof || "Unknown Professor",
+                reviewCount: profReviews.length,
+                rating: avg(
+                    profReviews
+                        .map((r) =>
+                            r.overall_rating !== null &&
+                            r.overall_rating !== undefined
+                                ? Number(r.overall_rating)
+                                : (r.rating ?? null)
+                        )
+                        .filter((n): n is number => n !== null)
+                ),
+                difficulty: avg(
+                    profReviews
+                        .map((r) => r.difficulty)
+                        .filter((n): n is number => n !== null)
+                ),
+                workload: avg(
+                    profReviews
+                        .map((r) => r.workload)
+                        .filter((n): n is number => n !== null)
+                ),
+                value: avg(
+                    profReviews
+                        .map((r) => r.rating)
+                        .filter((n): n is number => n !== null)
+                ),
+                terms: profTerms.sort(),
             };
         });
 
-        // Aggregate codes and departments
-        const codes = crossListResult.map((c: any) => c.code);
-        const departments = Array.from(
-            new Set(crossListResult.map((c: any) => c.category))
-        );
-        // Use the first course as the primary
-        const course = crossListResult[0];
-
-        // Fetch reviews for all cross-listed courses
-        const courseIds = crossListResult.map((c: any) => c.id);
+        // Fetch ALL reviews for the course with user details
+        const courseIds = allCourseInstances.map((c) => c.id);
         const reviewsResult = await prisma.course_reviews.findMany({
             where: { course_id: { in: courseIds } },
             include: {
                 users: { select: { name: true, avatar_url: true } },
+                courses: {
+                    select: { professor_id: true, semester: true, year: true },
+                },
             },
             orderBy: { created_at: "desc" },
         });
 
+        // Use the first course instance as reference for basic info
+        const primaryCourse = allCourseInstances[0];
+
         // Transform the data
         const transformedCourse = {
             id: codes[0],
-            title: course.title,
-            professor: course.professor || "Unknown Professor",
-            departments: Array.from(
-                new Set(crossListResult.map((c: any) => c.category))
-            ),
-            semester: course.semester,
-            year: course.year,
-            credits: course.credits,
-            rating: Number(course.rating) || 0,
-            reviewCount: Number(course.review_count) || 0,
-            difficulty: Number(course.difficulty) || 0,
-            workload: Number(course.workload) || 0,
-            value: Number(course.value) || 0,
+            code: codes[0],
+            codes: codes, // Add all codes for display
+            title: primaryCourse.name,
+            professor:
+                professors.length === 1
+                    ? professors[0] || "Unknown Professor"
+                    : `${professors.length} professors`,
+            professors: professorData, // Detailed professor breakdown
+            departments: departments,
+            semester: primaryCourse.semester,
+            year: primaryCourse.year,
+            credits: primaryCourse.credits,
+            rating: Number(overallRating) || 0,
+            reviewCount: allReviews.length,
+            difficulty: Number(overallDifficulty) || 0,
+            workload: Number(overallWorkload) || 0,
+            value: Number(overallValue) || 0,
             categoryColor: getCategoryColor(departments[0]?.toLowerCase()),
+            terms: terms.sort(),
             reviews: reviewsResult.map((review: any) => ({
                 id: review.id,
                 content: review.content,
@@ -154,6 +211,8 @@ export async function GET(
                 createdAt: review.created_at,
                 author: review.users?.name ?? "Anonymous",
                 avatarUrl: review.users?.avatar_url ?? null,
+                professor: review.courses?.professor_id || "Unknown Professor",
+                term: `${review.courses?.semester || ""} ${review.courses?.year || ""}`.trim(),
             })),
         };
 

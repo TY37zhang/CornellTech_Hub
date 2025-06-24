@@ -37,13 +37,13 @@ export async function POST(request: Request) {
             },
             update: {
                 name: validatedData.title,
-                professor_id: validatedData.professor,
+                professor_id: validatedData.professor || "Unknown Professor",
                 department: validatedData.category,
             },
             create: {
                 code: validatedData.courseId.substring(0, 20),
                 name: validatedData.title,
-                professor_id: validatedData.professor,
+                professor_id: validatedData.professor || "Unknown Professor",
                 department: validatedData.category,
                 semester: "Spring",
                 year: 2024,

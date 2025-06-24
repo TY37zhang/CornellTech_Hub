@@ -22,7 +22,7 @@ export const userProfileSchema = z.object({
 // Course review schemas
 export const courseReviewSchema = z.object({
     title: z.string().min(1, "Title is required"),
-    professor: z.string().min(1, "Professor is required"),
+    professor: z.string().optional(), // Made optional since professor may not be available
     category: z.string(),
     difficulty: z.number().min(1).max(5),
     workload: z.number().min(1).max(5),

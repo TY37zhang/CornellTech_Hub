@@ -415,10 +415,10 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                {filteredCourses.map((course) => (
+                                {filteredCourses.map((course, index) => (
                                     <Link
                                         href={`/courses/${course.id}`}
-                                        key={course.id}
+                                        key={`${course.id}-${course.professor}-${index}`}
                                         className="group w-full"
                                     >
                                         <Card className="h-full w-full overflow-hidden transition-all hover:border-primary">

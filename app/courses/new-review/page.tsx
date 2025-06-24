@@ -43,6 +43,11 @@ interface Course {
     isCrossListed: boolean;
 }
 
+interface Professor {
+    id: string;
+    name: string;
+}
+
 export default function NewReviewPage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,6 +57,10 @@ export default function NewReviewPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
     const debouncedSearch = useDebounce(searchQuery, 300);
+
+    // Professor selection state
+    const [professors, setProfessors] = useState<Professor[]>([]);
+    const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -82,10 +91,15 @@ export default function NewReviewPage() {
                 ...prev,
                 title: courseName,
                 courseId: courseId,
-                professor: professor || "",
+                professor:
+                    professor === "Unknown Professor" ? "" : professor || "",
                 category: category || "",
                 categories: category ? category.split(", ") : [],
             }));
+
+            // Reset professor list and fetch professors for the pre-selected course
+            setProfessors([]);
+            fetchProfessorsForCourse(courseName);
         }
     }, []);
 
@@ -217,13 +231,42 @@ export default function NewReviewPage() {
             ...prev,
             title: course.name,
             courseId: course.id,
-            professor: course.professor_id || "",
+            professor: "", // Reset professor selection
             category: course.departments[0] || "",
             categories: course.departments,
             courseCode: course.codes[0],
         }));
         setSearchQuery("");
         setSearchResults([]);
+
+        // Reset professor list to ensure UI updates correctly
+        setProfessors([]);
+
+        // Fetch professors for this course
+        fetchProfessorsForCourse(course.name);
+    };
+
+    const fetchProfessorsForCourse = async (courseName: string) => {
+        if (!courseName) return;
+
+        setIsLoadingProfessors(true);
+        try {
+            const response = await fetch(
+                `/api/courses/${encodeURIComponent(courseName)}/professors`
+            );
+            if (response.ok) {
+                const professors = await response.json();
+                setProfessors(professors);
+            } else {
+                console.error("Failed to fetch professors");
+                setProfessors([]);
+            }
+        } catch (error) {
+            console.error("Error fetching professors:", error);
+            setProfessors([]);
+        } finally {
+            setIsLoadingProfessors(false);
+        }
     };
 
     return (
@@ -359,6 +402,89 @@ export default function NewReviewPage() {
                                 </p>
                             )}
                         </div>
+
+                        {/* Professor Selection - Show only when course is selected */}
+                        {formData.courseId && (
+                            <div className="space-y-2">
+                                <Label htmlFor="professor">Professor</Label>
+                                {isLoadingProfessors ? (
+                                    <div className="flex items-center space-x-2">
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
+                                        <span className="text-sm text-muted-foreground">
+                                            Loading professors...
+                                        </span>
+                                    </div>
+                                ) : professors.length > 0 &&
+                                  !professors.every(
+                                      (prof) =>
+                                          prof.name === "Unknown Professor"
+                                  ) ? (
+                                    <Select
+                                        value={formData.professor}
+                                        onValueChange={(value) =>
+                                            setFormData({
+                                                ...formData,
+                                                professor: value,
+                                            })
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id="professor"
+                                            className={
+                                                errors.professor
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }
+                                        >
+                                            <SelectValue placeholder="Select a professor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {professors.map((prof) => (
+                                                <SelectItem
+                                                    key={prof.id}
+                                                    value={prof.id}
+                                                >
+                                                    {prof.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <Input
+                                            id="professor"
+                                            placeholder="Enter professor name (optional)"
+                                            value={
+                                                formData.professor ===
+                                                "Unknown Professor"
+                                                    ? ""
+                                                    : formData.professor
+                                            }
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    professor: e.target.value,
+                                                })
+                                            }
+                                            className={
+                                                errors.professor
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }
+                                        />
+                                        <p className="text-sm text-muted-foreground">
+                                            No professors found. You can enter
+                                            the professor's name manually.
+                                        </p>
+                                    </div>
+                                )}
+                                {errors.professor && (
+                                    <p className="text-sm text-red-500">
+                                        {errors.professor}
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="space-y-4">
                             <div className="space-y-2">

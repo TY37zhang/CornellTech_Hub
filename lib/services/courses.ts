@@ -119,10 +119,10 @@ export async function getAggregatedCourses(
         },
     });
 
-    // 2. Group by course name + professor to mimic DISTINCT ON behaviour
+    // 2. Group by course name only to combine courses with different professors
     const groupMap = new Map<string, typeof coursesRaw>();
     for (const course of coursesRaw) {
-        const key = `${course.name}|${course.professor_id}`;
+        const key = course.name;
         if (!groupMap.has(key)) {
             groupMap.set(key, [] as any);
         }
@@ -171,13 +171,19 @@ export async function getAggregatedCourses(
         const departments = Array.from(
             new Set(group.map((c) => c.department))
         ).sort();
+        const professors = Array.from(
+            new Set(group.map((c) => c.professor_id).filter(Boolean))
+        ).sort();
 
         const primaryCourse = group[0];
 
         return {
             id: codes[0],
             title: primaryCourse.name,
-            professor: primaryCourse.professor_id || "Unknown Professor",
+            professor:
+                professors.length > 0
+                    ? professors.join(", ")
+                    : "Unknown Professor",
             category: departments[0]?.toLowerCase() || "",
             rating: avg(ratings),
             reviewCount,
