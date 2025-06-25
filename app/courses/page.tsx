@@ -11,7 +11,7 @@ async function getInitialCourses() {
         return await getAggregatedCourses({
             limit,
             offset: 0,
-            sortBy: "rating",
+            sortBy: "recent",
         });
     } catch (error) {
         // If the DB is unreachable for some reason, fallback so the page still builds.

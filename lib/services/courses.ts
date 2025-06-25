@@ -51,12 +51,36 @@ export async function getAggregatedCourses(
         category = "",
         limit = 5,
         offset = 0,
-        sortBy = "rating",
+        sortBy = "recent",
     } = options;
 
     // 1. Fetch _some_ course rows from the DB instead of the entire table.
     //    We over-fetch a small multiple of `limit` to keep diversity but avoid hundreds of rows.
     const preSample = limit * 20; // e.g. homepage limit=3 → fetch at most 60 rows
+
+    // For sorting options that depend on review data, prioritize courses with reviews in pre-sampling
+    // For other sorts, we can use course creation date as a reasonable default
+    const reviewBasedSorts = [
+        "recent",
+        "popular",
+        "rating",
+        "difficulty",
+        "workload",
+    ];
+    const orderByClause = reviewBasedSorts.includes(sortBy)
+        ? [
+              {
+                  course_reviews: {
+                      _count: "desc" as const,
+                  },
+              },
+              {
+                  created_at: "desc" as const,
+              },
+          ]
+        : {
+              created_at: "desc" as const,
+          };
 
     const coursesRaw = await prisma.courses.findMany({
         where: {
@@ -101,9 +125,7 @@ export async function getAggregatedCourses(
                     : {},
             ],
         },
-        orderBy: {
-            created_at: "desc", // cheap index – gives recent entries first
-        },
+        orderBy: orderByClause,
         take: preSample,
         include: {
             course_reviews: {
@@ -114,6 +136,9 @@ export async function getAggregatedCourses(
                     workload: true,
                     content: true,
                     created_at: true,
+                },
+                orderBy: {
+                    created_at: "desc",
                 },
             },
         },
