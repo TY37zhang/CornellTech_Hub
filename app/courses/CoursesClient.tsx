@@ -422,10 +422,10 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
                                         className="group w-full"
                                     >
                                         <Card className="h-full w-full overflow-hidden transition-all hover:border-primary">
-                                            <CardHeader className="pb-3">
+                                            <CardHeader className="pb-3 pt-6">
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div className="min-w-0 flex-1">
-                                                        <CardTitle className="text-xl truncate">
+                                                        <CardTitle className="text-lg leading-normal min-h-[4rem] flex items-start break-words hyphens-auto">
                                                             {course.title}
                                                         </CardTitle>
                                                     </div>

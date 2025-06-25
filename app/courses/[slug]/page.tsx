@@ -191,6 +191,34 @@ export default function CourseDetailPage() {
     const [selectedTerm, setSelectedTerm] = useState<string>("all");
     const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
 
+    // Move the useMemo hook before any conditional returns to avoid hook ordering issues
+    const departmentBadges = React.useMemo(() => {
+        if (!course?.departments) return [];
+
+        // More robust deduplication that handles various data types
+        const rawDepts = course.departments || [];
+        const cleanDepts = rawDepts
+            .filter(
+                (dept) => dept && typeof dept === "string" && dept.trim() !== ""
+            )
+            .map((dept) => dept.trim().toUpperCase())
+            .filter((dept, index, arr) => arr.indexOf(dept) === index); // Remove duplicates
+
+        console.log(
+            `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}, Render ID: ${Math.random()}`
+        );
+
+        return cleanDepts.map((dept) => (
+            <Badge
+                key={`dept-${dept}-${Date.now()}`}
+                variant={dept.toLowerCase() as any}
+                className="min-w-[56px] justify-center text-center"
+            >
+                {dept}
+            </Badge>
+        ));
+    }, [course?.departments]);
+
     useEffect(() => {
         const fetchCourse = async () => {
             try {
@@ -361,48 +389,7 @@ export default function CourseDetailPage() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            {React.useMemo(() => {
-                                                // More robust deduplication that handles various data types
-                                                const rawDepts =
-                                                    course.departments || [];
-                                                const cleanDepts = rawDepts
-                                                    .filter(
-                                                        (dept) =>
-                                                            dept &&
-                                                            typeof dept ===
-                                                                "string" &&
-                                                            dept.trim() !== ""
-                                                    )
-                                                    .map((dept) =>
-                                                        dept
-                                                            .trim()
-                                                            .toUpperCase()
-                                                    )
-                                                    .filter(
-                                                        (dept, index, arr) =>
-                                                            arr.indexOf(
-                                                                dept
-                                                            ) === index
-                                                    ); // Remove duplicates
-
-                                                console.log(
-                                                    `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}, Render ID: ${Math.random()}`
-                                                );
-
-                                                return cleanDepts.map(
-                                                    (dept) => (
-                                                        <Badge
-                                                            key={`dept-${dept}-${Date.now()}`}
-                                                            variant={
-                                                                dept.toLowerCase() as any
-                                                            }
-                                                            className="min-w-[56px] justify-center text-center"
-                                                        >
-                                                            {dept}
-                                                        </Badge>
-                                                    )
-                                                );
-                                            }, [course.departments])}
+                                            {departmentBadges}
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title}
