@@ -361,21 +361,35 @@ export default function CourseDetailPage() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            {Array.from(
-                                                new Set(
-                                                    course.departments || []
-                                                )
-                                            )?.map((dept, index) => (
-                                                <Badge
-                                                    key={index}
-                                                    variant={
-                                                        dept.toLowerCase() as any
-                                                    }
-                                                    className="min-w-[56px] justify-center text-center"
-                                                >
-                                                    {dept.toUpperCase()}
-                                                </Badge>
-                                            ))}
+                                            {(() => {
+                                                const depts = Array.from(
+                                                    new Set(
+                                                        (
+                                                            course.departments ||
+                                                            []
+                                                        ).filter(Boolean)
+                                                    )
+                                                );
+                                                console.log(
+                                                    "Departments:",
+                                                    course.departments,
+                                                    "Filtered:",
+                                                    depts
+                                                );
+                                                return depts.map(
+                                                    (dept, index) => (
+                                                        <Badge
+                                                            key={`${dept}-${index}`}
+                                                            variant={
+                                                                dept.toLowerCase() as any
+                                                            }
+                                                            className="min-w-[56px] justify-center text-center"
+                                                        >
+                                                            {dept.toUpperCase()}
+                                                        </Badge>
+                                                    )
+                                                );
+                                            })()}
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title}
