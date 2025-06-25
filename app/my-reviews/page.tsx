@@ -293,12 +293,12 @@ export default function MyReviewsPage() {
                                                 <div className="mt-3 space-y-2">
                                                     {review.difficulty !==
                                                         undefined && (
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
+                                                        <div className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground w-16 flex-shrink-0">
                                                                 Difficulty
                                                             </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                            <div className="flex items-center gap-2 flex-1 justify-end">
+                                                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
                                                                     <div
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
@@ -310,7 +310,7 @@ export default function MyReviewsPage() {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <span>
+                                                                <span className="w-8 text-right flex-shrink-0">
                                                                     {review.difficulty?.toFixed(
                                                                         1
                                                                     )}
@@ -321,12 +321,12 @@ export default function MyReviewsPage() {
                                                     )}
                                                     {review.workload !==
                                                         undefined && (
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
+                                                        <div className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground w-16 flex-shrink-0">
                                                                 Workload
                                                             </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                            <div className="flex items-center gap-2 flex-1 justify-end">
+                                                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
                                                                     <div
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
@@ -338,7 +338,7 @@ export default function MyReviewsPage() {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <span>
+                                                                <span className="w-8 text-right flex-shrink-0">
                                                                     {review.workload?.toFixed(
                                                                         1
                                                                     )}
@@ -349,12 +349,12 @@ export default function MyReviewsPage() {
                                                     )}
                                                     {review.value !==
                                                         undefined && (
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-muted-foreground">
+                                                        <div className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground w-16 flex-shrink-0">
                                                                 Value
                                                             </span>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-2 w-24 rounded-full bg-muted">
+                                                            <div className="flex items-center gap-2 flex-1 justify-end">
+                                                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
                                                                     <div
                                                                         className="h-2 rounded-full bg-yellow-400"
                                                                         style={{
@@ -366,10 +366,11 @@ export default function MyReviewsPage() {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <span>
+                                                                <span className="w-8 text-right flex-shrink-0">
                                                                     {review.value?.toFixed(
                                                                         1
                                                                     )}
+                                                                    /5
                                                                 </span>
                                                             </div>
                                                         </div>
