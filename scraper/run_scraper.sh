@@ -62,6 +62,9 @@ TERM=""
 while true; do
     read -p "Enter term (e.g., FA25): " term_input
     
+    # Convert to uppercase for validation and usage
+    term_input=$(echo "$term_input" | tr '[:lower:]' '[:upper:]')
+    
     # Validate term format
     if [[ $term_input =~ ^(SP|SU|FA|WI)[0-9]{2}$ ]]; then
         TERM="$term_input"
