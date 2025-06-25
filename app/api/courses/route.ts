@@ -14,7 +14,7 @@ export async function GET(request: Request) {
                 | "popular"
                 | "rating"
                 | "difficulty"
-                | "workload") || "rating";
+                | "workload") || "recent";
 
         const { courses, total } = await getAggregatedCourses({
             search,

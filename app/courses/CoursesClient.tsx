@@ -116,7 +116,7 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
     // Search & filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [programFilter, setProgramFilter] = useState("all");
-    const [sortBy, setSortBy] = useState("popular");
+    const [sortBy, setSortBy] = useState("recent");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
