@@ -204,10 +204,6 @@ export default function CourseDetailPage() {
             .map((dept) => dept.trim().toUpperCase())
             .filter((dept, index, arr) => arr.indexOf(dept) === index); // Remove duplicates
 
-        console.log(
-            `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}, Render ID: ${Math.random()}`
-        );
-
         return cleanDepts.map((dept) => (
             <Badge
                 key={`dept-${dept}-${Date.now()}`}

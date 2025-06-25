@@ -45,10 +45,6 @@ export const authOptions: NextAuthOptions = {
 
             // Only allow Cornell email addresses
             if (user.email && !user.email.endsWith("@cornell.edu")) {
-                console.log(
-                    "Access denied: Non-Cornell email attempted to sign in",
-                    user.email
-                );
                 return false;
             }
 
@@ -60,10 +56,6 @@ export const authOptions: NextAuthOptions = {
                     });
 
                     if (!existing) {
-                        console.log(
-                            "Creating new user with Cornell email:",
-                            user.email
-                        );
                         const newUser = await prisma.users.create({
                             data: {
                                 name: user.name!,

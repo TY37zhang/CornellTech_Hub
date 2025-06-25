@@ -694,14 +694,9 @@ export default function PlannerPage() {
                 setIsLoading(true);
 
                 if (session?.user?.program) {
-                    console.log(
-                        "Setting program from session:",
-                        session.user.program
-                    );
                     setUserProgram(session.user.program);
                     await loadSavedCoursePlans();
                 } else {
-                    console.log("Fetching program from API");
                     await fetchUserProgram();
                 }
             } catch (error) {
@@ -724,9 +719,7 @@ export default function PlannerPage() {
 
     const loadSavedCoursePlans = async () => {
         try {
-            console.log("Loading saved course plans...");
             const response = await fetch("/api/planner");
-            console.log("Response status:", response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -735,7 +728,6 @@ export default function PlannerPage() {
             }
 
             const data = await response.json();
-            console.log("Loaded course plans:", data);
 
             // Always rebuild selectedCourses from backend data to preserve 'taken' property and ensure uniqueness by id
             const uniqueCoursesMap = new Map();
@@ -1003,8 +995,6 @@ export default function PlannerPage() {
                 status: "planned",
             };
 
-            console.log("Saving course plan:", saveData);
-
             try {
                 // First check if a plan already exists for this course
                 const existingPlanId = coursePlanIds[course.id];
@@ -1033,10 +1023,6 @@ export default function PlannerPage() {
                     }
 
                     const updatedPlan = await updateResponse.json();
-                    console.log(
-                        "Course plan updated successfully:",
-                        updatedPlan
-                    );
                 } else {
                     // Create new plan
                     const createResponse = await fetch("/api/planner", {
@@ -1056,7 +1042,6 @@ export default function PlannerPage() {
                     }
 
                     const newPlan = await createResponse.json();
-                    console.log("Course plan created successfully:", newPlan);
 
                     // Store the new plan ID
                     setCoursePlanIds((prev) => ({
@@ -2037,10 +2022,6 @@ export default function PlannerPage() {
 
                                             const newPlan =
                                                 await createResponse.json();
-                                            console.log(
-                                                "Course plan created successfully:",
-                                                newPlan
-                                            );
 
                                             // Store the new plan ID
                                             setCoursePlanIds((prev) => ({

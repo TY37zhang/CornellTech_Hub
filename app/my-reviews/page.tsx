@@ -94,7 +94,6 @@ export default function MyReviewsPage() {
                     throw new Error("Failed to fetch reviews");
                 }
                 const data = await response.json();
-                console.log("Reviews data:", data); // Debug log
                 setReviews(data);
                 setFilteredReviews(data);
             } catch (err) {
