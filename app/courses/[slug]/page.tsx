@@ -386,13 +386,13 @@ export default function CourseDetailPage() {
                                                     ); // Remove duplicates
 
                                                 console.log(
-                                                    `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}`
+                                                    `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}, Render ID: ${Math.random()}`
                                                 );
 
                                                 return cleanDepts.map(
                                                     (dept) => (
                                                         <Badge
-                                                            key={dept}
+                                                            key={`dept-${dept}-${Date.now()}`}
                                                             variant={
                                                                 dept.toLowerCase() as any
                                                             }

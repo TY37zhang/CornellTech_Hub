@@ -67,7 +67,12 @@ export async function GET(
         );
         const codes = [...new Set(allCourseInstances.map((c) => c.code))];
         const departments = [
-            ...new Set(allCourseInstances.map((c) => c.department)),
+            ...new Set(
+                allCourseInstances
+                    .map((c) => c.department)
+                    .filter(Boolean)
+                    .map((dept) => dept.trim().toUpperCase())
+            ),
         ];
 
         // Debug logging

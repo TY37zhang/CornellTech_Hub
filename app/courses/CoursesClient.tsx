@@ -435,10 +435,23 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
                                                                 const uniqueDepts =
                                                                     Array.from(
                                                                         new Set(
-                                                                            course
-                                                                                .crossListed
-                                                                                ?.departments ??
+                                                                            (
+                                                                                course
+                                                                                    .crossListed
+                                                                                    ?.departments ??
                                                                                 []
+                                                                            )
+                                                                                .filter(
+                                                                                    Boolean
+                                                                                )
+                                                                                .map(
+                                                                                    (
+                                                                                        dept
+                                                                                    ) =>
+                                                                                        dept
+                                                                                            .trim()
+                                                                                            .toUpperCase()
+                                                                                )
                                                                         )
                                                                     );
                                                                 return uniqueDepts.map(

@@ -101,6 +101,12 @@ done
 export SCRAPER_TERM="$TERM"
 echo ""
 
+# Load environment variables from .env file if it exists
+if [ -f "../.env" ]; then
+    echo "📄 Loading environment variables from .env file..."
+    export $(grep -v '^#' ../.env | xargs)
+fi
+
 # Check if environment variables are set and ask for database choice
 DATABASE_CHOICE=""
 if [ -n "$SCRAPER_PROD_DATABASE_URL" ] && [ -n "$SCRAPER_TEST_DATABASE_URL" ]; then
