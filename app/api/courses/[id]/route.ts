@@ -72,14 +72,8 @@ export async function GET(
 
         // Debug logging
         console.log(
-            `Course "${name}" - Found ${allCourseInstances.length} instances`
+            `Course "${name}" - Departments: ${JSON.stringify(departments)}`
         );
-        console.log(
-            "Course instances:",
-            allCourseInstances.map((c) => ({ code: c.code, name: c.name }))
-        );
-        console.log("All codes:", codes);
-        console.log("All departments:", departments);
         const professors = [
             ...new Set(
                 allCourseInstances.map((c) => c.professor_id).filter(Boolean)

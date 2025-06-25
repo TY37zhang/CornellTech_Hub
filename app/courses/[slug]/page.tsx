@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -361,35 +361,48 @@ export default function CourseDetailPage() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            {(() => {
-                                                const depts = Array.from(
-                                                    new Set(
-                                                        (
-                                                            course.departments ||
-                                                            []
-                                                        ).filter(Boolean)
+                                            {React.useMemo(() => {
+                                                // More robust deduplication that handles various data types
+                                                const rawDepts =
+                                                    course.departments || [];
+                                                const cleanDepts = rawDepts
+                                                    .filter(
+                                                        (dept) =>
+                                                            dept &&
+                                                            typeof dept ===
+                                                                "string" &&
+                                                            dept.trim() !== ""
                                                     )
-                                                );
+                                                    .map((dept) =>
+                                                        dept
+                                                            .trim()
+                                                            .toUpperCase()
+                                                    )
+                                                    .filter(
+                                                        (dept, index, arr) =>
+                                                            arr.indexOf(
+                                                                dept
+                                                            ) === index
+                                                    ); // Remove duplicates
+
                                                 console.log(
-                                                    "Departments:",
-                                                    course.departments,
-                                                    "Filtered:",
-                                                    depts
+                                                    `Departments debug - Raw: ${JSON.stringify(rawDepts)}, Clean: ${JSON.stringify(cleanDepts)}`
                                                 );
-                                                return depts.map(
-                                                    (dept, index) => (
+
+                                                return cleanDepts.map(
+                                                    (dept) => (
                                                         <Badge
-                                                            key={`${dept}-${index}`}
+                                                            key={dept}
                                                             variant={
                                                                 dept.toLowerCase() as any
                                                             }
                                                             className="min-w-[56px] justify-center text-center"
                                                         >
-                                                            {dept.toUpperCase()}
+                                                            {dept}
                                                         </Badge>
                                                     )
                                                 );
-                                            })()}
+                                            }, [course.departments])}
                                         </div>
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title}
