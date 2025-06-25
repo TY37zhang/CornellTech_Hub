@@ -169,7 +169,12 @@ export async function getAggregatedCourses(
 
         const codes = group.map((c) => c.code).sort();
         const departments = Array.from(
-            new Set(group.map((c) => c.department))
+            new Set(
+                group
+                    .map((c) => c.department)
+                    .filter(Boolean)
+                    .map((dept) => dept.trim().toUpperCase())
+            )
         ).sort();
         const professors = Array.from(
             new Set(group.map((c) => c.professor_id).filter(Boolean))

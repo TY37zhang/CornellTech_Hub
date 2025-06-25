@@ -152,12 +152,6 @@ export async function getForumPosts(
     offset = 0
 ): Promise<{ posts: ForumPostResponse[]; total: number }> {
     try {
-        console.log("Starting getForumPosts with params:", {
-            search,
-            limit,
-            offset,
-        });
-
         const totalPromise = prisma.forum_posts.count({
             where: {
                 status: "active",

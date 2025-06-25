@@ -53,7 +53,6 @@ export default function AdditionalQuestions({
     useEffect(() => {
         const loadSavedRequirements = async () => {
             try {
-                console.log("Loading saved requirements...");
                 const response = await fetch(
                     "/api/course-special-requirements"
                 );
@@ -66,14 +65,12 @@ export default function AdditionalQuestions({
                 }
 
                 const requirements = await response.json();
-                console.log("Loaded requirements:", requirements);
 
                 // Find ethics requirement
                 const ethicsReq = requirements.find(
                     (req: any) => req.requirement_type === "ethics_course"
                 );
                 if (ethicsReq) {
-                    console.log("Found ethics requirement:", ethicsReq);
                     setTookEthics(true);
                     setSelectedEthicsCourse(ethicsReq.selected_course_id || "");
                     setDeductedCategory(ethicsReq.deducted_from_category);
@@ -104,7 +101,6 @@ export default function AdditionalQuestions({
                     (req: any) => req.requirement_type === "techie_5901"
                 );
                 if (techieReq) {
-                    console.log("Found Techie 5901 requirement:", techieReq);
                     setTookTechie5901(true);
                     // Only call onTechie5901Change if we can actually add the credit
                     const jacobsProgrammaticCore =
@@ -149,12 +145,6 @@ export default function AdditionalQuestions({
         deductFromCategory?: string
     ) => {
         try {
-            console.log("Saving ethics requirement:", {
-                hasEthicsCourse,
-                course,
-                deductFromCategory,
-            });
-
             // Validate inputs
             if (hasEthicsCourse && (!course || !deductFromCategory)) {
                 throw new Error(
@@ -196,8 +186,6 @@ export default function AdditionalQuestions({
                 const error = await response.text();
                 throw new Error(error);
             }
-
-            console.log("Ethics requirement saved successfully");
         } catch (error) {
             console.error("Error saving ethics requirement:", error);
             // Revert state on error
@@ -219,8 +207,6 @@ export default function AdditionalQuestions({
     // Save Techie 5901 selection to database
     const saveTechie5901Requirement = async (hasTechie5901: boolean) => {
         try {
-            console.log("Saving Techie 5901 requirement:", { hasTechie5901 });
-
             // Validate program has JacobsProgrammaticCore requirement
             if (
                 hasTechie5901 &&
@@ -251,8 +237,6 @@ export default function AdditionalQuestions({
                 const error = await response.text();
                 throw new Error(error);
             }
-
-            console.log("Techie 5901 requirement saved successfully");
         } catch (error) {
             console.error("Error saving Techie 5901 requirement:", error);
             // Revert state on error
@@ -273,7 +257,6 @@ export default function AdditionalQuestions({
     };
 
     const handleEthicsCheckboxChange = async (checked: boolean) => {
-        console.log("Ethics checkbox changed:", checked);
         const newValue = checked as boolean;
         setTookEthics(newValue);
 
@@ -286,7 +269,6 @@ export default function AdditionalQuestions({
     };
 
     const handleEthicsCourseSelect = async (courseCode: string) => {
-        console.log("Ethics course selected:", courseCode);
         setSelectedEthicsCourse(courseCode);
         const selectedCourse = selectedCourses.find(
             (course) => course.code === courseCode
@@ -327,7 +309,6 @@ export default function AdditionalQuestions({
     };
 
     const handleTechie5901CheckboxChange = async (checked: boolean) => {
-        console.log("Techie 5901 checkbox changed:", checked);
         const newValue = checked as boolean;
         setTookTechie5901(newValue);
         onTechie5901Change(newValue);

@@ -62,6 +62,9 @@ TERM=""
 while true; do
     read -p "Enter term (e.g., FA25): " term_input
     
+    # Convert to uppercase for validation and usage
+    term_input=$(echo "$term_input" | tr '[:lower:]' '[:upper:]')
+    
     # Validate term format
     if [[ $term_input =~ ^(SP|SU|FA|WI)[0-9]{2}$ ]]; then
         TERM="$term_input"
@@ -100,6 +103,12 @@ done
 # Export term for the Python script
 export SCRAPER_TERM="$TERM"
 echo ""
+
+# Load environment variables from .env file if it exists
+if [ -f "../.env" ]; then
+    echo "📄 Loading environment variables from .env file..."
+    export $(grep -v '^#' ../.env | xargs)
+fi
 
 # Check if environment variables are set and ask for database choice
 DATABASE_CHOICE=""

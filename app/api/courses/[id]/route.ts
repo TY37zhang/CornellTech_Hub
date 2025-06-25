@@ -67,19 +67,14 @@ export async function GET(
         );
         const codes = [...new Set(allCourseInstances.map((c) => c.code))];
         const departments = [
-            ...new Set(allCourseInstances.map((c) => c.department)),
+            ...new Set(
+                allCourseInstances
+                    .map((c) => c.department)
+                    .filter(Boolean)
+                    .map((dept) => dept.trim().toUpperCase())
+            ),
         ];
 
-        // Debug logging
-        console.log(
-            `Course "${name}" - Found ${allCourseInstances.length} instances`
-        );
-        console.log(
-            "Course instances:",
-            allCourseInstances.map((c) => ({ code: c.code, name: c.name }))
-        );
-        console.log("All codes:", codes);
-        console.log("All departments:", departments);
         const professors = [
             ...new Set(
                 allCourseInstances.map((c) => c.professor_id).filter(Boolean)

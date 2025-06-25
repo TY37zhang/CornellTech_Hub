@@ -25,12 +25,6 @@ export async function sendForumReplyNotification(
             return;
         }
 
-        console.log("Found post for notification:", {
-            postId,
-            authorId: post.author_id,
-            title: post.title,
-        });
-
         const comment = await prisma.forum_comments.findUnique({
             where: { id: commentId },
             select: {
@@ -52,23 +46,8 @@ export async function sendForumReplyNotification(
             });
 
         if (!notificationPref?.notify_on_reply) {
-            console.log(
-                "No notification preference found or notifications disabled for post:",
-                postId,
-                "user:",
-                post.author_id,
-                "notification preference:",
-                notificationPref
-            );
             return; // Author doesn't want notifications
         }
-
-        console.log(
-            "Sending notification email for post:",
-            postId,
-            "to:",
-            post.users.email
-        );
 
         // Get the app URL from environment variables or use a default
         const appUrl =

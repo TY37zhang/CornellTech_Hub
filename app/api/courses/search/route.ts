@@ -49,7 +49,12 @@ export async function GET(request: Request) {
                     credits: first.credits,
                     description: first.description,
                     department: Array.from(
-                        new Set(group.map((c) => c.department))
+                        new Set(
+                            group
+                                .map((c) => c.department)
+                                .filter(Boolean)
+                                .map((dept) => dept.trim().toUpperCase())
+                        )
                     )
                         .sort()
                         .join(", "),
