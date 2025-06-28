@@ -54,11 +54,7 @@ export async function getAggregatedCourses(
         sortBy = "recent",
     } = options;
 
-    // 1. Fetch _some_ course rows from the DB instead of the entire table.
-    //    We over-fetch a small multiple of `limit` to keep diversity but avoid hundreds of rows.
-    const preSample = limit * 20; // e.g. homepage limit=3 → fetch at most 60 rows
-
-    // For sorting options that depend on review data, prioritize courses with reviews in pre-sampling
+    // For sorting options that depend on review data, prioritize courses with reviews
     // For other sorts, we can use course creation date as a reasonable default
     const reviewBasedSorts = [
         "recent",
@@ -126,7 +122,7 @@ export async function getAggregatedCourses(
             ],
         },
         orderBy: orderByClause,
-        take: preSample,
+        // Fetch all courses - removed pre-sampling limitation to display complete course catalog
         include: {
             course_reviews: {
                 select: {
