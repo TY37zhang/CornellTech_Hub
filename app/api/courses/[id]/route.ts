@@ -162,7 +162,7 @@ export async function GET(
         const reviewsResult = await prisma.course_reviews.findMany({
             where: { course_id: { in: courseIds } },
             include: {
-                users: { select: { name: true, avatar_url: true } },
+                users: { select: { id: true, name: true, avatar_url: true } },
                 courses: {
                     select: { professor_id: true, semester: true, year: true },
                 },
@@ -205,6 +205,7 @@ export async function GET(
                 grade: (review as any).grade ?? undefined,
                 createdAt: review.created_at,
                 author: review.users?.name ?? "Anonymous",
+                authorId: review.users?.id ?? null,
                 avatarUrl: review.users?.avatar_url ?? null,
                 professor: review.courses?.professor_id || "Unknown Professor",
                 term: `${review.courses?.semester || ""} ${review.courses?.year || ""}`.trim(),

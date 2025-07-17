@@ -10,6 +10,8 @@ import {
     Star,
     ThumbsDown,
     ThumbsUp,
+    Edit,
+    Trash2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -34,6 +36,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 // Define course type
 interface Review {
@@ -45,6 +58,7 @@ interface Review {
     value: number;
     createdAt: string;
     author: string;
+    authorId: string | null;
     avatarUrl: string | null;
     grade?: string;
     professor?: string;
@@ -190,6 +204,7 @@ export default function CourseDetailPage() {
     const [selectedProfessor, setSelectedProfessor] = useState<string>("all");
     const [selectedTerm, setSelectedTerm] = useState<string>("all");
     const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
+    const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
 
     // Move the useMemo hook before any conditional returns to avoid hook ordering issues
     const departmentBadges = React.useMemo(() => {
@@ -332,6 +347,39 @@ export default function CourseDetailPage() {
 
         const reviewUrl = `/courses/new-review?courseId=${course.id}&courseName=${encodeURIComponent(course.title)}&courseCode=${encodeURIComponent(course.id)}&professor=${encodeURIComponent(course.professor)}&category=${(course.departments?.[0] || "").toLowerCase()}`;
         router.push(reviewUrl);
+    };
+
+    const handleEditReview = (reviewId: string) => {
+        router.push(`/reviews/${reviewId}/edit`);
+    };
+
+    const handleDeleteReview = async (reviewId: string) => {
+        try {
+            const response = await fetch(`/api/user/reviews/${reviewId}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete review");
+            }
+
+            // Remove the deleted review from local state
+            if (course) {
+                const updatedReviews = course.reviews.filter((review) => review.id !== reviewId);
+                setCourse({
+                    ...course,
+                    reviews: updatedReviews,
+                    reviewCount: updatedReviews.length,
+                });
+            }
+
+            toast.success("Review deleted successfully");
+        } catch (error) {
+            console.error("Error deleting review:", error);
+            toast.error("Failed to delete review. Please try again.");
+        } finally {
+            setReviewToDelete(null);
+        }
     };
 
     if (isLoading) {
@@ -755,6 +803,26 @@ export default function CourseDetailPage() {
                                                         </div>
                                                     </div>
                                                 </CardContent>
+                                                {session?.user?.id === review.authorId && (
+                                                    <CardFooter className="flex items-center justify-end gap-2 pt-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleEditReview(review.id)}
+                                                            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => setReviewToDelete(review.id)}
+                                                            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </CardFooter>
+                                                )}
                                             </Card>
                                         ))}
 
@@ -801,6 +869,27 @@ export default function CourseDetailPage() {
                     </Tabs>
                 </section>
             </div>
+
+            {/* Delete Review Confirmation Dialog */}
+            <AlertDialog open={!!reviewToDelete} onOpenChange={() => setReviewToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Review</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this review? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => reviewToDelete && handleDeleteReview(reviewToDelete)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
