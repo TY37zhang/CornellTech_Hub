@@ -40,6 +40,7 @@ import {
     checkUserLikeStatus,
     toggleForumSave,
     checkUserSaveStatus,
+    updateForumComment,
 } from "../actions";
 import { LikeButton } from "@/app/components/LikeButton";
 import { CommentActions } from "@/app/components/CommentActions";
@@ -164,6 +165,9 @@ export default function ThreadContent({
     const [isLoading, setIsLoading] = useState(false);
     const [relatedThreads, setRelatedThreads] = useState<any[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editingContent, setEditingContent] = useState("");
+    const [isUpdatingComment, setIsUpdatingComment] = useState(false);
 
     // Function to refresh thread data
     const refreshThreadData = useCallback(async () => {
@@ -491,6 +495,69 @@ export default function ThreadContent({
         router.push(`/user/posts/${threadId}/edit`);
     };
 
+    // Handle comment edit
+    const handleEditComment = (commentId: string, currentContent: string) => {
+        setEditingCommentId(commentId);
+        setEditingContent(currentContent);
+    };
+
+    // Handle comment edit cancel
+    const handleCancelEdit = () => {
+        setEditingCommentId(null);
+        setEditingContent("");
+    };
+
+    // Handle comment edit save
+    const handleSaveEdit = async () => {
+        if (!session?.user?.id || !editingCommentId) {
+            return;
+        }
+
+        try {
+            setIsUpdatingComment(true);
+            
+            const result = await updateForumComment({
+                commentId: editingCommentId,
+                content: editingContent,
+                authorId: session.user.id,
+            });
+
+            if (result.success) {
+                // Update the comment in the local state
+                setSortedComments((prev) =>
+                    prev.map((comment) =>
+                        comment.id === editingCommentId
+                            ? { ...comment, content: editingContent }
+                            : comment
+                    )
+                );
+                
+                setEditingCommentId(null);
+                setEditingContent("");
+                
+                toast({
+                    title: "Comment updated",
+                    description: "Your comment has been updated successfully.",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error || "Failed to update comment.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error updating comment:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update comment.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsUpdatingComment(false);
+        }
+    };
+
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
         <Card>
@@ -808,9 +875,37 @@ export default function ThreadContent({
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="pb-3">
-                                                    <div className="whitespace-pre-line text-muted-foreground">
-                                                        {reply.content}
-                                                    </div>
+                                                    {editingCommentId === reply.id ? (
+                                                        <div className="space-y-3">
+                                                            <Textarea
+                                                                value={editingContent}
+                                                                onChange={(e) => setEditingContent(e.target.value)}
+                                                                className="min-h-[100px]"
+                                                                placeholder="Edit your comment..."
+                                                            />
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={handleSaveEdit}
+                                                                    disabled={isUpdatingComment || !editingContent.trim()}
+                                                                >
+                                                                    {isUpdatingComment ? "Saving..." : "Save"}
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={handleCancelEdit}
+                                                                    disabled={isUpdatingComment}
+                                                                >
+                                                                    Cancel
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="whitespace-pre-line text-muted-foreground">
+                                                            {reply.content}
+                                                        </div>
+                                                    )}
                                                 </CardContent>
                                                 <CardFooter className="flex items-center justify-between pt-1">
                                                     <div className="flex items-center gap-2">
@@ -828,18 +923,29 @@ export default function ThreadContent({
                                                     </div>
                                                     {session?.user?.id ===
                                                         reply.author.id && (
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger
-                                                                asChild
+                                                        <div className="flex items-center gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleEditComment(reply.id, reply.content)}
+                                                                className="text-muted-foreground hover:text-foreground"
+                                                                disabled={editingCommentId !== null}
                                                             >
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="text-muted-foreground hover:text-foreground"
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="text-muted-foreground hover:text-foreground"
+                                                                        disabled={editingCommentId !== null}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
                                                             <AlertDialogContent>
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>
@@ -879,6 +985,7 @@ export default function ThreadContent({
                                                                 </AlertDialogFooter>
                                                             </AlertDialogContent>
                                                         </AlertDialog>
+                                                        </div>
                                                     )}
                                                 </CardFooter>
                                             </Card>

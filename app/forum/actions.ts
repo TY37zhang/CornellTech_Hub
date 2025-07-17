@@ -545,6 +545,93 @@ export async function createForumComment({
     }
 }
 
+export async function updateForumComment({
+    commentId,
+    content,
+    authorId,
+}: {
+    commentId: string;
+    content: string;
+    authorId: string;
+}) {
+    try {
+        // Validate content
+        if (!content || typeof content !== 'string') {
+            return {
+                success: false,
+                error: "Content is required",
+            };
+        }
+
+        const trimmedContent = content.trim();
+        
+        if (trimmedContent.length < 1) {
+            return {
+                success: false,
+                error: "Comment cannot be empty",
+            };
+        }
+
+        if (trimmedContent.length > 2000) {
+            return {
+                success: false,
+                error: "Comment must be less than 2000 characters",
+            };
+        }
+
+        // Check if comment exists and belongs to the user
+        const existingComment = await prisma.forum_comments.findFirst({
+            where: {
+                id: commentId,
+                author_id: authorId,
+            },
+            select: {
+                id: true,
+                post_id: true,
+            },
+        });
+
+        if (!existingComment) {
+            return {
+                success: false,
+                error: "Comment not found or you don't have permission to edit it",
+            };
+        }
+
+        // Update the comment
+        const updatedComment = await prisma.forum_comments.update({
+            where: { id: commentId },
+            data: {
+                content: trimmedContent,
+                updated_at: new Date(),
+            },
+            select: {
+                id: true,
+                content: true,
+                updated_at: true,
+            },
+        });
+
+        // Revalidate the thread page to show the updated comment
+        revalidatePath(`/forum/${existingComment.post_id}`);
+        revalidatePath("/forum");
+
+        return { 
+            success: true, 
+            comment: updatedComment,
+        };
+    } catch (error) {
+        console.error("Error updating comment:", error);
+        return {
+            success: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to update comment",
+        };
+    }
+}
+
 export async function toggleForumLike(postId: string, userId: string) {
     try {
         // Check if a like already exists
