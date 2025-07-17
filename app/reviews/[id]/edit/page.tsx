@@ -59,6 +59,8 @@ export default function EditReviewPage({
     // Professor selection state
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
+    const [isManualProfessorEntry, setIsManualProfessorEntry] = useState(false);
+    const [manualProfessorName, setManualProfessorName] = useState("");
 
     useEffect(() => {
         const fetchReview = async () => {
@@ -170,7 +172,7 @@ export default function EditReviewPage({
                     value: formData.value,
                     content: formData.content,
                     grade: formData.grade === "none" ? null : formData.grade,
-                    professor: formData.professor,
+                    professor: isManualProfessorEntry ? manualProfessorName : formData.professor,
                 }),
             });
 
@@ -181,7 +183,7 @@ export default function EditReviewPage({
             }
 
             toast.success("Review updated successfully!");
-            router.push("/my-reviews");
+            router.back();
         } catch (error) {
             console.error("Error updating review:", error);
             toast.error(
@@ -246,36 +248,79 @@ export default function EditReviewPage({
                               !professors.every(
                                   (prof) => prof.name === "Unknown Professor"
                               ) ? (
-                                <Select
-                                    value={formData.professor}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            professor: value,
-                                        })
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="professor"
-                                        className={
-                                            errors.professor
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    >
-                                        <SelectValue placeholder="Select a professor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {professors.map((prof) => (
-                                            <SelectItem
-                                                key={prof.id}
-                                                value={prof.id}
+                                !isManualProfessorEntry ? (
+                                    <div className="space-y-2">
+                                        <Select
+                                            value={formData.professor}
+                                            onValueChange={(value) => {
+                                                if (value === "manual_entry") {
+                                                    setIsManualProfessorEntry(true);
+                                                    setManualProfessorName(formData.professor || "");
+                                                    setFormData({
+                                                        ...formData,
+                                                        professor: "",
+                                                    });
+                                                } else {
+                                                    setFormData({
+                                                        ...formData,
+                                                        professor: value,
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger
+                                                id="professor"
+                                                className={
+                                                    errors.professor
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
                                             >
-                                                {prof.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                                <SelectValue placeholder="Select a professor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {professors.map((prof) => (
+                                                    <SelectItem
+                                                        key={prof.id}
+                                                        value={prof.id}
+                                                    >
+                                                        {prof.name}
+                                                    </SelectItem>
+                                                ))}
+                                                <SelectItem value="manual_entry">
+                                                    ✏️ Add Custom Professor
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <Input
+                                            id="professor"
+                                            placeholder="Enter professor name"
+                                            value={manualProfessorName}
+                                            onChange={(e) =>
+                                                setManualProfessorName(e.target.value)
+                                            }
+                                            className={
+                                                errors.professor
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                setIsManualProfessorEntry(false);
+                                                setManualProfessorName("");
+                                            }}
+                                        >
+                                            ← Back to professor list
+                                        </Button>
+                                    </div>
+                                )
                             ) : (
                                 <div className="space-y-2">
                                     <Input
