@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, Trash2, Edit } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -297,18 +297,32 @@ export default function UserPostsPage() {
                                         <span>{post.likeCount} likes</span>
                                         <span>{post.viewCount} views</span>
 
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="ml-auto text-muted-foreground hover:text-destructive"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setPostToDelete(post.id);
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="ml-auto flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-muted-foreground hover:text-foreground"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    router.push(`/user/posts/${post.id}/edit`);
+                                                }}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-muted-foreground hover:text-destructive"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setPostToDelete(post.id);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </CardFooter>
                                 </Card>
                             ))

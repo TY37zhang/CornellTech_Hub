@@ -6,7 +6,8 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const post = await getForumPostById(params.id);
+        const { id } = await params;
+        const post = await getForumPostById(id);
 
         if (!post) {
             return NextResponse.json(
