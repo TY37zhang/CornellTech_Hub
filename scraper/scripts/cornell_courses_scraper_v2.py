@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class CornellCourseScraperV2:
-    def __init__(self, term=None, output_dir='output'):
+    def __init__(self, term=None, output_dir='output', url_params=None):
         self.base_url = "https://classes.cornell.edu"
         
         # Get term from environment variable or use default
@@ -31,7 +31,25 @@ class CornellCourseScraperV2:
             term = os.environ.get('SCRAPER_TERM', 'FA25')
         
         self.term = term
-        self.search_url = f"https://classes.cornell.edu/search/roster/{term}?q=&days-type=any&campus%5B%5D=NYT&crseAttrs-type=any&breadthDistr-type=any&pi="
+        
+        # Default URL parameters (updated to current Cornell format)
+        default_params = {
+            'q': '',
+            'days-type': 'any',
+            'campus[]': 'NYT',
+            'distrReqs-type': 'any',
+            'explStudies-type': 'any',
+            'pi': ''
+        }
+        
+        # Allow custom parameters to override defaults
+        if url_params:
+            default_params.update(url_params)
+        
+        # Build the search URL with parameters
+        from urllib.parse import urlencode
+        param_string = urlencode(default_params, doseq=True)
+        self.search_url = f"https://classes.cornell.edu/search/roster/{term}?{param_string}"
         
         # Set up output directory
         self.output_dir = output_dir
@@ -42,11 +60,19 @@ class CornellCourseScraperV2:
         
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive'
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"'
         })
     
     def _ensure_output_dir(self):
@@ -85,6 +111,38 @@ class CornellCourseScraperV2:
             raise ValueError(f"Invalid year code: {year_code}. Must be a 2-digit number")
         
         return season_map[season_code], year
+    
+    def validate_url(self, url):
+        """Validate that a URL is accessible before scraping"""
+        try:
+            logger.info(f"Validating URL accessibility: {url}")
+            response = self.session.head(url, timeout=10)
+            
+            if response.status_code == 200:
+                logger.info("✅ URL is accessible")
+                return True
+            elif response.status_code == 403:
+                logger.error(f"❌ Access forbidden (403) for URL: {url}")
+                logger.error("This usually means:")
+                logger.error("   • The term doesn't exist or isn't available yet")
+                logger.error("   • Cornell has blocked the request (check headers/parameters)")
+                logger.error("   • The URL parameters are incorrect or outdated")
+                return False
+            elif response.status_code == 404:
+                logger.error(f"❌ URL not found (404): {url}")
+                logger.error("   • The term may not exist in Cornell's system")
+                logger.error("   • Check the term format (e.g., FA25, SP24)")
+                return False
+            else:
+                logger.warning(f"⚠️ Unexpected status code {response.status_code} for URL: {url}")
+                # Continue anyway, might still work for GET requests
+                return True
+                
+        except Exception as e:
+            logger.error(f"❌ URL validation failed: {e}")
+            logger.error("   • Check your internet connection")
+            logger.error("   • Cornell's website may be temporarily unavailable")
+            return False
         
     # Database connection methods commented out - moved to separate script
     # def connect_to_db(self):
@@ -327,6 +385,11 @@ class CornellCourseScraperV2:
         try:
             logger.info(f"Fetching course listings from Cornell for {self.semester} {self.year} ({self.term})...")
             logger.info(f"URL: {self.search_url}")
+            
+            # Validate URL before attempting to scrape
+            if not self.validate_url(self.search_url):
+                raise ValueError(f"URL validation failed for {self.search_url}. Cannot proceed with scraping.")
+            
             response = self.session.get(self.search_url)
             
             # Check for specific error conditions
