@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { BookmarkPlus } from "lucide-react";
+import { BookmarkPlus, BookmarkX, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,30 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getUserSavedPosts } from "../actions";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { getUserSavedPosts, toggleForumSave } from "../actions";
 import { formatDate } from "@/lib/utils";
 
 export default function SavedPostsPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { toast } = useToast();
     const [savedPosts, setSavedPosts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [unsavingPosts, setUnsavingPosts] = useState<Set<string>>(new Set());
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        postId: string;
+        postTitle: string;
+    }>({ isOpen: false, postId: "", postTitle: "" });
 
     useEffect(() => {
         const fetchSavedPosts = async () => {
@@ -47,6 +63,64 @@ export default function SavedPostsPage() {
 
         fetchSavedPosts();
     }, [session, status, router]);
+
+    const showConfirmDialog = (postId: string, postTitle: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setConfirmDialog({ isOpen: true, postId, postTitle });
+    };
+
+    const handleConfirmUnsave = async () => {
+        const { postId } = confirmDialog;
+        setConfirmDialog({ isOpen: false, postId: "", postTitle: "" });
+        
+        if (!session?.user?.id) {
+            toast({
+                title: "Error",
+                description: "You must be logged in to unsave posts.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Optimistically remove the post from UI
+        const originalPosts = [...savedPosts];
+        setSavedPosts(prev => prev.filter(post => post.id !== postId));
+        setUnsavingPosts(prev => new Set(prev).add(postId));
+
+        try {
+            const result = await toggleForumSave(postId, session.user.id);
+            if (result.success && result.action === "unsaved") {
+                toast({
+                    title: "Success",
+                    description: "Post removed from saved posts.",
+                });
+            } else {
+                // Rollback on failure
+                setSavedPosts(originalPosts);
+                toast({
+                    title: "Error",
+                    description: result.error || "Failed to unsave post.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            // Rollback on error
+            setSavedPosts(originalPosts);
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred.",
+                variant: "destructive",
+            });
+        } finally {
+            setUnsavingPosts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(postId);
+                return newSet;
+            });
+        }
+    };
+
 
     if (status === "loading" || isLoading) {
         return (
@@ -112,9 +186,25 @@ export default function SavedPostsPage() {
                                                         )}
                                                     </CardDescription>
                                                 </div>
-                                                <Badge variant="outline">
-                                                    {post.category_name}
-                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline">
+                                                        {post.category_name}
+                                                    </Badge>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={(e) => showConfirmDialog(post.id, post.title, e)}
+                                                        disabled={unsavingPosts.has(post.id)}
+                                                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                                        title="Remove from saved posts"
+                                                    >
+                                                        {unsavingPosts.has(post.id) ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <BookmarkX className="h-4 w-4" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </CardHeader>
                                         <CardContent>
@@ -163,6 +253,52 @@ export default function SavedPostsPage() {
                     </div>
                 </section>
             </div>
+
+            {/* Confirmation Dialog */}
+            <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => 
+                setConfirmDialog({ isOpen: open, postId: "", postTitle: "" })
+            }>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Remove from Saved Posts</DialogTitle>
+                        <div className="text-sm text-muted-foreground space-y-3">
+                            <div>
+                                Are you sure you want to remove this post from your saved posts?
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border-l-4 border-red-200">
+                                <p className="font-medium text-gray-900 text-sm leading-relaxed">
+                                    {confirmDialog.postTitle}
+                                </p>
+                            </div>
+                            <div className="text-red-600 text-sm">
+                                This action cannot be undone.
+                            </div>
+                        </div>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setConfirmDialog({ isOpen: false, postId: "", postTitle: "" })}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="destructive" 
+                            onClick={handleConfirmUnsave}
+                            disabled={unsavingPosts.has(confirmDialog.postId)}
+                        >
+                            {unsavingPosts.has(confirmDialog.postId) ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    Removing...
+                                </>
+                            ) : (
+                                "Remove"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
