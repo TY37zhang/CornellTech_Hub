@@ -74,7 +74,7 @@ export async function POST(request: Request) {
                 rating: validatedData.value,
                 overall_rating: validatedData.overall_rating,
                 content: validatedData.review,
-                grade: validatedData.grade,
+                grade: validatedData.grade === "" || validatedData.grade === "none" ? null : validatedData.grade,
             },
         });
 

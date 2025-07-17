@@ -200,7 +200,7 @@ export default function NewReviewPage() {
                 },
                 body: JSON.stringify({
                     ...formData,
-                    grade: formData.grade === "none" ? null : formData.grade,
+                    grade: formData.grade === "none" || formData.grade === "" ? null : formData.grade,
                     courseId: formData.courseCode || formData.courseId,
                     category: formData.categories.join(", "),
                 }),

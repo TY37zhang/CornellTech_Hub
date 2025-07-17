@@ -757,16 +757,15 @@ export default function CourseDetailPage() {
                                                     <p className="text-sm text-muted-foreground">
                                                         {review.content}
                                                     </p>
-                                                    <div className="mt-4 grid grid-cols-2 gap-y-1 gap-x-4 text-sm md:flex md:flex-row md:flex-wrap md:items-center md:gap-x-6 md:gap-y-1">
+                                                </CardContent>
+                                                <CardFooter className="flex items-center justify-between pt-2">
+                                                    <div className="grid grid-cols-2 gap-y-1 gap-x-4 text-sm md:flex md:flex-row md:flex-wrap md:items-center md:gap-x-6 md:gap-y-1">
                                                         <div>
                                                             <span className="font-semibold">
                                                                 Difficulty:
                                                             </span>
                                                             <span className="ml-1 font-normal">
-                                                                {
-                                                                    review.difficulty
-                                                                }
-                                                                /5
+                                                                {review.difficulty}/5
                                                             </span>
                                                         </div>
                                                         <div>
@@ -782,10 +781,7 @@ export default function CourseDetailPage() {
                                                                 Workload:
                                                             </span>
                                                             <span className="ml-1 font-normal">
-                                                                {
-                                                                    review.workload
-                                                                }
-                                                                /5
+                                                                {review.workload}/5
                                                             </span>
                                                         </div>
                                                         <div>
@@ -793,36 +789,33 @@ export default function CourseDetailPage() {
                                                                 Grade:
                                                             </span>
                                                             <span className="ml-1 font-normal">
-                                                                {review.grade !==
-                                                                    undefined &&
-                                                                review.grade !==
-                                                                    null
+                                                                {review.grade !== undefined && review.grade !== null
                                                                     ? review.grade
                                                                     : "N/A"}
                                                             </span>
                                                         </div>
                                                     </div>
-                                                </CardContent>
-                                                {session?.user?.id === review.authorId && (
-                                                    <CardFooter className="flex items-center justify-end gap-2 pt-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleEditReview(review.id)}
-                                                            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => setReviewToDelete(review.id)}
-                                                            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </CardFooter>
-                                                )}
+                                                    {session?.user?.id === review.authorId && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleEditReview(review.id)}
+                                                                className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => setReviewToDelete(review.id)}
+                                                                className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </CardFooter>
                                             </Card>
                                         ))}
 
