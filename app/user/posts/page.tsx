@@ -245,7 +245,7 @@ export default function UserPostsPage() {
                                     className="hover:shadow-md transition-shadow relative group"
                                 >
                                     <Link
-                                        href={`/forum/${post.slug}`}
+                                        href={`/forum/${post.id}`}
                                         className="block"
                                     >
                                         <CardHeader>

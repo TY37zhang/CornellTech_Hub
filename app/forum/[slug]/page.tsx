@@ -154,6 +154,14 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
+// Helper to extract UUID from slug or return original if already UUID
+function extractUUID(id: string): string {
+    const match = id.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+    );
+    return match ? match[0] : id;
+}
+
 export default async function ThreadPage({ params }: PageProps) {
     // Await the params object
     const resolvedParams = await params;
@@ -163,8 +171,11 @@ export default async function ThreadPage({ params }: PageProps) {
         notFound();
     }
 
+    // Extract UUID from slug
+    const actualId = extractUUID(resolvedParams.slug);
+
     // Get the data
-    const data = await getThreadData(resolvedParams.slug);
+    const data = await getThreadData(actualId);
     if (!data) {
         notFound();
     }
@@ -174,7 +185,7 @@ export default async function ThreadPage({ params }: PageProps) {
             <ThreadContent
                 threadData={data.threadData}
                 comments={data.comments}
-                threadId={resolvedParams.slug}
+                threadId={actualId}
             />
         </Suspense>
     );

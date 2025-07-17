@@ -31,7 +31,6 @@ export async function GET(
             created_at: post.created_at,
             updated_at: post.updated_at,
             category: post.forum_categories?.name ?? null,
-            slug: post.slug ?? null,
             author_id: post.author_id,
         });
     } catch (error) {
