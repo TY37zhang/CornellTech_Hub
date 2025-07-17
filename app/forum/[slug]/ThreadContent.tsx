@@ -15,6 +15,7 @@ import {
     ThumbsUp,
     SortAsc,
     Trash2,
+    Edit,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -162,6 +163,7 @@ export default function ThreadContent({
     const [sortedComments, setSortedComments] = useState(initialComments);
     const [isLoading, setIsLoading] = useState(false);
     const [relatedThreads, setRelatedThreads] = useState<any[]>([]);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     // Function to refresh thread data
     const refreshThreadData = useCallback(async () => {
@@ -441,6 +443,54 @@ export default function ThreadContent({
         }
     };
 
+    // Delete the post
+    const handleDeletePost = async () => {
+        if (!session?.user?.id) {
+            router.push("/auth/signin");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/user/posts/${threadId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                toast({
+                    title: "Post deleted",
+                    description: "Your post has been deleted successfully.",
+                });
+                // Redirect to forum after successful deletion
+                router.push("/forum");
+            } else {
+                const data = await response.json();
+                toast({
+                    title: "Error",
+                    description: data.error || "Failed to delete post.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            toast({
+                title: "Error",
+                description: "Failed to delete post.",
+                variant: "destructive",
+            });
+        } finally {
+            setShowDeleteDialog(false);
+        }
+    };
+
+    // Handle edit post navigation
+    const handleEditPost = () => {
+        if (!session?.user?.id) {
+            router.push("/auth/signin");
+            return;
+        }
+        router.push(`/user/posts/${threadId}/edit`);
+    };
+
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
         <Card>
@@ -622,6 +672,26 @@ export default function ThreadContent({
                                             </Button>
                                         </div>
                                     </div>
+                                    {session?.user?.id === threadData.author.id && (
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={handleEditPost}
+                                                className="text-muted-foreground hover:text-foreground"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setShowDeleteDialog(true)}
+                                                className="text-muted-foreground hover:text-foreground"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    )}
                                 </CardFooter>
                             </Card>
 
@@ -765,7 +835,7 @@ export default function ThreadContent({
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="text-destructive hover:bg-destructive/10"
+                                                                    className="text-muted-foreground hover:text-foreground"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </Button>
@@ -958,6 +1028,28 @@ export default function ThreadContent({
                     </div>
                 </section>
             </div>
+
+            {/* Delete Post Confirmation Modal */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this post? This action cannot be undone.
+                            All comments and likes will also be permanently deleted.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeletePost}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

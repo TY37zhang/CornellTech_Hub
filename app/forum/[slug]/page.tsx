@@ -97,6 +97,7 @@ async function getThreadData(slug: string) {
         category: post.forum_categories.name,
         createdAt: formatDate(post.created_at),
         author: {
+            id: post.users.id,
             name: post.users.name,
             avatar:
                 post.users.avatar_url || "/placeholder.svg?height=40&width=40",
