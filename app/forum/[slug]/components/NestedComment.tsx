@@ -281,8 +281,8 @@ export default function NestedComment({
                                                 "Unknown User"}
                                             {isOriginalPoster && (
                                                 <Badge
-                                                    variant="secondary"
-                                                    className="ml-2 text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50"
+                                                    variant="outline"
+                                                    className="ml-2 text-xs px-1.5 py-0.5 !bg-blue-50 !text-blue-700 !border-blue-200 font-medium dark:!bg-blue-950/30 dark:!text-blue-300 dark:!border-blue-800/50"
                                                 >
                                                     OP
                                                 </Badge>
