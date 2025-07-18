@@ -88,12 +88,12 @@ export function CommentActions({
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5 -ml-3">
             <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1 ${
-                    userVote === "upvote" ? "text-primary bg-primary/10" : ""
+                className={`gap-1 h-8 px-1 ${
+                    userVote === "upvote" ? "text-primary" : ""
                 }`}
                 onClick={() => handleVote("upvote")}
                 disabled={isLoading}
@@ -108,8 +108,8 @@ export function CommentActions({
             <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1 ${
-                    userVote === "downvote" ? "text-primary bg-primary/10" : ""
+                className={`gap-1 h-8 px-1 ${
+                    userVote === "downvote" ? "text-primary" : ""
                 }`}
                 onClick={() => handleVote("downvote")}
                 disabled={isLoading}

@@ -8,14 +8,10 @@ import {
     ArrowLeft,
     BookmarkPlus,
     BookmarkCheck,
-    Flag,
     MessageSquare,
-    Share2,
-    ThumbsDown,
     ThumbsUp,
-    SortAsc,
-    Trash2,
     Edit,
+    Trash2,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -35,15 +31,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
     createForumComment,
     getForumComments,
-    getForumPostById,
-    toggleForumLike,
-    checkUserLikeStatus,
     toggleForumSave,
     checkUserSaveStatus,
-    updateForumComment,
 } from "../actions";
 import { LikeButton } from "@/app/components/LikeButton";
-import { CommentActions } from "@/app/components/CommentActions";
+import NestedComment from "./components/NestedComment";
 import {
     Select,
     SelectContent,
@@ -53,7 +45,6 @@ import {
 } from "@/components/ui/select";
 import {
     AlertDialog,
-    AlertDialogTrigger,
     AlertDialogContent,
     AlertDialogHeader,
     AlertDialogTitle,
@@ -83,6 +74,94 @@ function formatDate(date: string | Date): string {
     return `${Math.floor(diffDays / 365)} years ago`;
 }
 
+// Helper function to format nested comments for display
+function formatNestedComments(comments: any[]): any[] {
+    const formatComment = (comment: any): any => ({
+        id: comment.id,
+        content: comment.content,
+        createdAt: formatDate(comment.created_at),
+        like_count: comment.like_count || 0,
+        dislike_count: comment.dislike_count || 0,
+        depth: comment.depth || 0,
+        isDeleted: comment.is_deleted || false,
+        author: {
+            id: comment.author_id,
+            name: comment.author_name,
+            avatar:
+                comment.author_avatar || "/placeholder.svg?height=40&width=40",
+            program: "Student",
+            joinDate: formatDate(comment.created_at),
+        },
+        replies: comment.replies ? comment.replies.map(formatComment) : [],
+    });
+
+    return comments.map(formatComment);
+}
+
+// Helper function to remove a comment by ID from nested structure
+function removeCommentById(comments: any[], commentId: string): any[] {
+    return comments.reduce((acc: any[], comment) => {
+        if (comment.id === commentId) {
+            // Skip this comment (remove it)
+            return acc;
+        }
+
+        // Keep the comment but check its replies
+        const updatedComment = {
+            ...comment,
+            replies: comment.replies
+                ? removeCommentById(comment.replies, commentId)
+                : [],
+        };
+
+        return [...acc, updatedComment];
+    }, []);
+}
+
+// Helper function to update a comment by ID in nested structure
+function updateCommentById(
+    comments: any[],
+    commentId: string,
+    newContent: string
+): any[] {
+    return comments.map((comment) => {
+        if (comment.id === commentId) {
+            return { ...comment, content: newContent };
+        }
+
+        if (comment.replies) {
+            return {
+                ...comment,
+                replies: updateCommentById(
+                    comment.replies,
+                    commentId,
+                    newContent
+                ),
+            };
+        }
+
+        return comment;
+    });
+}
+
+// Helper function to mark a comment as deleted by ID in nested structure
+function markCommentAsDeletedById(comments: any[], commentId: string): any[] {
+    return comments.map((comment) => {
+        if (comment.id === commentId) {
+            return { ...comment, isDeleted: true };
+        }
+
+        if (comment.replies) {
+            return {
+                ...comment,
+                replies: markCommentAsDeletedById(comment.replies, commentId),
+            };
+        }
+
+        return comment;
+    });
+}
+
 // Add this new function at the top level
 async function getSortedComments(postId: string, sortBy: string) {
     try {
@@ -109,22 +188,7 @@ async function getSortedComments(postId: string, sortBy: string) {
                 break;
         }
 
-        return sortedComments.map((comment) => ({
-            id: comment.id,
-            content: comment.content,
-            createdAt: formatDate(comment.created_at),
-            like_count: comment.like_count || 0,
-            dislike_count: comment.dislike_count || 0,
-            author: {
-                id: comment.author_id,
-                name: comment.author_name,
-                avatar:
-                    comment.author_avatar ||
-                    "/placeholder.svg?height=40&width=40",
-                program: "Student",
-                joinDate: formatDate(comment.created_at),
-            },
-        }));
+        return formatNestedComments(sortedComments);
     } catch (error) {
         console.error("Error sorting comments:", error);
         return [];
@@ -150,51 +214,23 @@ export default function ThreadContent({
     comments: initialComments,
     threadId,
 }: ThreadContentProps) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
     const [threadData, setThreadData] = useState(initialThreadData);
-    const [comments, setComments] = useState(initialComments);
+    const [comments, setComments] = useState(
+        formatNestedComments(initialComments)
+    );
     const [newComment, setNewComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [commentError, setCommentError] = useState<string | null>(null);
-    const [isLikeLoading, setIsLikeLoading] = useState(false);
-    const [hasLiked, setHasLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [sortBy, setSortBy] = useState<string>("recent");
-    const [sortedComments, setSortedComments] = useState(initialComments);
+    const [sortedComments, setSortedComments] = useState(
+        formatNestedComments(initialComments)
+    );
     const [isLoading, setIsLoading] = useState(false);
     const [relatedThreads, setRelatedThreads] = useState<any[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-    const [editingContent, setEditingContent] = useState("");
-    const [isUpdatingComment, setIsUpdatingComment] = useState(false);
-
-    // Function to refresh thread data
-    const refreshThreadData = useCallback(async () => {
-        try {
-            const response = await fetch(`/api/forum/posts/${threadId}`);
-            const data = await response.json();
-            if (data.success) {
-                setThreadData(data.post);
-            }
-        } catch (error) {
-            console.error("Error refreshing thread data:", error);
-        }
-    }, [threadId]);
-
-    // Check initial like status
-    useEffect(() => {
-        async function checkLikeStatus() {
-            if (session?.user?.id) {
-                const { hasLiked: liked } = await checkUserLikeStatus(
-                    threadId,
-                    session.user.id
-                );
-                setHasLiked(liked);
-            }
-        }
-        checkLikeStatus();
-    }, [session?.user?.id, threadId]);
 
     // Add this useEffect to check initial save status
     useEffect(() => {
@@ -261,23 +297,8 @@ export default function ThreadContent({
                 // Fetch updated comments
                 const updatedComments = await getForumComments(threadId);
 
-                // Format the comments
-                const formattedComments = updatedComments.map((comment) => ({
-                    id: comment.id,
-                    content: comment.content,
-                    createdAt: formatDate(comment.created_at),
-                    like_count: comment.like_count || 0,
-                    dislike_count: comment.dislike_count || 0,
-                    author: {
-                        id: comment.author_id,
-                        name: comment.author_name,
-                        avatar:
-                            comment.author_avatar ||
-                            "/placeholder.svg?height=40&width=40",
-                        program: "Student",
-                        joinDate: formatDate(comment.created_at),
-                    },
-                }));
+                // Format the comments (they now come with nested structure)
+                const formattedComments = formatNestedComments(updatedComments);
 
                 // Update the comments state
                 setComments(formattedComments);
@@ -296,38 +317,6 @@ export default function ThreadContent({
             setCommentError("An unexpected error occurred");
         } finally {
             setSubmitting(false);
-        }
-    };
-
-    const handleLike = async () => {
-        if (!session?.user) {
-            router.push("/auth/signin");
-            return;
-        }
-
-        try {
-            setIsLikeLoading(true);
-            const result = await toggleForumLike(threadId, session.user.id);
-
-            if (result.success) {
-                // Update local state
-                setHasLiked(result.action === "liked");
-                // Refresh the entire thread data
-                await refreshThreadData();
-            }
-        } catch (error) {
-            console.error("Error updating like:", error);
-        } finally {
-            setIsLikeLoading(false);
-        }
-    };
-
-    const handleShare = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            // You could add a toast notification here
-        } catch (err) {
-            console.error("Failed to copy link:", err);
         }
     };
 
@@ -370,17 +359,10 @@ export default function ThreadContent({
         }
     };
 
-    const handleReport = () => {
-        if (!session?.user) {
-            router.push("/auth/signin");
-            return;
-        }
-        // TODO: Implement report dialog/form
-    };
-
     // Handle sort change
     const handleSort = async (value: string) => {
         try {
+            setIsLoading(true);
             setSortBy(value);
             const sorted = await getSortedComments(threadId, value);
             setSortedComments(sorted);
@@ -391,6 +373,8 @@ export default function ThreadContent({
                 description: "Failed to sort comments. Please try again.",
                 variant: "destructive",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -398,54 +382,6 @@ export default function ThreadContent({
     useEffect(() => {
         handleSort("recent");
     }, []);
-
-    // Delete a comment
-    const handleDeleteComment = async (commentId: string) => {
-        if (!session?.user?.id) {
-            router.push("/auth/signin");
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/comments/${commentId}`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: session.user.id }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Remove comment locally
-                setSortedComments((prev) =>
-                    prev.filter((c) => c.id !== commentId)
-                );
-                // Decrement reply count in thread stats
-                setThreadData((prev: any) => ({
-                    ...prev,
-                    stats: {
-                        ...prev.stats,
-                        replies: (prev.stats.replies || 1) - 1,
-                    },
-                }));
-
-                toast({ title: "Comment deleted" });
-            } else {
-                toast({
-                    title: "Error",
-                    description: data.error || "Failed to delete comment.",
-                    variant: "destructive",
-                });
-            }
-        } catch (error) {
-            console.error("Error deleting comment:", error);
-            toast({
-                title: "Error",
-                description: "Failed to delete comment.",
-                variant: "destructive",
-            });
-        }
-    };
 
     // Delete the post
     const handleDeletePost = async () => {
@@ -493,69 +429,6 @@ export default function ThreadContent({
             return;
         }
         router.push(`/user/posts/${threadId}/edit`);
-    };
-
-    // Handle comment edit
-    const handleEditComment = (commentId: string, currentContent: string) => {
-        setEditingCommentId(commentId);
-        setEditingContent(currentContent);
-    };
-
-    // Handle comment edit cancel
-    const handleCancelEdit = () => {
-        setEditingCommentId(null);
-        setEditingContent("");
-    };
-
-    // Handle comment edit save
-    const handleSaveEdit = async () => {
-        if (!session?.user?.id || !editingCommentId) {
-            return;
-        }
-
-        try {
-            setIsUpdatingComment(true);
-            
-            const result = await updateForumComment({
-                commentId: editingCommentId,
-                content: editingContent,
-                authorId: session.user.id,
-            });
-
-            if (result.success) {
-                // Update the comment in the local state
-                setSortedComments((prev) =>
-                    prev.map((comment) =>
-                        comment.id === editingCommentId
-                            ? { ...comment, content: editingContent }
-                            : comment
-                    )
-                );
-                
-                setEditingCommentId(null);
-                setEditingContent("");
-                
-                toast({
-                    title: "Comment updated",
-                    description: "Your comment has been updated successfully.",
-                });
-            } else {
-                toast({
-                    title: "Error",
-                    description: result.error || "Failed to update comment.",
-                    variant: "destructive",
-                });
-            }
-        } catch (error) {
-            console.error("Error updating comment:", error);
-            toast({
-                title: "Error",
-                description: "Failed to update comment.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsUpdatingComment(false);
-        }
     };
 
     // Modify the Reply Form section to show login prompt if not authenticated
@@ -739,7 +612,8 @@ export default function ThreadContent({
                                             </Button>
                                         </div>
                                     </div>
-                                    {session?.user?.id === threadData.author.id && (
+                                    {session?.user?.id ===
+                                        threadData.author.id && (
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 variant="ghost"
@@ -752,7 +626,9 @@ export default function ThreadContent({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => setShowDeleteDialog(true)}
+                                                onClick={() =>
+                                                    setShowDeleteDialog(true)
+                                                }
                                                 className="text-muted-foreground hover:text-foreground"
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -802,193 +678,76 @@ export default function ThreadContent({
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                                     </div>
                                 ) : (
-                                    <div className="space-y-4">
-                                        {sortedComments.map((reply) => (
-                                            <Card
-                                                key={reply.id}
-                                                className={
-                                                    reply.isAccepted
-                                                        ? "border-green-500 dark:border-green-700"
-                                                        : ""
-                                                }
-                                            >
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <Avatar className="h-10 w-10">
-                                                                <AvatarImage
-                                                                    src={
-                                                                        reply
-                                                                            .author
-                                                                            .avatar ||
-                                                                        "/placeholder.svg"
-                                                                    }
-                                                                    alt={
-                                                                        reply
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                />
-                                                                <AvatarFallback>
-                                                                    {
-                                                                        reply
-                                                                            .author
-                                                                            .name[0]
-                                                                    }
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div>
-                                                                <CardTitle className="text-base">
-                                                                    {
-                                                                        reply
-                                                                            .author
-                                                                            .name
-                                                                    }
-                                                                </CardTitle>
-                                                                <CardDescription>
-                                                                    {
-                                                                        reply
-                                                                            .author
-                                                                            .program
-                                                                    }{" "}
-                                                                    • Joined{" "}
-                                                                    {
-                                                                        reply
-                                                                            .author
-                                                                            .joinDate
-                                                                    }
-                                                                </CardDescription>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {reply.isAccepted && (
-                                                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400">
-                                                                    Best Answer
-                                                                </Badge>
-                                                            )}
-                                                            <span className="text-sm text-muted-foreground">
-                                                                {
-                                                                    reply.createdAt
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent className="pb-3">
-                                                    {editingCommentId === reply.id ? (
-                                                        <div className="space-y-3">
-                                                            <Textarea
-                                                                value={editingContent}
-                                                                onChange={(e) => setEditingContent(e.target.value)}
-                                                                className="min-h-[100px]"
-                                                                placeholder="Edit your comment..."
-                                                            />
-                                                            <div className="flex gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    onClick={handleSaveEdit}
-                                                                    disabled={isUpdatingComment || !editingContent.trim()}
-                                                                >
-                                                                    {isUpdatingComment ? "Saving..." : "Save"}
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={handleCancelEdit}
-                                                                    disabled={isUpdatingComment}
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="whitespace-pre-line text-muted-foreground">
-                                                            {reply.content}
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                                <CardFooter className="flex items-center justify-between pt-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <CommentActions
-                                                            commentId={reply.id}
-                                                            initialLikeCount={
-                                                                reply.like_count ||
-                                                                0
-                                                            }
-                                                            initialDislikeCount={
-                                                                reply.dislike_count ||
-                                                                0
-                                                            }
-                                                        />
-                                                    </div>
-                                                    {session?.user?.id ===
-                                                        reply.author.id && (
-                                                        <div className="flex items-center gap-2">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => handleEditComment(reply.id, reply.content)}
-                                                                className="text-muted-foreground hover:text-foreground"
-                                                                disabled={editingCommentId !== null}
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger
-                                                                    asChild
-                                                                >
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="text-muted-foreground hover:text-foreground"
-                                                                        disabled={editingCommentId !== null}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
-                                                                        Delete
-                                                                        comment
-                                                                    </AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        This
-                                                                        action
-                                                                        cannot
-                                                                        be
-                                                                        undone.
-                                                                        This
-                                                                        will
-                                                                        permanently
-                                                                        remove
-                                                                        your
-                                                                        comment
-                                                                        from the
-                                                                        thread.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>
-                                                                        Cancel
-                                                                    </AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                        onClick={() =>
-                                                                            handleDeleteComment(
-                                                                                reply.id
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        Delete
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                        </div>
-                                                    )}
-                                                </CardFooter>
-                                            </Card>
+                                    <div className="space-y-2">
+                                        {sortedComments.map((comment) => (
+                                            <NestedComment
+                                                key={comment.id}
+                                                comment={comment}
+                                                threadId={threadId}
+                                                onCommentDeleted={(
+                                                    commentId
+                                                ) => {
+                                                    setSortedComments((prev) =>
+                                                        removeCommentById(
+                                                            prev,
+                                                            commentId
+                                                        )
+                                                    );
+                                                    // Decrement reply count in thread stats
+                                                    setThreadData(
+                                                        (prev: any) => ({
+                                                            ...prev,
+                                                            stats: {
+                                                                ...prev.stats,
+                                                                replies:
+                                                                    (prev.stats
+                                                                        .replies ||
+                                                                        1) - 1,
+                                                            },
+                                                        })
+                                                    );
+                                                }}
+                                                onCommentMarkedDeleted={(
+                                                    commentId
+                                                ) => {
+                                                    setSortedComments((prev) =>
+                                                        markCommentAsDeletedById(
+                                                            prev,
+                                                            commentId
+                                                        )
+                                                    );
+                                                    // Don't decrement reply count for soft deletion
+                                                }}
+                                                onCommentUpdated={(
+                                                    commentId,
+                                                    newContent
+                                                ) => {
+                                                    setSortedComments((prev) =>
+                                                        updateCommentById(
+                                                            prev,
+                                                            commentId,
+                                                            newContent
+                                                        )
+                                                    );
+                                                }}
+                                                onReplyAdded={async () => {
+                                                    // Refresh comments to get the latest data
+                                                    const updatedComments =
+                                                        await getForumComments(
+                                                            threadId
+                                                        );
+                                                    const formattedComments =
+                                                        formatNestedComments(
+                                                            updatedComments
+                                                        );
+                                                    setSortedComments(
+                                                        formattedComments
+                                                    );
+                                                    setComments(
+                                                        formattedComments
+                                                    );
+                                                }}
+                                            />
                                         ))}
                                     </div>
                                 )}
@@ -1137,13 +896,17 @@ export default function ThreadContent({
             </div>
 
             {/* Delete Post Confirmation Modal */}
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Post</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this post? This action cannot be undone.
-                            All comments and likes will also be permanently deleted.
+                            Are you sure you want to delete this post? This
+                            action cannot be undone. All comments and likes will
+                            also be permanently deleted.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

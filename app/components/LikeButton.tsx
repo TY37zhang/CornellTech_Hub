@@ -44,7 +44,7 @@ export function LikeButton({ postId, initialLikeCount }: LikeButtonProps) {
 
             if (result.success) {
                 setHasLiked(result.action === "liked");
-                setLikeCount(result.newCount);
+                setLikeCount(result.newCount ?? likeCount);
             }
         } catch (error) {
             console.error("Error updating like:", error);
@@ -57,7 +57,7 @@ export function LikeButton({ postId, initialLikeCount }: LikeButtonProps) {
         <Button
             variant="ghost"
             size="sm"
-            className={`gap-1 ${hasLiked ? "text-primary bg-primary/10" : ""}`}
+            className={`gap-1 ${hasLiked ? "text-primary" : ""}`}
             onClick={handleLike}
             disabled={isLikeLoading}
         >

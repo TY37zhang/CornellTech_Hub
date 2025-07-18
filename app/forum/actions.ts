@@ -431,6 +431,31 @@ interface ForumCommentResponse {
     author_id: string;
     like_count: number;
     dislike_count: number;
+    parent_id: string | null;
+    depth: number;
+    is_deleted: boolean;
+    replies?: ForumCommentResponse[];
+}
+
+// Utility function to build nested comment tree from flat array
+function buildCommentTree(
+    comments: ForumCommentResponse[],
+    parentId: string | null = null,
+    depth = 0,
+    maxDepth = 5
+): ForumCommentResponse[] {
+    if (depth > maxDepth) {
+        return []; // Prevent excessive nesting
+    }
+
+    return comments
+        .filter((comment) => comment.parent_id === parentId)
+        .map((comment) => ({
+            ...comment,
+            depth,
+            replies: buildCommentTree(comments, comment.id, depth + 1, maxDepth),
+        }))
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 }
 
 export async function getForumComments(
@@ -478,7 +503,7 @@ export async function getForumComments(
             },
         });
 
-        return comments.map((comment) => ({
+        const flatComments = comments.map((comment) => ({
             id: comment.id,
             content: comment.content,
             created_at: comment.created_at?.toISOString() ?? "",
@@ -487,7 +512,13 @@ export async function getForumComments(
             author_id: comment.users.id,
             like_count: comment.like_count,
             dislike_count: comment.dislike_count,
+            parent_id: comment.parent_id,
+            depth: 0, // Will be calculated in buildCommentTree
+            is_deleted: comment.is_deleted,
         }));
+
+        // Transform flat comments into nested tree structure
+        return buildCommentTree(flatComments);
     } catch (error) {
         console.error("Error fetching forum comments:", error);
         return [];
@@ -498,10 +529,12 @@ export async function createForumComment({
     content,
     postId,
     authorId,
+    parentId,
 }: {
     content: string;
     postId: string;
     authorId: string;
+    parentId?: string;
 }) {
     try {
         // Insert the comment into forum_comments table using Prisma
@@ -510,6 +543,7 @@ export async function createForumComment({
                 content,
                 post_id: postId,
                 author_id: authorId,
+                parent_id: parentId || null,
             },
             select: {
                 id: true,

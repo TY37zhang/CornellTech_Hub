@@ -4,13 +4,47 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// Helper function to recursively clean up deleted parent comments that have no remaining replies
+async function cleanupDeletedParentComments(parentId: string) {
+    const parentComment = await prisma.forum_comments.findUnique({
+        where: { id: parentId },
+        select: {
+            id: true,
+            is_deleted: true,
+            parent_id: true,
+            other_forum_comments: {
+                select: { id: true }
+            }
+        }
+    });
+
+    if (!parentComment) {
+        return; // Parent comment doesn't exist, nothing to clean up
+    }
+
+    // Only clean up if the parent is deleted and has no remaining replies
+    if (parentComment.is_deleted && parentComment.other_forum_comments.length === 0) {
+        const grandparentId = parentComment.parent_id;
+        
+        // Delete the parent comment completely
+        await prisma.forum_comments.delete({
+            where: { id: parentId }
+        });
+        
+        // Recursively check if grandparent should be cleaned up
+        if (grandparentId) {
+            await cleanupDeletedParentComments(grandparentId);
+        }
+    }
+}
+
 export async function PUT(
     request: Request,
     { params }: { params: { commentId: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
-        
+
         if (!session?.user?.id) {
             return NextResponse.json(
                 { success: false, error: "Unauthorized" },
@@ -20,7 +54,7 @@ export async function PUT(
 
         const { content } = await request.json();
 
-        if (!content || typeof content !== 'string') {
+        if (!content || typeof content !== "string") {
             return NextResponse.json(
                 { success: false, error: "Content is required" },
                 { status: 400 }
@@ -28,7 +62,7 @@ export async function PUT(
         }
 
         const trimmedContent = content.trim();
-        
+
         if (trimmedContent.length < 1) {
             return NextResponse.json(
                 { success: false, error: "Comment cannot be empty" },
@@ -38,7 +72,10 @@ export async function PUT(
 
         if (trimmedContent.length > 2000) {
             return NextResponse.json(
-                { success: false, error: "Comment must be less than 2000 characters" },
+                {
+                    success: false,
+                    error: "Comment must be less than 2000 characters",
+                },
                 { status: 400 }
             );
         }
@@ -83,13 +120,13 @@ export async function PUT(
             revalidatePath(`/forum/${comment.post_id}`);
         }
 
-        return NextResponse.json({ 
-            success: true, 
+        return NextResponse.json({
+            success: true,
             comment: {
                 id: updatedComment.id,
                 content: updatedComment.content,
                 updated_at: updatedComment.updated_at,
-            }
+            },
         });
     } catch (error) {
         console.error("Error updating comment:", error);
@@ -114,11 +151,17 @@ export async function DELETE(
             );
         }
 
+        const { commentId } = await params;
+        
         const comment = await prisma.forum_comments.findUnique({
-            where: { id: params.commentId },
+            where: { id: commentId },
             select: {
                 author_id: true,
                 post_id: true,
+                parent_id: true,
+                other_forum_comments: {
+                    select: { id: true },
+                },
             },
         });
 
@@ -139,14 +182,41 @@ export async function DELETE(
             );
         }
 
-        await prisma.forum_comments.delete({ where: { id: params.commentId } });
+        // Check if comment has replies
+        const hasReplies =
+            comment.other_forum_comments &&
+            comment.other_forum_comments.length > 0;
 
-        // Revalidate the thread page so the deleted comment is removed from cache
+        if (hasReplies) {
+            // Soft delete: Mark as deleted but keep the record to preserve thread structure
+            await prisma.forum_comments.update({
+                where: { id: commentId },
+                data: {
+                    is_deleted: true,
+                    updated_at: new Date(),
+                },
+            });
+        } else {
+            // Hard delete: Remove completely since no replies depend on it
+            await prisma.forum_comments.delete({
+                where: { id: commentId },
+            });
+            
+            // After deleting, check if parent comment should be cleaned up
+            if (comment.parent_id) {
+                await cleanupDeletedParentComments(comment.parent_id);
+            }
+        }
+
+        // Revalidate the thread page so the deleted comment is updated in cache
         if (comment.post_id) {
             revalidatePath(`/forum/${comment.post_id}`);
         }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({
+            success: true,
+            deletionType: hasReplies ? "soft" : "hard",
+        });
     } catch (error) {
         console.error("Error deleting comment:", error);
         return NextResponse.json(
