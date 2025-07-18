@@ -51,6 +51,7 @@ interface NestedCommentProps {
         replies?: NestedCommentProps["comment"][];
     };
     threadId: string;
+    originalPosterId?: string;
     onCommentDeleted: (commentId: string) => void;
     onCommentMarkedDeleted: (commentId: string) => void;
     onCommentUpdated: (commentId: string, newContent: string) => void;
@@ -61,6 +62,7 @@ interface NestedCommentProps {
 export default function NestedComment({
     comment,
     threadId,
+    originalPosterId,
     onCommentDeleted,
     onCommentMarkedDeleted,
     onCommentUpdated,
@@ -78,6 +80,8 @@ export default function NestedComment({
     const canReply = comment.depth < maxDepth;
     const isAuthor = session?.user?.id === comment.author?.id;
     const hasReplies = comment.replies && comment.replies.length > 0;
+    const isOriginalPoster =
+        originalPosterId && comment.author?.id === originalPosterId;
 
     const handleDelete = async () => {
         if (!session?.user?.id) {
@@ -272,7 +276,18 @@ export default function NestedComment({
                                             [Deleted User]
                                         </span>
                                     ) : (
-                                        comment.author?.name || "Unknown User"
+                                        <>
+                                            {comment.author?.name ||
+                                                "Unknown User"}
+                                            {isOriginalPoster && (
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="ml-2 text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50"
+                                                >
+                                                    OP
+                                                </Badge>
+                                            )}
+                                        </>
                                     )}
                                     {hasReplies && (
                                         <span className="ml-2 text-xs text-muted-foreground">
@@ -466,6 +481,7 @@ export default function NestedComment({
                             key={reply.id}
                             comment={reply}
                             threadId={threadId}
+                            originalPosterId={originalPosterId}
                             onCommentDeleted={onCommentDeleted}
                             onCommentMarkedDeleted={onCommentMarkedDeleted}
                             onCommentUpdated={onCommentUpdated}

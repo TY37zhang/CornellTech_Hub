@@ -684,6 +684,9 @@ export default function ThreadContent({
                                                 key={comment.id}
                                                 comment={comment}
                                                 threadId={threadId}
+                                                originalPosterId={
+                                                    threadData.author.id
+                                                }
                                                 onCommentDeleted={(
                                                     commentId
                                                 ) => {
