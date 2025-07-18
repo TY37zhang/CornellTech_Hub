@@ -1627,7 +1627,7 @@ export default function PlannerPage() {
                                     </h3>
                                     <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
                                         <li>
-                                            Select your program from the
+                                            Select your program from the{" "}
                                             <b>
                                                 dropdown menu in the settings
                                                 page
