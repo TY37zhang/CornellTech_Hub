@@ -115,7 +115,7 @@ export function Footer() {
                         rel="noopener noreferrer"
                         className="hover:underline"
                     >
-                        Tianyin Zhang
+                        Ty Zhang
                     </Link>{" "}
                     with ♡
                 </div>

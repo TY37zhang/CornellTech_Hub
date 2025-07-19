@@ -39,6 +39,7 @@ interface SelectedCoursesProps {
     onAddToRequirement: (course: Course, requirementKey: string | null) => void;
     coursePlan: { [key: string]: Course[] };
     onCourseTaken: (course: Course, taken: boolean) => void;
+    isDemoMode?: boolean;
 }
 
 export default function SelectedCourses({
@@ -48,6 +49,7 @@ export default function SelectedCourses({
     onAddToRequirement,
     coursePlan,
     onCourseTaken,
+    isDemoMode = false,
 }: SelectedCoursesProps) {
     // Find which requirement a course is currently assigned to
     const findCourseAssignment = (courseId: string): string | null => {
@@ -61,18 +63,26 @@ export default function SelectedCourses({
 
     // Collapsible state
     const [collapsed, setCollapsed] = useState(false);
-    const [showTakenCourses, setShowTakenCourses] = useState(true);
+    const [showTakenCourses, setShowTakenCourses] = useState(false); // Always start with false
 
-    // Persist toggle state in localStorage
+    // Initialize toggle state based on mode and localStorage
     useEffect(() => {
-        const stored = localStorage.getItem("showTakenCourses");
+        const storageKey = isDemoMode ? "showTakenCoursesDemo" : "showTakenCourses";
+        const stored = localStorage.getItem(storageKey);
+        
         if (stored !== null) {
             setShowTakenCourses(stored === "true");
+        } else {
+            // Default behavior: false for demo mode, true for regular mode
+            setShowTakenCourses(isDemoMode ? false : true);
         }
-    }, []);
+    }, [isDemoMode]);
+    
+    // Save to localStorage when state changes
     useEffect(() => {
-        localStorage.setItem("showTakenCourses", String(showTakenCourses));
-    }, [showTakenCourses]);
+        const storageKey = isDemoMode ? "showTakenCoursesDemo" : "showTakenCourses";
+        localStorage.setItem(storageKey, String(showTakenCourses));
+    }, [showTakenCourses, isDemoMode]);
 
     return (
         <Card className="p-6 w-full overflow-hidden">

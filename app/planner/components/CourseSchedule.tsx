@@ -48,6 +48,7 @@ interface CourseTime {
 
 interface CourseScheduleProps {
     selectedCourses: Course[];
+    isDemoMode?: boolean;
 }
 
 const DAYS = [
@@ -245,6 +246,7 @@ function CourseTimeCard({
 
 export default function CourseSchedule({
     selectedCourses,
+    isDemoMode = false,
 }: CourseScheduleProps) {
     const [courseTimes, setCourseTimes] = useState<CourseTime[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -323,6 +325,24 @@ export default function CourseSchedule({
     const loadSchedule = async () => {
         try {
             setIsLoading(true);
+            
+            if (isDemoMode) {
+                // Load from localStorage for demo mode, or use default sample data
+                const savedSchedule = localStorage.getItem('demoScheduleData');
+                if (savedSchedule) {
+                    const data = JSON.parse(savedSchedule);
+                    setCourseTimes(data);
+                } else {
+                    // Import and use default sample schedule data
+                    const { sampleScheduleData } = await import('@/lib/sampleData');
+                    setCourseTimes(sampleScheduleData);
+                    // Save the default data to localStorage for persistence
+                    localStorage.setItem('demoScheduleData', JSON.stringify(sampleScheduleData));
+                }
+                setIsLoading(false);
+                return;
+            }
+            
             const response = await fetch("/api/schedule");
             if (!response.ok) {
                 throw new Error("Failed to load schedule");
@@ -340,18 +360,39 @@ export default function CourseSchedule({
             );
         } catch (error) {
             console.error("Error loading schedule:", error);
-            toast({
-                title: "Error",
-                description: "Failed to load your schedule",
-                variant: "destructive",
-            });
+            if (!isDemoMode) {
+                toast({
+                    title: "Error",
+                    description: "Failed to load your schedule",
+                    variant: "destructive",
+                });
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Save demo schedule data to localStorage
+    const saveDemoSchedule = (scheduleData: CourseTime[]) => {
+        if (isDemoMode) {
+            localStorage.setItem('demoScheduleData', JSON.stringify(scheduleData));
+        }
+    };
+
     const handleDeleteSchedule = async (scheduleId: string) => {
         try {
+            if (isDemoMode) {
+                // Handle demo mode - update local state and localStorage
+                const updatedSchedule = courseTimes.filter((ct) => ct.id !== scheduleId);
+                setCourseTimes(updatedSchedule);
+                saveDemoSchedule(updatedSchedule);
+                toast({
+                    title: "Success",
+                    description: "Schedule deleted successfully",
+                });
+                return;
+            }
+
             const response = await fetch(`/api/schedule?id=${scheduleId}`, {
                 method: "DELETE",
             });
@@ -395,21 +436,30 @@ export default function CourseSchedule({
                 endTime: updates.endTime || currentCourse.endTime,
             };
 
-            const response = await fetch(`/api/schedule/${scheduleId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedData),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to update schedule");
-            }
-
-            setCourseTimes((prevTimes) =>
-                prevTimes.map((ct) =>
+            if (isDemoMode) {
+                // Handle demo mode - update local state and localStorage
+                const updatedCourseTimes = courseTimes.map((ct) =>
                     ct.id === scheduleId ? { ...ct, ...updates } : ct
-                )
-            );
+                );
+                setCourseTimes(updatedCourseTimes);
+                saveDemoSchedule(updatedCourseTimes);
+            } else {
+                const response = await fetch(`/api/schedule/${scheduleId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updatedData),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to update schedule");
+                }
+
+                setCourseTimes((prevTimes) =>
+                    prevTimes.map((ct) =>
+                        ct.id === scheduleId ? { ...ct, ...updates } : ct
+                    )
+                );
+            }
 
             toast({
                 title: "Success",
@@ -440,33 +490,48 @@ export default function CourseSchedule({
                     DAYS.find((day) => !usedDays.includes(day)) || "Monday";
             }
 
-            const response = await fetch("/api/schedule", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    courseId: course.id,
-                    day: defaultDay,
-                    startTime: "9:00",
-                    endTime: "10:15",
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to add course");
-            }
-
-            const savedSchedule = await response.json();
-            setCourseTimes([
-                ...courseTimes,
-                {
-                    id: savedSchedule.id,
+            if (isDemoMode) {
+                // Handle demo mode - generate a mock ID and update local state
+                const newSchedule = {
+                    id: `demo-${Date.now()}-${Math.random()}`,
                     courseId: course.id,
                     courseName: course.name,
                     day: defaultDay,
                     startTime: "9:00",
                     endTime: "10:15",
-                },
-            ]);
+                };
+                const updatedCourseTimes = [...courseTimes, newSchedule];
+                setCourseTimes(updatedCourseTimes);
+                saveDemoSchedule(updatedCourseTimes);
+            } else {
+                const response = await fetch("/api/schedule", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        courseId: course.id,
+                        day: defaultDay,
+                        startTime: "9:00",
+                        endTime: "10:15",
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to add course");
+                }
+
+                const savedSchedule = await response.json();
+                setCourseTimes([
+                    ...courseTimes,
+                    {
+                        id: savedSchedule.id,
+                        courseId: course.id,
+                        courseName: course.name,
+                        day: defaultDay,
+                        startTime: "9:00",
+                        endTime: "10:15",
+                    },
+                ]);
+            }
 
             toast({
                 title: "Success",
@@ -522,6 +587,24 @@ export default function CourseSchedule({
     };
     const handleSaveAddSlot = async (course: Course) => {
         try {
+            if (isDemoMode) {
+                // Handle demo mode - generate a mock ID and update local state
+                const newSchedule = {
+                    id: `demo-slot-${Date.now()}-${Math.random()}`,
+                    courseId: course.id,
+                    courseName: course.name,
+                    day: addSlotDay,
+                    startTime: addSlotStart,
+                    endTime: addSlotEnd,
+                };
+                const updatedCourseTimes = [...courseTimes, newSchedule];
+                setCourseTimes(updatedCourseTimes);
+                saveDemoSchedule(updatedCourseTimes);
+                toast({ title: "Success", description: "Course time slot added" });
+                closeAddSlot();
+                return;
+            }
+
             const response = await fetch("/api/schedule", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -569,6 +652,24 @@ export default function CourseSchedule({
     };
     const handleSaveAddSlotCard = async (course: CourseTime) => {
         try {
+            if (isDemoMode) {
+                // Handle demo mode - generate a mock ID and update local state
+                const newSchedule = {
+                    id: `demo-card-slot-${Date.now()}-${Math.random()}`,
+                    courseId: course.courseId,
+                    courseName: course.courseName,
+                    day: addSlotCardDay,
+                    startTime: addSlotCardStart,
+                    endTime: addSlotCardEnd,
+                };
+                const updatedCourseTimes = [...courseTimes, newSchedule];
+                setCourseTimes(updatedCourseTimes);
+                saveDemoSchedule(updatedCourseTimes);
+                toast({ title: "Success", description: "Course time slot added" });
+                closeAddSlotCard();
+                return;
+            }
+
             const response = await fetch("/api/schedule", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

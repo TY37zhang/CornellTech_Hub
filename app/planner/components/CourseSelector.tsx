@@ -24,6 +24,7 @@ interface CourseSelectorProps {
     selectedCourses: Course[];
     onSelectCourse: (course: Course) => void;
     searchQuery: string;
+    sampleCourses?: Course[];
 }
 
 export default function CourseSelector({
@@ -31,6 +32,7 @@ export default function CourseSelector({
     selectedCourses,
     onSelectCourse,
     searchQuery,
+    sampleCourses,
 }: CourseSelectorProps) {
     const [searchResults, setSearchResults] = useState<Course[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -66,16 +68,30 @@ export default function CourseSelector({
             setError(null);
 
             try {
-                const response = await fetch(
-                    `/api/courses/search?q=${encodeURIComponent(debouncedSearch)}`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch courses");
+                let data: Course[];
+                
+                if (sampleCourses) {
+                    // Use sample courses for demo mode
+                    const query = debouncedSearch.toLowerCase();
+                    data = sampleCourses.filter(course => 
+                        course.code.toLowerCase().includes(query) ||
+                        course.name.toLowerCase().includes(query) ||
+                        course.department.toLowerCase().includes(query)
+                    );
+                } else {
+                    // Use API for authenticated users
+                    const response = await fetch(
+                        `/api/courses/search?q=${encodeURIComponent(debouncedSearch)}`
+                    );
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch courses");
+                    }
+                    data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
                 }
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                
                 setSearchResults(
                     data.filter(
                         (course: Course) =>
@@ -98,7 +114,7 @@ export default function CourseSelector({
         };
 
         fetchCourses();
-    }, [debouncedSearch, selectedCourses]);
+    }, [debouncedSearch, selectedCourses, sampleCourses]);
 
     if (!searchQuery) return null;
 

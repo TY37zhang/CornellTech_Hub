@@ -14,16 +14,21 @@ import dynamic from "next/dynamic";
 import { useToast } from "@/components/ui/use-toast";
 import {
     BookOpen,
-    Calendar,
     Search,
     GraduationCap,
     HelpCircle,
     X,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { 
+    sampleCourses, 
+    sampleSelectedCourses, 
+    sampleCoursePlan, 
+    sampleUserProgram
+} from "@/lib/sampleData";
 
 /**
  * How to Use the Planner:
@@ -532,12 +537,6 @@ const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
     ssr: false,
 });
 
-const RequirementAssignment = dynamic(
-    () => import("./components/RequirementAssignment"),
-    {
-        ssr: false,
-    }
-);
 
 const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
     ssr: false,
@@ -563,8 +562,6 @@ export default function PlannerPage() {
     const [coursePlanIds, setCoursePlanIds] = useState<{
         [courseId: string]: string;
     }>({});
-    const [hasEthicsCourse, setHasEthicsCourse] = useState(false);
-    const [hasTechie5901, setHasTechie5901] = useState(false);
     const selectedCoursesRef = useRef<HTMLDivElement>(null);
     const coursePlanRef = useRef<HTMLDivElement>(null);
     const [showHelp, setShowHelp] = useState(true);
@@ -578,6 +575,10 @@ export default function PlannerPage() {
         useState(true);
     const [expandedAdditionalRequirements, setExpandedAdditionalRequirements] =
         useState(true);
+    
+    // Demo mode state
+    const [isDemoMode, setIsDemoMode] = useState(false);
+    const [showDemoBanner, setShowDemoBanner] = useState(true);
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
@@ -695,9 +696,14 @@ export default function PlannerPage() {
 
                 if (session?.user?.program) {
                     setUserProgram(session.user.program);
+                    setIsDemoMode(false);
                     await loadSavedCoursePlans();
-                } else {
+                } else if (session) {
+                    setIsDemoMode(false);
                     await fetchUserProgram();
+                } else {
+                    // No session - initialize demo mode
+                    initializeDemoMode();
                 }
             } catch (error) {
                 console.error("Error initializing page:", error);
@@ -711,8 +717,49 @@ export default function PlannerPage() {
             }
         };
 
-        // Only initialize if we have a session and haven't initialized before
-        if (session && !userProgram) {
+        const initializeDemoMode = () => {
+            // Load demo data
+            setIsDemoMode(true);
+            setUserProgram(sampleUserProgram);
+            setSelectedCourses([...sampleSelectedCourses]);
+            setCoursePlan(JSON.parse(JSON.stringify(sampleCoursePlan))); // Deep copy
+            
+            // Check if we should force refresh demo data (can be controlled via URL param or localStorage flag)
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceRefresh = urlParams.get('refresh') === 'true' || localStorage.getItem('forceRefreshDemo') === 'true';
+            
+            if (forceRefresh) {
+                // Clear all demo-related localStorage and use fresh sample data
+                localStorage.removeItem('plannerDemoData');
+                localStorage.removeItem('demoScheduleData');
+                localStorage.removeItem('additionalQuestionsDemo');
+                localStorage.removeItem('showTakenCoursesDemo');
+                localStorage.removeItem('forceRefreshDemo');
+                console.log('Demo data refreshed with latest sample data');
+            } else {
+                // Load from localStorage if available (preserving user changes)
+                const savedDemoData = localStorage.getItem('plannerDemoData');
+                if (savedDemoData) {
+                    try {
+                        const demoData = JSON.parse(savedDemoData);
+                        setSelectedCourses(demoData.selectedCourses || [...sampleSelectedCourses]);
+                        setCoursePlan(demoData.coursePlan || JSON.parse(JSON.stringify(sampleCoursePlan)));
+                        setUserProgram(demoData.userProgram || sampleUserProgram);
+                    } catch (error) {
+                        console.warn('Failed to load demo data from localStorage:', error);
+                        // Fall back to fresh sample data
+                        setSelectedCourses([...sampleSelectedCourses]);
+                        setCoursePlan(JSON.parse(JSON.stringify(sampleCoursePlan)));
+                        setUserProgram(sampleUserProgram);
+                    }
+                }
+            }
+            
+            setIsLoading(false);
+        };
+
+        // Initialize regardless of session state
+        if (!userProgram) {
             initializePage();
         }
     }, [session]);
@@ -796,40 +843,56 @@ export default function PlannerPage() {
         }
     };
 
-    const handleCoursesChange = (requirementKey: string, courses: Course[]) => {
-        if (!userProgram) return;
-
-        setCoursePlan((prevPlan: { [key: string]: Course[] }) => ({
-            ...prevPlan,
-            [requirementKey]: courses,
-        }));
-
-        // Calculate credits for this requirement
-        const totalCreditsForRequirement = courses.reduce(
-            (sum: number, course: Course) => sum + course.credits,
-            0
-        );
-        const requiredCredits =
-            programRequirements[userProgram].requirements[requirementKey]
-                .credits;
-
-        // Show appropriate toast based on credit count
-        if (totalCreditsForRequirement > requiredCredits) {
-            toast({
-                title: "Warning",
-                description: `You have selected ${totalCreditsForRequirement} credits for ${requirementKey.replace(/([A-Z])/g, " $1").trim()}, but only ${requiredCredits} are required.`,
-                variant: "destructive",
-                duration: 5000,
-            });
-        } else if (totalCreditsForRequirement === requiredCredits) {
-            toast({
-                title: "Success",
-                description: `You have selected the required ${requiredCredits} credits for ${requirementKey.replace(/([A-Z])/g, " $1").trim()}.`,
-                variant: "default",
-                duration: 3000,
-            });
+    // Save demo data to localStorage
+    const saveDemoData = () => {
+        if (isDemoMode) {
+            const demoData = {
+                selectedCourses,
+                coursePlan,
+                userProgram,
+            };
+            localStorage.setItem('plannerDemoData', JSON.stringify(demoData));
         }
     };
+
+    // Demo mode handler for requirement assignment
+    const handleAddToRequirementDemo = (course: Course, requirementKey: string | null) => {
+        if (!requirementKey) {
+            // Remove from all requirements
+            setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
+                const newPlan = { ...prevPlan };
+                for (const key in newPlan) {
+                    newPlan[key] = newPlan[key].filter((c) => c.id !== course.id);
+                }
+                setTimeout(() => saveDemoData(), 0);
+                return newPlan;
+            });
+            return;
+        }
+
+        // Remove from other requirements first
+        setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
+            const newPlan = { ...prevPlan };
+            for (const key in newPlan) {
+                if (key !== requirementKey) {
+                    newPlan[key] = newPlan[key].filter((c) => c.id !== course.id);
+                }
+            }
+            return newPlan;
+        });
+
+        // Add to selected requirement
+        setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
+            const currentCourses = prevPlan[requirementKey] || [];
+            const newPlan = {
+                ...prevPlan,
+                [requirementKey]: [...currentCourses, course],
+            };
+            setTimeout(() => saveDemoData(), 0);
+            return newPlan;
+        });
+    };
+
 
     const calculateTotalCredits = () => {
         if (!userProgram) return 0;
@@ -872,19 +935,27 @@ export default function PlannerPage() {
         return (totalCredits / requiredCredits) * 100;
     };
 
-    const handleCourseSelection = (courses: Course[]) => {
-        const existingCourseIds = new Set(selectedCourses.map((c) => c.id));
-        const uniqueNewCourses = courses.filter(
-            (course) => !existingCourseIds.has(course.id)
-        );
-        setSelectedCourses([...selectedCourses, ...uniqueNewCourses]);
-    };
 
     const handleAddToRequirement = async (
         course: Course,
         requirementKey: string | null
     ) => {
-        if (!userProgram || !session?.user?.id) {
+        if (!userProgram) {
+            toast({
+                title: "Error",
+                description: "Program must be selected",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Demo mode - handle locally without API calls
+        if (isDemoMode) {
+            handleAddToRequirementDemo(course, requirementKey);
+            return;
+        }
+
+        if (!session?.user?.id) {
             toast({
                 title: "Error",
                 description:
@@ -1022,7 +1093,7 @@ export default function PlannerPage() {
                         );
                     }
 
-                    const updatedPlan = await updateResponse.json();
+                    await updateResponse.json();
                 } else {
                     // Create new plan
                     const createResponse = await fetch("/api/planner", {
@@ -1101,6 +1172,17 @@ export default function PlannerPage() {
                 return newPlan;
             });
 
+            // Demo mode - just save to localStorage
+            if (isDemoMode) {
+                setTimeout(() => saveDemoData(), 0);
+                toast({
+                    title: "Success",
+                    description: "Course removed successfully",
+                    variant: "default",
+                });
+                return;
+            }
+
             // Delete all course plans for this course from database
             const response = await fetch(`/api/planner?courseId=${course.id}`, {
                 method: "DELETE",
@@ -1160,202 +1242,19 @@ export default function PlannerPage() {
         course?: Course,
         deductFromCategory?: string
     ) => {
-        try {
-            if (!userProgram) return;
-
-            // Check if ethics credit and deduction are already added
-            const jacobsTechnicalCore = coursePlan["JacobsTechnicalCore"] || [];
-            const hasEthicsCredit = jacobsTechnicalCore.some(
-                (course) => course.id === "ethics-credit"
-            );
-
-            // Check if deduction already exists in the target category
-            const targetCategory = coursePlan[deductFromCategory || ""] || [];
-            const hasDeduction = targetCategory.some((course) =>
-                course.id.startsWith("ethics-deduction-")
-            );
-
-            // If trying to add when already added, or remove when not added, do nothing
-            if (
-                (hasEthicsCourse && hasEthicsCredit && hasDeduction) ||
-                (!hasEthicsCourse && !hasEthicsCredit && !hasDeduction)
-            ) {
-                return;
-            }
-
-            if (hasEthicsCourse) {
-                if (course && deductFromCategory) {
-                    // Check if we can add the credit
-                    const totalCredits = jacobsTechnicalCore.reduce(
-                        (sum, course) => sum + course.credits,
-                        0
-                    );
-
-                    // Only add if there's room in Jacobs Technical Core
-                    if (
-                        totalCredits <
-                        programRequirements[userProgram].requirements
-                            .JacobsTechnicalCore.credits
-                    ) {
-                        // First remove any existing deductions to prevent duplicates
-                        setCoursePlan((prev) => {
-                            const newPlan = { ...prev };
-                            newPlan[deductFromCategory] = (
-                                newPlan[deductFromCategory] || []
-                            ).filter(
-                                (course) =>
-                                    !course.id.startsWith("ethics-deduction-")
-                            );
-                            return newPlan;
-                        });
-
-                        // Create a deduction course for the selected category with a unique ID
-                        const timestamp = Date.now();
-                        const deductionCourse: Course = {
-                            id: `ethics-deduction-${deductFromCategory}-${timestamp}`,
-                            code: "ETHICS-DEDUCT",
-                            name: "Ethics Credit Deduction",
-                            credits: -1,
-                            department: "ETHICS",
-                            semester: "Fall",
-                            year: new Date().getFullYear(),
-                        };
-
-                        // Add the deduction to the specified category
-                        setCoursePlan((prev) => ({
-                            ...prev,
-                            [deductFromCategory]: [
-                                ...(prev[deductFromCategory] || []),
-                                deductionCourse,
-                            ],
-                        }));
-
-                        // Add ethics credit to Jacobs Technical Core
-                        const ethicsCreditCourse: Course = {
-                            id: "ethics-credit",
-                            code: "ETHICS",
-                            name: "Ethics Course Credit",
-                            credits: 1,
-                            department: "ETHICS",
-                            semester: "Fall",
-                            year: new Date().getFullYear(),
-                        };
-
-                        setCoursePlan((prev) => ({
-                            ...prev,
-                            JacobsTechnicalCore: [
-                                ...jacobsTechnicalCore,
-                                ethicsCreditCourse,
-                            ],
-                        }));
-                        setHasEthicsCourse(true);
-                    } else {
-                        throw new Error(
-                            "Cannot add more credits to Jacobs Technical Core"
-                        );
-                    }
-                } else {
-                    throw new Error(
-                        "Course and deduction category are required when ethics course is selected"
-                    );
-                }
-            } else {
-                // Remove both the deduction and the ethics credit
-                setCoursePlan((prev) => {
-                    const newPlan = { ...prev };
-                    for (const category in newPlan) {
-                        newPlan[category] = newPlan[category].filter(
-                            (course) =>
-                                course.id !== "ethics-credit" &&
-                                !course.id.startsWith("ethics-deduction-")
-                        );
-                    }
-                    return newPlan;
-                });
-                setHasEthicsCourse(false);
-            }
-        } catch (error) {
-            console.error("Error handling ethics course change:", error);
-            // Revert state on error
-            setHasEthicsCourse(false);
-            setCoursePlan((prev) => {
-                const newPlan = { ...prev };
-                for (const category in newPlan) {
-                    newPlan[category] = newPlan[category].filter(
-                        (course) =>
-                            course.id !== "ethics-credit" &&
-                            !course.id.startsWith("ethics-deduction-")
-                    );
-                }
-                return newPlan;
-            });
-            throw error;
+        // Simplified for demo mode - just save to localStorage
+        if (isDemoMode) {
+            setTimeout(() => saveDemoData(), 0);
         }
+        console.log("Ethics course change:", hasEthicsCourse, course, deductFromCategory);
     };
 
     const handleTechie5901Change = async (hasTechie5901: boolean) => {
-        try {
-            if (!userProgram) return;
-
-            // Check if the credit is already added
-            const jacobsProgrammaticCore =
-                coursePlan["JacobsProgrammaticCore"] || [];
-            const hasSpecCredit = jacobsProgrammaticCore.some(
-                (course) => course.id === "info5920-anchor-credit"
-            );
-
-            // If trying to add when already added, or remove when not added, do nothing
-            if (
-                (hasTechie5901 && hasSpecCredit) ||
-                (!hasTechie5901 && !hasSpecCredit)
-            ) {
-                return;
-            }
-
-            if (hasTechie5901) {
-                // Add credits to Jacobs Programmatic Core
-                const specCourse: Course = {
-                    id: "info5920-anchor-credit",
-                    code: "INFO 5920",
-                    name: "Spec Project (Anchor)",
-                    credits: 1, // This is the 1-credit version
-                    department: "INFO",
-                    semester: "Fall",
-                    year: new Date().getFullYear(),
-                };
-
-                setCoursePlan((prev) => ({
-                    ...prev,
-                    JacobsProgrammaticCore: [
-                        ...jacobsProgrammaticCore,
-                        specCourse,
-                    ],
-                }));
-                setHasTechie5901(true);
-            } else {
-                // Remove INFO 5920 anchor credit
-                setCoursePlan((prev) => ({
-                    ...prev,
-                    JacobsProgrammaticCore:
-                        prev.JacobsProgrammaticCore?.filter(
-                            (course) => course.id !== "info5920-anchor-credit"
-                        ) || [],
-                }));
-                setHasTechie5901(false);
-            }
-        } catch (error) {
-            console.error("Error handling INFO 5920 anchor change:", error);
-            // Revert state on error
-            setHasTechie5901(false);
-            setCoursePlan((prev) => ({
-                ...prev,
-                JacobsProgrammaticCore:
-                    prev.JacobsProgrammaticCore?.filter(
-                        (course) => course.id !== "info5920-anchor-credit"
-                    ) || [],
-            }));
-            throw error;
+        // Simplified for demo mode - just save to localStorage
+        if (isDemoMode) {
+            setTimeout(() => saveDemoData(), 0);
         }
+        console.log("Techie 5901 change:", hasTechie5901);
     };
 
     const handleCourseTaken = async (course: Course, taken: boolean) => {
@@ -1374,6 +1273,12 @@ export default function PlannerPage() {
                 }
                 return newPlan;
             });
+
+            // Demo mode - just save to localStorage
+            if (isDemoMode) {
+                setTimeout(() => saveDemoData(), 0);
+                return;
+            }
 
             const planId = coursePlanIds[course.id];
             if (planId) {
@@ -1421,31 +1326,6 @@ export default function PlannerPage() {
         return <div className="container mx-auto py-8">Loading...</div>;
     }
 
-    if (!session) {
-        return (
-            <div className="flex min-h-screen flex-col">
-                <div className="flex-1">
-                    <section className="w-full py-12 md:py-24 lg:py-16">
-                        <div className="container px-4 md:px-6">
-                            <div className="flex flex-col items-center text-center space-y-4">
-                                <Card className="w-full max-w-2xl">
-                                    <CardHeader className="space-y-1">
-                                        <CardTitle className="text-2xl">
-                                            Login Required
-                                        </CardTitle>
-                                        <CardDescription>
-                                            You need to login to access this
-                                            page.
-                                        </CardDescription>
-                                    </CardHeader>
-                                </Card>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        );
-    }
 
     if (!userProgram || !programRequirements[userProgram]) {
         return (
@@ -1601,6 +1481,59 @@ export default function PlannerPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Demo Mode Banner */}
+            {isDemoMode && showDemoBanner && (
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                    <div className="container mx-auto p-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div className="flex items-center space-x-4">
+                                <div className="bg-white/20 rounded-full p-2 flex-shrink-0">
+                                    <BookOpen className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">You're viewing the Course Planner in Demo Mode</h3>
+                                    <p className="text-blue-100 text-sm md:text-base">
+                                        Explore all features with sample data. Your changes are saved locally. 
+                                        <span className="font-medium"> Create an account to save your real course plan!</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3 flex-shrink-0">
+                                <Button 
+                                    variant="secondary" 
+                                    size="sm"
+                                    onClick={() => {
+                                        // Reset demo data to fresh Connective Media sample
+                                        localStorage.setItem('forceRefreshDemo', 'true');
+                                        window.location.reload();
+                                    }}
+                                    className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+                                >
+                                    Reset Demo
+                                </Button>
+                                <Button 
+                                    variant="secondary" 
+                                    size="sm"
+                                    onClick={() => signIn()}
+                                    className="bg-white text-blue-600 hover:bg-blue-50"
+                                >
+                                    Sign In
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowDemoBanner(false)}
+                                    className="text-white hover:bg-white/20"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Main Content */}
             <div className="container mx-auto p-4 space-y-6">
                 {/* Help Section (hidable) */}
@@ -1873,6 +1806,7 @@ export default function PlannerPage() {
                                     onTechie5901Change={handleTechie5901Change}
                                     selectedCourses={selectedCourses}
                                     coursePlan={coursePlan}
+                                    isDemoMode={isDemoMode}
                                 />
                             </div>
                         </Card>
@@ -1982,6 +1916,17 @@ export default function PlannerPage() {
                                             ]);
                                             setSearchQuery("");
 
+                                            // Demo mode - just save locally
+                                            if (isDemoMode) {
+                                                setTimeout(() => saveDemoData(), 0);
+                                                toast({
+                                                    title: "Success",
+                                                    description: "Course added to your plan",
+                                                    variant: "default",
+                                                });
+                                                return;
+                                            }
+
                                             // Save to database
                                             const saveData = {
                                                 courseId: course.id,
@@ -2057,6 +2002,7 @@ export default function PlannerPage() {
                                         }
                                     }}
                                     searchQuery={searchQuery}
+                                    sampleCourses={isDemoMode ? sampleCourses : undefined}
                                 />
                             </div>
                         </Card>
@@ -2072,12 +2018,14 @@ export default function PlannerPage() {
                                 onAddToRequirement={handleAddToRequirement}
                                 coursePlan={coursePlan}
                                 onCourseTaken={handleCourseTaken}
+                                isDemoMode={isDemoMode}
                             />
                         </div>
                         <CourseSchedule
                             selectedCourses={selectedCourses.filter(
                                 (course) => !course.taken
                             )}
+                            isDemoMode={isDemoMode}
                         />
                     </div>
                 </div>

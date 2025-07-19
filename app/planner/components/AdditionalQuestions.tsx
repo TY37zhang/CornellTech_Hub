@@ -31,6 +31,7 @@ interface AdditionalQuestionsProps {
     onTechie5901Change: (hasTechie5901: boolean) => void;
     selectedCourses: Course[];
     coursePlan: { [key: string]: Course[] };
+    isDemoMode?: boolean;
 }
 
 export default function AdditionalQuestions({
@@ -38,6 +39,7 @@ export default function AdditionalQuestions({
     onTechie5901Change,
     selectedCourses,
     coursePlan,
+    isDemoMode = false,
 }: AdditionalQuestionsProps) {
     const [tookEthics, setTookEthics] = useState(false);
     const [tookTechie5901, setTookTechie5901] = useState(false);
@@ -53,6 +55,33 @@ export default function AdditionalQuestions({
     useEffect(() => {
         const loadSavedRequirements = async () => {
             try {
+                if (isDemoMode) {
+                    // Demo mode - load from localStorage or set defaults
+                    const savedDemoData = localStorage.getItem('additionalQuestionsDemo');
+                    if (savedDemoData) {
+                        const data = JSON.parse(savedDemoData);
+                        setTookEthics(data.tookEthics || false);
+                        setSelectedEthicsCourse(data.selectedEthicsCourse || "");
+                        setDeductedCategory(data.deductedCategory || null);
+                        setTookTechie5901(data.tookTechie5901 || false);
+                    } else {
+                        // Set demo defaults based on screenshots
+                        setTookEthics(true);
+                        setSelectedEthicsCourse("INFO 5910");
+                        setDeductedCategory("ConcentrationCore");
+                        setTookTechie5901(true);
+                        
+                        // Apply the demo settings
+                        const ethicsCourse = selectedCourses.find(c => c.code === "INFO 5910");
+                        if (ethicsCourse) {
+                            onEthicsCourseChange(true, ethicsCourse, "ConcentrationCore");
+                        }
+                        onTechie5901Change(true);
+                    }
+                    setIsLoading(false);
+                    return;
+                }
+                
                 const response = await fetch(
                     "/api/course-special-requirements"
                 );
@@ -136,7 +165,20 @@ export default function AdditionalQuestions({
         };
 
         loadSavedRequirements();
-    }, [selectedCourses, onEthicsCourseChange, onTechie5901Change, coursePlan]);
+    }, [selectedCourses, onEthicsCourseChange, onTechie5901Change, coursePlan, isDemoMode]);
+
+    // Save demo data to localStorage
+    const saveDemoData = () => {
+        if (isDemoMode) {
+            const demoData = {
+                tookEthics,
+                selectedEthicsCourse,
+                deductedCategory,
+                tookTechie5901,
+            };
+            localStorage.setItem('additionalQuestionsDemo', JSON.stringify(demoData));
+        }
+    };
 
     // Save ethics course selection to database
     const saveEthicsRequirement = async (
@@ -144,6 +186,12 @@ export default function AdditionalQuestions({
         course?: Course,
         deductFromCategory?: string
     ) => {
+        if (isDemoMode) {
+            // Just save to localStorage for demo mode
+            setTimeout(() => saveDemoData(), 0);
+            return;
+        }
+        
         try {
             // Validate inputs
             if (hasEthicsCourse && (!course || !deductFromCategory)) {
@@ -206,6 +254,12 @@ export default function AdditionalQuestions({
 
     // Save Techie 5901 selection to database
     const saveTechie5901Requirement = async (hasTechie5901: boolean) => {
+        if (isDemoMode) {
+            // Just save to localStorage for demo mode
+            setTimeout(() => saveDemoData(), 0);
+            return;
+        }
+        
         try {
             // Validate program has JacobsProgrammaticCore requirement
             if (
