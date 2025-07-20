@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import {
     BookOpen,
@@ -105,28 +105,40 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-function calculateHotScore(thread: {
-    likes: number;
-    replies: number;
-    views: number;
-    createdAt: string;
-}): { isHot: boolean; score: number } {
-    const now = new Date();
-    const threadDate = new Date(thread.createdAt);
-    const hoursSinceCreation =
-        (now.getTime() - threadDate.getTime()) / (1000 * 60 * 60);
-    const weights = { likes: 1, replies: 1.5, views: 0.2, recency: 2 };
-    const likeScore = thread.likes * weights.likes;
-    const replyScore = thread.replies * weights.replies;
-    const viewScore = thread.views * weights.views;
-    const recencyBoost = Math.max(
-        0,
-        100 - (hoursSinceCreation / 24) * weights.recency
-    );
-    const totalScore = likeScore + replyScore + viewScore + recencyBoost;
-    const threshold = 50 + (hoursSinceCreation / 24) * 10;
-    return { isHot: totalScore > threshold, score: totalScore };
-}
+// Memoized hot score calculation to avoid recalculation
+const calculateHotScore = (() => {
+    const cache = new Map();
+    return (thread: {
+        likes: number;
+        replies: number;
+        views: number;
+        createdAt: string;
+    }): { isHot: boolean; score: number } => {
+        const cacheKey = `${thread.likes}-${thread.replies}-${thread.views}-${thread.createdAt}`;
+        if (cache.has(cacheKey)) {
+            return cache.get(cacheKey);
+        }
+        
+        const now = new Date();
+        const threadDate = new Date(thread.createdAt);
+        const hoursSinceCreation =
+            (now.getTime() - threadDate.getTime()) / (1000 * 60 * 60);
+        const weights = { likes: 1, replies: 1.5, views: 0.2, recency: 2 };
+        const likeScore = thread.likes * weights.likes;
+        const replyScore = thread.replies * weights.replies;
+        const viewScore = thread.views * weights.views;
+        const recencyBoost = Math.max(
+            0,
+            100 - (hoursSinceCreation / 24) * weights.recency
+        );
+        const totalScore = likeScore + replyScore + viewScore + recencyBoost;
+        const threshold = 50 + (hoursSinceCreation / 24) * 10;
+        const result = { isHot: totalScore > threshold, score: totalScore };
+        
+        cache.set(cacheKey, result);
+        return result;
+    };
+})();
 
 const getVisiblePages = (current: number, total: number): number[] => {
     const pages: number[] = [];
@@ -145,14 +157,14 @@ interface ForumClientProps {
     initialTotalPages?: number;
 }
 
-export default function ForumClient({
+function ForumClient({
     initialPosts = [],
     initialStats = null,
     initialContributors = [],
     initialTotalPages = 1,
 }: ForumClientProps) {
-    const [threads, setThreads] = useState<Thread[]>(() => {
-        // If we have posts passed from the server, transform them immediately
+    // Memoized initial thread processing
+    const initialThreads = useMemo(() => {
         if (initialPosts.length > 0) {
             return initialPosts
                 .map((post: any) => {
@@ -197,7 +209,9 @@ export default function ForumClient({
                 .filter(Boolean) as Thread[];
         }
         return [];
-    });
+    }, [initialPosts]);
+    
+    const [threads, setThreads] = useState<Thread[]>(initialThreads);
     const [forumStats, setForumStats] = useState<any>(initialStats);
     const [topContributors, setTopContributors] =
         useState<any[]>(initialContributors);
@@ -208,16 +222,27 @@ export default function ForumClient({
     const [totalPages, setTotalPages] = useState(initialTotalPages);
     const threadsPerPage = 10;
     const [activeTab, setActiveTab] = useState("all");
-    const [filteredThreads, setFilteredThreads] = useState<Thread[]>([]);
     const [isMobile, setIsMobile] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const firstLoadRef = useRef(true);
 
-    const fetchData = async () => {
+    // Debounced search to reduce API calls
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+    
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Memoized fetch function
+    const fetchData = useCallback(async () => {
         try {
+            setLoading(true);
             const offset = (currentPage - 1) * threadsPerPage;
             const params = new URLSearchParams({
-                search: searchQuery,
+                search: debouncedSearchQuery,
                 limit: threadsPerPage.toString(),
                 offset: offset.toString(),
             });
@@ -291,7 +316,7 @@ export default function ForumClient({
             );
             setLoading(false);
         }
-    };
+    }, [debouncedSearchQuery, currentPage, threadsPerPage]);
 
     useEffect(() => {
         // Skip fetching on the very first render when we already have server data
@@ -300,8 +325,7 @@ export default function ForumClient({
             return;
         }
         fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, currentPage]);
+    }, [fetchData]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 900);
@@ -310,7 +334,8 @@ export default function ForumClient({
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-    useEffect(() => {
+    // Memoized filtering and sorting
+    const filteredThreads = useMemo(() => {
         let result = [...threads];
         if (activeTab !== "all")
             result = result.filter((t) => t.category === activeTab);
@@ -323,15 +348,108 @@ export default function ForumClient({
                 new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
         );
-        setFilteredThreads(result);
+        return result;
     }, [activeTab, selectedCategory, threads]);
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900" />
-                    <p className="mt-4 text-lg">Loading forum posts...</p>
+            <div className="flex min-h-screen flex-col">
+                <div className="flex-1">
+                    {/* HERO SKELETON */}
+                    <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
+                        <div className="container px-4 md:px-6">
+                            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                                <div className="space-y-2">
+                                    <div className="h-10 w-64 bg-muted rounded animate-pulse mx-auto" />
+                                    <div className="h-6 w-96 bg-muted rounded animate-pulse mx-auto" />
+                                </div>
+                                <div className="w-full max-w-2xl">
+                                    <div className="h-10 w-full bg-muted rounded-md animate-pulse" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* MAIN SECTION SKELETON */}
+                    <section className="w-full py-6">
+                        <div className="container px-4 md:px-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+                            </div>
+                            <div className="flex flex-col lg:flex-row gap-8">
+                                {/* LEFT COLUMN SKELETON */}
+                                <div className="flex-1">
+                                    <div className="w-full">
+                                        <div className="flex w-full items-center justify-between mb-6">
+                                            <div className="h-10 w-64 bg-muted rounded animate-pulse" />
+                                            <div className="h-10 w-32 bg-muted rounded animate-pulse" />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {[...Array(6)].map((_, i) => (
+                                                <Card key={i} className="overflow-hidden">
+                                                    <CardHeader className="p-4">
+                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <div className="flex flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
+                                                                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-full animate-pulse" />
+                                                                <div className="flex flex-col min-w-0 flex-1">
+                                                                    <div className="h-6 w-full max-w-[280px] bg-muted rounded animate-pulse mb-2" />
+                                                                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+                                                                <div className="h-6 w-12 bg-muted rounded animate-pulse" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="h-12 w-full bg-muted rounded animate-pulse mt-2" />
+                                                    </CardHeader>
+                                                    <CardFooter className="p-4 pt-0">
+                                                        <div className="flex flex-col gap-2 w-full">
+                                                            <div className="flex gap-2">
+                                                                <div className="h-5 w-12 bg-muted rounded animate-pulse" />
+                                                                <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+                                                            </div>
+                                                            <div className="flex gap-4">
+                                                                <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                                                                <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                                                                <div className="h-4 w-18 bg-muted rounded animate-pulse" />
+                                                            </div>
+                                                        </div>
+                                                    </CardFooter>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* RIGHT SIDEBAR SKELETON */}
+                                <div className="lg:w-[300px] flex-none">
+                                    <div className="space-y-4">
+                                        {[...Array(3)].map((_, i) => (
+                                            <Card key={i}>
+                                                <CardHeader>
+                                                    <div className="h-6 w-32 bg-muted rounded animate-pulse mb-2" />
+                                                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
+                                                </CardHeader>
+                                                <CardContent className="space-y-3">
+                                                    {[...Array(4)].map((_, j) => (
+                                                        <div key={j} className="flex items-center gap-3">
+                                                            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
+                                                            <div className="flex-1">
+                                                                <div className="h-4 w-24 bg-muted rounded animate-pulse mb-1" />
+                                                                <div className="h-3 w-16 bg-muted rounded animate-pulse" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         );
@@ -501,165 +619,10 @@ export default function ForumClient({
                                                 <div className="grid gap-4 max-w-full">
                                                     {filteredThreads.map(
                                                         (thread) => (
-                                                            <Link
-                                                                href={`/forum/${thread.id}`}
+                                                            <ForumThreadCard
                                                                 key={thread.id}
-                                                                className="block w-full"
-                                                            >
-                                                                <Card className="hover:bg-muted/50 transition-colors overflow-hidden">
-                                                                    <CardHeader className="p-4">
-                                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 flex-wrap">
-                                                                            <div className="flex flex-row sm:flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
-                                                                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                                                                    <AvatarImage
-                                                                                        src={
-                                                                                            thread
-                                                                                                .author
-                                                                                                .avatar
-                                                                                        }
-                                                                                        alt={
-                                                                                            thread
-                                                                                                .author
-                                                                                                .name
-                                                                                        }
-                                                                                    />
-                                                                                    <AvatarFallback>
-                                                                                        {
-                                                                                            thread
-                                                                                                .author
-                                                                                                .initials
-                                                                                        }
-                                                                                    </AvatarFallback>
-                                                                                </Avatar>
-                                                                                <div className="flex flex-col min-w-0">
-                                                                                    <CardTitle className="text-base sm:text-lg font-semibold truncate-title truncate max-w-[90vw] sm:max-w-[30ch]">
-                                                                                        {
-                                                                                            thread.title
-                                                                                        }
-                                                                                    </CardTitle>
-                                                                                    <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-                                                                                        <span>
-                                                                                            {
-                                                                                                thread
-                                                                                                    .author
-                                                                                                    .name
-                                                                                            }
-                                                                                        </span>
-                                                                                        <span>
-                                                                                            •
-                                                                                        </span>
-                                                                                        <span>
-                                                                                            {
-                                                                                                thread.createdAt
-                                                                                            }
-                                                                                        </span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex flex-row flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                                                                                {thread.isNew && (
-                                                                                    <Badge
-                                                                                        variant="new"
-                                                                                        className="px-2 py-0.5 text-xs sm:text-sm"
-                                                                                    >
-                                                                                        🌟
-                                                                                        New
-                                                                                    </Badge>
-                                                                                )}
-                                                                                {thread.isHot && (
-                                                                                    <Badge
-                                                                                        variant="hot"
-                                                                                        className="px-3 py-0.5 text-xs sm:text-sm"
-                                                                                    >
-                                                                                        🔥{" "}
-                                                                                        {thread.hotScore >
-                                                                                        200
-                                                                                            ? "Super Hot"
-                                                                                            : thread.hotScore >
-                                                                                                150
-                                                                                              ? "Very Hot"
-                                                                                              : "Hot"}
-                                                                                    </Badge>
-                                                                                )}
-                                                                                <Badge
-                                                                                    variant={
-                                                                                        thread.category.toLowerCase() as any
-                                                                                    }
-                                                                                    className="text-xs sm:text-sm"
-                                                                                >
-                                                                                    {
-                                                                                        thread.category
-                                                                                    }
-                                                                                </Badge>
-                                                                            </div>
-                                                                        </div>
-                                                                        <p className="text-xs sm:text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words line-clamp-2 sm:line-clamp-none">
-                                                                            {thread
-                                                                                .content
-                                                                                .length >
-                                                                            126
-                                                                                ? thread.content.slice(
-                                                                                      0,
-                                                                                      126
-                                                                                  ) +
-                                                                                  "..."
-                                                                                : thread.content}
-                                                                        </p>
-                                                                    </CardHeader>
-                                                                    <CardFooter className="p-4 pt-0">
-                                                                        <div className="flex flex-col gap-2 sm:gap-4 w-full">
-                                                                            <div className="flex flex-wrap items-center gap-1 sm:gap-4">
-                                                                                {thread.tags.map(
-                                                                                    (
-                                                                                        tag
-                                                                                    ) => (
-                                                                                        <Badge
-                                                                                            key={
-                                                                                                tag
-                                                                                            }
-                                                                                            variant="tag"
-                                                                                            className="text-[10px] sm:text-xs font-normal"
-                                                                                        >
-                                                                                            {
-                                                                                                tag
-                                                                                            }
-                                                                                        </Badge>
-                                                                                    )
-                                                                                )}
-                                                                            </div>
-                                                                            <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <MessageSquare className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.replies
-                                                                                        }{" "}
-                                                                                        replies
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <ThumbsUp className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.likes
-                                                                                        }{" "}
-                                                                                        likes
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-1">
-                                                                                    <Users className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            thread.views
-                                                                                        }{" "}
-                                                                                        views
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </CardFooter>
-                                                                </Card>
-                                                            </Link>
+                                                                thread={thread}
+                                                            />
                                                         )
                                                     )}
                                                 </div>
@@ -938,3 +901,109 @@ export default function ForumClient({
         </div>
     );
 }
+
+// Memoized forum thread card component for better performance
+const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
+    return (
+        <Link
+            href={`/forum/${thread.id}`}
+            className="block w-full"
+        >
+            <Card className="hover:bg-muted/50 transition-colors overflow-hidden">
+                <CardHeader className="p-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 flex-wrap">
+                        <div className="flex flex-row sm:flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
+                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                <AvatarImage
+                                    src={thread.author.avatar}
+                                    alt={thread.author.name}
+                                    loading="lazy"
+                                />
+                                <AvatarFallback>
+                                    {thread.author.initials}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col min-w-0">
+                                <CardTitle className="text-base sm:text-lg font-semibold truncate-title truncate max-w-[90vw] sm:max-w-[30ch]">
+                                    {thread.title}
+                                </CardTitle>
+                                <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                                    <span>{thread.author.name}</span>
+                                    <span>•</span>
+                                    <span>{thread.createdAt}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-row flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
+                            {thread.isNew && (
+                                <Badge
+                                    variant="new"
+                                    className="px-2 py-0.5 text-xs sm:text-sm"
+                                >
+                                    🌟 New
+                                </Badge>
+                            )}
+                            {thread.isHot && (
+                                <Badge
+                                    variant="hot"
+                                    className="px-3 py-0.5 text-xs sm:text-sm"
+                                >
+                                    🔥{" "}
+                                    {thread.hotScore > 200
+                                        ? "Super Hot"
+                                        : thread.hotScore > 150
+                                        ? "Very Hot"
+                                        : "Hot"}
+                                </Badge>
+                            )}
+                            <Badge
+                                variant={thread.category.toLowerCase() as any}
+                                className="text-xs sm:text-sm"
+                            >
+                                {thread.category}
+                            </Badge>
+                        </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words line-clamp-2 sm:line-clamp-none">
+                        {thread.content.length > 126
+                            ? thread.content.slice(0, 126) + "..."
+                            : thread.content}
+                    </p>
+                </CardHeader>
+                <CardFooter className="p-4 pt-0">
+                    <div className="flex flex-col gap-2 sm:gap-4 w-full">
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-4">
+                            {thread.tags.map((tag) => (
+                                <Badge
+                                    key={tag}
+                                    variant="tag"
+                                    className="text-[10px] sm:text-xs font-normal"
+                                >
+                                    {tag}
+                                </Badge>
+                            ))}
+                        </div>
+                        <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <MessageSquare className="h-4 w-4" />
+                                <span>{thread.replies} replies</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <ThumbsUp className="h-4 w-4" />
+                                <span>{thread.likes} likes</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>{thread.views} views</span>
+                            </div>
+                        </div>
+                    </div>
+                </CardFooter>
+            </Card>
+        </Link>
+    );
+});
+
+ForumThreadCard.displayName = 'ForumThreadCard';
+
+export default memo(ForumClient);

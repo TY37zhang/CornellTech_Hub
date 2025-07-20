@@ -1,9 +1,26 @@
 import Link from "next/link";
-import HeroVideo from "./components/HeroVideo";
+import dynamic from "next/dynamic";
+
+// Dynamic imports for performance optimization
+const HeroVideo = dynamic(() => import("./components/HeroVideo"), {
+    loading: () => (
+        <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full relative bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 animate-pulse">
+            <div className="w-full h-full flex items-center justify-center">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        </div>
+    ),
+});
+
+const CoursePreview = dynamic(() => import("./components/CoursePreview"), {
+    loading: () => <div className="w-full h-64 bg-muted rounded-lg animate-pulse" />,
+});
+
+const ForumPreview = dynamic(() => import("./components/ForumPreview"), {
+    loading: () => <div className="w-full h-64 bg-muted rounded-lg animate-pulse" />,
+});
 import {
-    BookOpen,
     Calendar,
-    MessageSquare,
     ShoppingBag,
     Star,
     Link as LinkIcon,
@@ -140,7 +157,7 @@ export default async function Dashboard() {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center">
-                                {/* Client-side only: video preview interaction */}
+                                {/* Lazy-loaded video component */}
                                 <HeroVideo />
                                 <p className="text-sm text-muted-foreground italic mt-4 text-center">
                                     This is a student-built independent project and is not officially affiliated with Cornell Tech.
@@ -158,128 +175,14 @@ export default async function Dashboard() {
                     </div>
                     <div className="mt-6">
                         <div className="grid gap-6 w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                            <Card className="w-full">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <BookOpen className="h-5 w-5 text-red-600" />
-                                        Course Reviews
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Find and share reviews for Cornell Tech
-                                        courses
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="pb-2">
-                                    <div className="space-y-2">
-                                        {topCourseError ? (
-                                            <div className="text-red-500 text-sm">
-                                                {topCourseError}
-                                            </div>
-                                        ) : (
-                                            topCourses.map((course) => (
-                                                <div
-                                                    className="flex items-center justify-between"
-                                                    key={course.id}
-                                                >
-                                                    <Link
-                                                        href={`/courses/${course.id}`}
-                                                        className="font-medium hover:underline max-w-[70%] truncate"
-                                                        style={{
-                                                            whiteSpace:
-                                                                "nowrap",
-                                                            overflow: "hidden",
-                                                            textOverflow:
-                                                                "ellipsis",
-                                                            display: "block",
-                                                        }}
-                                                    >
-                                                        {course.title}
-                                                    </Link>
-                                                    <div className="flex items-center">
-                                                        {[1, 2, 3, 4, 5].map(
-                                                            (i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    className={`h-4 w-4 ${i <= Math.round(course.rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
-                                                                />
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="flex justify-center">
-                                    <Link href="/courses">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full shadow-sm hover:shadow-md transition-shadow"
-                                        >
-                                            View All Courses
-                                        </Button>
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-                            <Card className="w-full">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <MessageSquare className="h-5 w-5 text-red-600" />
-                                        Student Forum
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Connect with peers and discuss academic
-                                        topics
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="pb-2">
-                                    <div className="space-y-2">
-                                        {forumError ? (
-                                            <div className="text-red-500 text-sm">
-                                                {forumError}
-                                            </div>
-                                        ) : (
-                                            forumPosts.map((post) => (
-                                                <div
-                                                    className="flex items-center justify-between"
-                                                    key={post.id}
-                                                >
-                                                    <Link
-                                                        href={`/forum/${post.id}`}
-                                                        className="font-medium hover:underline max-w-[70%] truncate"
-                                                        style={{
-                                                            whiteSpace:
-                                                                "nowrap",
-                                                            overflow: "hidden",
-                                                            textOverflow:
-                                                                "ellipsis",
-                                                            display: "block",
-                                                        }}
-                                                    >
-                                                        {post.title}
-                                                    </Link>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {post.reply_count}{" "}
-                                                        replies
-                                                    </span>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="flex justify-center">
-                                    <Link href="/forum">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="w-full shadow-sm hover:shadow-md transition-shadow"
-                                        >
-                                            Join Discussions
-                                        </Button>
-                                    </Link>
-                                </CardFooter>
-                            </Card>
+                            <CoursePreview
+                                topCourses={topCourses}
+                                topCourseError={topCourseError}
+                            />
+                            <ForumPreview
+                                forumPosts={forumPosts}
+                                forumError={forumError}
+                            />
                             <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="flex items-center gap-2">

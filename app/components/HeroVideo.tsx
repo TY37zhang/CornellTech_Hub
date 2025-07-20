@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, memo, useCallback } from "react";
 import Image from "next/image";
-import heroImg from "@/public/images/DJI_0440.jpg";
+import heroImg from "@/public/images/DJI_0440.webp";
 
-export default function HeroVideo() {
+function HeroVideo() {
     const [showVideo, setShowVideo] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Optimized video handlers
+    const handleVideoClick = useCallback(() => {
+        setShowVideo(true);
+    }, []);
+
+    const handleVideoCanPlay = useCallback(() => {
+        videoRef.current?.play();
+    }, []);
+
+    const handleVideoEnded = useCallback(() => {
+        setShowVideo(false);
+    }, []);
 
     return (
         <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full relative">
@@ -18,8 +31,9 @@ export default function HeroVideo() {
                     playsInline
                     autoPlay
                     className="w-full h-full object-cover"
-                    onCanPlay={() => videoRef.current?.play()}
-                    onEnded={() => setShowVideo(false)}
+                    onCanPlay={handleVideoCanPlay}
+                    onEnded={handleVideoEnded}
+                    preload="metadata"
                 />
             ) : (
                 <Image
@@ -31,9 +45,12 @@ export default function HeroVideo() {
                     quality={70}
                     className="object-cover w-full h-full cursor-pointer"
                     style={{ objectPosition: "center" }}
-                    onClick={() => setShowVideo(true)}
+                    onClick={handleVideoClick}
                 />
             )}
         </div>
     );
 }
+
+// Memoized component to prevent unnecessary re-renders
+export default memo(HeroVideo);

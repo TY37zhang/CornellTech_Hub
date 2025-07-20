@@ -531,21 +531,24 @@ const programRequirements: ProgramRequirements = {
 
 const CourseSelector = dynamic(() => import("./components/CourseSelector"), {
     ssr: false,
+    loading: () => <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
 });
 
 const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
-    ssr: false,
+    ssr: true,
+    loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
 });
 
-
 const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
-    ssr: false,
+    ssr: true,
+    loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
 });
 
 const AdditionalQuestions = dynamic(
     () => import("./components/AdditionalQuestions"),
     {
-        ssr: false,
+        ssr: true,
+        loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
     }
 );
 
@@ -700,7 +703,15 @@ export default function PlannerPage() {
                     await loadSavedCoursePlans();
                 } else if (session) {
                     setIsDemoMode(false);
-                    await fetchUserProgram();
+                    // Parallel fetch user program and prepare for course plans
+                    const [userProgram] = await Promise.all([
+                        fetchUserProgramAsync(),
+                        // Could add other parallel operations here
+                    ]);
+                    if (userProgram) {
+                        setUserProgram(userProgram);
+                        await loadSavedCoursePlans();
+                    }
                 } else {
                     // No session - initialize demo mode
                     initializeDemoMode();
@@ -776,29 +787,32 @@ export default function PlannerPage() {
 
             const data = await response.json();
 
-            // Always rebuild selectedCourses from backend data to preserve 'taken' property and ensure uniqueness by id
-            const uniqueCoursesMap = new Map();
-            data.forEach((plan: any) => {
-                const existing = uniqueCoursesMap.get(plan.course.id);
-                // Prefer 'taken: true' if any instance is true
-                if (!existing || plan.course.taken) {
-                    uniqueCoursesMap.set(plan.course.id, plan.course);
-                }
-            });
-            setSelectedCourses(Array.from(uniqueCoursesMap.values()));
-
-            // Convert the flat list into the coursePlan structure and store plan IDs
+            // Optimize data processing with single loop
+            const uniqueCoursesMap = new Map<string, Course>();
             const newCoursePlan: { [key: string]: Course[] } = {};
             const coursePlanIds: { [courseId: string]: string } = {};
-            data.forEach((plan: any) => {
+
+            // Single pass through data for better performance
+            for (const plan of data) {
+                const courseId = plan.course.id;
+                
+                // Handle unique courses map
+                const existing = uniqueCoursesMap.get(courseId);
+                if (!existing || plan.course.taken) {
+                    uniqueCoursesMap.set(courseId, plan.course);
+                }
+
+                // Handle course plan structure
                 if (plan.requirementType) {
                     if (!newCoursePlan[plan.requirementType]) {
                         newCoursePlan[plan.requirementType] = [];
                     }
                     newCoursePlan[plan.requirementType].push(plan.course);
-                    coursePlanIds[plan.course.id] = plan.id; // Store the plan ID
+                    coursePlanIds[courseId] = plan.id;
                 }
-            });
+            }
+
+            setSelectedCourses(Array.from(uniqueCoursesMap.values()));
 
             // Store the plan IDs in state
             setCoursePlanIds(coursePlanIds);
@@ -840,6 +854,31 @@ export default function PlannerPage() {
             });
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchUserProgramAsync = async (): Promise<string | null> => {
+        try {
+            const response = await fetch("/api/user");
+            const data = await response.json();
+
+            if (!data.program) {
+                toast({
+                    title: "Program not set",
+                    description:
+                        "Please set your program in the settings page first.",
+                    variant: "destructive",
+                });
+                return null;
+            }
+            return data.program;
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to load your program information.",
+                variant: "destructive",
+            });
+            return null;
         }
     };
 
@@ -1323,7 +1362,36 @@ export default function PlannerPage() {
     };
 
     if (isLoading) {
-        return <div className="container mx-auto py-8">Loading...</div>;
+        return (
+            <div>
+                {/* Loading Skeleton */}
+                <div className="w-full bg-gradient-to-b from-pink-50 to-white">
+                    <div className="container mx-auto p-4">
+                        <div className="text-center py-12">
+                            <div className="h-12 bg-gray-200 rounded-md w-64 mx-auto mb-4 animate-pulse"></div>
+                            <div className="h-6 bg-gray-200 rounded-md w-96 mx-auto animate-pulse"></div>
+                        </div>
+                        <div className="text-center mb-8">
+                            <div className="h-8 bg-gray-200 rounded-md w-80 mx-auto animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="container mx-auto p-4 space-y-6">
+                    <div className="h-24 bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        <div className="md:col-span-4 space-y-4">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                            ))}
+                        </div>
+                        <div className="md:col-span-8 space-y-6">
+                            <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+                            <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
 

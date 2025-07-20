@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import {
     Filter,
@@ -112,7 +112,7 @@ const sortOptions = [
     { value: "workload", label: "Heaviest Workload" },
 ];
 
-export default function CoursesClient({ initialCourses, initialTotal }: Props) {
+function CoursesClient({ initialCourses, initialTotal }: Props) {
     // Search & filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [programFilter, setProgramFilter] = useState("all");
@@ -130,52 +130,63 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
 
     // Data
     const [courses, setCourses] = useState<Course[]>(initialCourses);
-    const [filteredCourses, setFilteredCourses] =
-        useState<Course[]>(initialCourses);
+    
+    // Memoized filtered courses for performance
+    const filteredCourses = useMemo(() => {
+        return courses; // In this implementation, filtering is done server-side
+    }, [courses]);
 
     // Modal
     const [showSortModal, setShowSortModal] = useState(false);
     const isFirstRender = useRef(true);
 
-    // Fetch courses whenever any dependency changes (search, filters, sort, or page).
-    // Skip the very first render so we don't duplicate the server-side request.
+    // Debounced search to reduce API calls
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+    
     useEffect(() => {
-        const fetchCourses = async () => {
-            try {
-                setIsLoading(true);
-                const params = new URLSearchParams();
-                if (searchQuery) params.set("search", searchQuery);
-                if (programFilter !== "all")
-                    params.set("category", programFilter);
-                params.set("limit", coursesPerPage.toString());
-                params.set(
-                    "offset",
-                    ((currentPage - 1) * coursesPerPage).toString()
-                );
-                if (sortBy) params.set("sortBy", sortBy);
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
-                const res = await fetch(`/api/courses?${params.toString()}`);
-                if (!res.ok) throw new Error("Failed to fetch courses");
-                const data = await res.json();
-                setCourses(data.courses);
-                setFilteredCourses(data.courses);
-                setTotalPages(Math.ceil(data.total / coursesPerPage));
-            } catch (err) {
-                setError(
-                    err instanceof Error ? err.message : "An error occurred"
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    // Memoized fetch function
+    const fetchCourses = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const params = new URLSearchParams();
+            if (debouncedSearchQuery) params.set("search", debouncedSearchQuery);
+            if (programFilter !== "all")
+                params.set("category", programFilter);
+            params.set("limit", coursesPerPage.toString());
+            params.set(
+                "offset",
+                ((currentPage - 1) * coursesPerPage).toString()
+            );
+            if (sortBy) params.set("sortBy", sortBy);
 
+            const res = await fetch(`/api/courses?${params.toString()}`);
+            if (!res.ok) throw new Error("Failed to fetch courses");
+            const data = await res.json();
+            setCourses(data.courses);
+            setTotalPages(Math.ceil(data.total / coursesPerPage));
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "An error occurred"
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }, [debouncedSearchQuery, programFilter, currentPage, sortBy, coursesPerPage]);
+
+    // Fetch courses whenever dependencies change
+    useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
             return;
         }
-
         fetchCourses();
-    }, [searchQuery, programFilter, currentPage, sortBy]);
+    }, [fetchCourses]);
 
     // Handle responsive
     useEffect(() => {
@@ -185,8 +196,8 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-    // Helper to render stars
-    const renderStars = (rating: number) => {
+    // Helper to render stars - memoized for performance
+    const renderStars = useCallback((rating: number) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
             stars.push(
@@ -201,7 +212,7 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
             );
         }
         return stars;
-    };
+    }, []);
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -415,142 +426,11 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {filteredCourses.map((course, index) => (
-                                    <Link
-                                        href={`/courses/${course.id}`}
+                                    <CourseCard
                                         key={`${course.id}-${course.professor}-${index}`}
-                                        className="group w-full"
-                                    >
-                                        <Card className="h-full w-full overflow-hidden transition-all hover:border-primary">
-                                            <CardHeader className="pb-3 pt-6">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0 flex-1">
-                                                        <CardTitle className="text-lg leading-normal min-h-[4rem] flex items-start break-words hyphens-auto">
-                                                            {course.title}
-                                                        </CardTitle>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                                        {course.crossListed ? (
-                                                            (() => {
-                                                                const uniqueDepts =
-                                                                    Array.from(
-                                                                        new Set(
-                                                                            (
-                                                                                course
-                                                                                    .crossListed
-                                                                                    ?.departments ??
-                                                                                []
-                                                                            )
-                                                                                .filter(
-                                                                                    Boolean
-                                                                                )
-                                                                                .map(
-                                                                                    (
-                                                                                        dept
-                                                                                    ) =>
-                                                                                        dept
-                                                                                            .trim()
-                                                                                            .toUpperCase()
-                                                                                )
-                                                                        )
-                                                                    );
-                                                                return uniqueDepts.map(
-                                                                    (
-                                                                        dept,
-                                                                        idx
-                                                                    ) => (
-                                                                        <Badge
-                                                                            key={`${dept}-${idx}`}
-                                                                            variant={
-                                                                                dept.toLowerCase() as any
-                                                                            }
-                                                                            className="min-w-[56px] justify-center text-center"
-                                                                        >
-                                                                            {dept.toUpperCase()}
-                                                                        </Badge>
-                                                                    )
-                                                                );
-                                                            })()
-                                                        ) : (
-                                                            <Badge
-                                                                variant={
-                                                                    course.category.toLowerCase() as any
-                                                                }
-                                                                className="min-w-[56px] justify-center text-center"
-                                                            >
-                                                                {course.category.toUpperCase()}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                            <CardContent className="pb-3">
-                                                <div className="flex items-center gap-1 text-sm flex-wrap">
-                                                    <div className="flex">
-                                                        {renderStars(
-                                                            course.rating
-                                                        )}
-                                                    </div>
-                                                    <span className="font-medium">
-                                                        {course.rating.toFixed(
-                                                            1
-                                                        )}
-                                                    </span>
-                                                    <span className="text-muted-foreground">
-                                                        ({course.reviewCount}{" "}
-                                                        reviews)
-                                                    </span>
-                                                </div>
-                                                <div className="mt-3 space-y-3">
-                                                    {(
-                                                        [
-                                                            [
-                                                                "Difficulty",
-                                                                course.difficulty,
-                                                            ],
-                                                            [
-                                                                "Workload",
-                                                                course.workload,
-                                                            ],
-                                                            [
-                                                                "Value",
-                                                                course.value,
-                                                            ],
-                                                        ] as [string, number][]
-                                                    ).map(([label, val]) => (
-                                                        <div
-                                                            key={label}
-                                                            className="flex items-center justify-between gap-4"
-                                                        >
-                                                            <span className="min-w-[80px] text-sm text-muted-foreground">
-                                                                {label}
-                                                            </span>
-                                                            <div className="flex flex-1 items-center gap-3">
-                                                                <div className="h-2.5 flex-1 rounded-full bg-muted">
-                                                                    <div
-                                                                        className="h-2.5 rounded-full bg-yellow-400 transition-all"
-                                                                        style={{
-                                                                            width: `${(val / 5) * 100}%`,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <span className="min-w-[40px] text-sm font-medium">
-                                                                    {val.toFixed(
-                                                                        1
-                                                                    )}
-                                                                    /5
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </CardContent>
-                                            <CardFooter className="pt-1">
-                                                <p className="line-clamp-2 text-sm text-muted-foreground w-full">
-                                                    "{course.review}"
-                                                </p>
-                                            </CardFooter>
-                                        </Card>
-                                    </Link>
+                                        course={course}
+                                        renderStars={renderStars}
+                                    />
                                 ))}
 
                                 {filteredCourses.length === 0 && (
@@ -723,3 +603,148 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
         </div>
     );
 }
+
+// Memoized course card component for better performance
+const CourseCard = memo(({ course, renderStars }: { course: Course; renderStars: (rating: number) => JSX.Element[] }) => {
+    return (
+        <Link
+            href={`/courses/${course.id}`}
+            className="group w-full"
+        >
+            <Card className="h-full w-full overflow-hidden transition-all hover:border-primary">
+                <CardHeader className="pb-3 pt-6">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                            <CardTitle className="text-lg leading-normal min-h-[4rem] flex items-start break-words hyphens-auto">
+                                {course.title}
+                            </CardTitle>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            {course.crossListed ? (
+                                (() => {
+                                    const uniqueDepts =
+                                        Array.from(
+                                            new Set(
+                                                (
+                                                    course
+                                                        .crossListed
+                                                        ?.departments ??
+                                                    []
+                                                )
+                                                    .filter(
+                                                        Boolean
+                                                    )
+                                                    .map(
+                                                        (
+                                                            dept
+                                                        ) =>
+                                                            dept
+                                                                .trim()
+                                                                .toUpperCase()
+                                                    )
+                                            )
+                                        );
+                                    return uniqueDepts.map(
+                                        (
+                                            dept,
+                                            idx
+                                        ) => (
+                                            <Badge
+                                                key={`${dept}-${idx}`}
+                                                variant={
+                                                    dept.toLowerCase() as any
+                                                }
+                                                className="min-w-[56px] justify-center text-center"
+                                            >
+                                                {dept.toUpperCase()}
+                                            </Badge>
+                                        )
+                                    );
+                                })()
+                            ) : (
+                                <Badge
+                                    variant={
+                                        course.category.toLowerCase() as any
+                                    }
+                                    className="min-w-[56px] justify-center text-center"
+                                >
+                                    {course.category.toUpperCase()}
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="pb-3">
+                    <div className="flex items-center gap-1 text-sm flex-wrap">
+                        <div className="flex">
+                            {renderStars(
+                                course.rating
+                            )}
+                        </div>
+                        <span className="font-medium">
+                            {course.rating.toFixed(
+                                1
+                            )}
+                        </span>
+                        <span className="text-muted-foreground">
+                            ({course.reviewCount}{" "}
+                            reviews)
+                        </span>
+                    </div>
+                    <div className="mt-3 space-y-3">
+                        {(
+                            [
+                                [
+                                    "Difficulty",
+                                    course.difficulty,
+                                ],
+                                [
+                                    "Workload",
+                                    course.workload,
+                                ],
+                                [
+                                    "Value",
+                                    course.value,
+                                ],
+                            ] as [string, number][]
+                        ).map(([label, val]) => (
+                            <div
+                                key={label}
+                                className="flex items-center justify-between gap-4"
+                            >
+                                <span className="min-w-[80px] text-sm text-muted-foreground">
+                                    {label}
+                                </span>
+                                <div className="flex flex-1 items-center gap-3">
+                                    <div className="h-2.5 flex-1 rounded-full bg-muted">
+                                        <div
+                                            className="h-2.5 rounded-full bg-yellow-400 transition-all"
+                                            style={{
+                                                width: `${(val / 5) * 100}%`,
+                                            }}
+                                        />
+                                    </div>
+                                    <span className="min-w-[40px] text-sm font-medium">
+                                        {val.toFixed(
+                                            1
+                                        )}
+                                        /5
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+                <CardFooter className="pt-1">
+                    <p className="line-clamp-2 text-sm text-muted-foreground w-full">
+                        "{course.review}"
+                    </p>
+                </CardFooter>
+            </Card>
+        </Link>
+    );
+});
+
+CourseCard.displayName = 'CourseCard';
+
+export default memo(CoursesClient);

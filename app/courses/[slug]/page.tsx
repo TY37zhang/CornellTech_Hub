@@ -707,6 +707,7 @@ export default function CourseDetailPage() {
                                                                         review.avatarUrl ||
                                                                         undefined
                                                                     }
+                                                                    loading="lazy"
                                                                 />
                                                                 <AvatarFallback>
                                                                     {review.author.charAt(
