@@ -324,7 +324,7 @@ const programRequirements: ProgramRequirements = {
             "Minimum grade of C- required for all courses",
             "Must maintain at least 2.5 GPA",
             "TECH 5999 (CPT credits) do not count towards degree requirements",
-            "Technion students with GPA ≥ 75 may take up to two semesters break during degree",
+            "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
         ],
         optionalCertificate: {
             name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",
@@ -380,7 +380,7 @@ const programRequirements: ProgramRequirements = {
             "Minimum grade of C- required for all courses",
             "Must maintain at least 2.5 GPA",
             "TECH 5999 (CPT credits) do not count towards degree requirements",
-            "Technion students with GPA ≥ 75 may take up to two semesters break during degree",
+            "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
         ],
         optionalCertificate: {
             name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",
@@ -436,7 +436,7 @@ const programRequirements: ProgramRequirements = {
             "Minimum grade of C- required for all courses",
             "Must maintain at least 2.5 GPA",
             "TECH 5999 (CPT credits) do not count towards degree requirements",
-            "Technion students with GPA ≥ 75 may take up to two semesters break during degree",
+            "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
         ],
         optionalCertificate: {
             name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",

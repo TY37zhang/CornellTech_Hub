@@ -128,7 +128,7 @@ export default function CourseSelector({
             ) : error ? (
                 <div className="text-center text-red-500 py-4">{error}</div>
             ) : searchResults.length > 0 ? (
-                <div className="grid gap-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     {searchResults.map((course) => (
                         <div
                             key={course.id}
@@ -136,33 +136,40 @@ export default function CourseSelector({
                                 onSelectCourse(course);
                                 setSearchResults([]);
                             }}
-                            className="flex items-center p-3 border rounded-lg hover:bg-accent/5 transition-colors cursor-pointer group"
+                            className="relative p-4 border rounded-lg hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-white"
                         >
-                            <div className="flex-1 min-w-0">
-                                <div className="font-medium truncate">
-                                    {course.code}
+                            <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="font-medium truncate">
+                                        {course.code}
+                                    </div>
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-xs px-2 py-0.5 flex-shrink-0"
+                                    >
+                                        {course.credits} cr
+                                    </Badge>
                                 </div>
-                                <div className="text-sm text-muted-foreground truncate">
+                                <div className="text-sm text-gray-600 leading-tight" style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
+                                }}>
                                     {course.name}
                                 </div>
-                                <div className="flex flex-wrap gap-2 mt-1">
+                                <div className="flex items-center justify-between">
                                     <Badge
                                         variant="outline"
-                                        className="text-xs"
+                                        className="text-xs px-2 py-0.5"
                                     >
                                         {course.department}
                                     </Badge>
-                                    <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                    >
-                                        {course.credits} credits
-                                    </Badge>
+                                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Add to Schedule
+                                    </span>
                                 </div>
                             </div>
-                            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                                Click to add
-                            </span>
                         </div>
                     ))}
                 </div>

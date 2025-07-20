@@ -756,17 +756,17 @@ export default function CourseSchedule({
                                     .map((course) => (
                                         <Card
                                             key={course.id}
-                                            className="flex flex-col justify-between p-4 [container-type:inline-size]"
+                                            className="flex flex-col justify-between p-3 [container-type:inline-size] hover:shadow-sm transition-shadow"
                                         >
                                             <div className="flex justify-between items-start">
-                                                <div className="space-y-2">
-                                                    <h3 className="text-xl font-semibold">
+                                                <div className="space-y-1.5">
+                                                    <h3 className="font-medium">
                                                         {course.code}
                                                     </h3>
-                                                    <p className="text-gray-600 text-base">
+                                                    <p className="text-gray-600 text-sm leading-tight">
                                                         {course.name}
                                                     </p>
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                         <span>
                                                             {course.department}
                                                         </span>
@@ -955,12 +955,12 @@ export default function CourseSchedule({
                                             {sorted.map((course) => (
                                                 <div
                                                     key={course.id}
-                                                    className={`relative flex flex-col space-y-2 p-4 border rounded-lg overflow-hidden ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
+                                                    className={`relative flex flex-col space-y-1.5 p-3 border rounded-lg overflow-hidden hover:shadow-sm transition-shadow ${overlaps.has(course.id!) ? "border-red-500 bg-red-50" : ""}`}
                                                 >
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="absolute top-2 right-2 z-10 h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                                        className="absolute top-2 right-2 z-10 h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground"
                                                         onClick={() =>
                                                             course.id &&
                                                             handleDeleteSchedule(
@@ -969,17 +969,17 @@ export default function CourseSchedule({
                                                         }
                                                         aria-label="Remove scheduled course"
                                                     >
-                                                        <X className="h-4 w-4" />
+                                                        <X className="h-3.5 w-3.5" />
                                                     </Button>
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                                         <div className="min-w-0">
-                                                            <h3 className="font-medium text-lg truncate">
+                                                            <h3 className="font-medium truncate">
                                                                 {
                                                                     course.courseName
                                                                 }
                                                             </h3>
-                                                            <div className="flex items-center gap-2 mt-1 text-base text-gray-600">
-                                                                <Clock className="h-4 w-4 flex-shrink-0" />
+                                                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                                                                <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                                                                 <span className="truncate">
                                                                     {
                                                                         course.startTime
@@ -1004,7 +1004,7 @@ export default function CourseSchedule({
                                                                         className="flex items-center text-red-600 ml-2"
                                                                         title="This time slot overlaps with another."
                                                                     >
-                                                                        <AlertTriangle className="h-4 w-4 mr-1" />
+                                                                        <AlertTriangle className="h-3.5 w-3.5 mr-1" />
                                                                         Overlap
                                                                     </span>
                                                                 )}
