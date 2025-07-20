@@ -117,23 +117,35 @@ export default async function Dashboard() {
                         <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_700px]">
                             <div className="flex flex-col justify-center space-y-4">
                                 <div className="space-y-2 items-center text-center">
-                                    <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center">
-                                        Cornell Tech Hub
+                                    <h1 className="text-3xl font-mono tracking-tighter sm:text-4xl md:text-5xl text-center">
+                                        <span className="text-red-600 font-bold">
+                                            [
+                                        </span>
+                                        <span className="mx-2 text-black dark:text-white">
+                                            Cornell Tech Hub
+                                        </span>
+                                        <span className="text-red-600 font-bold">
+                                            ]
+                                        </span>
                                     </h1>
-                                    <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                                        Connect with peers, share course
-                                        reviews, and discover resources for your
-                                        Cornell Tech journey.
-                                    </p>
-                                    <p className="text-sm text-muted-foreground italic">
-                                        This is a student-built independent
-                                        project and is not officially affiliated
-                                        with Cornell Tech.
+                                    <p className="max-w-[600px] text-muted-foreground md:text-xl font-mono">
+                                        {/* <span className="text-red-600 font-bold">[</span> */}
+                                        <span className="mx-1">
+                                            Connect with peers, share course reviews
+                                            <br />
+                                            Discover resources for your <span className="text-red-600">CT</span> journey.
+                                        </span>
+                                        {/* <span className="text-red-600 font-bold">]</span> */}
                                     </p>
                                 </div>
                             </div>
-                            {/* Client-side only: video preview interaction */}
-                            <HeroVideo />
+                            <div className="flex flex-col items-center">
+                                {/* Client-side only: video preview interaction */}
+                                <HeroVideo />
+                                <p className="text-sm text-muted-foreground italic mt-4 text-center">
+                                    This is a student-built independent project and is not officially affiliated with Cornell Tech.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </section>

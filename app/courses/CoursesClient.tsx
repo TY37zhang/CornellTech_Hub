@@ -210,12 +210,11 @@ export default function CoursesClient({ initialCourses, initialTotal }: Props) {
                 <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
                     <div className="container px-4 md:px-6">
                         <div className="flex flex-col items-center text-center space-y-4">
-                            <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
+                            <h1 className="text-2xl font-mono tracking-tighter sm:text-3xl md:text-4xl">
                                 Course Reviews
                             </h1>
-                            <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                                Find and share reviews for Cornell Tech courses
-                                to help you make informed decisions.
+                            <p className="max-w-[700px] text-muted-foreground text-base md:text-lg font-mono">
+                                Find and share reviews.
                             </p>
                             <div className="w-full max-w-2xl relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

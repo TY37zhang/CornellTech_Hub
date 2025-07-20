@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
     BookOpen,
     Home,
@@ -53,12 +54,19 @@ export function SiteHeader() {
                     transition={{ duration: 0.3, delay: 0.1 }}
                     className="flex items-center gap-1 md:gap-2"
                 >
-                    <Link href="/" className="flex items-center">
-                        <span className="text-base sm:text-lg md:text-lg font-mono whitespace-nowrap">
+                    <Link href="/" className="flex items-center gap-2">
+                        <Image
+                            src="/images/favicon_io/favicon.png"
+                            alt="Cornell Tech Hub"
+                            width={96}
+                            height={96}
+                            className="rounded-md"
+                        />
+                        {/* <span className="text-base sm:text-lg md:text-lg font-mono whitespace-nowrap">
                             <span className="text-red-600 font-bold">[</span>
                             <span className="mx-1">Cornell Tech Hub</span>
                             <span className="text-red-600 font-bold">]</span>
-                        </span>
+                        </span> */}
                     </Link>
                 </motion.div>
                 <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">

@@ -1462,19 +1462,18 @@ export default function PlannerPage() {
                 <div className="container mx-auto p-4">
                     {/* Program Title */}
                     <div className="text-center py-12">
-                        <h1 className="text-4xl font-bold mb-4">
+                        <h1 className="text-2xl font-mono tracking-tighter sm:text-3xl md:text-4xl mb-4">
                             Course Planner
                         </h1>
-                        <p className="text-gray-600 text-lg">
-                            Plan and track your courses at Cornell Tech to meet
-                            your program requirements.
+                        <p className="text-gray-600 text-base md:text-lg font-mono">
+                            Plan and track your academic journey.
                         </p>
                     </div>
                     {/* Program Info */}
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                         <div className="flex items-center justify-center gap-3">
                             <GraduationCap className="h-6 w-6" />
-                            <h2 className="text-xl font-semibold">
+                            <h2 className="text-xl font-mono font-semibold tracking-tighter">
                                 {programRequirements[userProgram].name}
                             </h2>
                         </div>

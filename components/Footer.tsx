@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -7,15 +6,17 @@ export function Footer() {
             <div className="container flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:py-6">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                        <Image
-                            src="/images/logo/logo.png"
-                            alt="Cornell Tech Logo"
-                            width={24}
-                            height={24}
+                        {/* <Image
+                            src="/images/favicon_io/favicon.png"
+                            alt="Cornell Tech Hub Logo"
+                            width={32}
+                            height={32}
                             className="rounded-md"
-                        />
-                        <span className="text-lg font-bold">
-                            Cornell Tech Hub
+                        /> */}
+                        <span className="text-lg font-mono">
+                            <span className="text-red-600 font-bold">[</span>
+                            <span className="mx-1">Cornell Tech Hub</span>
+                            <span className="text-red-600 font-bold">]</span>
                         </span>
                     </div>
                     <p className="text-sm text-muted-foreground">

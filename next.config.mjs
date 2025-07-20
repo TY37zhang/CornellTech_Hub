@@ -34,6 +34,9 @@ const nextConfig = {
     // import `motion` server-side. We rely on modularizeImports to reduce the
     // client bundle instead.
     experimental: {},
+    turbopack: {
+        resolveExtensions: ['.tsx', '.ts', '.jsx', '.js'],
+    },
 };
 
 export default withBundleAnalyzer(nextConfig);

@@ -9,7 +9,7 @@ export default function HeroVideo() {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     return (
-        <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last relative">
+        <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full relative">
             {showVideo ? (
                 <video
                     ref={videoRef}
