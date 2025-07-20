@@ -553,7 +553,7 @@ const AdditionalQuestions = dynamic(
 );
 
 export default function PlannerPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const [userProgram, setUserProgram] = useState<string | null>(null);
     const [coursePlan, setCoursePlan] = useState<{ [key: string]: Course[] }>(
         {}
@@ -582,6 +582,10 @@ export default function PlannerPage() {
     // Demo mode state
     const [isDemoMode, setIsDemoMode] = useState(false);
     const [showDemoBanner, setShowDemoBanner] = useState(true);
+    
+    // Ethics course tracking state
+    const [selectedEthicsCourse, setSelectedEthicsCourse] = useState<Course | null>(null);
+    const [ethicsDeductionCategory, setEthicsDeductionCategory] = useState<string | null>(null);
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
@@ -697,11 +701,16 @@ export default function PlannerPage() {
             try {
                 setIsLoading(true);
 
-                if (session?.user?.program) {
+                if (status === 'loading') {
+                    // Don't initialize while session is still loading
+                    return;
+                }
+
+                if (status === 'authenticated' && session?.user?.program) {
                     setUserProgram(session.user.program);
                     setIsDemoMode(false);
                     await loadSavedCoursePlans();
-                } else if (session) {
+                } else if (status === 'authenticated' && session) {
                     setIsDemoMode(false);
                     // Parallel fetch user program and prepare for course plans
                     const [userProgram] = await Promise.all([
@@ -712,7 +721,7 @@ export default function PlannerPage() {
                         setUserProgram(userProgram);
                         await loadSavedCoursePlans();
                     }
-                } else {
+                } else if (status === 'unauthenticated') {
                     // No session - initialize demo mode
                     initializeDemoMode();
                 }
@@ -724,7 +733,10 @@ export default function PlannerPage() {
                     variant: "destructive",
                 });
             } finally {
-                setIsLoading(false);
+                // Only stop loading if we're not in the 'loading' status
+                if (status !== 'loading') {
+                    setIsLoading(false);
+                }
             }
         };
 
@@ -765,15 +777,13 @@ export default function PlannerPage() {
                     }
                 }
             }
-            
-            setIsLoading(false);
         };
 
-        // Initialize regardless of session state
-        if (!userProgram) {
+        // Initialize when we have a definitive authentication status
+        if (status !== 'loading' && !userProgram) {
             initializePage();
         }
-    }, [session]);
+    }, [session, status]);
 
     const loadSavedCoursePlans = async () => {
         try {
@@ -831,31 +841,6 @@ export default function PlannerPage() {
         }
     };
 
-    const fetchUserProgram = async () => {
-        try {
-            const response = await fetch("/api/user");
-            const data = await response.json();
-
-            if (!data.program) {
-                toast({
-                    title: "Program not set",
-                    description:
-                        "Please set your program in the settings page first.",
-                    variant: "destructive",
-                });
-            } else {
-                setUserProgram(data.program);
-            }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "Failed to load your program information.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const fetchUserProgramAsync = async (): Promise<string | null> => {
         try {
@@ -936,33 +921,27 @@ export default function PlannerPage() {
     const calculateTotalCredits = () => {
         if (!userProgram) return 0;
 
-        return Object.values(coursePlan).reduce(
-            (total: number, courses: Course[]) => {
-                return (
-                    total +
-                    courses.reduce(
-                        (sum: number, course: Course) => sum + course.credits,
-                        0
-                    )
-                );
-            },
-            0
-        );
+        let totalCredits = 0;
+        let totalEthicsDeductions = 0;
+
+        Object.keys(coursePlan).forEach(categoryKey => {
+            const creditInfo = calculateCategoryCredits(categoryKey);
+            totalCredits += creditInfo.totalCredits;
+            totalEthicsDeductions += creditInfo.ethicsDeduction;
+        });
+
+        return totalCredits - totalEthicsDeductions;
     };
 
     const calculateRequirementProgress = (requirementKey: string) => {
         if (!userProgram) return 0;
 
-        const reqCourses: Course[] = coursePlan[requirementKey] || [];
-        const totalCredits = reqCourses.reduce(
-            (sum: number, course: Course) => sum + course.credits,
-            0
-        );
+        const creditInfo = calculateCategoryCredits(requirementKey);
         const requiredCredits =
             programRequirements[userProgram].requirements[requirementKey]
                 .credits;
 
-        return (totalCredits / requiredCredits) * 100;
+        return (creditInfo.netCredits / requiredCredits) * 100;
     };
 
     const calculateOverallProgress = () => {
@@ -1281,11 +1260,21 @@ export default function PlannerPage() {
         course?: Course,
         deductFromCategory?: string
     ) => {
+        // Update the ethics course tracking state
+        if (hasEthicsCourse && course && deductFromCategory) {
+            setSelectedEthicsCourse(course);
+            setEthicsDeductionCategory(deductFromCategory);
+            console.log("Ethics course set:", course.code, "deducting from:", deductFromCategory);
+        } else {
+            setSelectedEthicsCourse(null);
+            setEthicsDeductionCategory(null);
+            console.log("Ethics course cleared");
+        }
+        
         // Simplified for demo mode - just save to localStorage
         if (isDemoMode) {
             setTimeout(() => saveDemoData(), 0);
         }
-        console.log("Ethics course change:", hasEthicsCourse, course, deductFromCategory);
     };
 
     const handleTechie5901Change = async (hasTechie5901: boolean) => {
@@ -1294,6 +1283,53 @@ export default function PlannerPage() {
             setTimeout(() => saveDemoData(), 0);
         }
         console.log("Techie 5901 change:", hasTechie5901);
+    };
+
+    // Helper function to check if a course fulfills ethics requirement
+    const isEthicsCourse = (courseCode: string): boolean => {
+        // List of courses that can fulfill ethics requirement
+        const ethicsCourseCodes = [
+            "INFO 5910", // Revolutionary Technologies
+            "INFO 5325", // Social and Ethical Issues in Tech
+            "TECH 5010", // Ethics in Technology
+            "INFO 5999", // Ethics in AI and Data Science
+        ];
+        return ethicsCourseCodes.includes(courseCode);
+    };
+
+    // Helper function to check if ethics requirement is fulfilled and get the course
+    const getEthicsFulfillmentInfo = () => {
+        // Check Additional Questions state for selected ethics course
+        // For demo mode, we'll assume INFO 5910 is the ethics course if it's assigned
+        const ethicsCourse = Object.values(coursePlan).flat().find(course => 
+            isEthicsCourse(course.code)
+        );
+        return ethicsCourse;
+    };
+
+    // Helper function to calculate credits for a category including ethics deduction
+    const calculateCategoryCredits = (categoryKey: string) => {
+        const courses = coursePlan[categoryKey] || [];
+        const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+        
+        // Check if this category should have ethics deduction based on user selection
+        const shouldDeductEthicsCredit = selectedEthicsCourse && 
+            ethicsDeductionCategory === categoryKey &&
+            courses.some(course => course.id === selectedEthicsCourse.id);
+        
+        // Programs that have ethics requirements typically include MS IS programs
+        const programsWithEthicsRequirements = [
+            "ms-is-cm", "ms-is-ht", "ms-is-ut"  // MS Information Systems programs
+        ];
+        const ethicsDeduction = shouldDeductEthicsCredit && 
+            userProgram && 
+            programsWithEthicsRequirements.includes(userProgram) ? 1 : 0;
+            
+        return {
+            totalCredits,
+            ethicsDeduction,
+            netCredits: totalCredits - ethicsDeduction
+        };
     };
 
     const handleCourseTaken = async (course: Course, taken: boolean) => {
@@ -1361,7 +1397,7 @@ export default function PlannerPage() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading || status === 'loading') {
         return (
             <div>
                 {/* Loading Skeleton */}
@@ -1744,12 +1780,14 @@ export default function PlannerPage() {
                                                     .trim()}
                                             </span>
                                             <span className="text-sm text-muted-foreground font-normal">
-                                                {(coursePlan[key] || []).reduce(
-                                                    (sum, course) =>
-                                                        sum + course.credits,
-                                                    0
-                                                )}{" "}
-                                                / {requirement.credits} cr
+                                                {(() => {
+                                                    const creditInfo = calculateCategoryCredits(key);
+                                                    
+                                                    if (creditInfo.ethicsDeduction > 0) {
+                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. -1 ethics deduction)`;
+                                                    }
+                                                    return `${creditInfo.totalCredits} / ${requirement.credits} cr`;
+                                                })()}
                                             </span>
                                         </div>
                                         {/* Chevron for mobile */}
@@ -1791,26 +1829,41 @@ export default function PlannerPage() {
                                                     (course) => (
                                                         <div
                                                             key={course.id}
-                                                            className="flex justify-between items-center text-sm p-2 rounded bg-muted"
+                                                            className={`flex justify-between items-center text-sm p-2 rounded ${
+                                                                selectedEthicsCourse && selectedEthicsCourse.id === course.id
+                                                                    ? "bg-blue-50 border border-blue-200" 
+                                                                    : "bg-muted"
+                                                            }`}
                                                         >
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="font-medium">
-                                                                    {
-                                                                        course.code
-                                                                    }
+                                                                <div className={`font-medium ${
+                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
+                                                                        ? "text-blue-800" 
+                                                                        : ""
+                                                                }`}>
+                                                                    {course.code}
+                                                                    {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (Ethics)"}
                                                                 </div>
-                                                                <div className="text-sm text-muted-foreground truncate">
-                                                                    {
-                                                                        course.name
-                                                                    }
+                                                                <div className={`text-sm truncate ${
+                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
+                                                                        ? "text-blue-600" 
+                                                                        : "text-muted-foreground"
+                                                                }`}>
+                                                                    {course.name}
+                                                                    {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " - fulfills ethics requirement"}
                                                                 </div>
                                                             </div>
                                                             <Badge
                                                                 variant="secondary"
-                                                                className="ml-2"
+                                                                className={`ml-2 ${
+                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
+                                                                        ? "bg-blue-100 text-blue-800" 
+                                                                        : ""
+                                                                }`}
                                                             >
                                                                 {course.credits}{" "}
                                                                 cr
+                                                                {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (-1)"}
                                                             </Badge>
                                                         </div>
                                                     )
@@ -1821,6 +1874,7 @@ export default function PlannerPage() {
                                 </Card>
                             );
                         })}
+                        
                         {/* Collapsible Additional Questions Card */}
                         <Card className="p-0 hover:shadow-md transition-shadow group">
                             <div
@@ -1874,6 +1928,8 @@ export default function PlannerPage() {
                                     selectedCourses={selectedCourses}
                                     coursePlan={coursePlan}
                                     isDemoMode={isDemoMode}
+                                    currentSelectedEthicsCourse={selectedEthicsCourse}
+                                    currentEthicsDeductionCategory={ethicsDeductionCategory}
                                 />
                             </div>
                         </Card>

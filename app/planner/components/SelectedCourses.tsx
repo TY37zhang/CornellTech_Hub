@@ -183,7 +183,7 @@ export default function SelectedCourses({
                                                 </p>
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 w-full">
                                                     <span>
-                                                        {course.department}
+                                                        {course.department.toUpperCase()}
                                                     </span>
                                                     <span>•</span>
                                                     <span className="whitespace-nowrap">

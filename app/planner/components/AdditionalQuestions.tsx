@@ -32,6 +32,8 @@ interface AdditionalQuestionsProps {
     selectedCourses: Course[];
     coursePlan: { [key: string]: Course[] };
     isDemoMode?: boolean;
+    currentSelectedEthicsCourse?: Course | null;
+    currentEthicsDeductionCategory?: string | null;
 }
 
 export default function AdditionalQuestions({
@@ -40,6 +42,8 @@ export default function AdditionalQuestions({
     selectedCourses,
     coursePlan,
     isDemoMode = false,
+    currentSelectedEthicsCourse,
+    currentEthicsDeductionCategory,
 }: AdditionalQuestionsProps) {
     const [tookEthics, setTookEthics] = useState(false);
     const [tookTechie5901, setTookTechie5901] = useState(false);
@@ -51,10 +55,29 @@ export default function AdditionalQuestions({
     // Add loading states
     const [isLoading, setIsLoading] = useState(true);
 
+    // Sync local state with parent component's ethics course state
+    useEffect(() => {
+        if (currentSelectedEthicsCourse) {
+            setTookEthics(true);
+            setSelectedEthicsCourse(currentSelectedEthicsCourse.code);
+            setDeductedCategory(currentEthicsDeductionCategory);
+        } else {
+            setTookEthics(false);
+            setSelectedEthicsCourse("");
+            setDeductedCategory(null);
+        }
+    }, [currentSelectedEthicsCourse, currentEthicsDeductionCategory]);
+
     // Load saved requirements on component mount
     useEffect(() => {
         const loadSavedRequirements = async () => {
             try {
+                // If parent has already provided ethics course state, don't override it with demo data
+                if (currentSelectedEthicsCourse) {
+                    setIsLoading(false);
+                    return;
+                }
+                
                 if (isDemoMode) {
                     // Demo mode - load from localStorage or set defaults
                     const savedDemoData = localStorage.getItem('additionalQuestionsDemo');
@@ -65,16 +88,30 @@ export default function AdditionalQuestions({
                         setDeductedCategory(data.deductedCategory || null);
                         setTookTechie5901(data.tookTechie5901 || false);
                     } else {
-                        // Set demo defaults based on screenshots
+                        // Set demo defaults - INFO 5910 fulfills ethics requirement
+                        // Dynamically find which category INFO 5910 is assigned to
+                        const ethicsCourse = selectedCourses.find(c => c.code === "INFO 5910");
+                        let detectedCategory = null;
+                        
+                        if (ethicsCourse) {
+                            // Find which category contains this ethics course
+                            for (const [category, courses] of Object.entries(coursePlan)) {
+                                if (courses.some(course => course.code === "INFO 5910")) {
+                                    detectedCategory = category;
+                                    break;
+                                }
+                            }
+                        }
+                        
                         setTookEthics(true);
                         setSelectedEthicsCourse("INFO 5910");
-                        setDeductedCategory("ConcentrationCore");
+                        setDeductedCategory(detectedCategory || "ConcentrationCore"); // Fallback to ConcentrationCore if not found
                         setTookTechie5901(true);
                         
-                        // Apply the demo settings
-                        const ethicsCourse = selectedCourses.find(c => c.code === "INFO 5910");
-                        if (ethicsCourse) {
-                            onEthicsCourseChange(true, ethicsCourse, "ConcentrationCore");
+                        // Apply the demo settings - the actual credit deduction will be handled
+                        // by the new simplified logic in the planner component
+                        if (ethicsCourse && detectedCategory) {
+                            onEthicsCourseChange(true, ethicsCourse, detectedCategory);
                         }
                         onTechie5901Change(true);
                     }
@@ -165,7 +202,7 @@ export default function AdditionalQuestions({
         };
 
         loadSavedRequirements();
-    }, [selectedCourses, onEthicsCourseChange, onTechie5901Change, coursePlan, isDemoMode]);
+    }, [isDemoMode, currentSelectedEthicsCourse, selectedCourses, coursePlan, onEthicsCourseChange, onTechie5901Change]); // Include necessary dependencies but prioritize parent props
 
     // Save demo data to localStorage
     const saveDemoData = () => {
@@ -329,35 +366,31 @@ export default function AdditionalQuestions({
         );
 
         if (selectedCourse) {
-            if (selectedCourse.credits === 1) {
-                // For 1-credit courses, deduct from Jacobs Technical Core
-                setDeductedCategory("JacobsTechnicalCore");
-                onEthicsCourseChange(
-                    true,
-                    selectedCourse,
-                    "JacobsTechnicalCore"
-                );
-                await saveEthicsRequirement(
-                    true,
-                    selectedCourse,
-                    "JacobsTechnicalCore"
-                );
-            } else {
-                // For courses with more than 1 credit, deduct from their assigned category
-                const assignedCategory = findCourseAssignment(courseCode);
-                if (assignedCategory) {
-                    setDeductedCategory(assignedCategory);
-                    onEthicsCourseChange(
-                        true,
-                        selectedCourse,
-                        assignedCategory
-                    );
-                    await saveEthicsRequirement(
-                        true,
-                        selectedCourse,
-                        assignedCategory
-                    );
+            // Always deduct from the category where the course is currently assigned
+            const assignedCategory = findCourseAssignment(courseCode);
+            let targetCategory = assignedCategory;
+            
+            if (!targetCategory) {
+                // If not assigned to a category yet, determine the best default
+                if (selectedCourse.credits === 1) {
+                    // For 1-credit ethics courses, default to Jacobs Technical Core if it exists
+                    targetCategory = Object.keys(coursePlan).includes("JacobsTechnicalCore") 
+                        ? "JacobsTechnicalCore" 
+                        : Object.keys(coursePlan)[0]; // Fallback to first available category
+                    console.log(`1-credit ethics course ${courseCode} not assigned - defaulting to ${targetCategory}`);
+                } else {
+                    // For multi-credit courses, default to first available category
+                    targetCategory = Object.keys(coursePlan)[0];
+                    console.log(`Ethics course ${courseCode} not assigned to category - defaulting to ${targetCategory}`);
                 }
+            } else {
+                console.log(`Ethics course ${courseCode} (${selectedCourse.credits} cr) - deducting from assigned category: ${assignedCategory}`);
+            }
+            
+            if (targetCategory) {
+                setDeductedCategory(targetCategory);
+                onEthicsCourseChange(true, selectedCourse, targetCategory);
+                await saveEthicsRequirement(true, selectedCourse, targetCategory);
             }
         }
     };
@@ -371,105 +404,106 @@ export default function AdditionalQuestions({
 
     if (isLoading) {
         return (
-            <Card className="p-4">
-                <div className="space-y-4">
-                    <h3 className="font-medium">Additional Questions</h3>
-                    <div className="text-sm text-muted-foreground">
-                        Loading...
-                    </div>
+            <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                    Loading...
                 </div>
-            </Card>
+            </div>
         );
     }
 
     return (
-        <Card className="p-4">
-            <div className="space-y-4">
-                <h3 className="font-medium">Additional Questions</h3>
-                <div className="space-y-4">
-                    {/* Ethics Course Question */}
-                    <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="ethics"
-                                checked={tookEthics}
-                                onCheckedChange={handleEthicsCheckboxChange}
-                            />
-                            <label
-                                htmlFor="ethics"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                                Did you take ethics course?
-                            </label>
-                        </div>
-                        {tookEthics && (
-                            <div className="pl-6 space-y-2">
-                                <label className="text-sm font-medium">
-                                    Which course did you take?
-                                </label>
-                                <Select
-                                    value={selectedEthicsCourse}
-                                    onValueChange={handleEthicsCourseSelect}
-                                >
-                                    <SelectTrigger className="w-full bg-white border border-input rounded-md h-10">
-                                        <SelectValue
-                                            placeholder="Select course"
-                                            className="text-sm"
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white">
-                                        {selectedCourses.length > 0 ? (
-                                            selectedCourses.map((course) => (
-                                                <SelectItem
-                                                    key={course.id}
-                                                    value={course.code}
-                                                    className="text-sm py-2.5 pl-3 pr-6 hover:bg-gray-100 cursor-pointer"
-                                                >
-                                                    {course.code} -{" "}
-                                                    {course.name}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <SelectItem
-                                                value=""
-                                                disabled
-                                                className="text-sm py-2.5 pl-3 pr-6 text-gray-500"
-                                            >
-                                                No courses selected
-                                            </SelectItem>
-                                        )}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Techie 5901 Question */}
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="techie5901"
-                            checked={tookTechie5901}
-                            onCheckedChange={handleTechie5901CheckboxChange}
-                        />
-                        <label
-                            htmlFor="techie5901"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                            Are you taking INFO 5920 with anchor course?
-                        </label>
-                    </div>
+        <div className="space-y-4">
+            {/* Ethics Course Question */}
+            <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="ethics"
+                        checked={tookEthics}
+                        onCheckedChange={handleEthicsCheckboxChange}
+                    />
+                    <label
+                        htmlFor="ethics"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        Did you take ethics course?
+                    </label>
                 </div>
+                {tookEthics && (
+                    <div className="pl-6 space-y-2">
+                        <label className="text-sm font-medium">
+                            Which course did you take?
+                        </label>
+                        <Select
+                            value={selectedEthicsCourse}
+                            onValueChange={handleEthicsCourseSelect}
+                        >
+                            <SelectTrigger className="w-full bg-white border border-input rounded-md h-10">
+                                <SelectValue
+                                    placeholder="Select course"
+                                    className="text-sm"
+                                />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                {selectedCourses.length > 0 ? (
+                                    selectedCourses.map((course) => (
+                                        <SelectItem
+                                            key={course.id}
+                                            value={course.code}
+                                            className="text-sm py-2.5 pl-3 pr-6 hover:bg-gray-100 cursor-pointer"
+                                        >
+                                            {course.code} -{" "}
+                                            {course.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem
+                                        value=""
+                                        disabled
+                                        className="text-sm py-2.5 pl-3 pr-6 text-gray-500"
+                                    >
+                                        No courses selected
+                                    </SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
             </div>
 
-            {/* Deduction Info Card */}
+            {/* Techie 5901 Question */}
+            <div className="flex items-center space-x-2">
+                <Checkbox
+                    id="techie5901"
+                    checked={tookTechie5901}
+                    onCheckedChange={handleTechie5901CheckboxChange}
+                />
+                <label
+                    htmlFor="techie5901"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    Are you taking INFO 5920 with anchor course?
+                </label>
+            </div>
+
+            {/* Ethics Status Info Card */}
             {tookEthics && selectedEthicsCourse && deductedCategory && (
-                <Card className="p-4 bg-muted mt-4">
-                    <div className="text-sm text-muted-foreground">
-                        Deducted 1 cr for Ethics from{" "}
-                        {deductedCategory.replace(/([A-Z])/g, " $1").trim()}
+                <Card className="p-4 bg-green-50 border-green-200 mt-4">
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium text-green-800">
+                            ✓ Ethics Requirement Fulfilled
+                        </div>
+                        <div className="text-sm text-green-700">
+                            <div className="mb-1">
+                                <strong>{selectedEthicsCourse}</strong> fulfills the ethics requirement.
+                            </div>
+                            <div className="text-green-600">
+                                1 credit is automatically deducted from <strong>{deductedCategory.replace(/([A-Z])/g, " $1").trim()}</strong> to avoid double-counting.
+                            </div>
+                        </div>
                     </div>
                 </Card>
             )}
-        </Card>
+        </div>
     );
 }

@@ -333,26 +333,6 @@ export const sampleCourses: Course[] = [
         year: 2025,
     },
     {
-        id: "sample-ethics-course",
-        code: "ETHICS",
-        name: "Ethics Course Credit",
-        credits: 1,
-        description: "Ethics course requirement that can be fulfilled by INFO5910 - Revolutionary Technologies.",
-        department: "ETHICS",
-        semester: "Fall",
-        year: 2024,
-    },
-    {
-        id: "sample-ethics-deduct",
-        code: "ETHICS-DEDUCT",
-        name: "Ethics Credit Deduction",
-        credits: -1,
-        description: "Credit deduction when ethics requirement is fulfilled by another course.",
-        department: "ETHICS",
-        semester: "Fall",
-        year: 2024,
-    },
-    {
         id: "sample-cs-5682",
         code: "CS 5682",
         name: "HCI and Design",
@@ -473,6 +453,16 @@ export const sampleCourses: Course[] = [
         department: "TECH",
         semester: "Fall",
         year: 2024,
+    },
+    {
+        id: "sample-info-5999-ethics",
+        code: "INFO 5999",
+        name: "Ethics in AI and Data Science",
+        credits: 1,
+        description: "Special topics course covering ethical considerations in artificial intelligence and data science applications.",
+        department: "INFO",
+        semester: "Spring",
+        year: 2025,
     },
 
     // TECHIE Courses
@@ -697,13 +687,11 @@ export const sampleSelectedCourses: Course[] = [
     { ...sampleCourses.find(c => c.code === "CS 5682")!, taken: true }, // HCI and Design (3 cr) - TAKEN
     { ...sampleCourses.find(c => c.code === "INFO 5368")!, taken: false }, // Practice & Applications of ML (3 cr) - NOT TAKEN
     { ...sampleCourses.find(c => c.code === "CS 5112")!, taken: true }, // Algorithms and Data Structures (3 cr) - TAKEN
-    { ...sampleCourses.find(c => c.code === "ETHICS")!, taken: true }, // Ethics Course Credit (1 cr) - TAKEN
     
     // Concentration Core courses (most taken)
     { ...sampleCourses.find(c => c.code === "INFO 5330")!, taken: true }, // Tech, Media & Democracy (3 cr) - TAKEN
     { ...sampleCourses.find(c => c.code === "INFO 5310")!, taken: false }, // Psychological and Social Aspects of Technology (3 cr) - NOT TAKEN
-    { ...sampleCourses.find(c => c.code === "INFO 5910")!, taken: true }, // Revolutionary Technologies (3 cr) - TAKEN
-    { ...sampleCourses.find(c => c.code === "ETHICS-DEDUCT")!, taken: true }, // Ethics Credit Deduction (-1 cr) - TAKEN
+    { ...sampleCourses.find(c => c.code === "INFO 5910")!, taken: true }, // Revolutionary Technologies (3 cr) - TAKEN (fulfills ethics requirement)
     
     // Concentration Electives courses (most taken, but leave 1 not taken)
     { ...sampleCourses.find(c => c.code === "CS 5304")!, taken: true }, // Data Science in the Wild (3 cr) - TAKEN
@@ -729,13 +717,11 @@ export const sampleCoursePlan: { [key: string]: Course[] } = {
         sampleCourses.find(c => c.code === "CS 5682")!, // HCI and Design (3 cr)
         sampleCourses.find(c => c.code === "INFO 5368")!, // Practice & Applications of ML (3 cr)
         sampleCourses.find(c => c.code === "CS 5112")!, // Algorithms and Data Structures (3 cr)
-        sampleCourses.find(c => c.code === "ETHICS")!, // Ethics Course Credit (1 cr)
     ].filter(Boolean),
     ConcentrationCore: [
         sampleCourses.find(c => c.code === "INFO 5330")!, // Tech, Media & Democracy (3 cr)
         sampleCourses.find(c => c.code === "INFO 5310")!, // Psychological and Social Aspects (3 cr)
-        sampleCourses.find(c => c.code === "INFO 5910")!, // Revolutionary Technologies (3 cr)
-        sampleCourses.find(c => c.code === "ETHICS-DEDUCT")!, // Ethics Credit Deduction (-1 cr)
+        sampleCourses.find(c => c.code === "INFO 5910")!, // Revolutionary Technologies (3 cr) - fulfills ethics requirement
     ].filter(Boolean),
     ConcentrationElectives: [
         sampleCourses.find(c => c.code === "CS 5304")!, // Data Science in the Wild (3 cr)
