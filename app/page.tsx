@@ -40,7 +40,7 @@ export const metadata: Metadata = {
         "NYC Campus",
     ],
     openGraph: {
-        title: "Cornell Tech Hub",
+        title: "Cornell Tech Hub - Student Community & Resources",
         description:
             "Connect with peers, share reviews, and discover resources for your Cornell Tech journey.",
         url: "https://cornell-tech-hub.com/",
