@@ -47,10 +47,10 @@ export const metadata: Metadata = {
         siteName: "Cornell Tech Hub",
         images: [
             {
-                url: "/images/logo/logo.png",
+                url: "/images/siteshot.png",
                 width: 1200,
                 height: 630,
-                alt: "Cornell Tech Hub logo",
+                alt: "Cornell Tech Hub - Student community platform for course reviews, forum discussions, and resources",
             },
         ],
         locale: "en_US",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
         title: "Cornell Tech Hub",
         description:
             "Connect with peers, share reviews, and discover resources for your Cornell Tech journey.",
-        images: ["/images/logo/logo.png"],
+        images: ["/images/siteshot.png"],
     },
     alternates: {
         canonical: "https://www.cornelltechhub.info/",

@@ -30,8 +30,24 @@ export const metadata = {
     description: "A community for Cornell Tech students",
     generator: "v0.dev",
     icons: {
-        icon: "/images/logo/cornell-tech.svg",
+        icon: [
+            { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+            { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+            { url: "/favicon.ico", sizes: "any" }
+        ],
+        apple: "/apple-touch-icon.png",
+        other: [
+            {
+                rel: "android-chrome-192x192",
+                url: "/android-chrome-192x192.png",
+            },
+            {
+                rel: "android-chrome-512x512", 
+                url: "/android-chrome-512x512.png",
+            },
+        ],
     },
+    manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -41,11 +57,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <meta
                     name="viewport"
                     content="width=device-width, initial-scale=1"
-                />
-                <link
-                    rel="icon"
-                    href="/images/logo/cornell-tech.svg"
-                    type="image/svg+xml"
                 />
             </head>
             <body className={inter.className} suppressHydrationWarning={true}>

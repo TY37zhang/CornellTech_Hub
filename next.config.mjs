@@ -16,15 +16,14 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     images: {
-        domains: [
-            "images.unsplash.com",
-            "plus.unsplash.com",
-            "placeholder.svg",
-        ],
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "**",
+                hostname: "images.unsplash.com",
+            },
+            {
+                protocol: "https",
+                hostname: "plus.unsplash.com",
             },
         ],
         unoptimized: false,

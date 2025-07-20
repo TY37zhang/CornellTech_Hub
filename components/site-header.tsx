@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
     BookOpen,
     Home,
@@ -54,16 +53,11 @@ export function SiteHeader() {
                     transition={{ duration: 0.3, delay: 0.1 }}
                     className="flex items-center gap-1 md:gap-2"
                 >
-                    <Link href="/" className="flex items-center gap-1 md:gap-2">
-                        <Image
-                            src="/images/logo/logo.png"
-                            alt="Cornell Tech Logo"
-                            width={32}
-                            height={32}
-                            className="rounded-md"
-                        />
-                        <span className="text-base sm:text-lg md:text-lg font-bold whitespace-nowrap">
-                            Cornell Tech Hub
+                    <Link href="/" className="flex items-center">
+                        <span className="text-base sm:text-lg md:text-lg font-mono whitespace-nowrap">
+                            <span className="text-red-600 font-bold">[</span>
+                            <span className="mx-1">Cornell Tech Hub</span>
+                            <span className="text-red-600 font-bold">]</span>
                         </span>
                     </Link>
                 </motion.div>
