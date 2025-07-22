@@ -62,11 +62,6 @@
       "source": "/signup",
       "destination": "/auth/signup",
       "permanent": true
-    },
-    {
-      "source": "/admin",
-      "destination": "/",
-      "permanent": false
     }
   ],
   "rewrites": [
