@@ -13,6 +13,9 @@ declare module "next-auth" {
         user: {
             id: string;
             program: string | null;
+            role: string;
+            is_admin: boolean;
+            is_mod: boolean;
         } & DefaultSession["user"];
     }
 }
@@ -36,6 +39,31 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: "/auth/signin",
+    },
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookies: {
+        csrfToken: {
+            name: process.env.NODE_ENV === "production" 
+                ? "__Host-next-auth.csrf-token" 
+                : "next-auth.csrf-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
+        sessionToken: {
+            name: process.env.NODE_ENV === "production" 
+                ? "__Secure-next-auth.session-token" 
+                : "next-auth.session-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
     },
     callbacks: {
         async signIn({ user, account, profile }) {
@@ -86,6 +114,25 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id;
             }
+            
+            // Fetch user role and elevation flags for middleware access
+            if (token.id) {
+                try {
+                    const dbUser = await prisma.users.findUnique({
+                        where: { id: token.id as string },
+                        select: { role: true, is_admin: true, is_mod: true },
+                    });
+                    
+                    if (dbUser) {
+                        token.role = dbUser.role || 'student';
+                        token.is_admin = dbUser.is_admin || false;
+                        token.is_mod = dbUser.is_mod || false;
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data in JWT callback:', error);
+                }
+            }
+            
             return token;
         },
         async session({ session, token }) {
@@ -93,19 +140,30 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string;
 
                 // Get the latest user data from database
-                const dbUser = await prisma.users.findUnique({
-                    where: { id: token.id as string },
-                    select: { name: true, avatar_url: true, program: true },
-                });
+                try {
+                    const dbUser = await prisma.users.findUnique({
+                        where: { id: token.id as string },
+                        select: { name: true, avatar_url: true, program: true, role: true, is_admin: true, is_mod: true },
+                    });
 
-                if (!dbUser) {
-                    return session;
+                    if (!dbUser) {
+                        return session;
+                    }
+
+                    session.user.name = dbUser.name;
+                    session.user.program = dbUser.program;
+                    session.user.role = dbUser.role || 'student';
+                    session.user.is_admin = dbUser.is_admin || false;
+                    session.user.is_mod = dbUser.is_mod || false;
+                    session.user.image =
+                        dbUser.avatar_url || DEFAULT_PROFILE_PICTURE;
+                } catch (error) {
+                    console.error('Error fetching user data in session:', error);
+                    // Fallback to token data or defaults
+                    session.user.role = (token.role as string) || 'student';
+                    session.user.is_admin = (token.is_admin as boolean) || false;
+                    session.user.is_mod = (token.is_mod as boolean) || false;
                 }
-
-                session.user.name = dbUser.name;
-                session.user.program = dbUser.program;
-                session.user.image =
-                    dbUser.avatar_url || DEFAULT_PROFILE_PICTURE;
             }
             return session;
         },

@@ -13,6 +13,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import ThreadContent from "./ThreadContent";
 import { notFound } from "next/navigation";
+import { getRoleDisplayName } from "@/lib/roles";
 
 // Helper function to format date
 function formatDate(dateStr: string): string {
@@ -49,6 +50,7 @@ async function getThreadData(slug: string) {
                     id: true,
                     name: true,
                     avatar_url: true,
+                    role: true,
                 },
             },
             forum_categories: {
@@ -68,12 +70,16 @@ async function getThreadData(slug: string) {
                 select: { id: true },
             },
             forum_comments: {
+                where: {
+                    status: "active"
+                },
                 include: {
                     users: {
                         select: {
                             id: true,
                             name: true,
                             avatar_url: true,
+                            role: true,
                         },
                     },
                     comment_votes: {
@@ -101,7 +107,7 @@ async function getThreadData(slug: string) {
             name: post.users.name,
             avatar:
                 post.users.avatar_url || "/placeholder.svg?height=40&width=40",
-            program: "Student",
+            program: getRoleDisplayName(post.users.role),
             joinDate: formatDate(post.created_at),
             postCount: await prisma.forum_posts.count({
                 where: { author_id: post.users.id, status: "active" },
@@ -139,7 +145,7 @@ async function getThreadData(slug: string) {
                 avatar:
                     comment.users.avatar_url ||
                     "/placeholder.svg?height=40&width=40",
-                program: "Student",
+                program: getRoleDisplayName(comment.users.role),
                 joinDate: formatDate(comment.created_at),
             },
         };

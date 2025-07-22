@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { sanitizeContent } from "@/lib/sanitization";
 
 // Define the request schema
 const updateProfileSchema = z.object({
@@ -60,10 +61,48 @@ export async function PATCH(request: NextRequest) {
         // Validate request body
         const validatedData = updateProfileSchema.parse(body);
 
+        // Sanitize the name field
+        const nameSanitization = sanitizeContent(validatedData.name.trim(), 'text');
+        
+        if (!nameSanitization.isValid) {
+            return NextResponse.json(
+                { 
+                    error: "Name contains inappropriate content",
+                    violations: nameSanitization.violations
+                },
+                { status: 400 }
+            );
+        }
+
+        const sanitizedName = nameSanitization.sanitized;
+
+        // Additional validation
+        if (sanitizedName.length < 2) {
+            return NextResponse.json(
+                { error: "Name must be at least 2 characters long" },
+                { status: 400 }
+            );
+        }
+
+        if (sanitizedName.length > 100) {
+            return NextResponse.json(
+                { error: "Name must be less than 100 characters long" },
+                { status: 400 }
+            );
+        }
+
+        // Check for suspicious patterns in name
+        if (/^\d+$/.test(sanitizedName)) {
+            return NextResponse.json(
+                { error: "Name cannot be only numbers" },
+                { status: 400 }
+            );
+        }
+
         // Update user profile in database
         const updatedUser = await prisma.users.update({
             where: { email: session.user.email },
-            data: { name: validatedData.name },
+            data: { name: sanitizedName },
             select: { id: true, name: true, email: true, avatar_url: true },
         });
 

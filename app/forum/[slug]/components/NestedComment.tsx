@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Reply, Edit, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Reply, Edit, Trash2, ChevronDown, ChevronRight, Flag } from "lucide-react";
 import { CommentActions } from "@/app/components/CommentActions";
 import { updateForumComment } from "../../actions";
 import { toast } from "@/components/ui/use-toast";
@@ -31,6 +31,7 @@ import {
     AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import ReplyForm from "./ReplyForm";
+import ReportModal from "@/components/ReportModal";
 
 interface NestedCommentProps {
     comment: {
@@ -76,6 +77,8 @@ export default function NestedComment({
     const [editContent, setEditContent] = useState(comment.content);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [reportingComment, setReportingComment] = useState<{id: string, title: string} | null>(null);
 
     const canReply = comment.depth < maxDepth;
     const isAuthor = session?.user?.id === comment.author?.id;
@@ -184,6 +187,14 @@ export default function NestedComment({
 
     const toggleCollapse = () => {
         setIsCollapsed(!isCollapsed);
+    };
+
+    const handleReportComment = () => {
+        setReportingComment({
+            id: comment.id,
+            title: `Comment by ${comment.author?.name || 'user'} in forum thread`
+        });
+        setReportModalOpen(true);
     };
 
     const indentationLevel = Math.min(comment.depth, 3); // Max visual indentation
@@ -409,55 +420,78 @@ export default function NestedComment({
                             )}
                         </div>
 
-                        {isAuthor && !comment.isDeleted && (
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={handleEdit}
-                                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                    disabled={isEditing}
-                                >
-                                    <Edit className="h-3 w-3" />
-                                </Button>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                        <div className="flex items-center gap-1">
+                            {isAuthor && !comment.isDeleted ? (
+                                <>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={handleEdit}
+                                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                        disabled={isEditing}
+                                    >
+                                        <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                disabled={isEditing}
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>
+                                                    Delete comment
+                                                </AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone.
+                                                    This will permanently remove
+                                                    your comment and all replies to
+                                                    it from the thread.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>
+                                                    Cancel
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    onClick={handleDelete}
+                                                >
+                                                    Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    {!comment.isDeleted && (
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            onClick={handleReportComment}
                                             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                            disabled={isEditing}
                                         >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Flag className="h-3 w-3" />
                                         </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>
-                                                Delete comment
-                                            </AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                This action cannot be undone.
-                                                This will permanently remove
-                                                your comment and all replies to
-                                                it from the thread.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>
-                                                Cancel
-                                            </AlertDialogCancel>
-                                            <AlertDialogAction
-                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                onClick={handleDelete}
-                                            >
-                                                Delete
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
-                        )}
+                                    )}
+                                </>
+                            ) : (
+                                !comment.isDeleted && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={handleReportComment}
+                                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <Flag className="h-3 w-3" />
+                                    </Button>
+                                )
+                            )}
+                        </div>
                     </div>
                 </CardFooter>
             </Card>
@@ -490,6 +524,20 @@ export default function NestedComment({
                         />
                     ))}
                 </div>
+            )}
+
+            {/* Report Comment Modal */}
+            {reportingComment && (
+                <ReportModal
+                    isOpen={reportModalOpen}
+                    onClose={() => {
+                        setReportModalOpen(false);
+                        setReportingComment(null);
+                    }}
+                    reportedItemType="comment"
+                    reportedItemId={reportingComment.id}
+                    reportedItemTitle={reportingComment.title}
+                />
             )}
         </div>
     );

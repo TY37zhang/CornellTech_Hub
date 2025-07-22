@@ -35,6 +35,9 @@ export async function GET(
                 year: true,
                 credits: true,
                 course_reviews: {
+                    where: {
+                        status: 'active' // Only include active reviews in statistics
+                    },
                     select: {
                         overall_rating: true,
                         difficulty: true,
@@ -157,10 +160,13 @@ export async function GET(
             };
         });
 
-        // Fetch ALL reviews for the course with user details
+        // Fetch ALL reviews for the course with user details (only active reviews for public view)
         const courseIds = allCourseInstances.map((c) => c.id);
         const reviewsResult = await prisma.course_reviews.findMany({
-            where: { course_id: { in: courseIds } },
+            where: { 
+                course_id: { in: courseIds },
+                status: 'active' // Only show active reviews to public users
+            },
             include: {
                 users: { select: { id: true, name: true, avatar_url: true } },
                 courses: {

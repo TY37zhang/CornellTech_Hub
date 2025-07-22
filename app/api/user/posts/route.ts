@@ -11,9 +11,12 @@ export async function GET(request: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Fetch user's posts from the database
+        // Fetch user's posts from the database (only active posts)
         const posts = await prisma.forum_posts.findMany({
-            where: { author_id: session.user.id },
+            where: { 
+                author_id: session.user.id,
+                status: 'active' // Only show active posts
+            },
             include: {
                 forum_categories: { select: { name: true } },
                 forum_comments: { select: { id: true } },

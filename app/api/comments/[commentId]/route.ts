@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sanitizeContent } from "@/lib/sanitization";
 
 // Helper function to recursively clean up deleted parent comments that have no remaining replies
 async function cleanupDeletedParentComments(parentId: string) {
@@ -61,16 +62,30 @@ export async function PUT(
             );
         }
 
-        const trimmedContent = content.trim();
+        // Sanitize and validate content
+        const sanitizationResult = sanitizeContent(content.trim(), 'text');
+        
+        if (!sanitizationResult.isValid) {
+            return NextResponse.json(
+                { 
+                    success: false, 
+                    error: "Content violates community guidelines",
+                    violations: sanitizationResult.violations
+                },
+                { status: 400 }
+            );
+        }
 
-        if (trimmedContent.length < 1) {
+        const sanitizedContent = sanitizationResult.sanitized;
+
+        if (sanitizedContent.length < 1) {
             return NextResponse.json(
                 { success: false, error: "Comment cannot be empty" },
                 { status: 400 }
             );
         }
 
-        if (trimmedContent.length > 2000) {
+        if (sanitizedContent.length > 2000) {
             return NextResponse.json(
                 {
                     success: false,
@@ -110,7 +125,7 @@ export async function PUT(
         const updatedComment = await prisma.forum_comments.update({
             where: { id: commentId },
             data: {
-                content: trimmedContent,
+                content: sanitizedContent,
                 updated_at: new Date(),
             },
         });
@@ -142,14 +157,16 @@ export async function DELETE(
     { params }: { params: { commentId: string } }
 ) {
     try {
-        const { userId } = await request.json();
+        const session = await getServerSession(authOptions);
 
-        if (!userId) {
+        if (!session?.user?.id) {
             return NextResponse.json(
-                { success: false, error: "User ID is required" },
-                { status: 400 }
+                { success: false, error: "Unauthorized" },
+                { status: 401 }
             );
         }
+
+        const userId = session.user.id;
 
         const { commentId } = await params;
         

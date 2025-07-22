@@ -11,9 +11,12 @@ export async function GET() {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Fetch user's reviews with detailed course information
+        // Fetch user's reviews with detailed course information (only active reviews)
         const reviews = await prisma.course_reviews.findMany({
-            where: { author_id: session.user.id },
+            where: { 
+                author_id: session.user.id,
+                status: 'active' // Only show active reviews
+            },
             include: {
                 courses: {
                     select: {

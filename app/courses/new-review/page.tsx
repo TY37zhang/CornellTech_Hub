@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ArrowLeft, Search } from "lucide-react";
 import { toast } from "sonner";
+import { isStudent } from "@/lib/roles";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +52,7 @@ interface Professor {
 
 export default function NewReviewPage() {
     const router = useRouter();
+    const { data: session, status } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [searchQuery, setSearchQuery] = useState("");
@@ -272,6 +275,60 @@ export default function NewReviewPage() {
             setIsLoadingProfessors(false);
         }
     };
+
+    // Authentication and role checking
+    if (status === "loading") {
+        return (
+            <div className="container max-w-2xl py-10">
+                <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (status === "unauthenticated") {
+        return (
+            <div className="container max-w-2xl py-10">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Authentication Required</CardTitle>
+                        <CardDescription>
+                            You need to be signed in to write course reviews.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button onClick={() => router.push("/auth/signin")}>
+                            Sign In
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
+
+    // Check user role - only students can create course reviews
+    const userRole = (session?.user as any)?.role;
+    if (!isStudent(userRole)) {
+        return (
+            <div className="container max-w-2xl py-10">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Access Restricted</CardTitle>
+                        <CardDescription>
+                            Only students can create course reviews. Faculty members can reply to existing reviews.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button onClick={() => router.push("/courses")}>
+                            Browse Courses
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="container max-w-2xl py-10">

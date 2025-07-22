@@ -13,6 +13,8 @@ import {
     BookmarkPlus,
     Calendar,
     MessageCircle,
+    Shield,
+    UserCog,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MobileNav } from "@/components/mobile-nav";
 import { motion } from "framer-motion";
+import { isAdmin, isMod } from "@/lib/roles";
 
 const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -154,6 +157,31 @@ export function SiteHeader() {
                                         </div>
                                     </motion.div>
                                     <DropdownMenuSeparator />
+                                    {isAdmin(session.user) && (
+                                        <DropdownMenuItem asChild>
+                                            <Link
+                                                href="/admin"
+                                                className="flex items-center cursor-pointer"
+                                            >
+                                                <UserCog className="mr-2 h-4 w-4" />
+                                                <span>Admin Panel</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    {isMod(session.user) && (
+                                        <DropdownMenuItem asChild>
+                                            <Link
+                                                href="/admin/moderation"
+                                                className="flex items-center cursor-pointer"
+                                            >
+                                                <Shield className="mr-2 h-4 w-4" />
+                                                <span>Content Moderation</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    {(isAdmin(session.user) || isMod(session.user)) && (
+                                        <DropdownMenuSeparator />
+                                    )}
                                     <DropdownMenuItem asChild>
                                         <Link
                                             href="/user/posts"

@@ -12,8 +12,10 @@ import {
     ThumbsUp,
     Edit,
     Trash2,
+    Flag,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { isStudent } from "@/lib/roles";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +49,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import ReportModal from "@/components/ReportModal";
+import ReviewReplies from "@/components/ReviewReplies";
 
 // Define course type
 interface Review {
@@ -196,6 +200,11 @@ export default function CourseDetailPage() {
     const params = useParams();
     const { data: session, status } = useSession();
     const router = useRouter();
+    
+    // Role checking for review creation
+    const userRole = session?.user?.role;
+    const canCreateReviews = !userRole || isStudent(userRole);
+    
     const [course, setCourse] = useState<Course | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -205,6 +214,8 @@ export default function CourseDetailPage() {
     const [selectedTerm, setSelectedTerm] = useState<string>("all");
     const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
     const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [reportingReview, setReportingReview] = useState<{id: string, title: string} | null>(null);
 
     // Move the useMemo hook before any conditional returns to avoid hook ordering issues
     const departmentBadges = React.useMemo(() => {
@@ -380,6 +391,14 @@ export default function CourseDetailPage() {
         } finally {
             setReviewToDelete(null);
         }
+    };
+
+    const handleReportReview = (review: Review) => {
+        setReportingReview({
+            id: review.id,
+            title: `Review by ${review.author} for ${course?.title || 'course'}`
+        });
+        setReportModalOpen(true);
     };
 
     if (isLoading) {
@@ -684,9 +703,11 @@ export default function CourseDetailPage() {
                                                     )}
                                                 </div>
                                             )}
-                                        <Button onClick={handleWriteReview}>
-                                            Write a Review
-                                        </Button>
+                                        {canCreateReviews && (
+                                            <Button onClick={handleWriteReview}>
+                                                Write a Review
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -796,27 +817,51 @@ export default function CourseDetailPage() {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    {session?.user?.id === review.authorId && (
-                                                        <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        {session?.user?.id === review.authorId ? (
+                                                            <>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleEditReview(review.id)}
+                                                                    className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => setReviewToDelete(review.id)}
+                                                                    className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleReportReview(review)}
+                                                                    className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+                                                                >
+                                                                    <Flag className="h-4 w-4" />
+                                                                </Button>
+                                                            </>
+                                                        ) : (
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                onClick={() => handleEditReview(review.id)}
+                                                                onClick={() => handleReportReview(review)}
                                                                 className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
                                                             >
-                                                                <Edit className="h-4 w-4" />
+                                                                <Flag className="h-4 w-4" />
                                                             </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => setReviewToDelete(review.id)}
-                                                                className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </CardFooter>
+                                                
+                                                {/* Faculty Replies */}
+                                                <div className="px-6 pb-6">
+                                                    <ReviewReplies reviewId={review.id} />
+                                                </div>
                                             </Card>
                                         ))}
 
@@ -884,6 +929,20 @@ export default function CourseDetailPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Report Review Modal */}
+            {reportingReview && (
+                <ReportModal
+                    isOpen={reportModalOpen}
+                    onClose={() => {
+                        setReportModalOpen(false);
+                        setReportingReview(null);
+                    }}
+                    reportedItemType="review"
+                    reportedItemId={reportingReview.id}
+                    reportedItemTitle={reportingReview.title}
+                />
+            )}
         </div>
     );
 }

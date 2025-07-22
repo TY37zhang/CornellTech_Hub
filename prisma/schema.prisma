@@ -88,24 +88,30 @@ model course_planner {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model course_reviews {
-  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  course_id      String    @db.Uuid
-  author_id      String    @db.Uuid
-  rating         Int
-  difficulty     Int
-  workload       Int
-  content        String
-  created_at     DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
-  overall_rating Decimal   @db.Decimal(2, 1)
-  grade          String?   @db.VarChar(8)
-  users          users     @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  courses        courses   @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id         String           @db.Uuid
+  author_id         String           @db.Uuid
+  rating            Int
+  difficulty        Int
+  workload          Int
+  content           String
+  created_at        DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?        @default(now()) @db.Timestamptz(6)
+  overall_rating    Decimal          @db.Decimal(2, 1)
+  grade             String?          @db.VarChar(8)
+  status            String?          @default("active") @db.VarChar(20)
+  moderated_by      String?          @db.Uuid
+  moderated_at      DateTime?        @db.Timestamptz(6)
+  moderation_reason String?          @db.VarChar(255)
+  users             users            @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  courses           courses          @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  review_replies    review_replies[]
 
   @@index([author_id], map: "idx_course_reviews_author")
   @@index([author_id], map: "idx_course_reviews_author_id")
   @@index([course_id], map: "idx_course_reviews_course")
   @@index([course_id], map: "idx_course_reviews_course_id")
+  @@index([status], map: "idx_course_reviews_status")
 }
 
 model course_schedules {
@@ -172,6 +178,7 @@ model feedback {
   created_at  DateTime? @default(now()) @db.Timestamptz(6)
   status      String    @default("pending")
   admin_notes String?
+  read        Boolean   @default(false)
   users       users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([created_at])
@@ -198,11 +205,17 @@ model forum_comments {
   like_count           Int              @default(0)
   dislike_count        Int              @default(0)
   is_deleted           Boolean          @default(false)
+  status               String?          @default("active") @db.VarChar(20)
+  moderated_by         String?          @db.Uuid
+  moderated_at         DateTime?        @db.Timestamptz(6)
+  moderation_reason    String?          @db.VarChar(255)
   comment_votes        comment_votes[]
   users                users            @relation(fields: [author_id], references: [id])
   forum_comments       forum_comments?  @relation("forum_commentsToforum_comments", fields: [parent_id], references: [id])
   other_forum_comments forum_comments[] @relation("forum_commentsToforum_comments")
   forum_posts          forum_posts      @relation(fields: [post_id], references: [id])
+
+  @@index([status], map: "idx_forum_comments_status")
 }
 
 model forum_likes {
@@ -249,6 +262,9 @@ model forum_posts {
   created_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
   updated_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
   notify_on_reply                Boolean                          @default(false)
+  moderated_by                   String?                          @db.Uuid
+  moderated_at                   DateTime?                        @db.Timestamptz(6)
+  moderation_reason              String?                          @db.VarChar(255)
   forum_comments                 forum_comments[]
   forum_likes                    forum_likes[]
   forum_notification_preferences forum_notification_preferences[]
@@ -257,6 +273,8 @@ model forum_posts {
   forum_categories               forum_categories                 @relation(fields: [category_id], references: [id])
   forum_saved                    forum_saved[]
   forum_views                    forum_views[]
+
+  @@index([status], map: "idx_forum_posts_status")
 }
 
 model forum_saved {
@@ -298,6 +316,61 @@ model marketplace_items {
   users       users     @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model moderation_logs {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moderator_id String   @db.Uuid
+  action       String   @db.VarChar(50)
+  target_type  String   @db.VarChar(50)
+  target_id    String   @db.Uuid
+  reason       String?  @db.VarChar(255)
+  notes        String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  users        users    @relation(fields: [moderator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([action], map: "idx_moderation_logs_action")
+  @@index([created_at], map: "idx_moderation_logs_created_at")
+  @@index([moderator_id], map: "idx_moderation_logs_moderator_id")
+  @@index([target_type, target_id], map: "idx_moderation_logs_target_type_id")
+}
+
+model reports {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporter_id        String   @db.Uuid
+  reported_item_type String   @db.VarChar(50)
+  reported_item_id   String   @db.Uuid
+  reason             String   @db.VarChar(100)
+  description        String?
+  status             String   @default("pending") @db.VarChar(20)
+  admin_notes        String?
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+  users              users    @relation(fields: [reporter_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([created_at])
+  @@index([reported_item_type, reported_item_id])
+  @@index([reporter_id])
+  @@index([status])
+}
+
+model review_replies {
+  id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  review_id         String         @db.Uuid
+  author_id         String         @db.Uuid
+  content           String
+  created_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  status            String?        @default("active") @db.VarChar(20)
+  moderated_by      String?        @db.Uuid
+  moderated_at      DateTime?      @db.Timestamptz(6)
+  moderation_reason String?        @db.VarChar(255)
+  users             users          @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  course_reviews    course_reviews @relation(fields: [review_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([author_id], map: "idx_review_replies_author")
+  @@index([review_id], map: "idx_review_replies_review")
+  @@index([status], map: "idx_review_replies_status")
+}
+
 model search_cache {
   query      String    @id
   results    Json
@@ -336,6 +409,9 @@ model users {
   created_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
   updated_at                     DateTime?                        @default(now()) @db.Timestamptz(6)
   program                        String?                          @db.VarChar(20)
+  role                           user_role                        @default(student)
+  is_mod                         Boolean                          @default(false)
+  is_admin                       Boolean                          @default(false)
   chat_conversations             chat_conversations[]
   chat_messages                  chat_messages[]
   comment_votes                  comment_votes[]
@@ -351,12 +427,21 @@ model users {
   forum_saved                    forum_saved[]
   forum_views                    forum_views[]
   marketplace_items              marketplace_items[]
+  moderation_logs                moderation_logs[]
+  reports                        reports[]
+  review_replies                 review_replies[]
   user_token_usage               user_token_usage[]
 }
 
 enum requirement_type {
   ethics_course
   techie_5901
+}
+
+enum user_role {
+  student
+  faculty
+  staff
 }
 
 enum vote_action {

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { isStudent, isFaculty, isStaff } from "@/lib/roles";
 import {
     Filter,
     Search,
@@ -113,6 +115,11 @@ const sortOptions = [
 ];
 
 function CoursesClient({ initialCourses, initialTotal }: Props) {
+    // Authentication and role checking
+    const { data: session } = useSession();
+    const userRole = session?.user?.role;
+    const canCreateReviews = !userRole || isStudent(userRole);
+    
     // Search & filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [programFilter, setProgramFilter] = useState("all");
@@ -368,24 +375,26 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                             </div>
                         )}
 
-                        {/* New Review CTA */}
-                        <div className="flex items-center gap-2 ml-2">
-                            <Link href="/courses/new-review">
-                                {isMobile ? (
-                                    <Button
-                                        size="icon"
-                                        aria-label="Add new review"
-                                    >
-                                        <PlusCircle className="h-4 w-4" />
-                                    </Button>
-                                ) : (
-                                    <Button className="gap-1">
-                                        <PlusCircle className="h-4 w-4" />
-                                        <span>New Review</span>
-                                    </Button>
-                                )}
-                            </Link>
-                        </div>
+                        {/* New Review CTA - Only show for students and unauthenticated users */}
+                        {canCreateReviews && (
+                            <div className="flex items-center gap-2 ml-2">
+                                <Link href="/courses/new-review">
+                                    {isMobile ? (
+                                        <Button
+                                            size="icon"
+                                            aria-label="Add new review"
+                                        >
+                                            <PlusCircle className="h-4 w-4" />
+                                        </Button>
+                                    ) : (
+                                        <Button className="gap-1">
+                                            <PlusCircle className="h-4 w-4" />
+                                            <span>New Review</span>
+                                        </Button>
+                                    )}
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     {/* COURSE GRID */}

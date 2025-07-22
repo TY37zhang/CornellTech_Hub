@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(
     request: Request,
-    { params }: { params: { commentId: string } }
+    { params }: { params: Promise<{ commentId: string }> }
 ) {
     try {
         const { userId, action } = await request.json();
@@ -18,7 +18,7 @@ export async function POST(
 
         // Use Prisma transaction for consistency
         const result = await prisma.$transaction(async (tx) => {
-            const commentId = params.commentId;
+            const { commentId } = await params;
             const voteValue = action === "like" ? "upvote" : "downvote";
 
             // Find existing vote

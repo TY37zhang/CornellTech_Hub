@@ -125,6 +125,9 @@ export async function getAggregatedCourses(
         // Fetch all courses - removed pre-sampling limitation to display complete course catalog
         include: {
             course_reviews: {
+                where: {
+                    status: 'active' // Only include active reviews in public aggregations
+                },
                 select: {
                     overall_rating: true,
                     rating: true, // value

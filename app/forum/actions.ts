@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { sendForumReplyNotification } from "@/lib/email/forum-notifications";
 import { prisma } from "@/lib/db/prisma";
+import { sanitizeContent } from "@/lib/sanitization";
 
 // Helper to extract UUID from slug or return original if already UUID
 function extractUUID(id: string): string {
@@ -37,6 +38,30 @@ export async function createThread({
             throw new Error("Invalid author ID format");
         }
 
+        // Sanitize title and content
+        const titleSanitization = sanitizeContent(title.trim(), 'text');
+        const contentSanitization = sanitizeContent(content.trim(), 'html');
+        
+        if (!titleSanitization.isValid) {
+            throw new Error(`Title violates community guidelines: ${titleSanitization.violations.join(', ')}`);
+        }
+        
+        if (!contentSanitization.isValid) {
+            throw new Error(`Content violates community guidelines: ${contentSanitization.violations.join(', ')}`);
+        }
+
+        const sanitizedTitle = titleSanitization.sanitized;
+        const sanitizedContent = contentSanitization.sanitized;
+
+        // Validate sanitized content
+        if (sanitizedTitle.length < 5) {
+            throw new Error("Title must be at least 5 characters long");
+        }
+        
+        if (sanitizedContent.length < 10) {
+            throw new Error("Content must be at least 10 characters long");
+        }
+
         // Perform all DB writes atomically
         const newPostId = await prisma.$transaction(async (tx) => {
             // 1. Ensure category exists (upsert)
@@ -56,8 +81,8 @@ export async function createThread({
             // 2. Create the post
             const post = await tx.forum_posts.create({
                 data: {
-                    title,
-                    content,
+                    title: sanitizedTitle,
+                    content: sanitizedContent,
                     author_id: authorId,
                     category_id: categoryRecord.id,
                     status: "active",
@@ -210,7 +235,11 @@ export async function getForumPosts(
                 forum_post_tags: { select: { tag: true } },
                 _count: {
                     select: {
-                        forum_comments: true,
+                        forum_comments: {
+                            where: {
+                                status: "active"
+                            }
+                        },
                         forum_likes: true,
                         forum_views: true,
                     },
@@ -281,7 +310,10 @@ export async function getForumPostsByCategory(
                         select: { name: true, avatar_url: true, id: true },
                     },
                     forum_categories: { select: { name: true, slug: true } },
-                    forum_comments: { select: { id: true } },
+                    forum_comments: { 
+                        where: { status: "active" },
+                        select: { id: true } 
+                    },
                     forum_likes: { select: { id: true } },
                     forum_views: { select: { id: true } },
                     forum_post_tags: { select: { tag: true } },
@@ -347,7 +379,10 @@ export async function getForumPostById(
                     users: {
                         select: { name: true, avatar_url: true, id: true },
                     },
-                    forum_comments: { select: { id: true } },
+                    forum_comments: { 
+                        where: { status: "active" },
+                        select: { id: true } 
+                    },
                     forum_likes: { select: { id: true } },
                     forum_views: { select: { id: true } },
                     forum_post_tags: { select: { tag: true } },
@@ -370,7 +405,10 @@ export async function getForumPostById(
                     users: {
                         select: { name: true, avatar_url: true, id: true },
                     },
-                    forum_comments: { select: { id: true } },
+                    forum_comments: { 
+                        where: { status: "active" },
+                        select: { id: true } 
+                    },
                     forum_likes: { select: { id: true } },
                     forum_views: { select: { id: true } },
                     forum_post_tags: { select: { tag: true } },
@@ -488,9 +526,12 @@ export async function getForumComments(
             actualPostId = latestPost.id;
         }
 
-        // Fetch comments for the resolved post id
+        // Fetch comments for the resolved post id (only active comments)
         const comments = await prisma.forum_comments.findMany({
-            where: { post_id: actualPostId },
+            where: { 
+                post_id: actualPostId,
+                status: 'active' // Only show active comments
+            },
             orderBy: { created_at: "asc" },
             include: {
                 users: {
@@ -498,6 +539,7 @@ export async function getForumComments(
                         name: true,
                         avatar_url: true,
                         id: true,
+                        role: true,
                     },
                 },
             },
@@ -510,6 +552,7 @@ export async function getForumComments(
             author_name: comment.users.name,
             author_avatar: comment.users.avatar_url,
             author_id: comment.users.id,
+            author_role: comment.users.role,
             like_count: comment.like_count,
             dislike_count: comment.dislike_count,
             parent_id: comment.parent_id,
@@ -537,10 +580,27 @@ export async function createForumComment({
     parentId?: string;
 }) {
     try {
+        // Sanitize content before storing
+        const sanitizationResult = sanitizeContent(content.trim(), 'text');
+        
+        if (!sanitizationResult.isValid) {
+            throw new Error(`Comment violates community guidelines: ${sanitizationResult.violations.join(', ')}`);
+        }
+
+        const sanitizedContent = sanitizationResult.sanitized;
+
+        if (sanitizedContent.length < 1) {
+            throw new Error("Comment cannot be empty");
+        }
+
+        if (sanitizedContent.length > 2000) {
+            throw new Error("Comment must be less than 2000 characters");
+        }
+
         // Insert the comment into forum_comments table using Prisma
         const comment = await prisma.forum_comments.create({
             data: {
-                content,
+                content: sanitizedContent,
                 post_id: postId,
                 author_id: authorId,
                 parent_id: parentId || null,
@@ -929,6 +989,29 @@ export async function toggleForumCommentLike(
     }
 }
 
+// Helper function to calculate text similarity using a simplified algorithm
+function calculateTextSimilarity(text1: string, text2: string): number {
+    const words1 = text1.toLowerCase().split(/\W+/).filter(word => word.length > 3);
+    const words2 = text2.toLowerCase().split(/\W+/).filter(word => word.length > 3);
+    
+    if (words1.length === 0 || words2.length === 0) return 0;
+    
+    const set1 = new Set(words1);
+    const set2 = new Set(words2);
+    const intersection = new Set(Array.from(set1).filter(word => set2.has(word)));
+    const union = new Set([...Array.from(set1), ...Array.from(set2)]);
+    
+    return intersection.size / union.size;
+}
+
+// Helper function to extract keywords from text
+function extractKeywords(text: string): string[] {
+    return text.toLowerCase()
+        .split(/\W+/)
+        .filter(word => word.length > 3)
+        .filter(word => !['this', 'that', 'with', 'have', 'will', 'from', 'they', 'been', 'were', 'said', 'each', 'which', 'their', 'time', 'more', 'very', 'what', 'know', 'just', 'first', 'into', 'over', 'also', 'than', 'only', 'some', 'could', 'would', 'other', 'after', 'make', 'most', 'people', 'work', 'good', 'come', 'think', 'there', 'here', 'where', 'when', 'about'].includes(word));
+}
+
 export async function getRelatedPosts(
     postId: string,
     category: string,
@@ -940,16 +1023,65 @@ export async function getRelatedPosts(
         const uuidMatch = postId.match(uuidRegex);
         const actualPostId = uuidMatch ? uuidMatch[0] : postId;
 
+        // Get the current post to find related posts based on author, tags, and content
+        const currentPost = await prisma.forum_posts.findUnique({
+            where: { id: actualPostId },
+            include: {
+                users: { select: { id: true } },
+                forum_post_tags: { select: { tag: true } },
+                forum_categories: { select: { slug: true } },
+            },
+        });
+
+        if (!currentPost) {
+            return [];
+        }
+
+        const currentTags = currentPost.forum_post_tags.map(t => t.tag);
+        const authorId = currentPost.users.id;
+        const currentKeywords = extractKeywords(currentPost.title + ' ' + currentPost.content);
+
+        // Find related posts with enhanced algorithm:
+        // 1. Posts by same author (weighted highest)
+        // 2. Posts with similar tags (weighted high)  
+        // 3. Posts with similar content/keywords (weighted high)
+        // 4. Posts in same category (weighted medium)
+        // 5. Recent and popular posts (weighted low)
         const related = await prisma.forum_posts.findMany({
             where: {
                 status: "active",
                 id: { not: actualPostId },
-                forum_categories: {
-                    slug: category,
-                },
+                OR: [
+                    // Posts by same author
+                    { author_id: authorId },
+                    // Posts with similar tags
+                    currentTags.length > 0 ? {
+                        forum_post_tags: {
+                            some: {
+                                tag: { in: currentTags }
+                            }
+                        }
+                    } : undefined,
+                    // Posts in same category
+                    {
+                        forum_categories: {
+                            slug: category,
+                        },
+                    },
+                    // Posts with similar keywords in title or content
+                    currentKeywords.length > 0 ? {
+                        OR: [
+                            { title: { contains: currentKeywords[0], mode: "insensitive" } },
+                            { content: { contains: currentKeywords[0], mode: "insensitive" } },
+                        ]
+                    } : undefined,
+                ].filter(Boolean),
             },
-            orderBy: { created_at: "desc" },
-            take: limit,
+            orderBy: [
+                { created_at: "desc" },
+                { forum_likes: { _count: "desc" } }
+            ],
+            take: limit * 3, // Get more to analyze and filter properly
             include: {
                 forum_categories: { select: { name: true, slug: true } },
                 users: { select: { name: true, avatar_url: true, id: true } },
@@ -960,7 +1092,59 @@ export async function getRelatedPosts(
             },
         });
 
-        return related.map((post) => ({
+        // Enhanced scoring with multiple factors
+        const scoredPosts = related.map(post => {
+            let score = 0;
+            
+            // Same author gets highest score (100 points)
+            if (post.author_id === authorId) {
+                score += 100;
+            }
+            
+            // Similar tags score (up to 50 points)
+            const postTags = post.forum_post_tags.map(t => t.tag);
+            const commonTags = currentTags.filter(tag => postTags.includes(tag));
+            score += Math.min(commonTags.length * 15, 50);
+            
+            // Content similarity score (up to 40 points)
+            const contentSimilarity = calculateTextSimilarity(
+                currentPost.title + ' ' + currentPost.content,
+                post.title + ' ' + post.content
+            );
+            score += contentSimilarity * 40;
+            
+            // Title similarity gets extra weight (up to 30 points)
+            const titleSimilarity = calculateTextSimilarity(currentPost.title, post.title);
+            score += titleSimilarity * 30;
+            
+            // Same category gets base score (10 points)
+            if (post.forum_categories.slug === category) {
+                score += 10;
+            }
+            
+            // Popular posts get boost based on engagement (up to 15 points)
+            const engagementScore = Math.min(
+                (post.forum_likes.length * 2 + post.forum_comments.length + post.forum_views.length * 0.1) / 5,
+                15
+            );
+            score += engagementScore;
+            
+            // Recent posts get slight boost (up to 5 points)
+            const daysSinceCreated = post.created_at ? 
+                (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60 * 24) : 365;
+            const recencyScore = Math.max(5 - (daysSinceCreated / 7), 0);
+            score += recencyScore;
+            
+            return { post, score };
+        });
+
+        // Sort by score descending and take the limit
+        const topPosts = scoredPosts
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit)
+            .map(item => item.post);
+
+        return topPosts.map((post) => ({
             id: post.id,
             title: post.title,
             content: post.content,
@@ -1133,7 +1317,10 @@ export async function getUserSavedPosts(
                         forum_categories: {
                             select: { name: true, slug: true },
                         },
-                        forum_comments: { select: { id: true } },
+                        forum_comments: { 
+                        where: { status: "active" },
+                        select: { id: true } 
+                    },
                         forum_likes: { select: { id: true } },
                         forum_views: { select: { id: true } },
                         forum_post_tags: { select: { tag: true } },

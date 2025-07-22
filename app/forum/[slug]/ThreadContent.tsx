@@ -12,6 +12,7 @@ import {
     ThumbsUp,
     Edit,
     Trash2,
+    Flag,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -28,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { getRoleDisplayName } from "@/lib/roles";
 import {
     createForumComment,
     getForumComments,
@@ -53,6 +55,7 @@ import {
     AlertDialogCancel,
     AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import ReportModal from "@/components/ReportModal";
 
 interface ThreadContentProps {
     threadData: any;
@@ -89,7 +92,7 @@ function formatNestedComments(comments: any[]): any[] {
             name: comment.author_name,
             avatar:
                 comment.author_avatar || "/placeholder.svg?height=40&width=40",
-            program: "Student",
+            program: comment.author_role ? getRoleDisplayName(comment.author_role) : "Student",
             joinDate: formatDate(comment.created_at),
         },
         replies: comment.replies ? comment.replies.map(formatComment) : [],
@@ -231,6 +234,8 @@ export default function ThreadContent({
     const [isLoading, setIsLoading] = useState(false);
     const [relatedThreads, setRelatedThreads] = useState<any[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [reportingPost, setReportingPost] = useState<{id: string, title: string} | null>(null);
 
     // Add this useEffect to check initial save status
     useEffect(() => {
@@ -431,6 +436,15 @@ export default function ThreadContent({
         router.push(`/user/posts/${threadId}/edit`);
     };
 
+    // Handle report post
+    const handleReportPost = () => {
+        setReportingPost({
+            id: threadId,
+            title: threadData.title
+        });
+        setReportModalOpen(true);
+    };
+
     // Modify the Reply Form section to show login prompt if not authenticated
     const replyForm = session?.user ? (
         <Card>
@@ -612,29 +626,47 @@ export default function ThreadContent({
                                             </Button>
                                         </div>
                                     </div>
-                                    {session?.user?.id ===
-                                        threadData.author.id && (
-                                        <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
+                                        {session?.user?.id === threadData.author.id ? (
+                                            <>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={handleEditPost}
+                                                    className="text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setShowDeleteDialog(true)
+                                                    }
+                                                    className="text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={handleReportPost}
+                                                    className="text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <Flag className="h-4 w-4" />
+                                                </Button>
+                                            </>
+                                        ) : (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={handleEditPost}
+                                                onClick={handleReportPost}
                                                 className="text-muted-foreground hover:text-foreground"
                                             >
-                                                <Edit className="h-4 w-4" />
+                                                <Flag className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setShowDeleteDialog(true)
-                                                }
-                                                className="text-muted-foreground hover:text-foreground"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </CardFooter>
                             </Card>
 
@@ -823,48 +855,112 @@ export default function ThreadContent({
                             {/* Related Threads */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Related Threads</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <MessageSquare className="h-5 w-5" />
+                                        Related Threads
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Similar discussions you might find interesting
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent className="pb-3">
                                     <div className="space-y-4">
-                                        {relatedThreads.map((thread) => (
+                                        {relatedThreads.map((thread, index) => (
                                             <div
                                                 key={thread.id}
-                                                className="space-y-1"
+                                                className="group relative rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                                             >
-                                                <Link
-                                                    href={`/forum/${thread.id}`}
-                                                    className="font-medium hover:text-primary"
-                                                >
-                                                    {thread.title}
-                                                </Link>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {thread.reply_count} replies
-                                                    •{" "}
-                                                    {formatDate(
-                                                        thread.created_at
+                                                <div className="space-y-2">
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="flex-shrink-0 mt-1">
+                                                            <div className="h-2 w-2 rounded-full bg-primary/60" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <Link
+                                                                href={`/forum/${thread.id}`}
+                                                                className="font-medium text-sm hover:text-primary transition-colors line-clamp-2"
+                                                            >
+                                                                {thread.title}
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="flex items-center gap-1">
+                                                                <MessageSquare className="h-3 w-3" />
+                                                                {thread.reply_count}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <ThumbsUp className="h-3 w-3" />
+                                                                {thread.like_count}
+                                                            </span>
+                                                        </div>
+                                                        <span>
+                                                            {formatDate(thread.created_at)}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {thread.author_name && (
+                                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                            <span>by</span>
+                                                            <span className="font-medium">
+                                                                {thread.author_name}
+                                                            </span>
+                                                            {thread.author_id === threadData.author.id && (
+                                                                <Badge variant="outline" className="text-xs px-1 py-0">
+                                                                    Same Author
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                     )}
-                                                </p>
+                                                    
+                                                    {thread.tags && thread.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {thread.tags.slice(0, 2).map((tag) => (
+                                                                <Badge 
+                                                                    key={tag}
+                                                                    variant="secondary" 
+                                                                    className="text-xs px-1 py-0"
+                                                                >
+                                                                    {tag}
+                                                                </Badge>
+                                                            ))}
+                                                            {thread.tags.length > 2 && (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    +{thread.tags.length - 2} more
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                         {relatedThreads.length === 0 && (
-                                            <p className="text-sm text-muted-foreground">
-                                                No related threads found
-                                            </p>
+                                            <div className="text-center py-6">
+                                                <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                                                <p className="text-sm text-muted-foreground">
+                                                    No related threads found
+                                                </p>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Try exploring the category for similar discussions
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
                                 </CardContent>
                                 {relatedThreads.length > 0 && (
-                                    <CardFooter>
+                                    <CardFooter className="pt-0">
                                         <Link
                                             href={`/forum/categories/${threadData.category.toLowerCase()}`}
                                             className="w-full"
                                         >
                                             <Button
                                                 variant="outline"
+                                                size="sm"
                                                 className="w-full"
                                             >
-                                                View More
+                                                Explore {threadData.category}
                                             </Button>
                                         </Link>
                                     </CardFooter>
@@ -923,6 +1019,20 @@ export default function ThreadContent({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Report Post Modal */}
+            {reportingPost && (
+                <ReportModal
+                    isOpen={reportModalOpen}
+                    onClose={() => {
+                        setReportModalOpen(false);
+                        setReportingPost(null);
+                    }}
+                    reportedItemType="post"
+                    reportedItemId={reportingPost.id}
+                    reportedItemTitle={reportingPost.title}
+                />
+            )}
         </div>
     );
 }

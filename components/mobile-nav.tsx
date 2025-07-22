@@ -11,6 +11,8 @@ import {
     ShoppingBag,
     Calendar,
     MessageCircle,
+    UserCog,
+    Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ import {
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
+import { isAdmin, isMod } from "@/lib/roles";
 
 const navItemVariants = {
     hidden: { opacity: 0, x: -20 },
@@ -128,9 +131,55 @@ export function MobileNav() {
                     {session ? (
                         <div className="mt-8 flex flex-col items-center gap-2">
                             <AnimatePresence>
+                                {isAdmin(session.user) && (
+                                    <motion.div
+                                        key="admin-panel"
+                                        custom={0}
+                                        variants={buttonVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                    >
+                                        <Button
+                                            variant="outline"
+                                            asChild
+                                            className="w-[180px]"
+                                        >
+                                            <Link
+                                                href="/admin"
+                                                onClick={() => setOpen(false)}
+                                            >
+                                                <UserCog className="mr-2 h-4 w-4" />
+                                                Admin Panel
+                                            </Link>
+                                        </Button>
+                                    </motion.div>
+                                )}
+                                {isMod(session.user) && (
+                                    <motion.div
+                                        key="content-moderation"
+                                        custom={1}
+                                        variants={buttonVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                    >
+                                        <Button
+                                            variant="outline"
+                                            asChild
+                                            className="w-[180px]"
+                                        >
+                                            <Link
+                                                href="/admin/moderation"
+                                                onClick={() => setOpen(false)}
+                                            >
+                                                <Shield className="mr-2 h-4 w-4" />
+                                                Moderation
+                                            </Link>
+                                        </Button>
+                                    </motion.div>
+                                )}
                                 <motion.div
                                     key="my-posts"
-                                    custom={0}
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 2 : 0}
                                     variants={buttonVariants}
                                     initial="hidden"
                                     animate="visible"
@@ -150,7 +199,7 @@ export function MobileNav() {
                                 </motion.div>
                                 <motion.div
                                     key="settings"
-                                    custom={1}
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 3 : 1}
                                     variants={buttonVariants}
                                     initial="hidden"
                                     animate="visible"
@@ -170,7 +219,7 @@ export function MobileNav() {
                                 </motion.div>
                                 <motion.div
                                     key="feedback"
-                                    custom={2}
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 4 : 2}
                                     variants={buttonVariants}
                                     initial="hidden"
                                     animate="visible"
@@ -190,7 +239,7 @@ export function MobileNav() {
                                 </motion.div>
                                 <motion.div
                                     key="logout"
-                                    custom={3}
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 5 : 3}
                                     variants={buttonVariants}
                                     initial="hidden"
                                     animate="visible"

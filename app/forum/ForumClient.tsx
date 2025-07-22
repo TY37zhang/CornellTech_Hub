@@ -193,9 +193,9 @@ function ForumClient({
                         ),
                         content: post.content || "",
                         tags: Array.isArray(post.tags) ? post.tags : [],
-                        replies: post.reply_count || 0,
-                        likes: post.like_count || 0,
-                        views: post.view_count || 0,
+                        replies: typeof post.reply_count === 'number' ? post.reply_count : 0,
+                        likes: typeof post.like_count === 'number' ? post.like_count : 0,
+                        views: typeof post.view_count === 'number' ? post.view_count : 0,
                         createdAt: formatDate(
                             post.created_at || new Date().toISOString()
                         ),
@@ -236,6 +236,57 @@ function ForumClient({
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
+    // Helper function to serialize errors to readable strings
+    const serializeError = (error: unknown): string => {
+        if (!error) return "An unknown error occurred";
+        
+        // Handle Error objects
+        if (error instanceof Error) {
+            return error.message || "An error occurred";
+        }
+        
+        // Handle string errors
+        if (typeof error === 'string') {
+            return error;
+        }
+        
+        // Handle objects with error property
+        if (typeof error === 'object' && error !== null) {
+            const errorObj = error as any;
+            
+            // Try common error properties
+            if (typeof errorObj.message === 'string') {
+                return errorObj.message;
+            }
+            
+            if (typeof errorObj.error === 'string') {
+                return errorObj.error;
+            }
+            
+            // Handle rate limit error structure: { message: string, retryAfter: number }
+            if (typeof errorObj.message === 'string' && typeof errorObj.retryAfter === 'number') {
+                return `${errorObj.message} (retry in ${errorObj.retryAfter} seconds)`;
+            }
+            
+            if (typeof errorObj.statusText === 'string') {
+                return `HTTP Error: ${errorObj.statusText}`;
+            }
+            
+            // Try to extract meaningful information from the object
+            try {
+                const jsonStr = JSON.stringify(errorObj);
+                if (jsonStr !== '{}') {
+                    return `Error: ${jsonStr}`;
+                }
+            } catch {
+                // JSON.stringify failed, continue to fallback
+            }
+        }
+        
+        // Final fallback
+        return "Failed to fetch data";
+    };
+
     // Memoized fetch function
     const fetchData = useCallback(async () => {
         try {
@@ -248,10 +299,16 @@ function ForumClient({
             });
             const res = await fetch(`/api/forum/posts?${params.toString()}`);
             if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(
-                    errorData.error || `HTTP error! status: ${res.status}`
-                );
+                let errorData;
+                try {
+                    errorData = await res.json();
+                } catch (parseError) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                const errorMessage = typeof errorData.error === 'string' 
+                    ? errorData.error 
+                    : serializeError(errorData.error) || `HTTP error! status: ${res.status}`;
+                throw new Error(errorMessage);
             }
             const postsData = await res.json();
             const [stats, contributors] = await Promise.all([
@@ -266,10 +323,16 @@ function ForumClient({
             const formattedThreads: Thread[] = postsData.posts
                 .map((post: any) => {
                     if (!post || typeof post !== "object") return null;
+                    
+                    // Ensure numeric values are properly typed
+                    const likeCount = typeof post.like_count === 'number' ? post.like_count : 0;
+                    const replyCount = typeof post.reply_count === 'number' ? post.reply_count : 0;
+                    const viewCount = typeof post.view_count === 'number' ? post.view_count : 0;
+                    
                     const hotStatus = calculateHotScore({
-                        likes: post.like_count || 0,
-                        replies: post.reply_count || 0,
-                        views: post.view_count || 0,
+                        likes: likeCount,
+                        replies: replyCount,
+                        views: viewCount,
                         createdAt: post.created_at || new Date().toISOString(),
                     });
                     return {
@@ -290,9 +353,9 @@ function ForumClient({
                         ),
                         content: post.content || "",
                         tags: Array.isArray(post.tags) ? post.tags : [],
-                        replies: post.reply_count || 0,
-                        likes: post.like_count || 0,
-                        views: post.view_count || 0,
+                        replies: replyCount,
+                        likes: likeCount,
+                        views: viewCount,
                         createdAt: formatDate(
                             post.created_at || new Date().toISOString()
                         ),
@@ -310,10 +373,31 @@ function ForumClient({
             setTotalPages(Math.ceil(postsData.total / threadsPerPage));
             setLoading(false);
         } catch (err) {
-            console.error("Error fetching forum data", err);
-            setError(
-                err instanceof Error ? err.message : "Failed to fetch data"
-            );
+            console.error("Error fetching forum data:", err);
+            
+            // Enhanced error logging for debugging
+            if (err instanceof Error) {
+                console.error("Error details:", {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                });
+            } else {
+                console.error("Non-Error object caught:", {
+                    type: typeof err,
+                    value: err,
+                    stringified: (() => {
+                        try {
+                            return JSON.stringify(err);
+                        } catch {
+                            return 'Unable to stringify error';
+                        }
+                    })()
+                });
+            }
+            
+            const errorMessage = serializeError(err);
+            setError(errorMessage);
             setLoading(false);
         }
     }, [debouncedSearchQuery, currentPage, threadsPerPage]);

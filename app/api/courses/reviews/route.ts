@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { validationMiddleware } from "@/middleware/validation";
 import { schemas } from "@/lib/validations/schemas";
 import { prisma } from "@/lib/db/prisma";
+import { sanitizeContent } from "@/lib/sanitization";
+import { isStudent } from "@/lib/roles";
 
 export async function POST(request: Request) {
     try {
@@ -26,6 +28,48 @@ export async function POST(request: Request) {
 
         const validatedData = (validatedRequest as any).validatedData;
 
+        // Sanitize review content and title
+        const titleSanitization = sanitizeContent(validatedData.title.trim(), 'text');
+        const reviewSanitization = sanitizeContent(validatedData.review.trim(), 'text');
+        
+        if (!titleSanitization.isValid) {
+            return NextResponse.json(
+                { 
+                    error: "Course title violates community guidelines",
+                    violations: titleSanitization.violations
+                },
+                { status: 400 }
+            );
+        }
+        
+        if (!reviewSanitization.isValid) {
+            return NextResponse.json(
+                { 
+                    error: "Review content violates community guidelines",
+                    violations: reviewSanitization.violations
+                },
+                { status: 400 }
+            );
+        }
+
+        const sanitizedTitle = titleSanitization.sanitized;
+        const sanitizedReview = reviewSanitization.sanitized;
+
+        // Additional validation
+        if (sanitizedTitle.length < 3) {
+            return NextResponse.json(
+                { error: "Course title must be at least 3 characters long" },
+                { status: 400 }
+            );
+        }
+
+        if (sanitizedReview.length < 20) {
+            return NextResponse.json(
+                { error: "Review must be at least 20 characters long" },
+                { status: 400 }
+            );
+        }
+
         // Create or update the course with all departments
         const course = await prisma.courses.upsert({
             where: {
@@ -36,13 +80,13 @@ export async function POST(request: Request) {
                 },
             },
             update: {
-                name: validatedData.title,
+                name: sanitizedTitle,
                 professor_id: validatedData.professor || "Unknown Professor",
                 department: validatedData.category,
             },
             create: {
                 code: validatedData.courseId.substring(0, 20),
-                name: validatedData.title,
+                name: sanitizedTitle,
                 professor_id: validatedData.professor || "Unknown Professor",
                 department: validatedData.category,
                 semester: "Spring",
@@ -65,6 +109,14 @@ export async function POST(request: Request) {
             );
         }
 
+        // Check if user is a student - only students can create course reviews
+        if (!isStudent(user.role)) {
+            return NextResponse.json(
+                { error: "Only students can create course reviews. Faculty can reply to existing reviews." },
+                { status: 403 }
+            );
+        }
+
         const review = await prisma.course_reviews.create({
             data: {
                 course_id: courseId,
@@ -73,7 +125,7 @@ export async function POST(request: Request) {
                 workload: validatedData.workload,
                 rating: validatedData.value,
                 overall_rating: validatedData.overall_rating,
-                content: validatedData.review,
+                content: sanitizedReview,
                 grade: validatedData.grade === "" || validatedData.grade === "none" ? null : validatedData.grade,
             },
         });
