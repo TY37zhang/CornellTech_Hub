@@ -74,19 +74,36 @@ export default function AdminFeedbackPage() {
         if (!session || !isAdmin(session?.user)) return;
 
         try {
+            // Find the current item to check its status
+            const currentItem = feedback.find(item => item.id === id);
+            
+            // Prepare the update payload
+            const updatePayload: { id: number; read: boolean; status?: string } = { id, read };
+            
+            // If marking as read and current status is pending, change to resolved
+            if (read && currentItem?.status === "pending") {
+                updatePayload.status = "resolved";
+            }
+
             const response = await fetch("/api/admin/feedback", {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ id, read }),
+                body: JSON.stringify(updatePayload),
             });
 
             if (response.ok) {
                 // Update the local state
                 setFeedback((prev) =>
                     prev.map((item) =>
-                        item.id === id ? { ...item, read } : item
+                        item.id === id 
+                            ? { 
+                                ...item, 
+                                read,
+                                status: updatePayload.status || item.status
+                              } 
+                            : item
                     )
                 );
             }
@@ -94,6 +111,7 @@ export default function AdminFeedbackPage() {
             console.error("Error updating feedback read status:", error);
         }
     };
+
 
     const getTypeIcon = (type: string) => {
         switch (type.toLowerCase()) {
@@ -318,15 +336,6 @@ export default function AdminFeedbackPage() {
                                                     ? "Bug Report"
                                                     : "Feedback"}{" "}
                                                 #{item.id}
-                                                {!item.read && (
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                    >
-                                                        <EyeOff className="h-3 w-3 mr-1" />
-                                                        Unread
-                                                    </Badge>
-                                                )}
                                             </CardTitle>
                                             <CardDescription className="flex items-center gap-4 mt-1">
                                                 <span className="flex items-center gap-1">

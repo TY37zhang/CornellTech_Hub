@@ -235,6 +235,53 @@ export async function PATCH(
                 
                 return NextResponse.json({ error: 'Failed to apply moderation action' }, { status: 500 });
             }
+        } else if (status && (status === 'resolved' || status === 'dismissed')) {
+            // If report is being resolved or dismissed without specific moderation action,
+            // automatically restore content to active if it's currently hidden
+            try {
+                // First check the current status of the content
+                let currentContent = null;
+                switch (report.reported_item_type) {
+                    case 'post':
+                        currentContent = await prisma.forum_posts.findUnique({
+                            where: { id: report.reported_item_id },
+                            select: { status: true }
+                        });
+                        break;
+                    case 'comment':
+                        currentContent = await prisma.forum_comments.findUnique({
+                            where: { id: report.reported_item_id },
+                            select: { status: true }
+                        });
+                        break;
+                    case 'review':
+                        currentContent = await prisma.course_reviews.findUnique({
+                            where: { id: report.reported_item_id },
+                            select: { status: true }
+                        });
+                        break;
+                    case 'reply':
+                        currentContent = await prisma.review_replies.findUnique({
+                            where: { id: report.reported_item_id },
+                            select: { status: true }
+                        });
+                        break;
+                }
+
+                // If content is currently hidden, restore it to active
+                if (currentContent && currentContent.status === 'hidden') {
+                    await applyModerationAction(
+                        report.reported_item_type,
+                        report.reported_item_id,
+                        'restore',
+                        session.user.id,
+                        `Content restored automatically when report ${reportId} was ${status}: ${adminNotes || 'No additional notes'}`
+                    );
+                }
+            } catch (error) {
+                console.error('Error auto-restoring content:', error);
+                // Don't fail the entire request if auto-restore fails
+            }
         }
 
         return NextResponse.json(updatedReport);

@@ -63,6 +63,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { canModerate, getFullRoleDisplay } from "@/lib/roles";
+import { useToast } from "@/hooks/use-toast";
 
 interface ModerationLog {
     id: string;
@@ -124,6 +125,7 @@ interface FlaggedContent {
 }
 
 function FlaggedContentTab() {
+    const { toast } = useToast();
     const [flaggedContent, setFlaggedContent] = useState<{
         posts: FlaggedContent[];
         comments: FlaggedContent[];
@@ -133,6 +135,7 @@ function FlaggedContentTab() {
     const [contentLoading, setContentLoading] = useState(true);
     const [contentTypeFilter, setContentTypeFilter] = useState('all');
     const [contentStatusFilter, setContentStatusFilter] = useState('flagged');
+    const [actionLoadingStates, setActionLoadingStates] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         fetchFlaggedContent();
@@ -158,7 +161,10 @@ function FlaggedContentTab() {
     };
 
     const handleContentAction = async (type: string, id: string, action: string, reason: string) => {
+        const actionKey = `${type}-${id}`;
         try {
+            setActionLoadingStates(prev => ({ ...prev, [actionKey]: true }));
+            
             const response = await fetch('/api/admin/moderation', {
                 method: 'POST',
                 headers: {
@@ -173,10 +179,41 @@ function FlaggedContentTab() {
             });
 
             if (response.ok) {
-                fetchFlaggedContent();
+                const data = await response.json();
+                await fetchFlaggedContent();
+                
+                // Show success toast with appropriate message
+                const actionMessages = {
+                    hide: 'Content has been hidden',
+                    delete: 'Content has been deleted',
+                    restore: 'Content has been restored',
+                    approve: 'Content has been approved',
+                    unflag: 'Content has been approved',
+                    flag: 'Content has been flagged',
+                    dismiss: 'Content has been dismissed'
+                };
+                
+                toast({
+                    title: "Action completed",
+                    description: actionMessages[action as keyof typeof actionMessages] || `${action} action completed successfully`,
+                });
+            } else {
+                const errorData = await response.json();
+                toast({
+                    title: "Error",
+                    description: errorData.error || `Failed to ${action} content`,
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error('Error applying moderation action:', error);
+            toast({
+                title: "Error",
+                description: `Failed to ${action} content. Please try again.`,
+                variant: "destructive",
+            });
+        } finally {
+            setActionLoadingStates(prev => ({ ...prev, [actionKey]: false }));
         }
     };
 
@@ -209,66 +246,79 @@ function FlaggedContentTab() {
                         </p>
                     )}
                 </div>
-                <div className="flex gap-2 ml-4">
-                    {item.status === 'flagged' && (
+                <div className="flex gap-2 ml-4">{(() => {
+                    const itemType = type.slice(0, -1);
+                    const isLoading = actionLoadingStates[`${itemType}-${item.id}`];
+                    
+                    return (
                         <>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleContentAction(type.slice(0, -1), item.id, 'unflag', 'Content approved')}
-                            >
-                                <FlagOff className="h-3 w-3 mr-1" />
-                                Approve
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => handleContentAction(type.slice(0, -1), item.id, 'hide', 'Content hidden for review')}
-                            >
-                                <EyeOff className="h-3 w-3 mr-1" />
-                                Hide
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleContentAction(type.slice(0, -1), item.id, 'delete', 'Content deleted for policy violation')}
-                            >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                            </Button>
+                            {item.status === 'flagged' && (
+                                <>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleContentAction(itemType, item.id, 'unflag', 'Content approved')}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <FlagOff className="h-3 w-3 mr-1" />}
+                                        Approve
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => handleContentAction(itemType, item.id, 'hide', 'Content hidden for review')}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <EyeOff className="h-3 w-3 mr-1" />}
+                                        Hide
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => handleContentAction(itemType, item.id, 'delete', 'Content deleted for policy violation')}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                                        Delete
+                                    </Button>
+                                </>
+                            )}
+                            {item.status === 'hidden' && (
+                                <>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleContentAction(itemType, item.id, 'restore', 'Content restored')}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <RotateCcw className="h-3 w-3 mr-1" />}
+                                        Restore
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => handleContentAction(itemType, item.id, 'delete', 'Content permanently deleted')}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                                        Delete
+                                    </Button>
+                                </>
+                            )}
+                            {item.status === 'deleted' && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleContentAction(itemType, item.id, 'restore', 'Content restored from deletion')}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <RotateCcw className="h-3 w-3 mr-1" />}
+                                    Restore
+                                </Button>
+                            )}
                         </>
-                    )}
-                    {item.status === 'hidden' && (
-                        <>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleContentAction(type.slice(0, -1), item.id, 'restore', 'Content restored')}
-                            >
-                                <RotateCcw className="h-3 w-3 mr-1" />
-                                Restore
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleContentAction(type.slice(0, -1), item.id, 'delete', 'Content permanently deleted')}
-                            >
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Delete
-                            </Button>
-                        </>
-                    )}
-                    {item.status === 'deleted' && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleContentAction(type.slice(0, -1), item.id, 'restore', 'Content restored from deletion')}
-                        >
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            Restore
-                        </Button>
-                    )}
-                </div>
+                    );
+                })()}</div>
             </div>
         </div>
     );
@@ -637,6 +687,7 @@ const formatActionName = (action: string) => {
 
 export default function ModerationDashboard() {
     const { data: session, status } = useSession();
+    const { toast } = useToast();
     const [reports, setReports] = useState<Report[]>([]);
     const [stats, setStats] = useState<ModerationStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -694,14 +745,48 @@ export default function ModerationDashboard() {
             });
 
             if (response.ok) {
-                fetchReports();
-                fetchStats();
+                const data = await response.json();
+                await Promise.all([fetchReports(), fetchStats()]);
                 setSelectedReport(null);
+                
+                // Show success toast with appropriate message
+                const statusMessages = {
+                    resolved: 'Report has been resolved and content restored',
+                    dismissed: 'Report has been dismissed and content restored', 
+                    reviewed: 'Report has been marked as reviewed'
+                };
+                
+                const message = statusMessages[newStatus as keyof typeof statusMessages] || `Report status updated to ${newStatus}`;
+                const description = moderationAction ? `${message} and content ${moderationAction}` : message;
+                
+                toast({
+                    title: "Report updated",
+                    description: description,
+                });
+                
+                // If there was a warning about missing content, show it
+                if (data.warning) {
+                    toast({
+                        title: "Warning",
+                        description: data.warning,
+                        variant: "default",
+                    });
+                }
             } else {
-                console.error('Failed to update report');
+                const errorData = await response.json();
+                toast({
+                    title: "Error",
+                    description: errorData.error || 'Failed to update report',
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error('Error updating report:', error);
+            toast({
+                title: "Error",
+                description: 'Failed to update report. Please try again.',
+                variant: "destructive",
+            });
         } finally {
             setActionLoading(false);
         }
@@ -723,11 +808,37 @@ export default function ModerationDashboard() {
             });
 
             if (response.ok) {
-                fetchReports();
-                fetchStats();
+                await Promise.all([fetchReports(), fetchStats()]);
+                
+                const actionMessages = {
+                    hide: 'Content has been hidden',
+                    delete: 'Content has been deleted',
+                    restore: 'Content has been restored',
+                    approve: 'Content has been approved',
+                    unflag: 'Content has been approved',
+                    flag: 'Content has been flagged',
+                    dismiss: 'Content has been dismissed'
+                };
+                
+                toast({
+                    title: "Action completed",
+                    description: actionMessages[action as keyof typeof actionMessages] || `${action} action completed successfully`,
+                });
+            } else {
+                const errorData = await response.json();
+                toast({
+                    title: "Error",
+                    description: errorData.error || `Failed to ${action} content`,
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error('Error applying moderation action:', error);
+            toast({
+                title: "Error",
+                description: `Failed to ${action} content. Please try again.`,
+                variant: "destructive",
+            });
         }
     };
 
