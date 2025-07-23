@@ -50,6 +50,16 @@ A student-built community platform for Cornell Tech students to collaboratively 
 - **Loading Optimization**: Skeleton screens and progressive loading states
 - **Accessibility**: ARIA labels and keyboard navigation support
 
+### 🛡️ Administration & Security
+
+- **Comprehensive Admin Dashboard**: Real-time statistics, system health monitoring, and user analytics
+- **Advanced User Management**: Role-based access control with Student/Faculty/Staff/Admin/Moderator roles
+- **Content Moderation System**: Complete moderation workflow with flagging, hiding, deletion, and audit trails
+- **Security Monitoring**: Real-time security event tracking, rate limiting, and IP-based suspicious activity detection
+- **Report Management**: User reporting system with admin review workflow and content moderation
+- **Database Administration**: Performance metrics, connection monitoring, and health checks
+- **Rate Limiting**: Campus-scale rate limiting (800+ users) with endpoint-specific configurations
+
 ### 🛠️ Support & Information
 
 - **FAQ System**: Comprehensive help with accordion-style organization
@@ -184,11 +194,23 @@ For detailed scraper documentation, see [scraper/README.md](scraper/README.md).
 ```
 cornell-tech-hub/
 ├── app/                    # Next.js App Router directory
+│   ├── admin/             # Admin dashboard and management interface
+│   │   ├── database/      # Database administration and stats
+│   │   ├── feedback/      # Admin feedback management
+│   │   ├── health/        # System health monitoring
+│   │   ├── moderation/    # Content moderation dashboard
+│   │   ├── security/      # Security event monitoring
+│   │   └── users/         # User role management
 │   ├── api/               # Full-stack API routes
+│   │   ├── admin/         # Admin-only API endpoints
+│   │   │   ├── moderation/ # Content moderation APIs
+│   │   │   ├── reports/   # User report management
+│   │   │   └── users/     # User management APIs
 │   │   ├── auth/          # NextAuth.js authentication
 │   │   ├── courses/       # Course CRUD and search
 │   │   ├── forum/         # Forum posts and comments
 │   │   ├── planner/       # Academic planning data
+│   │   ├── security/      # Security monitoring APIs
 │   │   ├── user/          # User profile management
 │   │   └── feedback/      # Contact and feedback handling
 │   ├── auth/              # Sign-in and sign-up pages
@@ -205,19 +227,25 @@ cornell-tech-hub/
 │   ├── settings/          # User preferences
 │   └── legal/             # Terms of service, privacy policy
 ├── components/            # Global reusable components
+│   ├── admin/             # Admin-specific components
 │   ├── ui/                # Radix UI styled components
 │   └── providers/         # Context providers (session, theme, etc.)
 ├── hooks/                 # Custom React hooks
 ├── lib/                   # Core utilities and configurations
 │   ├── auth.ts           # NextAuth.js configuration
 │   ├── db.ts             # Database connection
+│   ├── roles.ts          # User role management system
+│   ├── error-handling.ts # Security-focused error handling
 │   ├── validations/       # Zod schemas
 │   └── services/          # Business logic
 ├── middleware/            # Request/response middleware
+│   ├── rate-limit.ts     # Campus-scale rate limiting
+│   └── validation.ts     # Request validation
 ├── prisma/                # Database schema and migrations
 ├── scraper/               # Cornell course data scraping tools
 │   ├── scripts/           # Python scraping utilities
 │   └── output/            # Scraped course data
+├── scripts/               # Database migration and utility scripts
 ├── public/                # Static assets and media
 └── styles/                # Global CSS and Tailwind config
 ```
@@ -233,11 +261,13 @@ cornell-tech-hub/
 ### Key Directories Explained
 
 - **app/api/**: RESTful API endpoints with Next.js App Router
+- **app/admin/**: Comprehensive admin dashboard with user management, moderation, security monitoring
 - **app/planner/**: Interactive course planning with drag-and-drop
 - **app/forum/**: Community discussion system with categories
 - **app/courses/**: Course catalog, search, and review system
 - **components/ui/**: Radix UI components styled with Tailwind CSS
-- **lib/**: Core utilities including auth, database, and validation
+- **lib/**: Core utilities including auth, database, validation, and role management
+- **middleware/**: Rate limiting, request validation, and security middleware
 - **scraper/**: Python tools for importing Cornell course data
 - **prisma/**: Database schema with comprehensive academic models
 
@@ -300,13 +330,24 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 - **Forum Categories**: Organized discussion topics
 - **Forum Likes & Views**: Engagement tracking
 - **Forum Saved Posts**: User bookmarking system
+- **Content Moderation**: Comprehensive moderation system with flagging, review, and resolution workflows
+- **User Reporting**: Community-driven content reporting with admin review process
+
+### Administrative Features
+
+- **User Role Management**: Student/Faculty/Staff roles with Admin/Moderator elevation system
+- **Content Moderation Dashboard**: Complete moderation interface with audit trails
+- **Security Event Monitoring**: Real-time tracking of authentication failures, rate limiting, and suspicious activity
+- **Database Administration**: Performance monitoring, connection management, and health checks
+- **Report Processing**: Structured workflow for handling user reports and content violations
+- **Feedback Management**: Admin interface for processing user suggestions and bug reports
 
 ### Advanced Features
 
 - **Search Cache**: Optimized search performance
 - **User Token Usage**: Analytics and usage tracking
-- **Feedback System**: User suggestions and bug reports
-- **Marketplace**: Future feature for student item trading
+- **Rate Limiting**: Campus-scale protection with endpoint-specific configurations
+- **Security Logging**: Comprehensive audit trails for all administrative and moderation actions
 - **Special Requirements**: Custom academic requirement handling
 
 ### Data Relationships
@@ -318,11 +359,13 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 
 ## Usage Guidelines
 
-### Authentication Requirements
+### Authentication & Authorization
 
 - **Cornell Email Only**: Users must sign in with a @cornell.edu email address
 - **Google OAuth**: Authentication is handled through Cornell's Google Workspace
 - **Program Association**: Users select their Cornell Tech program during onboarding
+- **Role-Based Access**: Student/Faculty/Staff roles with Admin/Moderator elevation capabilities
+- **Route Protection**: Middleware-enforced access control for admin and moderation features
 
 ### Academic Programs Supported
 
@@ -345,6 +388,8 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 2. **Course Reviews**: Share detailed course experiences with ratings
 3. **Forum Discussions**: Engage in program-specific and general discussions
 4. **Demo Mode**: Try the planner without logging in using sample data
+5. **Community Moderation**: Report inappropriate content and participate in community governance
+6. **Admin Dashboard**: Access comprehensive administration tools (Admin/Moderator roles only)
 
 ## Development Workflow
 
@@ -424,6 +469,5 @@ The application includes several performance optimization features:
 ### Project Status
 
 - **Maintenance**: Actively maintained by Cornell Tech students
-- **Open Source**: MIT Licensed for community contributions
 - **Independent**: Not officially affiliated with Cornell Tech
 - **Community-Driven**: Built by students, for students
