@@ -114,7 +114,7 @@ export async function POST(req: Request) {
             to: adminEmail,
             subject: emailSubject,
             html: emailContent,
-            reply_to: email,
+            replyTo: email,
         });
 
         return NextResponse.json({ success: true });
