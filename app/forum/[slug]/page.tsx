@@ -42,8 +42,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function getThreadData(slug: string) {
-    const post = await prisma.forum_posts.findUnique({
-        where: { id: slug },
+    const post = await prisma.forum_posts.findFirst({
+        where: { 
+            id: slug,
+            status: "active"
+        },
         include: {
             users: {
                 select: {

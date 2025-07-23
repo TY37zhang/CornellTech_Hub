@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
 import { isAdmin, isMod } from '@/lib/roles';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(
     request: NextRequest,
@@ -347,11 +348,21 @@ async function applyModerationAction(
                     updateResult = await prisma.forum_posts.deleteMany({
                         where: { id: itemId }
                     });
+                    // Revalidate forum pages to remove deleted post from cache
+                    revalidatePath('/forum');
+                    revalidatePath('/forum/saved');
+                    // Revalidate all category pages
+                    const categories = ['general', 'academics', 'career', 'technology', 'campus-life', 'housing', 'events'];
+                    categories.forEach(category => {
+                        revalidatePath(`/forum/categories/${category}`);
+                    });
                     break;
                 case 'comment':
                     updateResult = await prisma.forum_comments.deleteMany({
                         where: { id: itemId }
                     });
+                    // Revalidate forum pages to update comment counts
+                    revalidatePath('/forum');
                     break;
                 case 'review':
                     updateResult = await prisma.course_reviews.deleteMany({

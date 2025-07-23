@@ -18,7 +18,11 @@ export async function GET(
 
         // Fetch the specific post from the database
         const post = await prisma.forum_posts.findFirst({
-            where: { id, author_id: session.user.id },
+            where: { 
+                id, 
+                author_id: session.user.id,
+                status: "active"
+            },
             include: { 
                 forum_categories: { select: { name: true } },
                 forum_post_tags: { select: { tag: true } },
@@ -97,7 +101,11 @@ export async function PUT(
         const updatedPost = await prisma.$transaction(async (tx) => {
             // Check if the post exists and belongs to the user
             const existingPost = await tx.forum_posts.findFirst({
-                where: { id, author_id: session.user.id },
+                where: { 
+                    id, 
+                    author_id: session.user.id,
+                    status: "active"
+                },
             });
 
             if (!existingPost) {
