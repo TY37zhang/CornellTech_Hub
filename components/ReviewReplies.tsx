@@ -370,11 +370,6 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
         </div>
       )}
 
-      {!canReply && replies.length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          No faculty or staff responses yet. Only faculty and staff members can reply to reviews.
-        </p>
-      )}
     </div>
   );
 }

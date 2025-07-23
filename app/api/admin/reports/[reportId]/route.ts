@@ -337,6 +337,13 @@ async function applyModerationAction(
             // Actually delete the record from the database
             switch (itemType) {
                 case 'post':
+                    // Delete related records first to avoid foreign key constraints
+                    await prisma.forum_views.deleteMany({
+                        where: { post_id: itemId }
+                    });
+                    await prisma.forum_comments.deleteMany({
+                        where: { post_id: itemId }
+                    });
                     updateResult = await prisma.forum_posts.deleteMany({
                         where: { id: itemId }
                     });

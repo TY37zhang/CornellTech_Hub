@@ -63,9 +63,9 @@ export async function POST(request: Request) {
             );
         }
 
-        if (sanitizedReview.length < 20) {
+        if (sanitizedReview.length < 10) {
             return NextResponse.json(
-                { error: "Review must be at least 20 characters long" },
+                { error: "Review must be at least 10 characters long" },
                 { status: 400 }
             );
         }
