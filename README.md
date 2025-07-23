@@ -17,10 +17,10 @@ A student-built community platform for Cornell Tech students to collaboratively 
 ### 📚 Academic Planning Suite
 
 - **Program-Specific Planning**: Tailored for all Cornell Tech programs:
-  - **MEng**: Computer Science, Data Science, Electrical & Computer Engineering, Operations Research
-  - **MS**: Design Technology, Information Systems (3 specialized tracks)
-  - **MBA**: Johnson Cornell Tech
-  - **LLM**: Law, Technology & Entrepreneurship
+    - **MEng**: Computer Science, Data Science, Electrical & Computer Engineering, Operations Research
+    - **MS**: Design Technology, Information Systems (3 specialized tracks)
+    - **MBA**: Johnson Cornell Tech
+    - **LLM**: Law, Technology & Entrepreneurship
 - **Intelligent Requirement Tracking**: Automatic progress monitoring for degree requirements
 - **Credit Management**: Real-time credit counting and validation
 - **Interactive Scheduling**: Weekly timetable with drag-and-drop course planning
@@ -304,7 +304,8 @@ NEXT_PUBLIC_VERCEL_ANALYTICS_ID="your-analytics-id"  # Optional
 VERCEL_URL="your-production-url"                     # Auto-set by Vercel
 ```
 
-> **Important**: 
+> **Important**:
+>
 > - For Google OAuth, add your domain to authorized origins in Google Console
 > - For production deployment on Vercel, set these variables in project settings
 > - The `NEXTAUTH_SECRET` should be a random 32+ character string
@@ -370,17 +371,17 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 ### Academic Programs Supported
 
 - **Master of Engineering (MEng)**:
-  - Computer Science
-  - Data Science
-  - Electrical & Computer Engineering
-  - Operations Research & Information Engineering
+    - Computer Science
+    - Data Science
+    - Electrical & Computer Engineering
+    - Operations Research & Information Engineering
 - **Master of Science (MS)**:
-  - Design Technology
-  - Information Systems (3 specialized tracks)
+    - Design Technology
+    - Information Systems (3 specialized tracks)
 - **Master of Business Administration (MBA)**:
-  - Johnson Cornell Tech
+    - Johnson Cornell Tech
 - **Master of Laws (LLM)**:
-  - Law, Technology & Entrepreneurship
+    - Law, Technology & Entrepreneurship
 
 ### Key Features Usage
 
