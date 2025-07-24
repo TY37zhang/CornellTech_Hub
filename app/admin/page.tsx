@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                 
                 {/* Mobile-first action bar */}
                 <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4">
-                    <div className="flex items-center justify-between sm:flex-col sm:items-end">
+                    <div className="flex items-center justify-between sm:items-center sm:gap-3">
                         <div className="text-xs sm:text-sm text-muted-foreground">
                             Last updated: {lastUpdated.toLocaleTimeString()}
                         </div>
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
                             variant="outline"
                             size="sm"
                             disabled={loading}
-                            className="ml-2 sm:ml-0 sm:mt-1"
+                            className="ml-2 sm:ml-0"
                         >
                             <RefreshCw
                                 className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}${loading ? "" : " mr-1 sm:mr-2"}`}

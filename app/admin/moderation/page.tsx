@@ -958,38 +958,73 @@ export default function ModerationDashboard() {
                 </div>
             </div>
 
-            {/* Mobile-optimized Statistics Cards */}
+            {/* Statistics Cards */}
             {stats && (
-                <div className="grid grid-cols-4 gap-1 sm:gap-4">
-                    <Card className="hover:shadow-md transition-shadow aspect-square">
-                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
-                            <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
-                            <div className="text-2xl sm:text-3xl font-bold text-orange-600 leading-none">{stats.reports.pending}</div>
-                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Pending</div>
+                <>
+                    {/* Mobile View - Original square cards */}
+                    <div className="grid grid-cols-4 gap-1 sm:hidden">
+                        <Card className="hover:shadow-md transition-shadow aspect-square">
+                            <div className="h-full p-3 flex flex-col items-center justify-center space-y-1">
+                                <AlertTriangle className="h-6 w-6 text-orange-600 flex-shrink-0" />
+                                <div className="text-2xl font-bold text-orange-600 leading-none">{stats.reports.pending}</div>
+                                <div className="text-xs font-medium text-center text-muted-foreground leading-tight">Pending</div>
+                            </div>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow aspect-square">
+                            <div className="h-full p-3 flex flex-col items-center justify-center space-y-1">
+                                <FileText className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                                <div className="text-2xl font-bold leading-none">{stats.reports.total}</div>
+                                <div className="text-xs font-medium text-center text-muted-foreground leading-tight">Total</div>
+                            </div>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow aspect-square">
+                            <div className="h-full p-3 flex flex-col items-center justify-center space-y-1">
+                                <Flag className="h-6 w-6 text-red-600 flex-shrink-0" />
+                                <div className="text-2xl font-bold text-red-600 leading-none">{stats.moderation.flaggedContent}</div>
+                                <div className="text-xs font-medium text-center text-muted-foreground leading-tight">Flagged</div>
+                            </div>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow aspect-square">
+                            <div className="h-full p-3 flex flex-col items-center justify-center space-y-1">
+                                <EyeOff className="h-6 w-6 text-gray-600 flex-shrink-0" />
+                                <div className="text-2xl font-bold text-gray-600 leading-none">{stats.moderation.hiddenContent}</div>
+                                <div className="text-xs font-medium text-center text-muted-foreground leading-tight">Hidden</div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Desktop View - Full width responsive cards */}
+                    <div className="hidden sm:grid sm:grid-cols-4 gap-4">
+                        <div className="flex items-center gap-3 px-4 py-4 bg-orange-50 rounded-lg border border-orange-200 hover:shadow-sm transition-shadow w-full">
+                            <AlertTriangle className="h-5 w-5 text-orange-600" />
+                            <div className="flex flex-col">
+                                <div className="text-2xl font-bold text-orange-600 leading-none">{stats.reports.pending}</div>
+                                <div className="text-sm font-medium text-orange-700">Pending</div>
+                            </div>
                         </div>
-                    </Card>
-                    <Card className="hover:shadow-md transition-shadow aspect-square">
-                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
-                            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
-                            <div className="text-2xl sm:text-3xl font-bold leading-none">{stats.reports.total}</div>
-                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Total</div>
+                        <div className="flex items-center gap-3 px-4 py-4 bg-blue-50 rounded-lg border border-blue-200 hover:shadow-sm transition-shadow w-full">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            <div className="flex flex-col">
+                                <div className="text-2xl font-bold text-blue-600 leading-none">{stats.reports.total}</div>
+                                <div className="text-sm font-medium text-blue-700">Total</div>
+                            </div>
                         </div>
-                    </Card>
-                    <Card className="hover:shadow-md transition-shadow aspect-square">
-                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
-                            <Flag className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 flex-shrink-0" />
-                            <div className="text-2xl sm:text-3xl font-bold text-red-600 leading-none">{stats.moderation.flaggedContent}</div>
-                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Flagged</div>
+                        <div className="flex items-center gap-3 px-4 py-4 bg-red-50 rounded-lg border border-red-200 hover:shadow-sm transition-shadow w-full">
+                            <Flag className="h-5 w-5 text-red-600" />
+                            <div className="flex flex-col">
+                                <div className="text-2xl font-bold text-red-600 leading-none">{stats.moderation.flaggedContent}</div>
+                                <div className="text-sm font-medium text-red-700">Flagged</div>
+                            </div>
                         </div>
-                    </Card>
-                    <Card className="hover:shadow-md transition-shadow aspect-square">
-                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
-                            <EyeOff className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 flex-shrink-0" />
-                            <div className="text-2xl sm:text-3xl font-bold text-gray-600 leading-none">{stats.moderation.hiddenContent}</div>
-                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Hidden</div>
+                        <div className="flex items-center gap-3 px-4 py-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow w-full">
+                            <EyeOff className="h-5 w-5 text-gray-600" />
+                            <div className="flex flex-col">
+                                <div className="text-2xl font-bold text-gray-600 leading-none">{stats.moderation.hiddenContent}</div>
+                                <div className="text-sm font-medium text-gray-700">Hidden</div>
+                            </div>
                         </div>
-                    </Card>
-                </div>
+                    </div>
+                </>
             )}
 
             <Tabs defaultValue="reports" className="space-y-2 sm:space-y-6">
