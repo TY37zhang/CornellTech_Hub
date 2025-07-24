@@ -131,7 +131,7 @@ export default async function Dashboard() {
             <main className="flex-1">
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-pink-50 to-white">
                     <div className="w-full px-4 md:px-6 lg:px-8">
-                        <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_700px]">
+                        <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 xl:gap-12">
                             <div className="flex flex-col justify-center space-y-4">
                                 <div className="space-y-2 items-center text-center">
                                     <h1 className="text-3xl font-mono tracking-tighter sm:text-4xl md:text-5xl text-center">
