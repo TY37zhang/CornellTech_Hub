@@ -4,6 +4,53 @@ A student-built community platform for Cornell Tech students to collaboratively 
 
 > **Note**: This platform is built by students, for students. It serves as a central hub for peer-to-peer resource sharing and academic collaboration within the Cornell Tech community.
 
+## Table of Contents
+
+- [Features](#features)
+  - [🎓 Course Management System](#-course-management-system)
+  - [📚 Academic Planning Suite](#-academic-planning-suite)
+  - [💬 Community Forum](#-community-forum)
+  - [🔐 Authentication & User Profiles](#-authentication--user-profiles)
+  - [✨ Advanced UI & Experience](#-advanced-ui--experience)
+  - [🛡️ Administration & Security](#️-administration--security)
+  - [🛠️ Support & Information](#️-support--information)
+- [Tech Stack](#tech-stack)
+  - [Frontend](#frontend)
+  - [Backend & Infrastructure](#backend--infrastructure)
+  - [Development & Optimization](#development--optimization)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Cornell Course Data](#cornell-course-data)
+- [Architecture & Design](#architecture--design)
+  - [Application Architecture](#application-architecture)
+  - [Design Principles](#design-principles)
+- [Project Structure](#project-structure)
+  - [Key Directories Explained](#key-directories-explained)
+- [Environment Variables](#environment-variables)
+- [Database Architecture](#database-architecture)
+  - [Core Entities](#core-entities)
+  - [Community Features](#community-features)
+  - [Administrative Features](#administrative-features)
+  - [Advanced Features](#advanced-features)
+  - [Data Relationships](#data-relationships)
+- [Usage Guidelines](#usage-guidelines)
+  - [Authentication & Authorization](#authentication--authorization)
+  - [Academic Programs Supported](#academic-programs-supported)
+  - [Key Features Usage](#key-features-usage)
+- [Development Workflow](#development-workflow)
+  - [Scripts & Commands](#scripts--commands)
+  - [Performance Monitoring](#performance-monitoring)
+- [Deployment](#deployment)
+  - [Vercel Deployment (Recommended)](#vercel-deployment-recommended)
+  - [Environment-Specific Configuration](#environment-specific-configuration)
+- [Contributing](#contributing)
+  - [Development Setup](#development-setup)
+  - [Contribution Guidelines](#contribution-guidelines)
+- [Community & Support](#community--support)
+  - [Getting Help](#getting-help)
+  - [Project Status](#project-status)
+
 ## Features
 
 ### 🎓 Course Management System
@@ -57,7 +104,10 @@ A student-built community platform for Cornell Tech students to collaboratively 
 - **Content Moderation System**: Complete moderation workflow with flagging, hiding, deletion, and audit trails
 - **Security Monitoring**: Real-time security event tracking, rate limiting, and IP-based suspicious activity detection
 - **Report Management**: User reporting system with admin review workflow and content moderation
-- **Database Administration**: Performance metrics, connection monitoring, and health checks
+- **Database Administration**: Performance metrics, connection monitoring, and health checks with live table stats
+- **Feedback System**: Admin interface for processing user suggestions and bug reports
+- **Moderation Logs**: Complete audit trails for all administrative actions with searchable history
+- **Online User Tracking**: Real-time monitoring of active users and session management
 - **Rate Limiting**: Campus-scale rate limiting (800+ users) with endpoint-specific configurations
 
 ### 🛠️ Support & Information
@@ -74,9 +124,9 @@ A student-built community platform for Cornell Tech students to collaboratively 
 - **Next.js 15.3.1** - React framework with App Router
 - **React 18.3.1** - UI library with concurrent features
 - **TypeScript** - Type safety and enhanced developer experience
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS v4.1.11** - Modern utility-first CSS framework
 - **Radix UI** - Accessible, unstyled UI primitives
-- **Framer Motion** - Advanced animations and transitions
+- **Framer Motion 12.9.2** - Advanced animations and transitions
 - **DnD Kit** - Drag-and-drop interactions for course planning
 - **Lucide React** - Beautiful, customizable icons
 - **React Hook Form** - Performant form management
@@ -86,13 +136,13 @@ A student-built community platform for Cornell Tech students to collaboratively 
 
 ### Backend & Infrastructure
 
-- **Next.js API Routes** - Full-stack API with Edge runtime support
-- **Prisma ORM** - Type-safe database client with migrations
-- **PostgreSQL** - Production database (local or Neon serverless)
+- **Next.js API Routes** - Full-stack API with comprehensive routing
+- **Prisma ORM 6.12.0** - Type-safe database client with migrations
+- **PostgreSQL** - Production database with 35+ table schema
 - **NextAuth.js** - Secure authentication with Google OAuth
-- **Cloudinary** - Image upload and optimization
-- **Resend** - Transactional email service
-- **Vercel** - Deployment platform with analytics
+- **Cloudinary** - Image upload, optimization, and CDN
+- **Resend** - Transactional email service for notifications
+- **Vercel** - Deployment platform with analytics and monitoring
 
 ### Development & Optimization
 
@@ -194,13 +244,13 @@ For detailed scraper documentation, see [scraper/README.md](scraper/README.md).
 ```
 cornell-tech-hub/
 ├── app/                    # Next.js App Router directory
-│   ├── admin/             # Admin dashboard and management interface
-│   │   ├── database/      # Database administration and stats
-│   │   ├── feedback/      # Admin feedback management
-│   │   ├── health/        # System health monitoring
-│   │   ├── moderation/    # Content moderation dashboard
-│   │   ├── security/      # Security event monitoring
-│   │   └── users/         # User role management
+│   ├── admin/             # Comprehensive admin dashboard
+│   │   ├── database/      # Database administration with live stats
+│   │   ├── feedback/      # User feedback management system
+│   │   ├── health/        # System health and performance monitoring
+│   │   ├── moderation/    # Content moderation dashboard with audit trails
+│   │   ├── security/      # Security event monitoring and threat detection
+│   │   └── users/         # User role management and analytics
 │   ├── api/               # Full-stack API routes
 │   │   ├── admin/         # Admin-only API endpoints
 │   │   │   ├── moderation/ # Content moderation APIs
@@ -345,18 +395,23 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 
 ### Advanced Features
 
-- **Search Cache**: Optimized search performance
-- **User Token Usage**: Analytics and usage tracking
-- **Rate Limiting**: Campus-scale protection with endpoint-specific configurations
+- **Hot Post Algorithm**: Intelligent ranking based on engagement, views, and recency
+- **Search Cache**: Optimized search performance with caching layer
+- **User Token Usage**: Analytics and usage tracking for future AI features
+- **Rate Limiting**: Campus-scale protection (800+ users) with endpoint-specific configurations
 - **Security Logging**: Comprehensive audit trails for all administrative and moderation actions
-- **Special Requirements**: Custom academic requirement handling
+- **Special Requirements**: Custom academic requirement handling (ethics courses, program-specific)
+- **Real-time Statistics**: Live database metrics and system health monitoring
+- **Chat Infrastructure**: Database schema ready for future AI integration
 
 ### Data Relationships
 
-- Users can create multiple course plans and reviews
-- Courses support many-to-many relationships with categories
-- Forum posts support nested comments with voting
-- Comprehensive indexing for performance optimization
+- Users can create multiple course plans and reviews with full CRUD operations
+- Courses support many-to-many relationships with categories and cross-listing
+- Forum posts support nested comments with upvote/downvote voting system
+- Comprehensive indexing for performance optimization across 35+ tables
+- Moderation system with complete audit trails and content status tracking
+- Future-ready infrastructure for chat/AI and marketplace features
 
 ## Usage Guidelines
 
@@ -385,12 +440,14 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 
 ### Key Features Usage
 
-1. **Course Planning**: Build your academic plan with drag-and-drop scheduling
-2. **Course Reviews**: Share detailed course experiences with ratings
-3. **Forum Discussions**: Engage in program-specific and general discussions
+1. **Course Planning**: Build your academic plan with drag-and-drop scheduling and progress tracking
+2. **Course Reviews**: Share detailed course experiences with multi-dimensional ratings
+3. **Forum Discussions**: Engage in 7 specialized categories with threaded comments and voting
 4. **Demo Mode**: Try the planner without logging in using sample data
 5. **Community Moderation**: Report inappropriate content and participate in community governance
 6. **Admin Dashboard**: Access comprehensive administration tools (Admin/Moderator roles only)
+7. **Hot Posts**: Discover trending discussions with intelligent ranking algorithms
+8. **Post Management**: Save posts, track views, and manage notification preferences
 
 ## Development Workflow
 
@@ -399,7 +456,7 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 ```bash
 # Development
 npm run dev                 # Start development server
-npm run build              # Build for production
+npm run build              # Build for production (includes Prisma generation and sitemap)
 npm run start              # Start production server
 npm run lint               # Run ESLint
 
