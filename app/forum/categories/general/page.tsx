@@ -36,7 +36,7 @@ import { getForumPostsByCategory } from "../../actions";
 
 // Helper function to get category color
 function getCategoryColor(category: string): string {
-    return "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400";
+    return "bg-orange-100 text-orange-800 hover:bg-orange-100";
 }
 
 // Helper function to format date
@@ -198,8 +198,8 @@ export default function GeneralCategoryPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-orange-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col space-y-4">
                             <div className="w-full">
                                 <div className="flex items-center justify-start">
@@ -241,13 +241,13 @@ export default function GeneralCategoryPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold tracking-tight">
                             Discussions
                         </h2>
                         <Link href="/forum/create">
-                            <Button className="gap-1">
+                            <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                 <PlusCircle className="h-4 w-4" />
                                 <span>New Thread</span>
                             </Button>
@@ -383,7 +383,7 @@ export default function GeneralCategoryPage() {
                             </p>
                         </div>
                         <Link href="/forum/create">
-                            <Button className="gap-1">
+                            <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                 <PlusCircle className="h-4 w-4" />
                                 <span>Create New Thread</span>
                             </Button>

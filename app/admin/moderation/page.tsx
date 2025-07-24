@@ -918,81 +918,87 @@ export default function ModerationDashboard() {
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
-                        <Button asChild variant="outline" size="sm">
+        <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+            {/* Mobile-optimized header */}
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <Button asChild variant="outline" size="sm" className="flex-shrink-0">
                             <Link
                                 href="/admin"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1 sm:gap-2"
                             >
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to Dashboard
+                                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline">Back to Dashboard</span>
+                                <span className="sm:hidden">Back</span>
                             </Link>
                         </Button>
                     </div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Shield className="h-8 w-8" />
-                        Content Moderation
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Manage and moderate community content
-                    </p>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                            <Shield className="h-6 w-6 sm:h-8 sm:w-8" />
+                            <span className="hidden sm:inline">Content Moderation</span>
+                            <span className="sm:hidden">Moderation</span>
+                        </h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">
+                            Manage and moderate community content
+                        </p>
+                    </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                    Logged in as: {session?.user?.email}
-                    <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-xs sm:text-sm text-muted-foreground bg-muted/50 p-2 rounded-md sm:bg-transparent sm:p-0">
+                    <div className="sm:text-right">
+                        <span className="font-medium">Logged in as:</span>
+                        <div className="truncate mt-1 sm:mt-0 sm:inline sm:ml-1">
+                            {session?.user?.email}
+                        </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 sm:text-right">
                         Role: {getFullRoleDisplay(session?.user)}
                     </div>
                 </div>
             </div>
 
-            {/* Statistics Cards */}
+            {/* Mobile-optimized Statistics Cards */}
             {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">{stats.reports.pending}</div>
-                        </CardContent>
+                <div className="grid grid-cols-4 gap-1 sm:gap-4">
+                    <Card className="hover:shadow-md transition-shadow aspect-square">
+                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
+                            <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
+                            <div className="text-2xl sm:text-3xl font-bold text-orange-600 leading-none">{stats.reports.pending}</div>
+                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Pending</div>
+                        </div>
                     </Card>
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.reports.total}</div>
-                        </CardContent>
+                    <Card className="hover:shadow-md transition-shadow aspect-square">
+                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
+                            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                            <div className="text-2xl sm:text-3xl font-bold leading-none">{stats.reports.total}</div>
+                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Total</div>
+                        </div>
                     </Card>
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Flagged Content</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{stats.moderation.flaggedContent}</div>
-                        </CardContent>
+                    <Card className="hover:shadow-md transition-shadow aspect-square">
+                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
+                            <Flag className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 flex-shrink-0" />
+                            <div className="text-2xl sm:text-3xl font-bold text-red-600 leading-none">{stats.moderation.flaggedContent}</div>
+                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Flagged</div>
+                        </div>
                     </Card>
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Hidden Content</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-600">{stats.moderation.hiddenContent}</div>
-                        </CardContent>
+                    <Card className="hover:shadow-md transition-shadow aspect-square">
+                        <div className="h-full p-4 flex flex-col items-center justify-center space-y-2">
+                            <EyeOff className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 flex-shrink-0" />
+                            <div className="text-2xl sm:text-3xl font-bold text-gray-600 leading-none">{stats.moderation.hiddenContent}</div>
+                            <div className="text-xs sm:text-sm font-medium text-center text-muted-foreground leading-tight">Hidden</div>
+                        </div>
                     </Card>
                 </div>
             )}
 
-            <Tabs defaultValue="reports" className="space-y-6">
+            <Tabs defaultValue="reports" className="space-y-2 sm:space-y-6">
                 <TabsList>
                     <TabsTrigger value="reports">Reports Queue</TabsTrigger>
                     <TabsTrigger value="content">Flagged Content</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="reports" className="space-y-6">
+                <TabsContent value="reports" className="space-y-3 sm:space-y-6 mt-3 sm:mt-6">
                     {/* Filter Controls */}
                     <Card>
                         <CardContent className="pt-6">

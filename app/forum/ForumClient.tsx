@@ -71,15 +71,15 @@ interface Thread {
 function getCategoryColor(category: string): string {
     const colors: Record<string, string> = {
         Academics:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        Career: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+            "bg-red-100 text-red-800 hover:bg-red-100",
+        Career: "bg-blue-100 text-blue-800 hover:bg-blue-100",
         "Campus Life":
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+            "bg-purple-100 text-purple-800 hover:bg-purple-100",
         Technology:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        Events: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
+            "bg-green-100 text-green-800 hover:bg-green-100",
+        Events: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
         General:
-            "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+            "bg-orange-100 text-orange-800 hover:bg-orange-100",
     };
     return colors[category] || colors.General;
 }
@@ -163,6 +163,7 @@ function ForumClient({
     initialContributors = [],
     initialTotalPages = 1,
 }: ForumClientProps) {
+    
     // Memoized initial thread processing
     const initialThreads = useMemo(() => {
         if (initialPosts.length > 0) {
@@ -235,6 +236,7 @@ function ForumClient({
         }, 300);
         return () => clearTimeout(timer);
     }, [searchQuery]);
+
 
     // Helper function to serialize errors to readable strings
     const serializeError = (error: unknown): string => {
@@ -402,6 +404,7 @@ function ForumClient({
         }
     }, [debouncedSearchQuery, currentPage, threadsPerPage]);
 
+    // Fetch posts whenever dependencies change (like course page)
     useEffect(() => {
         // Skip fetching on the very first render when we already have server data
         if (firstLoadRef.current) {
@@ -435,135 +438,6 @@ function ForumClient({
         return result;
     }, [activeTab, selectedCategory, threads]);
 
-    if (loading) {
-        return (
-            <div className="flex min-h-screen flex-col">
-                <div className="flex-1">
-                    {/* HERO SKELETON */}
-                    <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                        <div className="container px-4 md:px-6">
-                            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                                <div className="space-y-2">
-                                    <div className="h-10 w-64 bg-muted rounded animate-pulse mx-auto" />
-                                    <div className="h-6 w-96 bg-muted rounded animate-pulse mx-auto" />
-                                </div>
-                                <div className="w-full max-w-2xl">
-                                    <div className="h-10 w-full bg-muted rounded-md animate-pulse" />
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* MAIN SECTION SKELETON */}
-                    <section className="w-full py-6">
-                        <div className="container px-4 md:px-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="h-8 w-32 bg-muted rounded animate-pulse" />
-                            </div>
-                            <div className="flex flex-col lg:flex-row gap-8">
-                                {/* LEFT COLUMN SKELETON */}
-                                <div className="flex-1">
-                                    <div className="w-full">
-                                        <div className="flex w-full items-center justify-between mb-6">
-                                            <div className="h-10 w-64 bg-muted rounded animate-pulse" />
-                                            <div className="h-10 w-32 bg-muted rounded animate-pulse" />
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            {[...Array(6)].map((_, i) => (
-                                                <Card key={i} className="overflow-hidden">
-                                                    <CardHeader className="p-4">
-                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-                                                            <div className="flex flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
-                                                                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-full animate-pulse" />
-                                                                <div className="flex flex-col min-w-0 flex-1">
-                                                                    <div className="h-6 w-full max-w-[280px] bg-muted rounded animate-pulse mb-2" />
-                                                                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <div className="h-6 w-16 bg-muted rounded animate-pulse" />
-                                                                <div className="h-6 w-12 bg-muted rounded animate-pulse" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="h-12 w-full bg-muted rounded animate-pulse mt-2" />
-                                                    </CardHeader>
-                                                    <CardFooter className="p-4 pt-0">
-                                                        <div className="flex flex-col gap-2 w-full">
-                                                            <div className="flex gap-2">
-                                                                <div className="h-5 w-12 bg-muted rounded animate-pulse" />
-                                                                <div className="h-5 w-16 bg-muted rounded animate-pulse" />
-                                                            </div>
-                                                            <div className="flex gap-4">
-                                                                <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-                                                                <div className="h-4 w-16 bg-muted rounded animate-pulse" />
-                                                                <div className="h-4 w-18 bg-muted rounded animate-pulse" />
-                                                            </div>
-                                                        </div>
-                                                    </CardFooter>
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* RIGHT SIDEBAR SKELETON */}
-                                <div className="lg:w-[300px] flex-none">
-                                    <div className="space-y-4">
-                                        {[...Array(3)].map((_, i) => (
-                                            <Card key={i}>
-                                                <CardHeader>
-                                                    <div className="h-6 w-32 bg-muted rounded animate-pulse mb-2" />
-                                                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
-                                                </CardHeader>
-                                                <CardContent className="space-y-3">
-                                                    {[...Array(4)].map((_, j) => (
-                                                        <div key={j} className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
-                                                            <div className="flex-1">
-                                                                <div className="h-4 w-24 bg-muted rounded animate-pulse mb-1" />
-                                                                <div className="h-3 w-16 bg-muted rounded animate-pulse" />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        );
-    }
-    if (error) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center">
-                    <div className="rounded-full h-32 w-32 mx-auto mb-4">
-                        <ExclamationTriangleIcon className="h-full w-full text-red-500" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-red-500 mb-2">
-                        Error Loading Forum
-                    </h2>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">
-                        {error}
-                    </p>
-                    <button
-                        onClick={() => {
-                            setError(null);
-                            fetchData();
-                        }}
-                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     // --- inline style fix for mobile title truncation ---
     if (typeof document !== "undefined") {
@@ -580,8 +454,8 @@ function ForumClient({
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
                 {/* HERO */}
-                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
                             <div className="space-y-2">
                                 <h1 className="text-2xl font-mono tracking-tighter sm:text-3xl md:text-4xl">
@@ -599,9 +473,10 @@ function ForumClient({
                                         placeholder="Search discussions by topic, keyword, or author..."
                                         className="w-full bg-background pl-8 rounded-md border"
                                         value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -611,7 +486,7 @@ function ForumClient({
 
                 {/* MAIN SECTION */}
                 <section className="w-full py-6">
-                    <div className="container px-4 md:px-6">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold tracking-tight">
                                 Discussions
@@ -682,7 +557,7 @@ function ForumClient({
                                         )}
                                         <div className="flex items-center gap-2">
                                             <Link href="/forum/create">
-                                                <Button className="gap-1">
+                                                <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                                     <PlusCircle className="h-4 w-4" />
                                                     {!isMobile && (
                                                         <span>
@@ -699,7 +574,57 @@ function ForumClient({
                                         className="mt-6"
                                     >
                                         <div className="space-y-4">
-                                            {filteredThreads.length > 0 ? (
+                                            {loading ? (
+                                                // Loading skeleton for discussions only
+                                                <div className="space-y-4">
+                                                    {[...Array(6)].map((_, i) => (
+                                                        <Card key={i} className="overflow-hidden">
+                                                            <CardHeader className="p-4">
+                                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                                                                    <div className="flex flex-row items-start gap-2 sm:gap-4 w-full sm:w-auto">
+                                                                        <div className="h-8 w-8 sm:h-10 sm:w-10 bg-muted rounded-full animate-pulse" />
+                                                                        <div className="flex flex-col min-w-0 flex-1">
+                                                                            <div className="h-6 w-full max-w-[280px] bg-muted rounded animate-pulse mb-2" />
+                                                                            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+                                                                        <div className="h-6 w-12 bg-muted rounded animate-pulse" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="h-12 w-full bg-muted rounded animate-pulse mt-2" />
+                                                            </CardHeader>
+                                                            <CardFooter className="p-4 pt-0">
+                                                                <div className="flex flex-col gap-2 w-full">
+                                                                    <div className="flex gap-2">
+                                                                        <div className="h-5 w-12 bg-muted rounded animate-pulse" />
+                                                                        <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+                                                                    </div>
+                                                                    <div className="flex gap-4">
+                                                                        <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                                                                        <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                                                                        <div className="h-4 w-18 bg-muted rounded animate-pulse" />
+                                                                    </div>
+                                                                </div>
+                                                            </CardFooter>
+                                                        </Card>
+                                                    ))}
+                                                </div>
+                                            ) : error ? (
+                                                <div className="text-center py-10">
+                                                    <p className="text-red-500">{error}</p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setError(null);
+                                                            fetchData();
+                                                        }}
+                                                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        Try Again
+                                                    </button>
+                                                </div>
+                                            ) : filteredThreads.length > 0 ? (
                                                 <div className="grid gap-4 max-w-full">
                                                     {filteredThreads.map(
                                                         (thread) => (
@@ -727,7 +652,7 @@ function ForumClient({
                             {/* RIGHT SIDEBAR */}
                             <div className="lg:w-[300px] flex-none">
                                 <div className="space-y-4">
-                                    <Card>
+                                    <Card className="hidden sm:block">
                                         <CardHeader>
                                             <CardTitle>
                                                 Forum Categories
@@ -742,37 +667,37 @@ function ForumClient({
                                                     "Academics",
                                                     "Discussions about courses, professors, and academic resources",
                                                     BookOpen,
-                                                    "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400",
+                                                    "bg-red-100 text-red-800",
                                                 ],
                                                 [
                                                     "Career",
                                                     "Job hunting, internships, interviews, and career development",
                                                     TrendingUp,
-                                                    "bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-400",
+                                                    "bg-blue-100 text-blue-800",
                                                 ],
                                                 [
                                                     "Campus Life",
                                                     "Housing, social activities, and life at Cornell Tech",
                                                     Users,
-                                                    "bg-purple-100 text-purple-800 dark:bg-purple-800/20 dark:text-purple-400",
+                                                    "bg-purple-100 text-purple-800",
                                                 ],
                                                 [
                                                     "Technology",
                                                     "Tech trends, tools, programming, and technical discussions",
                                                     Tag,
-                                                    "bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-400",
+                                                    "bg-amber-100 text-amber-800",
                                                 ],
                                                 [
                                                     "Events",
                                                     "Campus events, meetups, conferences, and networking opportunities",
                                                     MessageSquare,
-                                                    "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400",
+                                                    "bg-green-100 text-green-800",
                                                 ],
                                                 [
                                                     "General",
                                                     "General discussions and topics that don't fit elsewhere",
                                                     MessageSquare,
-                                                    "bg-orange-100 text-orange-800 dark:bg-orange-800/20 dark:text-orange-400",
+                                                    "bg-orange-100 text-orange-800",
                                                 ],
                                             ].map(
                                                 ([name, desc, Icon, color]) => (
@@ -890,7 +815,7 @@ function ForumClient({
                 </section>
 
                 {/* FOOTER CTA */}
-                <section className="container px-4 py-8 md:px-6">
+                <section className="w-full px-4 py-8 md:px-6 lg:px-8">
                     {totalPages > 1 && (
                         <div className="w-full flex justify-center mb-8">
                             <nav
@@ -974,7 +899,7 @@ function ForumClient({
                             </p>
                         </div>
                         <Link href="/forum/create">
-                            <Button className="gap-1">
+                            <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                 <PlusCircle className="h-4 w-4" />
                                 <span>Create New Thread</span>
                             </Button>
@@ -1008,7 +933,7 @@ const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col min-w-0">
-                                <CardTitle className="text-base sm:text-lg font-semibold truncate-title truncate max-w-[90vw] sm:max-w-[30ch]">
+                                <CardTitle className="text-base sm:text-lg font-semibold leading-normal break-words hyphens-auto">
                                     {thread.title}
                                 </CardTitle>
                                 <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">

@@ -236,8 +236,10 @@ export default function SettingsPage() {
     // Show loading state while checking authentication or fetching profile
     if (status === "loading" || isFetching) {
         return (
-            <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-10">
-                <p>Loading...</p>
+            <div className="min-h-screen bg-background">
+                <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-10 px-4 mx-auto">
+                    <p>Loading...</p>
+                </div>
             </div>
         );
     }
@@ -248,7 +250,8 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="container max-w-4xl py-10">
+        <div className="min-h-screen bg-background">
+            <div className="container max-w-4xl py-10 px-4 mx-auto">
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold">Settings</h1>
@@ -287,7 +290,7 @@ export default function SettingsPage() {
                                         </Avatar>
                                         <label
                                             htmlFor="avatar-upload"
-                                            className="absolute bottom-0 right-0 p-1 bg-background rounded-full border cursor-pointer hover:bg-muted transition-colors"
+                                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full border-2 border-background cursor-pointer hover:bg-primary/90 transition-colors shadow-md"
                                         >
                                             <Upload className="h-4 w-4" />
                                             <input
@@ -374,9 +377,8 @@ export default function SettingsPage() {
                                                                 field.onChange
                                                             }
                                                         >
-                                                            <SelectTrigger className="justify-start text-left w-full truncate">
+                                                            <SelectTrigger className="w-full">
                                                                 <SelectValue
-                                                                    className="text-left w-full truncate"
                                                                     placeholder="Select your program"
                                                                 />
                                                             </SelectTrigger>
@@ -395,7 +397,6 @@ export default function SettingsPage() {
                                                                             value={
                                                                                 value
                                                                             }
-                                                                            className="text-left w-full truncate"
                                                                         >
                                                                             {
                                                                                 label
@@ -460,6 +461,7 @@ export default function SettingsPage() {
                     </TabsContent>
                 </Tabs>
             </div>
+        </div>
         </div>
     );
 }

@@ -33,15 +33,15 @@ import { toast } from "sonner";
 function getCategoryColor(category: string): string {
     const colors: { [key: string]: string } = {
         Academics:
-            "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        Career: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
+            "bg-red-100 text-red-800 hover:bg-red-100",
+        Career: "bg-blue-100 text-blue-800 hover:bg-blue-100",
         "Campus Life":
-            "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
+            "bg-purple-100 text-purple-800 hover:bg-purple-100",
         Technology:
-            "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        Events: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
+            "bg-green-100 text-green-800 hover:bg-green-100",
+        Events: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
         General:
-            "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+            "bg-orange-100 text-orange-800 hover:bg-orange-100",
     };
     return colors[category] || colors.General;
 }
@@ -135,8 +135,8 @@ export default function UserPostsPage() {
         return (
             <div className="flex min-h-screen flex-col">
                 <div className="flex-1">
-                    <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                        <div className="container px-4 md:px-6">
+                    <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                        <div className="w-full px-4 md:px-6 lg:px-8">
                             <div className="flex flex-col items-center justify-center text-center">
                                 <h1 className="text-4xl font-bold tracking-tight">
                                     My Posts
@@ -148,7 +148,7 @@ export default function UserPostsPage() {
                         </div>
                     </section>
 
-                    <section className="container px-4 py-6 md:px-6">
+                    <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                         <Card>
                             <CardContent className="flex flex-col items-center justify-center py-12">
                                 <p className="text-muted-foreground text-center mb-4">
@@ -169,8 +169,8 @@ export default function UserPostsPage() {
         return (
             <div className="flex min-h-screen flex-col">
                 <div className="flex-1">
-                    <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                        <div className="container px-4 md:px-6">
+                    <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                        <div className="w-full px-4 md:px-6 lg:px-8">
                             <div className="flex flex-col items-center justify-center text-center">
                                 <h1 className="text-4xl font-bold tracking-tight">
                                     My Posts
@@ -182,7 +182,7 @@ export default function UserPostsPage() {
                         </div>
                     </section>
 
-                    <section className="container px-4 py-6 md:px-6">
+                    <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                         <Card>
                             <CardContent className="flex flex-col items-center justify-center py-12">
                                 <p className="text-red-500 text-center mb-4">
@@ -200,8 +200,8 @@ export default function UserPostsPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center justify-center text-center">
                             <h1 className="text-4xl font-bold tracking-tight">
                                 My Posts
@@ -213,7 +213,7 @@ export default function UserPostsPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <div className="flex justify-end mb-6">
                         <Button asChild>
                             <a href="/forum/create">Create Post</a>

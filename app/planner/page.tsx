@@ -1436,7 +1436,7 @@ export default function PlannerPage() {
             <div className="flex min-h-screen flex-col">
                 <div className="flex-1">
                     <section className="w-full py-12 md:py-24 lg:py-16">
-                        <div className="container px-4 md:px-6">
+                        <div className="w-full px-4 md:px-6 lg:px-8">
                             <div className="flex flex-col items-center text-center space-y-4">
                                 <Card className="w-full max-w-2xl">
                                     <CardHeader className="space-y-1">
@@ -1829,42 +1829,38 @@ export default function PlannerPage() {
                                                     (course) => (
                                                         <div
                                                             key={course.id}
-                                                            className={`flex justify-between items-center text-sm p-2 rounded ${
+                                                            className={`flex justify-between items-start text-sm p-2 rounded-lg ${
                                                                 selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                    ? "bg-blue-50 border border-blue-200" 
-                                                                    : "bg-muted"
+                                                                    ? "bg-blue-50 border border-blue-300" 
+                                                                    : "bg-gray-100"
                                                             }`}
                                                         >
                                                             <div className="flex-1 min-w-0">
-                                                                <div className={`font-medium ${
+                                                                <div className={`font-normal text-sm ${
                                                                     selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                         ? "text-blue-800" 
-                                                                        : ""
+                                                                        : "text-black"
                                                                 }`}>
                                                                     {course.code}
                                                                     {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (Ethics)"}
                                                                 </div>
-                                                                <div className={`text-sm truncate ${
+                                                                <div className={`text-xs ${
                                                                     selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                         ? "text-blue-600" 
-                                                                        : "text-muted-foreground"
+                                                                        : "text-gray-600"
                                                                 }`}>
                                                                     {course.name}
                                                                     {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " - fulfills ethics requirement"}
                                                                 </div>
                                                             </div>
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className={`ml-2 ${
-                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                        ? "bg-blue-100 text-blue-800" 
-                                                                        : ""
-                                                                }`}
-                                                            >
-                                                                {course.credits}{" "}
-                                                                cr
+                                                            <div className={`ml-2 font-normal text-sm ${
+                                                                selectedEthicsCourse && selectedEthicsCourse.id === course.id
+                                                                    ? "text-blue-800" 
+                                                                    : "text-black"
+                                                            }`}>
+                                                                {course.credits} cr
                                                                 {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (-1)"}
-                                                            </Badge>
+                                                            </div>
                                                         </div>
                                                     )
                                                 )}

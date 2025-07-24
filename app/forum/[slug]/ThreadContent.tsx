@@ -493,8 +493,8 @@ export default function ThreadContent({
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8 overflow-hidden">
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center gap-2">
                                 <Button
@@ -510,18 +510,18 @@ export default function ThreadContent({
                             </div>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400">
+                                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
                                         {threadData.category}
                                     </Badge>
                                 </div>
-                                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl break-words">
                                     {threadData.title}
                                 </h1>
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                                    <span>
+                                    <span className="hidden sm:inline">
                                         Posted by {threadData.author.name}
                                     </span>
-                                    <span>•</span>
+                                    <span className="hidden sm:inline">•</span>
                                     <span>{threadData.createdAt}</span>
                                     <span>•</span>
                                     <div className="flex items-center gap-1">
@@ -543,9 +543,9 @@ export default function ThreadContent({
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
-                    <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-                        <div className="space-y-6">
+                <section className="w-full px-2 sm:px-4 py-6 md:px-6 lg:px-8 overflow-hidden">
+                    <div className="grid gap-6 lg:grid-cols-[1fr_300px] max-w-full">
+                        <div className="space-y-6 min-w-0 overflow-hidden">
                             {/* Original Post */}
                             <Card>
                                 <CardHeader className="pb-3">
@@ -569,9 +569,11 @@ export default function ThreadContent({
                                                     {threadData.author.name}
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    {threadData.author.program}{" "}
-                                                    • Joined{" "}
-                                                    {threadData.author.joinDate}
+                                                    {threadData.author.program}
+                                                    <span className="hidden sm:inline">
+                                                        {" "}• Joined{" "}
+                                                        {threadData.author.joinDate}
+                                                    </span>
                                                 </CardDescription>
                                             </div>
                                         </div>
@@ -687,7 +689,7 @@ export default function ThreadContent({
                                             onValueChange={handleSort}
                                             disabled={isLoading}
                                         >
-                                            <SelectTrigger className="w-[140px]">
+                                            <SelectTrigger className="w-[140px] sm:w-[140px] w-full min-w-0">
                                                 <SelectValue placeholder="Sort by..." />
                                             </SelectTrigger>
                                             <SelectContent align="end">
@@ -1003,16 +1005,16 @@ export default function ThreadContent({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Post</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this post? This
-                            action cannot be undone. All comments and likes will
-                            also be permanently deleted.
+                            Are you sure you want to delete this post?<br/>
+                            This action cannot be undone.<br/>
+                            All comments and likes will also be permanently deleted.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDeletePost}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-red-600 text-white hover:bg-red-700"
                         >
                             Delete
                         </AlertDialogAction>

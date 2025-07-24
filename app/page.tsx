@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 // Dynamic imports for performance optimization
 const HeroVideo = dynamic(() => import("./components/HeroVideo"), {
     loading: () => (
-        <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full relative bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 animate-pulse">
+        <div className="mx-auto aspect-video overflow-hidden rounded-xl sm:w-full relative bg-gradient-to-br from-red-50 to-red-100 animate-pulse">
             <div className="w-full h-full flex items-center justify-center">
                 <div className="text-muted-foreground">Loading...</div>
             </div>
@@ -129,8 +129,8 @@ export default async function Dashboard() {
     return (
         <div className="flex min-h-screen flex-col">
             <main className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="grid gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_700px]">
                             <div className="flex flex-col justify-center space-y-4">
                                 <div className="space-y-2 items-center text-center">
@@ -138,14 +138,14 @@ export default async function Dashboard() {
                                         <span className="text-red-600 font-bold">
                                             [
                                         </span>
-                                        <span className="mx-2 text-black dark:text-white">
+                                        <span className="mx-2 text-black">
                                             Cornell Tech Hub
                                         </span>
                                         <span className="text-red-600 font-bold">
                                             ]
                                         </span>
                                     </h1>
-                                    <p className="max-w-[600px] text-muted-foreground md:text-xl font-mono">
+                                    <p className="max-w-[600px] mx-auto text-muted-foreground md:text-xl font-mono text-center">
                                         {/* <span className="text-red-600 font-bold">[</span> */}
                                         <span className="mx-1">
                                             Connect with peers, share course reviews
@@ -167,7 +167,7 @@ export default async function Dashboard() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-12 md:px-6">
+                <section className="w-full px-4 py-12 md:px-6 lg:px-8">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold tracking-tight">
                             Explore Resources
@@ -253,7 +253,7 @@ export default async function Dashboard() {
 
                 {/* Only show Join the Community if not logged in */}
                 {!session && (
-                    <section className="container px-4 py-12 md:px-6">
+                    <section className="w-full px-4 py-12 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">

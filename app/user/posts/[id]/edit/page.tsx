@@ -371,7 +371,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                                             your post
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                                            <span className="font-medium text-yellow-600">
                                                 Note:
                                             </span>{" "}
                                             Tags must be single words containing

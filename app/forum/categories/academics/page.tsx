@@ -34,7 +34,7 @@ import { getForumPostsByCategory } from "../../actions";
 
 // Helper function to get category color
 function getCategoryColor(category: string): string {
-    return "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400";
+    return "bg-red-100 text-red-800 hover:bg-red-100";
 }
 
 // Helper function to format date
@@ -184,8 +184,8 @@ export default function AcademicsPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col space-y-4">
                             <div className="w-full">
                                 <div className="flex items-center justify-start">
@@ -228,7 +228,7 @@ export default function AcademicsPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold tracking-tight">
                             Academic Discussions
@@ -254,7 +254,7 @@ export default function AcademicsPage() {
                                 </SelectContent>
                             </Select>
                             <Link href="/forum/create">
-                                <Button className="gap-2">
+                                <Button className="gap-2 bg-black text-white hover:bg-gray-800">
                                     <PlusCircle className="h-4 w-4" />
                                     New Discussion
                                 </Button>

@@ -8,8 +8,9 @@ import {
 
 export default function FAQPage() {
     return (
-        <div className="container py-8">
-            <div className="max-w-3xl mx-auto">
+        <div className="min-h-screen bg-background">
+            <div className="container py-8 px-4 mx-auto">
+                <div className="max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold mb-6">
                     Frequently Asked Questions
                 </h1>
@@ -20,7 +21,7 @@ export default function FAQPage() {
 
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
-                        <AccordionTrigger>
+                        <AccordionTrigger className="text-left">
                             What is Cornell Tech Hub?
                         </AccordionTrigger>
                         <AccordionContent>
@@ -32,7 +33,7 @@ export default function FAQPage() {
                     </AccordionItem>
 
                     <AccordionItem value="item-2">
-                        <AccordionTrigger>
+                        <AccordionTrigger className="text-left">
                             How do I create an account?
                         </AccordionTrigger>
                         <AccordionContent>
@@ -44,7 +45,7 @@ export default function FAQPage() {
                     </AccordionItem>
 
                     <AccordionItem value="item-3">
-                        <AccordionTrigger>
+                        <AccordionTrigger className="text-left">
                             Is this platform officially affiliated with Cornell
                             Tech?
                         </AccordionTrigger>
@@ -60,7 +61,7 @@ export default function FAQPage() {
                     </AccordionItem>
 
                     <AccordionItem value="item-4">
-                        <AccordionTrigger>
+                        <AccordionTrigger className="text-left">
                             How can I contribute to the platform?
                         </AccordionTrigger>
                         <AccordionContent>
@@ -73,7 +74,7 @@ export default function FAQPage() {
                     </AccordionItem>
 
                     <AccordionItem value="item-5">
-                        <AccordionTrigger>
+                        <AccordionTrigger className="text-left">
                             How do I report inappropriate content?
                         </AccordionTrigger>
                         <AccordionContent>
@@ -96,6 +97,7 @@ export default function FAQPage() {
                         </p>
                     </CardContent>
                 </Card>
+                </div>
             </div>
         </div>
     );

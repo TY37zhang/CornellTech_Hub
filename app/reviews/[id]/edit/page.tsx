@@ -198,9 +198,11 @@ export default function EditReviewPage({
 
     if (isLoading) {
         return (
-            <div className="container max-w-2xl py-10">
-                <div className="flex justify-center items-center min-h-[50vh]">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="min-h-screen bg-background">
+                <div className="container max-w-2xl py-10 mx-auto">
+                    <div className="flex justify-center items-center min-h-[50vh]">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
                 </div>
             </div>
         );
@@ -211,18 +213,19 @@ export default function EditReviewPage({
     }
 
     return (
-        <div className="container max-w-2xl py-10">
-            <Button
-                variant="ghost"
-                className="mb-6"
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-            >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to My Reviews
-            </Button>
+        <div className="min-h-screen bg-background">
+            <div className="container max-w-2xl py-10 mx-auto">
+                <Button
+                    variant="ghost"
+                    className="mb-6"
+                    onClick={() => router.back()}
+                    disabled={isSubmitting}
+                >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to My Reviews
+                </Button>
 
-            <Card>
+                <Card>
                 <CardHeader>
                     <CardTitle>Edit Course Review</CardTitle>
                     <CardDescription>
@@ -522,14 +525,15 @@ export default function EditReviewPage({
                     <CardFooter>
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full bg-black text-white hover:bg-gray-800"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? "Updating..." : "Update Review"}
                         </Button>
                     </CardFooter>
                 </form>
-            </Card>
+                </Card>
+            </div>
         </div>
     );
 }

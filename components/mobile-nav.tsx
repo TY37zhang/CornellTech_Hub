@@ -13,6 +13,10 @@ import {
     MessageCircle,
     UserCog,
     Shield,
+    BookmarkPlus,
+    FileText,
+    Settings,
+    MessageCircleQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -93,7 +97,7 @@ export function MobileNav() {
                     <span className="sr-only">Toggle menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[240px] px-0">
+            <SheetContent side="right" className="w-[240px] px-0 bg-background">
                 <SheetHeader className="px-6 border-b pb-6">
                     <SheetTitle>Cornell Tech Hub</SheetTitle>
                     <SheetDescription className="sr-only">
@@ -142,13 +146,14 @@ export function MobileNav() {
                                         <Button
                                             variant="outline"
                                             asChild
-                                            className="w-[180px]"
+                                            className="w-[180px] justify-center"
                                         >
                                             <Link
                                                 href="/admin"
                                                 onClick={() => setOpen(false)}
+                                                className="flex items-center gap-2"
                                             >
-                                                <UserCog className="mr-2 h-4 w-4" />
+                                                <UserCog className="h-4 w-4" />
                                                 Admin Panel
                                             </Link>
                                         </Button>
@@ -165,13 +170,14 @@ export function MobileNav() {
                                         <Button
                                             variant="outline"
                                             asChild
-                                            className="w-[180px]"
+                                            className="w-[180px] justify-center"
                                         >
                                             <Link
                                                 href="/admin/moderation"
                                                 onClick={() => setOpen(false)}
+                                                className="flex items-center gap-2"
                                             >
-                                                <Shield className="mr-2 h-4 w-4" />
+                                                <Shield className="h-4 w-4" />
                                                 Moderation
                                             </Link>
                                         </Button>
@@ -187,18 +193,20 @@ export function MobileNav() {
                                     <Button
                                         variant="outline"
                                         asChild
-                                        className="w-[180px]"
+                                        className="w-[180px] justify-center"
                                     >
                                         <Link
                                             href="/user/posts"
                                             onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2"
                                         >
+                                            <MessageCircle className="h-4 w-4" />
                                             My Posts
                                         </Link>
                                     </Button>
                                 </motion.div>
                                 <motion.div
-                                    key="settings"
+                                    key="saved-posts"
                                     custom={isAdmin(session.user) || isMod(session.user) ? 3 : 1}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -207,18 +215,20 @@ export function MobileNav() {
                                     <Button
                                         variant="outline"
                                         asChild
-                                        className="w-[180px]"
+                                        className="w-[180px] justify-center"
                                     >
                                         <Link
-                                            href="/settings"
+                                            href="/forum/saved"
                                             onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2"
                                         >
-                                            Settings
+                                            <BookmarkPlus className="h-4 w-4" />
+                                            Saved Posts  
                                         </Link>
                                     </Button>
                                 </motion.div>
                                 <motion.div
-                                    key="feedback"
+                                    key="my-reviews"
                                     custom={isAdmin(session.user) || isMod(session.user) ? 4 : 2}
                                     variants={buttonVariants}
                                     initial="hidden"
@@ -227,26 +237,72 @@ export function MobileNav() {
                                     <Button
                                         variant="outline"
                                         asChild
-                                        className="w-[180px]"
+                                        className="w-[180px] justify-center"
                                     >
                                         <Link
-                                            href="/feedback"
+                                            href="/my-reviews"
                                             onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2"
                                         >
-                                            Feedback
+                                            <FileText className="h-4 w-4" />
+                                            My Reviews
                                         </Link>
                                     </Button>
                                 </motion.div>
                                 <motion.div
-                                    key="logout"
+                                    key="settings"
                                     custom={isAdmin(session.user) || isMod(session.user) ? 5 : 3}
                                     variants={buttonVariants}
                                     initial="hidden"
                                     animate="visible"
                                 >
                                     <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px] justify-center"
+                                    >
+                                        <Link
+                                            href="/settings"
+                                            onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Settings className="h-4 w-4" />
+                                            Settings
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    key="feedback"
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 6 : 4}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        asChild
+                                        className="w-[180px] justify-center"
+                                    >
+                                        <Link
+                                            href="/feedback"
+                                            onClick={() => setOpen(false)}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <MessageCircleQuestion className="h-4 w-4" />
+                                            Feedback
+                                        </Link>
+                                    </Button>
+                                </motion.div>
+                                <motion.div
+                                    key="logout"
+                                    custom={isAdmin(session.user) || isMod(session.user) ? 7 : 5}
+                                    variants={buttonVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Button
                                         variant="destructive"
-                                        className="w-[180px]"
+                                        className="w-[180px] justify-center"
                                         onClick={() => {
                                             setOpen(false);
                                             signOut();
@@ -270,11 +326,12 @@ export function MobileNav() {
                                     <Button
                                         variant="outline"
                                         asChild
-                                        className="w-[180px]"
+                                        className="w-[180px] justify-center"
                                     >
                                         <Link
                                             href="/auth/signin"
                                             onClick={() => setOpen(false)}
+                                            className="flex items-center justify-center"
                                         >
                                             Sign In
                                         </Link>
@@ -287,10 +344,11 @@ export function MobileNav() {
                                     initial="hidden"
                                     animate="visible"
                                 >
-                                    <Button asChild className="w-[180px]">
+                                    <Button asChild className="w-[180px] justify-center">
                                         <Link
                                             href="/auth/signup"
                                             onClick={() => setOpen(false)}
+                                            className="flex items-center justify-center"
                                         >
                                             Sign Up
                                         </Link>

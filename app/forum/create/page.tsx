@@ -182,8 +182,8 @@ export default function CreateThreadPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" asChild>
@@ -211,7 +211,7 @@ export default function CreateThreadPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <Card className="mx-auto max-w-2xl">
                         <form onSubmit={handleSubmit}>
                             <CardHeader className="text-center">
@@ -336,7 +336,7 @@ export default function CreateThreadPage() {
                                             your thread
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                                            <span className="font-medium text-yellow-600">
                                                 Note:
                                             </span>{" "}
                                             Tags must be single words containing
@@ -398,7 +398,11 @@ export default function CreateThreadPage() {
                                 <Button variant="outline" asChild>
                                     <Link href="/forum">Cancel</Link>
                                 </Button>
-                                <Button type="submit" disabled={isLoading}>
+                                <Button 
+                                    type="submit" 
+                                    disabled={isLoading}
+                                    className="bg-black text-white hover:bg-gray-800"
+                                >
                                     {isLoading
                                         ? "Creating..."
                                         : "Create Thread"}

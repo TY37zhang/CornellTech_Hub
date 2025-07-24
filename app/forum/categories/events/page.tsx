@@ -38,7 +38,7 @@ import { getForumPostsByCategory } from "../../actions";
 
 // Helper function to get category color
 function getCategoryColor(category: string): string {
-    return "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400";
+    return "bg-green-100 text-green-800 hover:bg-green-100";
 }
 
 // Helper function to format date
@@ -200,7 +200,7 @@ export default function EventsCategoryPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-green-50 to-white dark:from-green-950/20 dark:to-background">
+                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-green-50 to-white">
                     <div className="container px-4 md:px-6">
                         <div className="flex flex-col space-y-4">
                             <div className="w-full">
@@ -268,7 +268,7 @@ export default function EventsCategoryPage() {
                                 </SelectContent>
                             </Select>
                             <Link href="/forum/create">
-                                <Button className="gap-2">
+                                <Button className="gap-2 bg-black text-white hover:bg-gray-800">
                                     <PlusCircle className="h-4 w-4" />
                                     New Discussion
                                 </Button>
@@ -404,7 +404,7 @@ export default function EventsCategoryPage() {
                             </p>
                         </div>
                         <Link href="/forum/create">
-                            <Button className="gap-1">
+                            <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                 <PlusCircle className="h-4 w-4" />
                                 <span>Create New Thread</span>
                             </Button>

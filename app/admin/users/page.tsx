@@ -237,60 +237,64 @@ export default function UserManagement() {
     const currentUsers = sortedUsers.slice(startIndex, endIndex);
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
-                        <Button asChild variant="outline" size="sm">
-                            <Link
-                                href="/admin"
-                                className="flex items-center gap-2"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to Dashboard
-                            </Link>
-                        </Button>
+        <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+            {/* Mobile-optimized header */}
+            <div className="space-y-3 sm:space-y-0">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+                        <Link
+                            href="/admin"
+                            className="flex items-center gap-1 sm:gap-2"
+                        >
+                            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Back to Dashboard</span>
+                            <span className="sm:hidden">Back</span>
+                        </Link>
+                    </Button>
+                    <div className="text-xs sm:text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                        Total Users: {users.length}
                     </div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Users className="h-8 w-8" />
-                        User Management
+                </div>
+                
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                        <Users className="h-6 w-6 sm:h-8 sm:w-8" />
+                        <span className="hidden sm:inline">User Management</span>
+                        <span className="sm:hidden">Users</span>
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm sm:text-base text-muted-foreground">
                         Manage user roles and permissions
                     </p>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                    Total Users: {users.length}
-                </div>
             </div>
 
-            {/* Filters and Sorting */}
+            {/* Mobile-optimized Filters */}
             <Card>
-                <CardHeader>
-                    <CardTitle>Filters & Sorting</CardTitle>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Filters & Search</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex gap-4 items-end">
-                        {/* Search Bar - Main Width */}
-                        <div className="flex-1">
-                            <label className="text-sm font-medium mb-2 block">
-                                Search Users
-                            </label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                                <Input
-                                    placeholder="Search users by name or email..."
-                                    value={searchTerm}
-                                    onChange={(e) =>
-                                        setSearchTerm(e.target.value)
-                                    }
-                                    className="pl-10 pr-4"
-                                />
-                            </div>
+                <CardContent className="space-y-4">
+                    {/* Search - Full width on mobile */}
+                    <div>
+                        <label className="text-sm font-medium mb-2 block">
+                            Search Users
+                        </label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                            <Input
+                                placeholder="Search by name or email..."
+                                value={searchTerm}
+                                onChange={(e) =>
+                                    setSearchTerm(e.target.value)
+                                }
+                                className="pl-10 pr-4"
+                            />
                         </div>
-
-                        {/* Role Filter - Right Side */}
-                        <div className="w-48">
+                    </div>
+                    
+                    {/* Mobile: Stack filters vertically, Desktop: Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div>
                             <label className="text-sm font-medium mb-2 block">
                                 Role Filter
                             </label>
@@ -302,26 +306,17 @@ export default function UserManagement() {
                                     <SelectValue placeholder="Filter by role" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">
-                                        All Roles
-                                    </SelectItem>
-                                    <SelectItem value="student">
-                                        Student
-                                    </SelectItem>
-                                    <SelectItem value="faculty">
-                                        Faculty
-                                    </SelectItem>
+                                    <SelectItem value="all">All Roles</SelectItem>
+                                    <SelectItem value="student">Student</SelectItem>
+                                    <SelectItem value="faculty">Faculty</SelectItem>
                                     <SelectItem value="staff">Staff</SelectItem>
-                                    <SelectItem value="mod">
-                                        Moderator
-                                    </SelectItem>
+                                    <SelectItem value="mod">Moderator</SelectItem>
                                     <SelectItem value="admin">Admin</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        {/* Sorting Options */}
-                        <div className="w-48">
+                        
+                        <div>
                             <label className="text-sm font-medium mb-2 block">
                                 Sort By
                             </label>
@@ -333,20 +328,15 @@ export default function UserManagement() {
                                     <SelectItem value="name">Name</SelectItem>
                                     <SelectItem value="email">Email</SelectItem>
                                     <SelectItem value="role">Role</SelectItem>
-                                    <SelectItem value="program">
-                                        Program
-                                    </SelectItem>
-                                    <SelectItem value="created_at">
-                                        Created Date
-                                    </SelectItem>
+                                    <SelectItem value="program">Program</SelectItem>
+                                    <SelectItem value="created_at">Created Date</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        {/* Sort Order Button */}
-                        <div className="w-auto">
+                        
+                        <div>
                             <label className="text-sm font-medium mb-2 block">
-                                &nbsp;
+                                Sort Order
                             </label>
                             <Button
                                 onClick={() =>
@@ -355,13 +345,18 @@ export default function UserManagement() {
                                     )
                                 }
                                 variant="outline"
-                                size="sm"
-                                className="h-10"
+                                className="w-full h-10 justify-center"
                             >
                                 {sortOrder === "asc" ? (
-                                    <ArrowUp className="h-4 w-4" />
+                                    <>
+                                        <ArrowUp className="h-4 w-4 mr-2" />
+                                        Ascending
+                                    </>
                                 ) : (
-                                    <ArrowDown className="h-4 w-4" />
+                                    <>
+                                        <ArrowDown className="h-4 w-4 mr-2" />
+                                        Descending
+                                    </>
                                 )}
                             </Button>
                         </div>
@@ -369,20 +364,16 @@ export default function UserManagement() {
                 </CardContent>
             </Card>
 
-            {/* Users List */}
+            {/* Mobile-optimized Users List */}
             <Card>
-                <CardHeader>
-                    <CardTitle>Users ({sortedUsers.length})</CardTitle>
-                    <CardDescription>
-                        Manage user roles and view user information • Showing{" "}
-                        {currentUsers.length} of {sortedUsers.length} users
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Users ({sortedUsers.length})</CardTitle>
+                    <CardDescription className="text-sm">
+                        Showing {currentUsers.length} of {sortedUsers.length} users
                         {sortBy && (
-                            <span className="ml-2 text-xs">
+                            <span className="block sm:inline sm:ml-2 text-xs mt-1 sm:mt-0">
                                 • Sorted by {sortBy.replace("_", " ")} (
-                                {sortOrder === "asc"
-                                    ? "ascending"
-                                    : "descending"}
-                                )
+                                {sortOrder === "asc" ? "ascending" : "descending"})
                             </span>
                         )}
                     </CardDescription>
@@ -390,100 +381,99 @@ export default function UserManagement() {
                 <CardContent>
                     {currentUsers.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
-                            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No users found</p>
+                            <Users className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+                            <p className="text-sm sm:text-base">No users found</p>
                         </div>
                     ) : (
                         <>
-                            <div className="space-y-4">
+                            {/* Mobile-optimized user cards */}
+                            <div className="space-y-3 sm:space-y-4">
                                 {currentUsers.map((user) => (
                                     <div
                                         key={user.id}
-                                        className="flex items-center justify-between p-4 border rounded-lg"
+                                        className="p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between"
                                     >
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3">
-                                                <div>
-                                                    <p className="font-medium">
+                                        {/* User Info - Full width on mobile */}
+                                        <div className="space-y-1 sm:flex-1">
+                                            <div className="flex items-start justify-between">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-medium truncate">
                                                         {user.name}
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <p className="text-sm text-muted-foreground truncate">
                                                         {user.email}
                                                     </p>
                                                     {user.program && (
                                                         <p className="text-xs text-muted-foreground">
-                                                            Program:{" "}
-                                                            {user.program}
+                                                            Program: {user.program}
                                                         </p>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Role badges - Mobile: Right side */}
+                                                <div className="flex flex-wrap gap-1 ml-2 sm:hidden">
+                                                    {user.role === "student" && (
+                                                        <Badge variant="tech" className="text-xs">Student</Badge>
+                                                    )}
+                                                    {user.role === "faculty" && (
+                                                        <Badge variant="events" className="text-xs">Faculty</Badge>
+                                                    )}
+                                                    {user.role === "staff" && (
+                                                        <Badge variant="phar" className="text-xs">Staff</Badge>
+                                                    )}
+                                                    {user.is_admin && (
+                                                        <Badge variant="hot" className="text-xs">Admin</Badge>
+                                                    )}
+                                                    {user.is_mod && (
+                                                        <Badge variant="career" className="text-xs">Mod</Badge>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-2">
-                                                    {user.role ===
-                                                        "student" && (
-                                                        <Badge variant="secondary">
-                                                            Student
-                                                        </Badge>
-                                                    )}
-                                                    {user.role ===
-                                                        "faculty" && (
-                                                        <Badge variant="events">
-                                                            Faculty
-                                                        </Badge>
-                                                    )}
-                                                    {user.role === "staff" && (
-                                                        <Badge variant="phar">
-                                                            Staff
-                                                        </Badge>
-                                                    )}
-                                                    {user.is_admin && (
-                                                        <Badge variant="destructive">
-                                                            Admin
-                                                        </Badge>
-                                                    )}
-                                                    {user.is_mod && (
-                                                        <Badge variant="career">
-                                                            Moderator
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                                        
+                                        {/* Controls - Full width on mobile, right side on desktop */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 sm:pt-0 border-t sm:border-t-0">
+                                            {/* Desktop: Role badges */}
+                                            <div className="hidden sm:flex flex-wrap gap-1">
+                                                {user.role === "student" && (
+                                                    <Badge variant="tech">Student</Badge>
+                                                )}
+                                                {user.role === "faculty" && (
+                                                    <Badge variant="events">Faculty</Badge>
+                                                )}
+                                                {user.role === "staff" && (
+                                                    <Badge variant="phar">Staff</Badge>
+                                                )}
+                                                {user.is_admin && (
+                                                    <Badge variant="hot">Admin</Badge>
+                                                )}
+                                                {user.is_mod && (
+                                                    <Badge variant="career">Moderator</Badge>
+                                                )}
                                             </div>
+                                            
+                                            {/* Role selector and elevation buttons */}
                                             <div className="flex items-center gap-2">
                                                 <Select
                                                     value={user.role}
                                                     onValueChange={(newRole) =>
-                                                        updateUserRole(
-                                                            user.id,
-                                                            newRole
-                                                        )
+                                                        updateUserRole(user.id, newRole)
                                                     }
                                                 >
-                                                    <SelectTrigger className="w-28">
+                                                    <SelectTrigger className="w-24 sm:w-28 h-8">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="student">
-                                                            Student
-                                                        </SelectItem>
-                                                        <SelectItem value="faculty">
-                                                            Faculty
-                                                        </SelectItem>
-                                                        <SelectItem value="staff">
-                                                            Staff
-                                                        </SelectItem>
+                                                        <SelectItem value="student">Student</SelectItem>
+                                                        <SelectItem value="faculty">Faculty</SelectItem>
+                                                        <SelectItem value="staff">Staff</SelectItem>
                                                     </SelectContent>
                                                 </Select>
-
-                                                <div className="flex flex-col gap-1">
+                                                
+                                                {/* Mobile: Horizontal buttons, Desktop: Vertical */}
+                                                <div className="flex sm:flex-col gap-1">
                                                     <Button
-                                                        variant={
-                                                            user.is_admin
-                                                                ? "destructive"
-                                                                : "outline"
-                                                        }
+                                                        variant={user.is_admin ? "destructive" : "outline"}
                                                         size="sm"
                                                         onClick={() =>
                                                             updateUserElevation(
@@ -492,18 +482,12 @@ export default function UserManagement() {
                                                                 !user.is_admin
                                                             )
                                                         }
-                                                        className="h-6 px-2 text-xs"
+                                                        className="h-8 px-2 text-xs flex-1 sm:flex-none sm:min-w-[60px]"
                                                         disabled={
-                                                            user.id ===
-                                                                session?.user
-                                                                    ?.id &&
-                                                            user.is_admin
+                                                            user.id === session?.user?.id && user.is_admin
                                                         }
                                                         title={
-                                                            user.id ===
-                                                                session?.user
-                                                                    ?.id &&
-                                                            user.is_admin
+                                                            user.id === session?.user?.id && user.is_admin
                                                                 ? "Cannot remove your own admin privileges"
                                                                 : ""
                                                         }
@@ -511,11 +495,7 @@ export default function UserManagement() {
                                                         Admin
                                                     </Button>
                                                     <Button
-                                                        variant={
-                                                            user.is_mod
-                                                                ? "career"
-                                                                : "outline"
-                                                        }
+                                                        variant={user.is_mod ? "career" : "outline"}
                                                         size="sm"
                                                         onClick={() =>
                                                             updateUserElevation(
@@ -524,7 +504,7 @@ export default function UserManagement() {
                                                                 !user.is_mod
                                                             )
                                                         }
-                                                        className="h-6 px-2 text-xs"
+                                                        className="h-8 px-2 text-xs flex-1 sm:flex-none sm:min-w-[60px]"
                                                     >
                                                         Mod
                                                     </Button>
@@ -535,90 +515,75 @@ export default function UserManagement() {
                                 ))}
                             </div>
 
-                            {/* Pagination Controls */}
+                            {/* Mobile-optimized Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                                    <div className="text-sm text-muted-foreground">
+                                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 pt-4 border-t gap-3">
+                                    <div className="text-sm text-muted-foreground order-2 sm:order-1">
                                         Page {currentPage} of {totalPages}
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    
+                                    <div className="flex items-center gap-2 order-1 sm:order-2">
                                         <Button
                                             onClick={() =>
-                                                setCurrentPage((prev) =>
-                                                    Math.max(prev - 1, 1)
-                                                )
+                                                setCurrentPage((prev) => Math.max(prev - 1, 1))
                                             }
                                             disabled={currentPage === 1}
                                             variant="outline"
                                             size="sm"
+                                            className="px-2 sm:px-3"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
-                                            Previous
+                                            <span className="hidden sm:inline ml-1">Previous</span>
                                         </Button>
-
+                                        
+                                        {/* Mobile: Show fewer page numbers */}
                                         <div className="flex items-center gap-1">
-                                            {Array.from(
-                                                { length: totalPages },
-                                                (_, i) => i + 1
-                                            )
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1)
                                                 .filter((page) => {
+                                                    // Mobile: Show current, first, last, and adjacent pages
+                                                    const isMobile = window.innerWidth < 640;
+                                                    if (isMobile) {
+                                                        return (
+                                                            page === 1 ||
+                                                            page === totalPages ||
+                                                            Math.abs(page - currentPage) <= 0
+                                                        );
+                                                    }
                                                     return (
                                                         page === 1 ||
                                                         page === totalPages ||
-                                                        Math.abs(
-                                                            page - currentPage
-                                                        ) <= 1
+                                                        Math.abs(page - currentPage) <= 1
                                                     );
                                                 })
                                                 .map((page, index, array) => (
-                                                    <div
-                                                        key={page}
-                                                        className="flex items-center"
-                                                    >
-                                                        {index > 0 &&
-                                                            array[index - 1] !==
-                                                                page - 1 && (
-                                                                <span className="px-2 text-muted-foreground">
-                                                                    ...
-                                                                </span>
-                                                            )}
+                                                    <div key={page} className="flex items-center">
+                                                        {index > 0 && array[index - 1] !== page - 1 && (
+                                                            <span className="px-1 sm:px-2 text-muted-foreground text-sm">
+                                                                ...
+                                                            </span>
+                                                        )}
                                                         <Button
-                                                            onClick={() =>
-                                                                setCurrentPage(
-                                                                    page
-                                                                )
-                                                            }
-                                                            variant={
-                                                                currentPage ===
-                                                                page
-                                                                    ? "default"
-                                                                    : "outline"
-                                                            }
+                                                            onClick={() => setCurrentPage(page)}
+                                                            variant={currentPage === page ? "default" : "outline"}
                                                             size="sm"
-                                                            className="w-8 h-8 p-0"
+                                                            className="w-8 h-8 p-0 text-sm"
                                                         >
                                                             {page}
                                                         </Button>
                                                     </div>
                                                 ))}
                                         </div>
-
+                                        
                                         <Button
                                             onClick={() =>
-                                                setCurrentPage((prev) =>
-                                                    Math.min(
-                                                        prev + 1,
-                                                        totalPages
-                                                    )
-                                                )
+                                                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                             }
-                                            disabled={
-                                                currentPage === totalPages
-                                            }
+                                            disabled={currentPage === totalPages}
                                             variant="outline"
                                             size="sm"
+                                            className="px-2 sm:px-3"
                                         >
-                                            Next
+                                            <span className="hidden sm:inline mr-1">Next</span>
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                     </div>

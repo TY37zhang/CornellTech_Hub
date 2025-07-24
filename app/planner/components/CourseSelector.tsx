@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/lib/hooks/use-debounce";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 interface Course {
     id: string;
@@ -119,7 +119,7 @@ export default function CourseSelector({
     if (!searchQuery) return null;
 
     return (
-        <div ref={containerRef} className="space-y-2">
+        <div ref={containerRef} className="space-y-2 ml-9">
             {isLoading ? (
                 <div className="flex items-center justify-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -128,7 +128,7 @@ export default function CourseSelector({
             ) : error ? (
                 <div className="text-center text-red-500 py-4">{error}</div>
             ) : searchResults.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <div className="grid gap-3 grid-cols-2">
                     {searchResults.map((course) => (
                         <div
                             key={course.id}
@@ -136,38 +136,28 @@ export default function CourseSelector({
                                 onSelectCourse(course);
                                 setSearchResults([]);
                             }}
-                            className="relative p-4 border rounded-lg hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-white"
+                            className="relative p-3 border rounded-lg hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-white"
                         >
-                            <div className="space-y-2">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="font-medium truncate">
-                                        {course.code}
-                                    </div>
-                                    <Badge
-                                        variant="secondary"
-                                        className="text-xs px-2 py-0.5 flex-shrink-0"
-                                    >
-                                        {course.credits} cr
-                                    </Badge>
-                                </div>
-                                <div className="text-sm text-gray-600 leading-tight" style={{
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden'
-                                }}>
+                            <div className="w-full">
+                                <div className="font-medium text-base truncate">
                                     {course.name}
                                 </div>
-                                <div className="flex items-center justify-between">
+                                <div className="text-sm text-gray-600 mt-1">
+                                    {course.code}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
                                     <Badge
                                         variant="outline"
                                         className="text-xs px-2 py-0.5"
                                     >
                                         {course.department}
                                     </Badge>
-                                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Add to Schedule
-                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs px-2 py-0.5"
+                                    >
+                                        {course.credits} cr
+                                    </Badge>
                                 </div>
                             </div>
                         </div>

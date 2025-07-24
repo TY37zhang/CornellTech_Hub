@@ -29,7 +29,7 @@ export const Toast = ({ children, ...props }) => (
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="bg-background text-foreground border-border"
+        className="bg-background text-foreground border border-border rounded-md p-4 shadow-lg"
         {...props}
     >
         {children}

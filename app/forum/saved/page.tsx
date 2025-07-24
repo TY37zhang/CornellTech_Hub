@@ -133,8 +133,8 @@ export default function SavedPostsPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center justify-center text-center">
                             <h1 className="text-4xl font-bold tracking-tight">
                                 Saved Posts
@@ -146,7 +146,7 @@ export default function SavedPostsPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <div className="space-y-6">
                         {savedPosts.length === 0 ? (
                             <Card>

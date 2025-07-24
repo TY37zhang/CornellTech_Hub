@@ -107,11 +107,21 @@ export default function SelectedCourses({
                         </h3>
                         {/* Toggle: Desktop only */}
                         <div className="hidden md:flex items-center space-x-2 ml-auto">
-                            <Switch
+                            <button
                                 id="show-taken-courses"
-                                checked={showTakenCourses}
-                                onCheckedChange={setShowTakenCourses}
-                            />
+                                onClick={() => setShowTakenCourses(!showTakenCourses)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                                    showTakenCourses ? 'bg-black' : 'bg-gray-300'
+                                }`}
+                                role="switch"
+                                aria-checked={showTakenCourses}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        showTakenCourses ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
                             <label
                                 htmlFor="show-taken-courses"
                                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -124,11 +134,21 @@ export default function SelectedCourses({
                 {/* Toggle: Mobile only, below header, only if expanded */}
                 {!collapsed && (
                     <div className="flex md:hidden items-center space-x-2 mb-2">
-                        <Switch
+                        <button
                             id="show-taken-courses-mobile"
-                            checked={showTakenCourses}
-                            onCheckedChange={setShowTakenCourses}
-                        />
+                            onClick={() => setShowTakenCourses(!showTakenCourses)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                                showTakenCourses ? 'bg-black' : 'bg-gray-300'
+                            }`}
+                            role="switch"
+                            aria-checked={showTakenCourses}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    showTakenCourses ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                            />
+                        </button>
                         <label
                             htmlFor="show-taken-courses-mobile"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -216,7 +236,7 @@ export default function SelectedCourses({
                                                 </div>
                                             </div>
                                             {/* Requirement Assignment Dropdown - right side */}
-                                            <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-4 sm:mt-0">
+                                            <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-1 sm:mt-0">
                                                 <Select
                                                     value={
                                                         currentAssignment ||

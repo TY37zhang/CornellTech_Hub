@@ -225,8 +225,8 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
                 {/* HERO */}
-                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-24 lg:py-16 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center text-center space-y-4">
                             <h1 className="text-2xl font-mono tracking-tighter sm:text-3xl md:text-4xl">
                                 Course Reviews
@@ -252,7 +252,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                 </section>
 
                 {/* FILTER BAR */}
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <div className="flex w-full items-center justify-between">
                         {/* Program filter & sort */}
                         {isMobile ? (
@@ -294,7 +294,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                                         onClick={() => setShowSortModal(false)}
                                     >
                                         <div
-                                            className="bg-white dark:bg-background rounded-lg shadow-lg p-4 w-56"
+                                            className="bg-white rounded-lg shadow-lg p-4 w-56"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <h3 className="font-bold text-lg mb-2 text-center">
@@ -383,11 +383,12 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                                         <Button
                                             size="icon"
                                             aria-label="Add new review"
+                                            className="bg-black text-white hover:bg-gray-800"
                                         >
                                             <PlusCircle className="h-4 w-4" />
                                         </Button>
                                     ) : (
-                                        <Button className="gap-1">
+                                        <Button className="gap-1 bg-black text-white hover:bg-gray-800">
                                             <PlusCircle className="h-4 w-4" />
                                             <span>New Review</span>
                                         </Button>
@@ -546,7 +547,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                                                     onClick={() =>
                                                         setCurrentPage(page)
                                                     }
-                                                    className="w-10 h-10"
+                                                    className={`w-10 h-10 ${currentPage === page ? 'bg-black text-white hover:bg-gray-800' : ''}`}
                                                 >
                                                     {page}
                                                 </Button>
@@ -591,7 +592,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                 </section>
 
                 {/* CTA */}
-                <section className="container px-4 py-8 md:px-6">
+                <section className="w-full px-4 py-8 md:px-6 lg:px-8">
                     <div className="flex flex-col items-center text-center space-y-4">
                         <h2 className="text-2xl font-bold tracking-tight">
                             Can't find what you're looking for?

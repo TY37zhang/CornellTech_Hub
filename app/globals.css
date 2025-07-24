@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 body {
     font-family: Arial, Helvetica, sans-serif;
@@ -14,7 +12,7 @@ body {
 
 @layer components {
     .btn-hover-effect {
-        @apply transition-all duration-300 ease-in-out;
+        @apply transition-all duration-300;
     }
 
     .btn-hover-effect:hover {
@@ -26,7 +24,7 @@ body {
     }
 
     .card-hover {
-        @apply transition-all duration-300 ease-in-out;
+        @apply transition-all duration-300;
     }
 
     .card-hover:hover {
@@ -34,11 +32,11 @@ body {
     }
 
     .input-focus {
-        @apply transition-all duration-200 ease-in-out;
+        @apply transition-all duration-200;
     }
 
     .input-focus:focus {
-        @apply ring-2 ring-primary ring-opacity-50 transform scale-[1.02];
+        @apply ring-2 ring-blue-500/50 transform scale-[1.02];
     }
 }
 
@@ -116,9 +114,10 @@ body {
 
 @layer base {
     * {
-        @apply border-border;
+        border-color: hsl(var(--border));
     }
     body {
-        @apply bg-background text-foreground;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
     }
 }

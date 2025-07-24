@@ -50,7 +50,7 @@ export function SiteHeader() {
             transition={{ duration: 0.3 }}
             className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         >
-            <div className="flex h-14 items-center justify-between px-1 md:px-2">
+            <div className="flex h-14 items-center justify-between px-1 md:px-2 pr-4 md:pr-6">
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -121,15 +121,16 @@ export function SiteHeader() {
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        className="relative h-8 w-8 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0"
+                                        style={{"--tw-bg-opacity": "0"} as React.CSSProperties}
+                                        className="relative h-8 w-8 rounded-full ring-0 focus:ring-0 focus:ring-offset-0 p-0 [&:hover]:!bg-transparent [&:hover]:!opacity-100"
                                     >
-                                        <Avatar className="h-8 w-8 ring-0">
+                                        <Avatar className="h-8 w-8 ring-0 hover:!bg-transparent">
                                             <AvatarImage
                                                 src={session.user?.image || ""}
                                                 alt={session.user?.name || ""}
-                                                className="ring-0"
+                                                className="ring-0 hover:!bg-transparent"
                                             />
-                                            <AvatarFallback className="ring-0">
+                                            <AvatarFallback className="ring-0 hover:!bg-transparent">
                                                 {session.user?.name?.charAt(
                                                     0
                                                 ) || "U"}
@@ -209,6 +210,7 @@ export function SiteHeader() {
                                             <span>My Reviews</span>
                                         </Link>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
                                         <Link
                                             href="/settings"

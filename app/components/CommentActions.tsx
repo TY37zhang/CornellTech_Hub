@@ -88,11 +88,11 @@ export function CommentActions({
     };
 
     return (
-        <div className="flex items-center gap-0.5 -ml-3">
+        <div className="flex items-center gap-0 -ml-3">
             <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1 h-8 px-1 ${
+                className={`gap-0.5 h-8 px-0.5 ${
                     userVote === "upvote" ? "text-primary" : ""
                 }`}
                 onClick={() => handleVote("upvote")}
@@ -108,7 +108,7 @@ export function CommentActions({
             <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1 h-8 px-1 ${
+                className={`gap-0.5 h-8 px-0.5 ${
                     userVote === "downvote" ? "text-primary" : ""
                 }`}
                 onClick={() => handleVote("downvote")}

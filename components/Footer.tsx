@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export function Footer() {
     return (
-        <footer className="border-t bg-muted/40">
-            <div className="container flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:py-6">
+        <footer className="w-full border-t bg-muted/40">
+            <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:py-6">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         {/* <Image
@@ -99,26 +99,28 @@ export function Footer() {
                     </div>
                 </nav>
             </div>
-            <div className="container py-2 text-center text-sm text-muted-foreground border-t">
-                <div>
-                    &copy; {new Date().getFullYear()} Cornell Tech Hub. All
-                    rights reserved.
-                </div>
-                <div className="text-xs mt-1">
-                    This is a student-built independent project and is not
-                    officially affiliated with Cornell Tech.
-                </div>
-                <div className="text-xs mt-1">
-                    Designed and developed by{" "}
-                    <Link
-                        href="https://www.tianyinzhang.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                    >
-                        Ty Zhang
-                    </Link>{" "}
-                    with ♡
+            <div className="w-full border-t">
+                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 text-center text-sm text-muted-foreground">
+                    <div>
+                        &copy; {new Date().getFullYear()} Cornell Tech Hub. All
+                        rights reserved.
+                    </div>
+                    <div className="text-xs mt-1">
+                        This is a student-built independent project and is not
+                        officially affiliated with Cornell Tech.
+                    </div>
+                    <div className="text-xs mt-1">
+                        Designed and developed by{" "}
+                        <Link
+                            href="https://www.tianyinzhang.com/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                        >
+                            Ty Zhang
+                        </Link>{" "}
+                        with ♡
+                    </div>
                 </div>
             </div>
         </footer>

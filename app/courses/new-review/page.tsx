@@ -279,10 +279,14 @@ export default function NewReviewPage() {
     // Authentication and role checking
     if (status === "loading") {
         return (
-            <div className="container max-w-2xl py-10">
-                <div className="flex flex-col items-center justify-center space-y-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                    <p>Loading...</p>
+            <div className="min-h-screen bg-background">
+                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
+                    <div className="max-w-2xl mx-auto">
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -290,20 +294,24 @@ export default function NewReviewPage() {
 
     if (status === "unauthenticated") {
         return (
-            <div className="container max-w-2xl py-10">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Authentication Required</CardTitle>
-                        <CardDescription>
-                            You need to be signed in to write course reviews.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button onClick={() => router.push("/auth/signin")}>
-                            Sign In
-                        </Button>
-                    </CardFooter>
-                </Card>
+            <div className="min-h-screen bg-background">
+                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
+                    <div className="max-w-2xl mx-auto">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Authentication Required</CardTitle>
+                                <CardDescription>
+                                    You need to be signed in to write course reviews.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardFooter>
+                                <Button onClick={() => router.push("/auth/signin")}>
+                                    Sign In
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -312,37 +320,43 @@ export default function NewReviewPage() {
     const userRole = (session?.user as any)?.role;
     if (!isStudent(userRole)) {
         return (
-            <div className="container max-w-2xl py-10">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Access Restricted</CardTitle>
-                        <CardDescription>
-                            Only students can create course reviews. Faculty members can reply to existing reviews.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                        <Button onClick={() => router.push("/courses")}>
-                            Browse Courses
-                        </Button>
-                    </CardFooter>
-                </Card>
+            <div className="min-h-screen bg-background">
+                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
+                    <div className="max-w-2xl mx-auto">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Access Restricted</CardTitle>
+                                <CardDescription>
+                                    Only students can create course reviews. Faculty members can reply to existing reviews.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardFooter>
+                                <Button onClick={() => router.push("/courses")}>
+                                    Browse Courses
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="container max-w-2xl py-10">
-            <Button
-                variant="ghost"
-                className="mb-6"
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-            >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Courses
-            </Button>
+        <div className="min-h-screen bg-background">
+            <div className="w-full px-4 md:px-6 lg:px-8 py-10">
+                <div className="max-w-2xl mx-auto">
+                    <Button
+                        variant="ghost"
+                        className="mb-6"
+                        onClick={() => router.back()}
+                        disabled={isSubmitting}
+                    >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Courses
+                    </Button>
 
-            <Card>
+                    <Card>
                 <CardHeader>
                     <CardTitle>Add a New Course Review</CardTitle>
                     <CardDescription>
@@ -368,7 +382,7 @@ export default function NewReviewPage() {
                                         autoComplete="off"
                                     />
                                     {searchResults.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-background border rounded-lg shadow-lg z-50">
+                                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded-lg shadow-lg z-50">
                                             {searchResults.map((course) => (
                                                 <div
                                                     key={course.id}
@@ -377,7 +391,7 @@ export default function NewReviewPage() {
                                                             course
                                                         )
                                                     }
-                                                    className="flex items-center p-3 hover:bg-accent/5 transition-colors cursor-pointer"
+                                                    className="flex items-center p-3 hover:bg-gray-100 transition-colors cursor-pointer text-gray-900"
                                                 >
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-medium">
@@ -398,7 +412,7 @@ export default function NewReviewPage() {
                                                                         key={
                                                                             index
                                                                         }
-                                                                        variant="outline"
+                                                                        variant={dept.toLowerCase() as any}
                                                                         className="text-xs"
                                                                     >
                                                                         {dept}
@@ -415,8 +429,8 @@ export default function NewReviewPage() {
                                                                 {course.year}
                                                             </Badge>
                                                             <Badge
-                                                                variant="secondary"
-                                                                className="text-xs"
+                                                                variant="outline"
+                                                                className="text-xs border-gray-300"
                                                             >
                                                                 {course.credits}{" "}
                                                                 credits
@@ -754,14 +768,16 @@ export default function NewReviewPage() {
                     <CardFooter>
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full bg-black text-white hover:bg-gray-800"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? "Submitting..." : "Submit Review"}
                         </Button>
                     </CardFooter>
                 </form>
-            </Card>
+                    </Card>
+                </div>
+            </div>
         </div>
     );
 }

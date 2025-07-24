@@ -44,3 +44,5 @@ scraper/output/
 scraper/*.json
 scraper/*.csv
 scraper/*.html
+CLAUDE.md
+todo.md

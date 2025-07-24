@@ -85,8 +85,9 @@ export default function FeedbackPage() {
     }
 
     return (
-        <div className="container max-w-2xl py-10">
-            <Card>
+        <div className="min-h-screen bg-background">
+            <div className="container max-w-2xl py-10 px-4 mx-auto">
+                <Card>
                 <CardHeader>
                     <CardTitle>Submit Feedback</CardTitle>
                     <CardDescription>
@@ -157,7 +158,8 @@ export default function FeedbackPage() {
                         </form>
                     </Form>
                 </CardContent>
-            </Card>
+                </Card>
+            </div>
         </div>
     );
 }

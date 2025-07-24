@@ -52,22 +52,22 @@ interface Review {
 // Helper function to get category color
 function getCategoryColor(category: string | undefined): string {
     if (!category) {
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
     const colors: { [key: string]: string } = {
-        CEEE: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        CS: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        ECE: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        HADM: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
-        INFO: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        LAW: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
-        ORIE: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
-        TECH: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
-        TECHIE: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
+        CEEE: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+        CS: "bg-red-100 text-red-800 hover:bg-red-100",
+        ECE: "bg-green-100 text-green-800 hover:bg-green-100",
+        HADM: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+        INFO: "bg-purple-100 text-purple-800 hover:bg-purple-100",
+        LAW: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
+        ORIE: "bg-pink-100 text-pink-800 hover:bg-pink-100",
+        TECH: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+        TECHIE: "bg-teal-100 text-teal-800 hover:bg-teal-100",
     };
     return (
         colors[category.toUpperCase()] ||
-        "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
+        "bg-gray-100 text-gray-800 hover:bg-gray-100"
     );
 }
 
@@ -180,8 +180,8 @@ export default function MyReviewsPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col items-center justify-center text-center">
                             <h1 className="text-4xl font-bold tracking-tight">
                                 My Reviews
@@ -193,7 +193,7 @@ export default function MyReviewsPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-6 md:px-6 lg:px-8">
                     <Tabs
                         defaultValue="all"
                         value={activeTab}
@@ -228,10 +228,27 @@ export default function MyReviewsPage() {
                                         >
                                             <CardHeader className="pb-3">
                                                 <div className="flex items-start justify-between">
-                                                    <div>
+                                                    <div className="flex-1">
                                                         <CardTitle className="text-xl">
                                                             {review.courseName}
                                                         </CardTitle>
+                                                        <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                                                            <div>
+                                                                {new Date(
+                                                                    review.createdAt
+                                                                ).toLocaleDateString(
+                                                                    "en-US",
+                                                                    {
+                                                                        month: "numeric",
+                                                                        day: "numeric", 
+                                                                        year: "numeric",
+                                                                    }
+                                                                )}
+                                                            </div>
+                                                            {review.professor && (
+                                                                <div>Prof. {review.professor}</div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
                                                         {review.crossListed ? (
@@ -390,30 +407,6 @@ export default function MyReviewsPage() {
                                                 <p className="mt-4 text-sm whitespace-pre-wrap break-words text-muted-foreground">
                                                     {review.content}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {new Date(
-                                                            review.createdAt
-                                                        ).toLocaleDateString(
-                                                            "en-US",
-                                                            {
-                                                                year: "numeric",
-                                                                month: "long",
-                                                                day: "numeric",
-                                                            }
-                                                        )}
-                                                    </p>
-                                                    {review.semester &&
-                                                        review.year && (
-                                                            <p className="text-xs text-muted-foreground">
-                                                                •{" "}
-                                                                {
-                                                                    review.semester
-                                                                }{" "}
-                                                                {review.year}
-                                                            </p>
-                                                        )}
-                                                </div>
                                             </CardContent>
                                             <CardFooter className="flex justify-end gap-2">
                                                 <Button

@@ -162,7 +162,7 @@ export default function AdminFeedbackPage() {
         if (filter === "all") return true;
         if (filter === "unread") return !item.read;
         if (filter === "read") return !!item.read;
-        return item.status.toLowerCase() === filter;
+        return true;
     });
 
     if (status === "loading") {
@@ -207,43 +207,71 @@ export default function AdminFeedbackPage() {
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-4 mb-2">
-                        <Button asChild variant="outline" size="sm">
-                            <Link href="/admin" className="flex items-center gap-2">
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to Dashboard
-                            </Link>
-                        </Button>
-                    </div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <MessageSquare className="h-8 w-8" />
-                        User Feedback
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Review and manage user feedback and bug reports
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
+        <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+            {/* Mobile-optimized Header */}
+            <div className="space-y-3 sm:space-y-0">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+                        <Link href="/admin" className="flex items-center gap-1 sm:gap-2">
+                            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Back to Dashboard</span>
+                            <span className="sm:hidden">Back</span>
+                        </Link>
+                    </Button>
+                    
                     <Button
                         onClick={fetchFeedback}
                         variant="outline"
                         size="sm"
                         disabled={loading}
+                        className="ml-auto sm:hidden"
                     >
                         <RefreshCw
-                            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                            className={`h-3 w-3 ${loading ? "animate-spin" : ""}`}
                         />
-                        Refresh
+                        <span className="sr-only">Refresh</span>
                     </Button>
-                    <div className="text-sm text-muted-foreground">
-                        Logged in as: {session?.user?.email}
-                        <div className="text-xs text-muted-foreground mt-1">
-                            Role: {getFullRoleDisplay(session?.user)}
+                </div>
+                
+                <div className="sm:flex sm:items-center sm:justify-between sm:gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                            <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8" />
+                            <span className="hidden sm:inline">User Feedback</span>
+                            <span className="sm:hidden">Feedback</span>
+                        </h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">
+                            Review and manage user feedback and bug reports
+                        </p>
+                    </div>
+                    
+                    <div className="hidden sm:flex sm:items-center sm:gap-4 mt-3 sm:mt-0">
+                        <Button
+                            onClick={fetchFeedback}
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                        >
+                            <RefreshCw
+                                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                            />
+                            Refresh
+                        </Button>
+                        <div className="text-sm text-muted-foreground">
+                            <div className="text-right">Logged in as: {session?.user?.email}</div>
+                            <div className="text-xs text-muted-foreground mt-1 text-right">
+                                Role: {getFullRoleDisplay(session?.user)}
+                            </div>
                         </div>
+                    </div>
+                </div>
+                
+                {/* Mobile user info */}
+                <div className="sm:hidden text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
+                    <div className="font-medium">Logged in as:</div>
+                    <div className="truncate mt-1">{session?.user?.email}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                        Role: {getFullRoleDisplay(session?.user)}
                     </div>
                 </div>
             </div>
@@ -272,31 +300,6 @@ export default function AdminFeedbackPage() {
                 >
                     <Eye className="h-3 w-3 mr-1" />
                     Read ({feedback.filter((f) => !!f.read).length})
-                </Button>
-                <div className="w-px bg-gray-300 mx-2" />
-                <Button
-                    variant={filter === "pending" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("pending")}
-                >
-                    Pending (
-                    {feedback.filter((f) => f.status === "pending").length})
-                </Button>
-                <Button
-                    variant={filter === "in_progress" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("in_progress")}
-                >
-                    In Progress (
-                    {feedback.filter((f) => f.status === "in_progress").length})
-                </Button>
-                <Button
-                    variant={filter === "resolved" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("resolved")}
-                >
-                    Resolved (
-                    {feedback.filter((f) => f.status === "resolved").length})
                 </Button>
             </div>
 
@@ -373,7 +376,6 @@ export default function AdminFeedbackPage() {
                                                 </>
                                             )}
                                         </Button>
-                                        {getStatusBadge(item.status)}
                                     </div>
                                 </div>
                             </CardHeader>

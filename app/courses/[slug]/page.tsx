@@ -108,34 +108,34 @@ interface Course {
 // Helper function to get category color
 function getCategoryColor(category: string): string {
     const colors: { [key: string]: string } = {
-        ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        cs: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-800/20 dark:text-red-400",
-        ece: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-800/20 dark:text-yellow-400",
-        info: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
-        orie: "bg-pink-100 text-pink-800 hover:bg-pink-100 dark:bg-pink-800/20 dark:text-pink-400",
-        tech: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
-        techie: "bg-teal-100 text-teal-800 hover:bg-teal-100 dark:bg-teal-800/20 dark:text-teal-400",
-        arch: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100 dark:bg-cyan-800/20 dark:text-cyan-400",
-        cee: "bg-lime-100 text-lime-800 hover:bg-lime-100 dark:bg-lime-800/20 dark:text-lime-400",
-        cmbp: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-800/20 dark:text-emerald-400",
-        cmpb: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        ctiv: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
-        design: "bg-violet-100 text-violet-800 hover:bg-violet-100 dark:bg-violet-800/20 dark:text-violet-400",
-        hbds: "bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-100 dark:bg-fuchsia-800/20 dark:text-fuchsia-400",
-        hinf: "bg-sky-100 text-sky-800 hover:bg-sky-100 dark:bg-sky-800/20 dark:text-sky-400",
-        hpec: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-800/20 dark:text-amber-400",
-        iamp: "bg-rose-100 text-rose-800 hover:bg-rose-100 dark:bg-rose-800/20 dark:text-rose-400",
-        nba: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-800/20 dark:text-indigo-400",
-        nbay: "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-800/20 dark:text-blue-400",
-        pbsb: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-800/20 dark:text-green-400",
-        phar: "bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-800/20 dark:text-purple-400",
-        tpcm: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-800/20 dark:text-orange-400",
+        ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+        cs: "bg-red-100 text-red-800 hover:bg-red-100",
+        ece: "bg-green-100 text-green-800 hover:bg-green-100",
+        hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+        info: "bg-purple-100 text-purple-800 hover:bg-purple-100",
+        law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
+        orie: "bg-pink-100 text-pink-800 hover:bg-pink-100",
+        tech: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+        techie: "bg-teal-100 text-teal-800 hover:bg-teal-100",
+        arch: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100",
+        cee: "bg-lime-100 text-lime-800 hover:bg-lime-100",
+        cmbp: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100",
+        cmpb: "bg-amber-100 text-amber-800 hover:bg-amber-100",
+        ctiv: "bg-rose-100 text-rose-800 hover:bg-rose-100",
+        design: "bg-violet-100 text-violet-800 hover:bg-violet-100",
+        hbds: "bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-100",
+        hinf: "bg-sky-100 text-sky-800 hover:bg-sky-100",
+        hpec: "bg-amber-100 text-amber-800 hover:bg-amber-100",
+        iamp: "bg-rose-100 text-rose-800 hover:bg-rose-100",
+        nba: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
+        nbay: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+        pbsb: "bg-green-100 text-green-800 hover:bg-green-100",
+        phar: "bg-purple-100 text-purple-800 hover:bg-purple-100",
+        tpcm: "bg-orange-100 text-orange-800 hover:bg-orange-100",
     };
     return (
         colors[category] ||
-        "bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800/20 dark:text-gray-400"
+        "bg-gray-100 text-gray-800 hover:bg-gray-100"
     );
 }
 
@@ -403,7 +403,7 @@ export default function CourseDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="container px-4 py-8 md:px-6">
+            <div className="w-full px-4 py-8 md:px-6 lg:px-8">
                 <div className="flex flex-col space-y-4">
                     <div className="h-8 w-1/4 bg-muted rounded animate-pulse" />
                     <div className="h-12 w-3/4 bg-muted rounded animate-pulse" />
@@ -415,7 +415,7 @@ export default function CourseDetailPage() {
 
     if (error || !course) {
         return (
-            <div className="container px-4 py-8 md:px-6">
+            <div className="w-full px-4 py-8 md:px-6 lg:px-8">
                 <div className="flex flex-col items-center justify-center space-y-4">
                     <p className="text-red-500">
                         {error || "Course not found"}
@@ -434,8 +434,8 @@ export default function CourseDetailPage() {
     return (
         <div className="flex min-h-screen flex-col">
             <div className="flex-1">
-                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-red-50 to-white dark:from-red-950/20 dark:to-background">
-                    <div className="container px-4 md:px-6">
+                <section className="w-full py-12 md:py-16 lg:py-12 bg-gradient-to-b from-pink-50 to-white">
+                    <div className="w-full px-4 md:px-6 lg:px-8">
                         <div className="flex flex-col gap-4">
                             <div className="w-full">
                                 <div className="flex items-center justify-start">
@@ -457,8 +457,9 @@ export default function CourseDetailPage() {
                                         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
                                             {course.title}
                                         </h1>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <div className="flex items-center">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-muted-foreground">
+                                            {/* Desktop: Show stars, rating, and review count */}
+                                            <div className="hidden sm:flex items-center">
                                                 {renderStars(course.rating)}
                                                 <span className="ml-2">
                                                     {course.rating
@@ -467,27 +468,39 @@ export default function CourseDetailPage() {
                                                           )
                                                         : "0.0"}
                                                 </span>
+                                                <span className="ml-1">
+                                                    ({course.reviewCount || 0}{" "}
+                                                    review
+                                                    {course.reviewCount !== 1
+                                                        ? "s"
+                                                        : ""}
+                                                    )
+                                                </span>
                                             </div>
-                                            <span>
-                                                ({course.reviewCount || 0}{" "}
-                                                review
-                                                {course.reviewCount !== 1
-                                                    ? "s"
-                                                    : ""}
-                                                )
-                                            </span>
-                                            <BookOpen className="h-4 w-4 ml-2" />
-                                            <span>
-                                                {course.codes &&
-                                                course.codes.length > 1
-                                                    ? course.codes.join(", ")
-                                                    : course.code ||
-                                                      course.id}{" "}
-                                                • {course.credits || 0} Credit
-                                                {course.credits !== 1
-                                                    ? "s"
-                                                    : ""}
-                                            </span>
+                                            
+                                            <div className="flex items-center">
+                                                <BookOpen className="h-4 w-4 mr-2" />
+                                                <span>
+                                                    {course.codes &&
+                                                    course.codes.length > 1
+                                                        ? course.codes.join(", ")
+                                                        : course.code ||
+                                                          course.id}{" "}
+                                                    • {course.credits || 0} Credit
+                                                    {course.credits !== 1
+                                                        ? "s"
+                                                        : ""}
+                                                </span>
+                                                {/* Mobile: Show review count after credits */}
+                                                <span className="sm:hidden ml-2">
+                                                    • ({course.reviewCount || 0}{" "}
+                                                    review
+                                                    {course.reviewCount !== 1
+                                                        ? "s"
+                                                        : ""}
+                                                    )
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -591,24 +604,24 @@ export default function CourseDetailPage() {
                     </div>
                 </section>
 
-                <section className="container px-4 py-6 md:px-6">
+                <section className="w-full px-4 py-2 md:px-6 lg:px-8">
                     <Tabs defaultValue="reviews" className="w-full">
-                        <TabsList className="inline-flex h-10 items-center gap-6 justify-start rounded-none border-b bg-transparent p-0 w-screen max-w-none -mx-4 md:w-full md:max-w-full md:mx-0">
+                        <TabsList className="flex h-10 items-center gap-6 justify-center rounded-none border-b bg-transparent p-0 w-full">
                             <TabsTrigger
                                 value="reviews"
-                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
+                                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
                             >
                                 Reviews
                             </TabsTrigger>
                             <TabsTrigger
                                 value="overview"
-                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
+                                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
                             >
                                 Overview
                             </TabsTrigger>
                             <TabsTrigger
                                 value="syllabus"
-                                className="relative px-0 pb-4 text-base data-[state=active]:text-foreground data-[state=active]:font-semibold text-muted-foreground hover:text-foreground before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[2px] data-[state=active]:before:bg-foreground before:content-['']"
+                                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
                             >
                                 Syllabus
                             </TabsTrigger>
@@ -622,94 +635,82 @@ export default function CourseDetailPage() {
                         </TabsContent>
                         <TabsContent value="reviews" className="pt-6">
                             <div className="space-y-6">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center justify-between gap-4">
                                     <h2 className="text-2xl font-bold tracking-tight">
                                         Course Reviews
                                     </h2>
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                        {/* Professor Filter */}
-                                        {course.professors &&
-                                            course.professors.length > 1 && (
-                                                <div className="flex items-center gap-2">
-                                                    <Select
-                                                        value={
-                                                            selectedProfessor
-                                                        }
-                                                        onValueChange={
-                                                            setSelectedProfessor
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-48">
-                                                            <SelectValue placeholder="All Professors" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="all">
-                                                                All Professors (
-                                                                {
-                                                                    course.reviewCount
-                                                                }{" "}
-                                                                reviews)
-                                                            </SelectItem>
-                                                            {course.professors
-                                                                .filter(
-                                                                    (prof) =>
-                                                                        prof.name !==
-                                                                        "Unknown Professor"
-                                                                )
-                                                                .map((prof) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            prof.name
-                                                                        }
-                                                                        value={
-                                                                            prof.name
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            prof.name
-                                                                        }{" "}
-                                                                        (
-                                                                        {
-                                                                            prof.reviewCount
-                                                                        }{" "}
-                                                                        reviews)
-                                                                        {prof.rating && (
-                                                                            <span className="ml-2 text-yellow-600">
-                                                                                ⭐{" "}
-                                                                                {prof.rating.toFixed(
-                                                                                    1
-                                                                                )}
-                                                                            </span>
-                                                                        )}
-                                                                    </SelectItem>
-                                                                ))}
-                                                        </SelectContent>
-                                                    </Select>
-
-                                                    {selectedProfessor !==
-                                                        "all" && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setSelectedProfessor(
-                                                                    "all"
-                                                                );
-                                                            }}
-                                                            className="whitespace-nowrap"
-                                                        >
-                                                            Clear
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            )}
-                                        {canCreateReviews && (
-                                            <Button onClick={handleWriteReview}>
+                                    {canCreateReviews && (
+                                        <>
+                                            {/* Desktop: Full button with text */}
+                                            <Button 
+                                                onClick={handleWriteReview}
+                                                className="!hidden md:!flex bg-black text-white hover:bg-gray-800"
+                                            >
+                                                <Edit className="h-4 w-4 mr-2" />
                                                 Write a Review
                                             </Button>
-                                        )}
-                                    </div>
+                                            {/* Mobile: Square icon-only button */}
+                                            <Button 
+                                                onClick={handleWriteReview}
+                                                size="icon"
+                                                className="md:!hidden bg-black text-white hover:bg-gray-800 !h-8 !w-8"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
+                                
+                                {/* Professor Filter - moved below on its own line */}
+                                {course.professors &&
+                                    course.professors.length > 1 && (
+                                        <div className="flex items-center gap-2">
+                                            <Select
+                                                value={selectedProfessor}
+                                                onValueChange={setSelectedProfessor}
+                                            >
+                                                <SelectTrigger className="w-48">
+                                                    <SelectValue placeholder="All Professors" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">
+                                                        All Professors ({course.reviewCount} reviews)
+                                                    </SelectItem>
+                                                    {course.professors
+                                                        .filter(
+                                                            (prof) =>
+                                                                prof.name !== "Unknown Professor"
+                                                        )
+                                                        .map((prof) => (
+                                                            <SelectItem
+                                                                key={prof.name}
+                                                                value={prof.name}
+                                                            >
+                                                                {prof.name} ({prof.reviewCount} reviews)
+                                                                {prof.rating && (
+                                                                    <span className="ml-2 text-yellow-600">
+                                                                        ⭐ {prof.rating.toFixed(1)}
+                                                                    </span>
+                                                                )}
+                                                            </SelectItem>
+                                                        ))}
+                                                </SelectContent>
+                                            </Select>
+
+                                            {selectedProfessor !== "all" && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setSelectedProfessor("all");
+                                                    }}
+                                                    className="whitespace-nowrap"
+                                                >
+                                                    Clear
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
 
                                 {filteredReviews.length > 0 ||
                                 course.reviews.length > 0 ? (
@@ -744,28 +745,23 @@ export default function CourseDetailPage() {
                                                                     ) +
                                                                         "******"}
                                                                 </p>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    {new Date(
-                                                                        review.createdAt
-                                                                    ).toLocaleDateString()}
+                                                                <div className="space-y-0.5">
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {new Date(
+                                                                            review.createdAt
+                                                                        ).toLocaleDateString()}
+                                                                    </p>
                                                                     {review.professor && (
-                                                                        <span className="ml-2">
-                                                                            •
-                                                                            Prof.{" "}
-                                                                            {
-                                                                                review.professor
-                                                                            }
-                                                                        </span>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            Prof. {review.professor}
+                                                                        </p>
                                                                     )}
                                                                     {review.term && (
-                                                                        <span className="ml-2">
-                                                                            •{" "}
-                                                                            {
-                                                                                review.term
-                                                                            }
-                                                                        </span>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            {review.term}
+                                                                        </p>
                                                                     )}
-                                                                </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center space-x-1">

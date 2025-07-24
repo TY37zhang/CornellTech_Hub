@@ -222,66 +222,82 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Settings className="h-8 w-8" />
-                        Admin Dashboard
+        <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 overflow-hidden">
+            {/* Mobile-optimized header */}
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                    <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                        <Settings className="h-6 w-6 sm:h-8 sm:w-8" />
+                        <span className="hidden sm:inline">Admin Dashboard</span>
+                        <span className="sm:hidden">Admin</span>
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm sm:text-base text-muted-foreground">
                         Cornell Tech Hub Administration
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
-                        Last updated: {lastUpdated.toLocaleTimeString()}
+                
+                {/* Mobile-first action bar */}
+                <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex items-center justify-between sm:flex-col sm:items-end">
+                        <div className="text-xs sm:text-sm text-muted-foreground">
+                            Last updated: {lastUpdated.toLocaleTimeString()}
+                        </div>
+                        <Button
+                            onClick={fetchAdminStats}
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                            className="ml-2 sm:ml-0 sm:mt-1"
+                        >
+                            <RefreshCw
+                                className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}${loading ? "" : " mr-1 sm:mr-2"}`}
+                            />
+                            <span className="hidden sm:inline">Refresh</span>
+                        </Button>
                     </div>
-                    <Button
-                        onClick={fetchAdminStats}
-                        variant="outline"
-                        size="sm"
-                        disabled={loading}
-                    >
-                        <RefreshCw
-                            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-                        />
-                        Refresh
-                    </Button>
-                    <div className="text-sm text-muted-foreground">
-                        Logged in as: {session?.user?.email}
-                        <div className="text-xs text-muted-foreground mt-1">
+                    
+                    {/* User info - collapsible on mobile */}
+                    <div className="text-xs sm:text-sm text-muted-foreground bg-muted/50 p-2 rounded-md sm:bg-transparent sm:p-0">
+                        <div className="sm:text-right">
+                            <span className="font-medium">Logged in as:</span>
+                            <div className="truncate mt-1 sm:mt-0 sm:inline sm:ml-1">
+                                {session?.user?.email}
+                            </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 sm:text-right">
                             Role: {getFullRoleDisplay(session?.user)}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Admin Actions Bar */}
+            {/* Mobile-optimized Admin Actions */}
             <Card className="shadow-sm border-l-4 border-l-purple-500">
-                <div className="px-6 py-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Users className="h-5 w-5 text-purple-600" />
-                            <span className="font-medium text-sm">Admin Actions</span>
+                <div className="p-3 sm:px-6 sm:py-4">
+                    <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                            <span className="font-medium text-sm sm:text-base sm:font-semibold">Quick Actions</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Button asChild variant="ghost" size="sm" className="h-8">
-                                <Link href="/admin/users" className="flex items-center gap-2">
-                                    <Users className="h-4 w-4" />
-                                    Manage Users
+                        
+                        {/* Mobile: Single row layout */}
+                        <div className="flex flex-row gap-1 sm:gap-3">
+                            <Button asChild variant="ghost" size="sm" className="h-8 sm:h-9 flex-1 sm:flex-none justify-center px-1 py-1 sm:px-3 sm:py-2 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                <Link href="/admin/users" className="flex items-center gap-1 sm:gap-2">
+                                    <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                                    <span className="font-medium text-xs sm:text-sm">Users</span>
                                 </Link>
                             </Button>
-                            <Button asChild variant="ghost" size="sm" className="h-8">
-                                <Link href="/admin/moderation" className="flex items-center gap-2">
-                                    <Shield className="h-4 w-4" />
-                                    Content Moderation
+                            <Button asChild variant="ghost" size="sm" className="h-8 sm:h-9 flex-1 sm:flex-none justify-center px-1 py-1 sm:px-3 sm:py-2 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                <Link href="/admin/moderation" className="flex items-center gap-1 sm:gap-2">
+                                    <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                                    <span className="font-medium text-xs sm:text-sm">Moderation</span>
                                 </Link>
                             </Button>
-                            <Button asChild variant="ghost" size="sm" className="h-8">
-                                <Link href="/admin/feedback" className="flex items-center gap-2">
-                                    <MessageSquare className="h-4 w-4" />
-                                    User Feedback
+                            <Button asChild variant="ghost" size="sm" className="h-8 sm:h-9 flex-1 sm:flex-none justify-center px-1 py-1 sm:px-3 sm:py-2 hover:bg-pink-50 hover:text-pink-700 transition-colors">
+                                <Link href="/admin/feedback" className="flex items-center gap-1 sm:gap-2">
+                                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-pink-600" />
+                                    <span className="font-medium text-xs sm:text-sm">Feedback</span>
                                 </Link>
                             </Button>
                         </div>
@@ -292,18 +308,18 @@ export default function AdminDashboard() {
             {/* Admin Statistics Dashboard */}
             {stats && (
                 <>
-                    {/* User Statistics - Row 1 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Mobile-optimized Statistics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Users className="h-6 w-6 text-blue-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Total Users
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.users.toLocaleString()}
                                     </div>
                                 </div>
@@ -311,15 +327,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Activity className="h-6 w-6 text-green-500" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-green-500 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Online Users
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.onlineUsers.toLocaleString()}
                                     </div>
                                 </div>
@@ -327,15 +343,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Flag className="h-6 w-6 text-orange-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Flag className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             User Reports
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.reports.toLocaleString()}
                                     </div>
                                 </div>
@@ -343,15 +359,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <MessageSquare className="h-6 w-6 text-pink-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             User Feedback
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.feedback?.toLocaleString() || 0}
                                     </div>
                                 </div>
@@ -359,18 +375,18 @@ export default function AdminDashboard() {
                         </Card>
                     </div>
 
-                    {/* Forum Activity & Tools - Row 2 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Forum & Activity Stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <MessageSquare className="h-6 w-6 text-green-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Forum Posts
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.forum_posts.toLocaleString()}
                                     </div>
                                 </div>
@@ -378,15 +394,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <MessageSquare className="h-6 w-6 text-blue-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Comments
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.forum_comments.toLocaleString()}
                                     </div>
                                 </div>
@@ -394,15 +410,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <TrendingUp className="h-6 w-6 text-indigo-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Course Planner
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.course_planner?.toLocaleString() || 0}
                                     </div>
                                 </div>
@@ -410,15 +426,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Activity className="h-6 w-6 text-cyan-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Course Schedules
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.course_schedules?.toLocaleString() || 0}
                                     </div>
                                 </div>
@@ -426,18 +442,18 @@ export default function AdminDashboard() {
                         </Card>
                     </div>
 
-                    {/* Course Content - Row 3 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Course & Content Stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <BookOpen className="h-6 w-6 text-blue-500" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Total Courses
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.courses.toLocaleString()}
                                     </div>
                                 </div>
@@ -445,15 +461,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Star className="h-6 w-6 text-yellow-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Course Reviews
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.course_reviews.toLocaleString()}
                                     </div>
                                 </div>
@@ -461,15 +477,15 @@ export default function AdminDashboard() {
                         </Card>
 
                         <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="px-4 pt-3 pb-2">
-                                <div className="flex flex-col space-y-1">
+                            <CardContent className="px-3 pt-4 pb-2 sm:px-4 sm:pt-5 sm:pb-3">
+                                <div className="flex flex-col space-y-1.5">
                                     <div className="flex items-center space-x-2">
-                                        <Reply className="h-6 w-6 text-purple-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">
+                                        <Reply className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 flex-shrink-0" />
+                                        <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                                             Review Replies
                                         </span>
                                     </div>
-                                    <div className="text-2xl font-bold tracking-tight">
+                                    <div className="text-lg sm:text-2xl font-bold tracking-tight">
                                         {stats.database.tables.review_replies?.toLocaleString() || 0}
                                     </div>
                                 </div>
@@ -477,8 +493,8 @@ export default function AdminDashboard() {
                         </Card>
                     </div>
 
-                    {/* Services Health */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Mobile-optimized Services Health */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">

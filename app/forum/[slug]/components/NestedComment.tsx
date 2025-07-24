@@ -197,20 +197,25 @@ export default function NestedComment({
         setReportModalOpen(true);
     };
 
-    const indentationLevel = Math.min(comment.depth, 3); // Max visual indentation
-    const marginLeft = indentationLevel * 8; // 8px per level for very compact spacing
+    const indentationLevel = Math.min(comment.depth, 2); // Max visual indentation reduced for mobile
+    const desktopMargin = indentationLevel * 8; // 8px per level for desktop
+    const mobileMargin = indentationLevel * 4; // 4px per level for mobile (increased from 2px)
+    
+    // Calculate responsive margin and threading line position
+    const responsiveMargin = `clamp(${mobileMargin}px, 2vw, ${desktopMargin}px)`;
+    const threadingLineOffset = 4; // Fixed offset from margin edge
 
     return (
         <div
             className={`relative group`}
-            style={{ marginLeft: `${marginLeft}px` }}
+            style={{ marginLeft: responsiveMargin }}
         >
             {/* Elegant gradient threading line with collapse button */}
             {comment.depth > 0 && (
                 <div
                     className="absolute top-0 bottom-0 w-0.5 transition-all duration-300 ease-out group-hover:w-1"
                     style={{
-                        left: `-${marginLeft - 4}px`,
+                        left: `calc(-1 * (clamp(${mobileMargin}px, 2vw, ${desktopMargin}px) - ${threadingLineOffset}px))`,
                         background: `linear-gradient(to bottom, 
                             ${
                                 comment.depth === 1
@@ -238,16 +243,16 @@ export default function NestedComment({
                     variant="ghost"
                     size="icon"
                     onClick={toggleCollapse}
-                    className="absolute top-4 h-4 w-4 p-0 bg-transparent border-0 hover:bg-accent/20 z-10 transition-all duration-200"
+                    className="absolute top-4 h-3 w-3 p-0 bg-transparent border-0 hover:bg-transparent z-10"
                     style={{
-                        left: `-${marginLeft - 4}px`,
+                        left: `calc(-1 * (clamp(${mobileMargin}px, 2vw, ${desktopMargin}px) - ${threadingLineOffset}px))`,
                         transform: "translateX(-50%)",
                     }}
                 >
                     {isCollapsed ? (
-                        <ChevronRight className="h-3 w-3" />
+                        <ChevronRight className="h-2 w-2" />
                     ) : (
-                        <ChevronDown className="h-3 w-3" />
+                        <ChevronDown className="h-2 w-2" />
                     )}
                 </Button>
             )}
@@ -255,9 +260,9 @@ export default function NestedComment({
             <Card
                 className={`transition-all hover:shadow-sm group-hover:shadow-md`}
             >
-                <CardHeader className="pb-1">
+                <CardHeader className="pb-1 px-2 sm:px-6 pt-2 sm:pt-6">
                     <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                             <Avatar
                                 className={`${comment.depth > 0 ? "h-7 w-7" : "h-8 w-8"}`}
                             >
@@ -293,7 +298,7 @@ export default function NestedComment({
                                             {isOriginalPoster && (
                                                 <Badge
                                                     variant="outline"
-                                                    className="ml-2 text-xs px-1.5 py-0.5 !bg-blue-50 !text-blue-700 !border-blue-200 font-medium dark:!bg-blue-950/30 dark:!text-blue-300 dark:!border-blue-800/50"
+                                                    className="ml-2 text-xs px-1.5 py-0.5 !bg-blue-50 !text-blue-700 !border-blue-200 font-medium"
                                                 >
                                                     OP
                                                 </Badge>
@@ -324,23 +329,37 @@ export default function NestedComment({
                                 </CardDescription>
                             </div>
                         </div>
+                        
+                        {/* Reply button in top right on mobile */}
+                        {canReply && !comment.isDeleted && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="sm:hidden gap-1 text-muted-foreground hover:text-foreground h-8 px-2"
+                                onClick={() => setShowReplyForm(!showReplyForm)}
+                                disabled={isEditing}
+                            >
+                                <Reply className="h-4 w-4" />
+                                <span className="text-xs">Reply</span>
+                            </Button>
+                        )}
                     </div>
                 </CardHeader>
 
-                <CardContent className="pb-0">
+                <CardContent className="pb-0 px-2 sm:px-6">
                     {comment.isDeleted ? (
-                        <div className="ml-11 text-sm text-muted-foreground/60 italic leading-relaxed">
+                        <div className="ml-4 sm:ml-11 text-sm text-muted-foreground/60 italic leading-relaxed">
                             This comment has been deleted
                         </div>
                     ) : isEditing ? (
-                        <div className="ml-11 space-y-3">
+                        <div className="ml-4 sm:ml-11 space-y-3">
                             <Textarea
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
                                 className="min-h-[80px]"
                                 placeholder="Edit your comment..."
                             />
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                                 <Button
                                     size="sm"
                                     onClick={handleSaveEdit}
@@ -359,40 +378,32 @@ export default function NestedComment({
                             </div>
                         </div>
                     ) : (
-                        <div className="ml-11 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
+                        <div className="ml-10 sm:ml-11 whitespace-pre-line text-sm text-muted-foreground leading-relaxed break-words overflow-hidden">
                             {comment.content}
                         </div>
                     )}
                 </CardContent>
 
-                <CardFooter className="p-0 pt-0 pb-1 pr-6">
+                <CardFooter className="p-0 pt-0 pb-1 pr-2 sm:pr-6 pl-2 sm:pl-6">
                     <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
                             {/* Collapse button for root level comments inside the card */}
                             {hasReplies && comment.depth === 0 && (
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={toggleCollapse}
-                                    className="h-6 w-6 p-0 rounded-full bg-background border shadow-sm hover:bg-accent transition-all duration-200 mr-2"
+                                    className="h-4 w-4 p-0 bg-transparent border-0 hover:bg-transparent mr-2"
                                 >
                                     {isCollapsed ? (
-                                        <ChevronRight className="h-3 w-3" />
+                                        <ChevronRight className="h-2 w-2" />
                                     ) : (
-                                        <ChevronDown className="h-3 w-3" />
+                                        <ChevronDown className="h-2 w-2" />
                                     )}
                                 </Button>
                             )}
                             {!comment.isDeleted && (
-                                <div
-                                    className="flex items-center gap-1"
-                                    style={{
-                                        marginLeft:
-                                            hasReplies && comment.depth === 0
-                                                ? "0"
-                                                : "2.75rem",
-                                    }}
-                                >
+                                <div className="flex items-center gap-0.5 ml-10 sm:ml-11">
                                     <CommentActions
                                         commentId={comment.id}
                                         initialLikeCount={
@@ -402,25 +413,11 @@ export default function NestedComment({
                                             comment.dislike_count || 0
                                         }
                                     />
-                                    {canReply && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="gap-1 text-muted-foreground hover:text-foreground h-8 px-1"
-                                            onClick={() =>
-                                                setShowReplyForm(!showReplyForm)
-                                            }
-                                            disabled={isEditing}
-                                        >
-                                            <Reply className="h-4 w-4" />
-                                            <span>Reply</span>
-                                        </Button>
-                                    )}
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
                             {isAuthor && !comment.isDeleted ? (
                                 <>
                                     <Button
@@ -449,10 +446,9 @@ export default function NestedComment({
                                                     Delete comment
                                                 </AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    This action cannot be undone.
-                                                    This will permanently remove
-                                                    your comment and all replies to
-                                                    it from the thread.
+                                                    Are you sure you want to delete this comment?<br/>
+                                                    This action cannot be undone.<br/>
+                                                    This will permanently remove your comment and all replies to it.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
@@ -460,7 +456,7 @@ export default function NestedComment({
                                                     Cancel
                                                 </AlertDialogCancel>
                                                 <AlertDialogAction
-                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    className="bg-red-600 text-white hover:bg-red-700"
                                                     onClick={handleDelete}
                                                 >
                                                     Delete
