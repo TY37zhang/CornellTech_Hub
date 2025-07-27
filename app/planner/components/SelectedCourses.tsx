@@ -188,7 +188,7 @@ export default function SelectedCourses({
                                             onClick={() =>
                                                 onRemoveCourse(course)
                                             }
-                                            className="absolute top-2 right-2 z-10"
+                                            className="absolute top-0 right-2 z-10 hover:bg-transparent hover:text-gray-700"
                                             aria-label="Remove course"
                                         >
                                             <X className="h-4 w-4" />
@@ -236,7 +236,7 @@ export default function SelectedCourses({
                                                 </div>
                                             </div>
                                             {/* Requirement Assignment Dropdown - right side */}
-                                            <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-1 sm:mt-0">
+                                            <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-3 sm:mt-2">
                                                 <Select
                                                     value={
                                                         currentAssignment ||

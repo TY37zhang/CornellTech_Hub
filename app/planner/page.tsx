@@ -1055,7 +1055,6 @@ export default function PlannerPage() {
                         title: "Warning",
                         description: `You have selected ${newTotalCredits} total credits, but only ${programRequirements[userProgram].totalCredits} are required for your program.`,
                         variant: "destructive",
-                        duration: 5000,
                     });
                 } else if (
                     newTotalCredits ===
@@ -1065,7 +1064,6 @@ export default function PlannerPage() {
                         title: "Success",
                         description: `You have selected the required ${programRequirements[userProgram].totalCredits} credits for your program.`,
                         variant: "default",
-                        duration: 3000,
                     });
                 }
 
