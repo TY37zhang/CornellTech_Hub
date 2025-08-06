@@ -262,8 +262,7 @@ export default function AdditionalQuestions({
                     selectedCourseId: course?.code,
                     deductedFromCategory: deductFromCategory,
                     creditAmount: course?.credits || -1,
-                    addedToCategory:
-                        course?.credits === 1 ? "JacobsTechnicalCore" : null,
+                    addedToCategory: "JacobsTechnicalCore", // Always add 1 credit to JacobsTechnicalCore
                 }),
             });
 

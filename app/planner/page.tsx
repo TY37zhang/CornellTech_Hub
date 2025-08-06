@@ -586,6 +586,9 @@ export default function PlannerPage() {
     // Ethics course tracking state
     const [selectedEthicsCourse, setSelectedEthicsCourse] = useState<Course | null>(null);
     const [ethicsDeductionCategory, setEthicsDeductionCategory] = useState<string | null>(null);
+    
+    // Special requirements state
+    const [specialRequirements, setSpecialRequirements] = useState<any[]>([]);
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
@@ -822,11 +825,15 @@ export default function PlannerPage() {
                 }
             }
 
-            setSelectedCourses(Array.from(uniqueCoursesMap.values()));
+            const loadedCourses = Array.from(uniqueCoursesMap.values());
+            setSelectedCourses(loadedCourses);
 
             // Store the plan IDs in state
             setCoursePlanIds(coursePlanIds);
             setCoursePlan(newCoursePlan);
+            
+            // Load special requirements with the loaded courses
+            await loadSpecialRequirements(loadedCourses);
         } catch (error) {
             console.error("Error loading course plans:", error);
             toast({
@@ -841,6 +848,39 @@ export default function PlannerPage() {
         }
     };
 
+    const loadSpecialRequirements = async (coursesForLookup?: Course[]) => {
+        try {
+            const response = await fetch("/api/course-special-requirements");
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Error loading special requirements:", errorText);
+                throw new Error(`Failed to load special requirements: ${errorText}`);
+            }
+
+            const requirements = await response.json();
+            setSpecialRequirements(requirements);
+
+            // Find ethics requirement and update local state
+            const ethicsReq = requirements.find(
+                (req: any) => req.requirement_type === "ethics_course"
+            );
+            if (ethicsReq && ethicsReq.selected_course_id) {
+                // Use provided courses or current selectedCourses state
+                const coursesToSearch = coursesForLookup || selectedCourses;
+                const course = coursesToSearch.find(
+                    (c) => c.code === ethicsReq.selected_course_id
+                );
+                if (course) {
+                    setSelectedEthicsCourse(course);
+                    setEthicsDeductionCategory(ethicsReq.deducted_from_category);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading special requirements:", error);
+            // Don't throw - special requirements are optional
+        }
+    };
 
     const fetchUserProgramAsync = async (): Promise<string | null> => {
         try {
@@ -923,14 +963,16 @@ export default function PlannerPage() {
 
         let totalCredits = 0;
         let totalEthicsDeductions = 0;
+        let totalEthicsAdditions = 0;
 
         Object.keys(coursePlan).forEach(categoryKey => {
             const creditInfo = calculateCategoryCredits(categoryKey);
             totalCredits += creditInfo.totalCredits;
             totalEthicsDeductions += creditInfo.ethicsDeduction;
+            totalEthicsAdditions += creditInfo.ethicsAddition;
         });
 
-        return totalCredits - totalEthicsDeductions;
+        return totalCredits - totalEthicsDeductions + totalEthicsAdditions;
     };
 
     const calculateRequirementProgress = (requirementKey: string) => {
@@ -1272,6 +1314,13 @@ export default function PlannerPage() {
         // Simplified for demo mode - just save to localStorage
         if (isDemoMode) {
             setTimeout(() => saveDemoData(), 0);
+        } else {
+            // Reload special requirements to reflect the change in the database
+            try {
+                await loadSpecialRequirements();
+            } catch (error) {
+                console.error("Error reloading special requirements after ethics course change:", error);
+            }
         }
     };
 
@@ -1305,7 +1354,7 @@ export default function PlannerPage() {
         return ethicsCourse;
     };
 
-    // Helper function to calculate credits for a category including ethics deduction
+    // Helper function to calculate credits for a category including ethics deduction and addition
     const calculateCategoryCredits = (categoryKey: string) => {
         const courses = coursePlan[categoryKey] || [];
         const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
@@ -1322,11 +1371,25 @@ export default function PlannerPage() {
         const ethicsDeduction = shouldDeductEthicsCredit && 
             userProgram && 
             programsWithEthicsRequirements.includes(userProgram) ? 1 : 0;
+        
+        // Check if this category should have ethics addition (specifically for JacobsTechnicalCore)
+        let ethicsAddition = 0;
+        if (categoryKey === "JacobsTechnicalCore" && userProgram && programsWithEthicsRequirements.includes(userProgram)) {
+            // Check if there's an ethics requirement with a selected course (regardless of credit count)
+            const ethicsReq = specialRequirements.find(
+                (req: any) => req.requirement_type === "ethics_course" && 
+                             req.selected_course_id // Only if a course is actually selected
+            );
+            if (ethicsReq) {
+                ethicsAddition = 1; // Always add 1 credit to JacobsTechnicalCore when ethics course is selected
+            }
+        }
             
         return {
             totalCredits,
             ethicsDeduction,
-            netCredits: totalCredits - ethicsDeduction
+            ethicsAddition,
+            netCredits: totalCredits - ethicsDeduction + ethicsAddition
         };
     };
 
@@ -1781,8 +1844,12 @@ export default function PlannerPage() {
                                                 {(() => {
                                                     const creditInfo = calculateCategoryCredits(key);
                                                     
-                                                    if (creditInfo.ethicsDeduction > 0) {
+                                                    if (creditInfo.ethicsDeduction > 0 && creditInfo.ethicsAddition > 0) {
+                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. -1 ethics deduction, +1 ethics addition)`;
+                                                    } else if (creditInfo.ethicsDeduction > 0) {
                                                         return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. -1 ethics deduction)`;
+                                                    } else if (creditInfo.ethicsAddition > 0) {
+                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. +1 ethics addition)`;
                                                     }
                                                     return `${creditInfo.totalCredits} / ${requirement.credits} cr`;
                                                 })()}
@@ -1862,6 +1929,28 @@ export default function PlannerPage() {
                                                         </div>
                                                     )
                                                 )}
+                                            </div>
+                                        )}
+                                        
+                                        {/* Ethics Credit Addition Card for JacobsTechnicalCore */}
+                                        {key === "JacobsTechnicalCore" && 
+                                         userProgram && 
+                                         ["ms-is-cm", "ms-is-ht", "ms-is-ut"].includes(userProgram) &&
+                                         selectedEthicsCourse && (
+                                            <div className="mt-2">
+                                                <div className="flex justify-between items-start text-sm p-2 rounded-lg bg-green-50 border border-green-300">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-normal text-sm text-green-800">
+                                                            Ethics Credit Transfer
+                                                        </div>
+                                                        <div className="text-xs text-green-600">
+                                                            1 credit from {selectedEthicsCourse.code} ethics requirement
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-2 font-normal text-sm text-green-800">
+                                                        +1 cr
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
