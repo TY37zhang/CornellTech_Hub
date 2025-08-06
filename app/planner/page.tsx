@@ -18,6 +18,7 @@ import {
     GraduationCap,
     HelpCircle,
     X,
+    ArrowRightLeft,
 } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import {
     sampleCoursePlan, 
     sampleUserProgram
 } from "@/lib/sampleData";
+import CreditTransferModal from "./components/CreditTransferModal";
 
 /**
  * How to Use the Planner:
@@ -82,6 +84,13 @@ interface ProgramRequirement {
 
 interface ProgramRequirements {
     [key: string]: ProgramRequirement;
+}
+
+interface CreditTransfer {
+    id: string;
+    fromCategory: string;
+    toCategory: string;
+    amount: number;
 }
 
 // Program requirements data structure
@@ -589,6 +598,9 @@ export default function PlannerPage() {
     
     // Special requirements state
     const [specialRequirements, setSpecialRequirements] = useState<any[]>([]);
+    
+    // Credit transfer state
+    const [creditTransfers, setCreditTransfers] = useState<CreditTransfer[]>([]);
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
@@ -712,7 +724,10 @@ export default function PlannerPage() {
                 if (status === 'authenticated' && session?.user?.program) {
                     setUserProgram(session.user.program);
                     setIsDemoMode(false);
-                    await loadSavedCoursePlans();
+                    await Promise.all([
+                        loadSavedCoursePlans(),
+                        loadCreditTransfers()
+                    ]);
                 } else if (status === 'authenticated' && session) {
                     setIsDemoMode(false);
                     // Parallel fetch user program and prepare for course plans
@@ -722,7 +737,10 @@ export default function PlannerPage() {
                     ]);
                     if (userProgram) {
                         setUserProgram(userProgram);
-                        await loadSavedCoursePlans();
+                        await Promise.all([
+                            loadSavedCoursePlans(),
+                            loadCreditTransfers()
+                        ]);
                     }
                 } else if (status === 'unauthenticated') {
                     // No session - initialize demo mode
@@ -787,6 +805,18 @@ export default function PlannerPage() {
             initializePage();
         }
     }, [session, status]);
+
+    const loadCreditTransfers = async () => {
+        try {
+            const response = await fetch("/api/credit-transfers");
+            if (response.ok) {
+                const data = await response.json();
+                setCreditTransfers(data.transfers || []);
+            }
+        } catch (error) {
+            console.error("Error loading credit transfers:", error);
+        }
+    };
 
     const loadSavedCoursePlans = async () => {
         try {
@@ -964,15 +994,19 @@ export default function PlannerPage() {
         let totalCredits = 0;
         let totalEthicsDeductions = 0;
         let totalEthicsAdditions = 0;
+        let totalTransferDeductions = 0;
+        let totalTransferAdditions = 0;
 
         Object.keys(coursePlan).forEach(categoryKey => {
             const creditInfo = calculateCategoryCredits(categoryKey);
             totalCredits += creditInfo.totalCredits;
             totalEthicsDeductions += creditInfo.ethicsDeduction;
             totalEthicsAdditions += creditInfo.ethicsAddition;
+            totalTransferDeductions += creditInfo.transferDeductions;
+            totalTransferAdditions += creditInfo.transferAdditions;
         });
 
-        return totalCredits - totalEthicsDeductions + totalEthicsAdditions;
+        return totalCredits - totalEthicsDeductions + totalEthicsAdditions - totalTransferDeductions + totalTransferAdditions;
     };
 
     const calculateRequirementProgress = (requirementKey: string) => {
@@ -993,6 +1027,40 @@ export default function PlannerPage() {
         const requiredCredits = programRequirements[userProgram].totalCredits;
 
         return (totalCredits / requiredCredits) * 100;
+    };
+
+    const handleTransferCredits = async (transfer: CreditTransfer) => {
+        try {
+            if (!isDemoMode) {
+                const response = await fetch("/api/credit-transfers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        fromCategory: transfer.fromCategory,
+                        toCategory: transfer.toCategory,
+                        creditAmount: transfer.amount,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to create credit transfer");
+                }
+            }
+
+            setCreditTransfers((prev) => [...prev, transfer]);
+            
+            toast({
+                title: "Success",
+                description: `Transferred ${transfer.amount} credit${transfer.amount > 1 ? 's' : ''} from ${transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
+                variant: "default",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to create credit transfer. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
 
 
@@ -1384,12 +1452,27 @@ export default function PlannerPage() {
                 ethicsAddition = 1; // Always add 1 credit to JacobsTechnicalCore when ethics course is selected
             }
         }
+
+        // Calculate custom credit transfers
+        let transferDeductions = 0;
+        let transferAdditions = 0;
+        
+        creditTransfers.forEach((transfer) => {
+            if (transfer.fromCategory === categoryKey) {
+                transferDeductions += transfer.amount;
+            }
+            if (transfer.toCategory === categoryKey) {
+                transferAdditions += transfer.amount;
+            }
+        });
             
         return {
             totalCredits,
             ethicsDeduction,
             ethicsAddition,
-            netCredits: totalCredits - ethicsDeduction + ethicsAddition
+            transferDeductions,
+            transferAdditions,
+            netCredits: totalCredits - ethicsDeduction + ethicsAddition - transferDeductions + transferAdditions
         };
     };
 
@@ -1816,10 +1899,20 @@ export default function PlannerPage() {
                                 window.innerWidth < 768;
                             const expanded =
                                 expandedRequirements[key] ?? !isMobile;
+
+                            // Check if this requirement is involved in any credit transfers
+                            const hasTransferOut = creditTransfers.some(t => t.fromCategory === key);
+                            const hasTransferIn = creditTransfers.some(t => t.toCategory === key);
+                            const isTransferHighlighted = hasTransferOut || hasTransferIn;
+                            
                             return (
                                 <Card
                                     key={key}
-                                    className="p-0 hover:shadow-md transition-shadow group"
+                                    className={`p-0 hover:shadow-md transition-shadow group ${
+                                        isTransferHighlighted 
+                                            ? "ring-2 ring-purple-200 bg-purple-50/50" 
+                                            : ""
+                                    }`}
                                 >
                                     {/* Header as button on mobile, static on desktop */}
                                     <div
@@ -1843,18 +1936,46 @@ export default function PlannerPage() {
                                             <span className="text-sm text-muted-foreground font-normal">
                                                 {(() => {
                                                     const creditInfo = calculateCategoryCredits(key);
+                                                    const adjustments = [];
                                                     
-                                                    if (creditInfo.ethicsDeduction > 0 && creditInfo.ethicsAddition > 0) {
-                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. -1 ethics deduction, +1 ethics addition)`;
-                                                    } else if (creditInfo.ethicsDeduction > 0) {
-                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. -1 ethics deduction)`;
-                                                    } else if (creditInfo.ethicsAddition > 0) {
-                                                        return `${creditInfo.netCredits} / ${requirement.credits} cr (incl. +1 ethics addition)`;
+                                                    if (creditInfo.ethicsDeduction > 0) {
+                                                        adjustments.push(`-${creditInfo.ethicsDeduction} ethics`);
                                                     }
-                                                    return `${creditInfo.totalCredits} / ${requirement.credits} cr`;
+                                                    if (creditInfo.ethicsAddition > 0) {
+                                                        adjustments.push(`+${creditInfo.ethicsAddition} ethics`);
+                                                    }
+                                                    if (creditInfo.transferDeductions > 0) {
+                                                        adjustments.push(`-${creditInfo.transferDeductions} transfer`);
+                                                    }
+                                                    if (creditInfo.transferAdditions > 0) {
+                                                        adjustments.push(`+${creditInfo.transferAdditions} transfer`);
+                                                    }
+                                                    
+                                                    const baseText = `${creditInfo.netCredits} / ${requirement.credits} cr`;
+                                                    return adjustments.length > 0 
+                                                        ? `${baseText} (${adjustments.join(', ')})`
+                                                        : baseText;
                                                 })()}
                                             </span>
                                         </div>
+                                        {/* Transfer Credits Button */}
+                                        <CreditTransferModal
+                                            requirements={programRequirements[userProgram].requirements}
+                                            coursePlan={coursePlan}
+                                            calculateCategoryCredits={calculateCategoryCredits}
+                                            onTransferCredits={handleTransferCredits}
+                                            existingTransfers={creditTransfers}
+                                            sourceRequirement={key}
+                                        >
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <ArrowRightLeft className="h-4 w-4" />
+                                            </Button>
+                                        </CreditTransferModal>
                                         {/* Chevron for mobile */}
                                         <span className="ml-2 md:hidden">
                                             <svg
@@ -1887,6 +2008,33 @@ export default function PlannerPage() {
                                         <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
                                             {requirement.description}
                                         </p>
+                                        
+                                        {/* Credit Transfer Information */}
+                                        {isTransferHighlighted && (
+                                            <div className="mt-3 space-y-1">
+                                                {creditTransfers
+                                                    .filter(t => t.fromCategory === key || t.toCategory === key)
+                                                    .map(transfer => (
+                                                        <div 
+                                                            key={transfer.id}
+                                                            className="flex items-center gap-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded"
+                                                        >
+                                                            {transfer.fromCategory === key ? (
+                                                                <>
+                                                                    <ArrowRightLeft className="h-3 w-3" />
+                                                                    <span>-{transfer.amount} cr to {transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ArrowRightLeft className="h-3 w-3" />
+                                                                    <span>+{transfer.amount} cr from {transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()}</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                }
+                                            </div>
+                                        )}
                                         {/* Selected Courses for this category */}
                                         {(coursePlan[key] || []).length > 0 && (
                                             <div className="mt-2 space-y-1">

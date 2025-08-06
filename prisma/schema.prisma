@@ -436,6 +436,7 @@ model users {
 enum requirement_type {
   ethics_course
   techie_5901
+  credit_transfer
 }
 
 enum user_role {
