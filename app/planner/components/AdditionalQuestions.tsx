@@ -28,12 +28,13 @@ interface AdditionalQuestionsProps {
         course?: Course,
         deductFromCategory?: string
     ) => void;
-    onTechie5901Change: (hasTechie5901: boolean) => void;
+    onTechie5901Change: (hasTechie5901: boolean, anchorCourse?: Course) => void;
     selectedCourses: Course[];
     coursePlan: { [key: string]: Course[] };
     isDemoMode?: boolean;
     currentSelectedEthicsCourse?: Course | null;
     currentEthicsDeductionCategory?: string | null;
+    currentSelectedAnchorCourse?: Course | null;
 }
 
 export default function AdditionalQuestions({
@@ -44,6 +45,7 @@ export default function AdditionalQuestions({
     isDemoMode = false,
     currentSelectedEthicsCourse,
     currentEthicsDeductionCategory,
+    currentSelectedAnchorCourse,
 }: AdditionalQuestionsProps) {
     const [tookEthics, setTookEthics] = useState(false);
     const [tookTechie5901, setTookTechie5901] = useState(false);
@@ -51,6 +53,7 @@ export default function AdditionalQuestions({
     const [deductedCategory, setDeductedCategory] = useState<string | null>(
         null
     );
+    const [selectedAnchorCourse, setSelectedAnchorCourse] = useState("");
 
     // Add loading states
     const [isLoading, setIsLoading] = useState(true);
@@ -72,6 +75,15 @@ export default function AdditionalQuestions({
         }
     }, [currentSelectedEthicsCourse, currentEthicsDeductionCategory]);
 
+    // Sync local state with parent component's anchor course state
+    useEffect(() => {
+        if (currentSelectedAnchorCourse) {
+            setSelectedAnchorCourse(currentSelectedAnchorCourse.code);
+        } else if (currentSelectedAnchorCourse === null) {
+            setSelectedAnchorCourse("");
+        }
+    }, [currentSelectedAnchorCourse]);
+
     // Load saved requirements on component mount
     useEffect(() => {
         const loadSavedRequirements = async () => {
@@ -91,6 +103,7 @@ export default function AdditionalQuestions({
                         setSelectedEthicsCourse(data.selectedEthicsCourse || "");
                         setDeductedCategory(data.deductedCategory || null);
                         setTookTechie5901(data.tookTechie5901 || false);
+                        setSelectedAnchorCourse(data.selectedAnchorCourse || "");
                     } else {
                         // Set demo defaults - INFO 5910 fulfills ethics requirement
                         // Dynamically find which category INFO 5910 is assigned to
@@ -172,29 +185,51 @@ export default function AdditionalQuestions({
                 );
                 if (techieReq) {
                     setTookTechie5901(true);
-                    // Only call onTechie5901Change if we can actually add the credit
-                    const jacobsProgrammaticCore =
-                        coursePlan["JacobsProgrammaticCore"] || [];
-                    const totalCredits = jacobsProgrammaticCore.reduce(
-                        (sum, course) => sum + course.credits,
-                        0
-                    );
-                    if (totalCredits < 17) {
-                        // 17 is the total required credits for JacobsProgrammaticCore
-                        try {
-                            await onTechie5901Change(true);
-                        } catch (error) {
-                            console.warn(
-                                "Error applying Techie 5901 change:",
-                                error
-                            );
-                            // Don't throw, just log the error
+                    
+                    // If there's a selected course ID (anchor course), find and set it
+                    if (techieReq.selected_course_id) {
+                        setSelectedAnchorCourse(techieReq.selected_course_id);
+                        
+                        // Find the anchor course object from selectedCourses
+                        const anchorCourse = selectedCourses.find(
+                            (c) => c.code === techieReq.selected_course_id
+                        );
+                        
+                        if (anchorCourse) {
+                            try {
+                                await onTechie5901Change(true, anchorCourse);
+                            } catch (error) {
+                                console.warn(
+                                    "Error applying Techie 5901 with anchor course:",
+                                    error
+                                );
+                            }
                         }
                     } else {
-                        console.warn(
-                            "Cannot add Techie 5901 credit - Jacobs Programmatic Core is full"
+                        // Legacy case - just the checkbox without anchor course
+                        const jacobsProgrammaticCore =
+                            coursePlan["JacobsProgrammaticCore"] || [];
+                        const totalCredits = jacobsProgrammaticCore.reduce(
+                            (sum, course) => sum + course.credits,
+                            0
                         );
-                        setTookTechie5901(false);
+                        if (totalCredits < 17) {
+                            // 17 is the total required credits for JacobsProgrammaticCore
+                            try {
+                                await onTechie5901Change(true);
+                            } catch (error) {
+                                console.warn(
+                                    "Error applying Techie 5901 change:",
+                                    error
+                                );
+                                // Don't throw, just log the error
+                            }
+                        } else {
+                            console.warn(
+                                "Cannot add Techie 5901 credit - Jacobs Programmatic Core is full"
+                            );
+                            setTookTechie5901(false);
+                        }
                     }
                 }
             } catch (error) {
@@ -216,6 +251,7 @@ export default function AdditionalQuestions({
                 selectedEthicsCourse: tookEthics ? selectedEthicsCourse : "",
                 deductedCategory: tookEthics ? deductedCategory : null,
                 tookTechie5901,
+                selectedAnchorCourse: tookTechie5901 ? selectedAnchorCourse : "",
             };
             localStorage.setItem('additionalQuestionsDemo', JSON.stringify(demoData));
         }
@@ -305,7 +341,7 @@ export default function AdditionalQuestions({
     };
 
     // Save Techie 5901 selection to database
-    const saveTechie5901Requirement = async (hasTechie5901: boolean) => {
+    const saveTechie5901Requirement = async (hasTechie5901: boolean, anchorCourse?: Course) => {
         if (isDemoMode) {
             // Just save to localStorage for demo mode
             setTimeout(() => saveDemoData(), 0);
@@ -330,12 +366,13 @@ export default function AdditionalQuestions({
                 },
                 body: JSON.stringify({
                     requirementType: "techie_5901",
-                    selectedCourseId: hasTechie5901 ? "TECHIE5901" : null,
+                    selectedCourseId: hasTechie5901 ? (anchorCourse?.code || "TECHIE5901") : null,
                     deductedFromCategory: null,
                     creditAmount: 1,
                     addedToCategory: hasTechie5901
                         ? "JacobsProgrammaticCore"
                         : null,
+                    anchorCourseId: anchorCourse?.code || null,
                 }),
             });
 
@@ -347,6 +384,7 @@ export default function AdditionalQuestions({
             console.error("Error saving Techie 5901 requirement:", error);
             // Revert state on error
             setTookTechie5901(false);
+            setSelectedAnchorCourse("");
             onTechie5901Change(false);
             throw error; // Re-throw to handle in the calling function
         }
@@ -426,8 +464,27 @@ export default function AdditionalQuestions({
     const handleTechie5901CheckboxChange = async (checked: boolean) => {
         const newValue = checked as boolean;
         setTookTechie5901(newValue);
-        onTechie5901Change(newValue);
-        await saveTechie5901Requirement(newValue);
+
+        if (!newValue) {
+            // Clear anchor course selection when unchecking
+            setSelectedAnchorCourse("");
+            onTechie5901Change(false);
+            await saveTechie5901Requirement(false);
+        }
+        // Don't call onTechie5901Change(true) immediately - wait for anchor course selection
+    };
+
+    const handleAnchorCourseSelect = async (courseCode: string) => {
+        setSelectedAnchorCourse(courseCode);
+        const anchorCourse = selectedCourses.find(
+            (course) => course.code === courseCode
+        );
+
+        if (anchorCourse) {
+            // Notify parent component with both checkbox state and anchor course
+            onTechie5901Change(true, anchorCourse);
+            await saveTechie5901Requirement(true, anchorCourse);
+        }
     };
 
     if (isLoading) {
@@ -500,18 +557,60 @@ export default function AdditionalQuestions({
             </div>
 
             {/* Techie 5901 Question */}
-            <div className="flex items-center space-x-2">
-                <Checkbox
-                    id="techie5901"
-                    checked={tookTechie5901}
-                    onCheckedChange={handleTechie5901CheckboxChange}
-                />
-                <label
-                    htmlFor="techie5901"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                    Are you taking INFO 5920 with anchor course?
-                </label>
+            <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="techie5901"
+                        checked={tookTechie5901}
+                        onCheckedChange={handleTechie5901CheckboxChange}
+                    />
+                    <label
+                        htmlFor="techie5901"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        Are you taking INFO 5920 with anchor course?
+                    </label>
+                </div>
+                {tookTechie5901 && (
+                    <div className="pl-6 space-y-2">
+                        <label className="text-sm font-medium">
+                            Which course is your anchor course?
+                        </label>
+                        <Select
+                            value={selectedAnchorCourse}
+                            onValueChange={handleAnchorCourseSelect}
+                        >
+                            <SelectTrigger className="w-full bg-white border border-input rounded-md h-10">
+                                <SelectValue
+                                    placeholder="Select anchor course"
+                                    className="text-sm"
+                                />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                {selectedCourses.length > 0 ? (
+                                    selectedCourses.map((course) => (
+                                        <SelectItem
+                                            key={course.id}
+                                            value={course.code}
+                                            className="text-sm py-2.5 pl-3 pr-6 hover:bg-gray-100 cursor-pointer"
+                                        >
+                                            {course.code} -{" "}
+                                            {course.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem
+                                        value=""
+                                        disabled
+                                        className="text-sm py-2.5 pl-3 pr-6 text-gray-500"
+                                    >
+                                        No courses selected
+                                    </SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
             </div>
 
             {/* Ethics Status Info Card */}
@@ -527,6 +626,25 @@ export default function AdditionalQuestions({
                             </div>
                             <div className="text-green-600">
                                 1 credit is automatically deducted from <strong>{deductedCategory.replace(/([A-Z])/g, " $1").trim()}</strong> to avoid double-counting.
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* Anchor Course Status Info Card */}
+            {tookTechie5901 && selectedAnchorCourse && (
+                <Card className="p-4 bg-blue-50 border-blue-200 mt-4">
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium text-blue-800">
+                            ✓ INFO 5920 Anchor Course Selected
+                        </div>
+                        <div className="text-sm text-blue-700">
+                            <div className="mb-1">
+                                <strong>{selectedAnchorCourse}</strong> is your anchor course for INFO 5920.
+                            </div>
+                            <div className="text-blue-600">
+                                This course has been moved to <strong>Jacobs Programmatic Core</strong> and will count as your anchor course for the specialization project.
                             </div>
                         </div>
                     </div>

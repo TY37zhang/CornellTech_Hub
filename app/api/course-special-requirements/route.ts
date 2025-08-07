@@ -17,6 +17,7 @@ export async function POST(req: Request) {
             deductedFromCategory,
             creditAmount,
             addedToCategory,
+            anchorCourseId,
         } = body;
 
         // Validate required fields
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
                     data: {
                         user_id: session.user.id,
                         requirement_type: requirementType,
-                        selected_course_id: selectedCourseId,
+                        selected_course_id: requirementType === "techie_5901" && anchorCourseId ? anchorCourseId : selectedCourseId,
                         deducted_from_category: deductedFromCategory,
                         credit_amount: creditAmount ?? undefined,
                         added_to_category: addedToCategory,

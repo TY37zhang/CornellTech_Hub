@@ -596,6 +596,9 @@ export default function PlannerPage() {
     const [selectedEthicsCourse, setSelectedEthicsCourse] = useState<Course | null>(null);
     const [ethicsDeductionCategory, setEthicsDeductionCategory] = useState<string | null>(null);
     
+    // Anchor course tracking state for INFO 5920
+    const [selectedAnchorCourse, setSelectedAnchorCourse] = useState<Course | null>(null);
+    
     // Special requirements state
     const [specialRequirements, setSpecialRequirements] = useState<any[]>([]);
     
@@ -1396,12 +1399,50 @@ export default function PlannerPage() {
         }
     };
 
-    const handleTechie5901Change = async (hasTechie5901: boolean) => {
+    const handleTechie5901Change = async (hasTechie5901: boolean, anchorCourse?: Course) => {
         // Simplified for demo mode - just save to localStorage
         if (isDemoMode) {
             setTimeout(() => saveDemoData(), 0);
         }
-        console.log("Techie 5901 change:", hasTechie5901);
+        
+        if (hasTechie5901 && anchorCourse) {
+            // Update selected anchor course state
+            setSelectedAnchorCourse(anchorCourse);
+            
+            // Move the anchor course to JacobsProgrammaticCore
+            const currentCategory = findCourseInPlan(anchorCourse.id);
+            if (currentCategory && currentCategory !== "JacobsProgrammaticCore") {
+                // Remove from current category
+                setCoursePlan(prev => ({
+                    ...prev,
+                    [currentCategory]: prev[currentCategory]?.filter(c => c.id !== anchorCourse.id) || [],
+                    JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), anchorCourse]
+                }));
+                console.log(`Moved ${anchorCourse.code} from ${currentCategory} to JacobsProgrammaticCore as anchor course`);
+            } else if (!currentCategory) {
+                // Add directly to JacobsProgrammaticCore if not in any category
+                setCoursePlan(prev => ({
+                    ...prev,
+                    JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), anchorCourse]
+                }));
+                console.log(`Added ${anchorCourse.code} to JacobsProgrammaticCore as anchor course`);
+            }
+        } else if (!hasTechie5901) {
+            // Clear selected anchor course when unchecking
+            setSelectedAnchorCourse(null);
+        }
+        
+        console.log("Techie 5901 change:", hasTechie5901, anchorCourse ? `with anchor course ${anchorCourse.code}` : "");
+    };
+
+    // Helper function to find which requirement category a course is in
+    const findCourseInPlan = (courseId: string): string | null => {
+        for (const [category, courses] of Object.entries(coursePlan)) {
+            if (courses.some(course => course.id === courseId)) {
+                return category;
+            }
+        }
+        return null;
     };
 
     // Helper function to check if a course fulfills ethics requirement
@@ -2049,31 +2090,41 @@ export default function PlannerPage() {
                                                             className={`flex justify-between items-start text-sm p-2 rounded-lg ${
                                                                 selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                     ? "bg-blue-50 border border-blue-300" 
-                                                                    : "bg-gray-100"
+                                                                    : selectedAnchorCourse && selectedAnchorCourse.id === course.id
+                                                                        ? "bg-purple-50 border border-purple-300"
+                                                                        : "bg-gray-100"
                                                             }`}
                                                         >
                                                             <div className="flex-1 min-w-0">
                                                                 <div className={`font-normal text-sm ${
                                                                     selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                         ? "text-blue-800" 
-                                                                        : "text-black"
+                                                                        : selectedAnchorCourse && selectedAnchorCourse.id === course.id
+                                                                            ? "text-purple-800"
+                                                                            : "text-black"
                                                                 }`}>
                                                                     {course.code}
                                                                     {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (Ethics)"}
+                                                                    {selectedAnchorCourse && selectedAnchorCourse.id === course.id && " (Anchor Course)"}
                                                                 </div>
                                                                 <div className={`text-xs ${
                                                                     selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                         ? "text-blue-600" 
-                                                                        : "text-gray-600"
+                                                                        : selectedAnchorCourse && selectedAnchorCourse.id === course.id
+                                                                            ? "text-purple-600"
+                                                                            : "text-gray-600"
                                                                 }`}>
                                                                     {course.name}
                                                                     {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " - fulfills ethics requirement"}
+                                                                    {selectedAnchorCourse && selectedAnchorCourse.id === course.id && " - anchor course for INFO 5920"}
                                                                 </div>
                                                             </div>
                                                             <div className={`ml-2 font-normal text-sm ${
                                                                 selectedEthicsCourse && selectedEthicsCourse.id === course.id
                                                                     ? "text-blue-800" 
-                                                                    : "text-black"
+                                                                    : selectedAnchorCourse && selectedAnchorCourse.id === course.id
+                                                                        ? "text-purple-800"
+                                                                        : "text-black"
                                                             }`}>
                                                                 {course.credits} cr
                                                                 {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (-1)"}
@@ -2165,6 +2216,7 @@ export default function PlannerPage() {
                                     isDemoMode={isDemoMode}
                                     currentSelectedEthicsCourse={selectedEthicsCourse}
                                     currentEthicsDeductionCategory={ethicsDeductionCategory}
+                                    currentSelectedAnchorCourse={selectedAnchorCourse}
                                 />
                             </div>
                         </Card>
