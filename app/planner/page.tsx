@@ -2006,19 +2006,10 @@ export default function PlannerPage() {
                             const expanded =
                                 expandedRequirements[key] ?? !isMobile;
 
-                            // Check if this requirement is involved in any credit transfers
-                            const hasTransferOut = creditTransfers.some(t => t.fromCategory === key);
-                            const hasTransferIn = creditTransfers.some(t => t.toCategory === key);
-                            const isTransferHighlighted = hasTransferOut || hasTransferIn;
-                            
                             return (
                                 <Card
                                     key={key}
-                                    className={`p-0 hover:shadow-md transition-shadow group ${
-                                        isTransferHighlighted 
-                                            ? "ring-2 ring-purple-200 bg-purple-50/50" 
-                                            : ""
-                                    }`}
+                                    className="p-0 hover:shadow-md transition-shadow group"
                                 >
                                     {/* Header as button on mobile, static on desktop */}
                                     <div
@@ -2116,7 +2107,7 @@ export default function PlannerPage() {
                                         </p>
                                         
                                         {/* Credit Transfer Information */}
-                                        {isTransferHighlighted && (
+                                        {creditTransfers.some(t => t.fromCategory === key || t.toCategory === key) && (
                                             <div className="mt-3 space-y-1">
                                                 {creditTransfers
                                                     .filter(t => t.fromCategory === key || t.toCategory === key)
