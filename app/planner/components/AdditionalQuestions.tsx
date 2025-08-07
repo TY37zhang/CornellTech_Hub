@@ -57,14 +57,18 @@ export default function AdditionalQuestions({
 
     // Sync local state with parent component's ethics course state
     useEffect(() => {
-        if (currentSelectedEthicsCourse) {
+        if (currentSelectedEthicsCourse && currentEthicsDeductionCategory) {
             setTookEthics(true);
             setSelectedEthicsCourse(currentSelectedEthicsCourse.code);
             setDeductedCategory(currentEthicsDeductionCategory);
         } else {
-            setTookEthics(false);
-            setSelectedEthicsCourse("");
-            setDeductedCategory(null);
+            // Only clear state if parent has explicitly cleared it
+            // This prevents clearing during initial load
+            if (currentSelectedEthicsCourse === null && currentEthicsDeductionCategory === null) {
+                setTookEthics(false);
+                setSelectedEthicsCourse("");
+                setDeductedCategory(null);
+            }
         }
     }, [currentSelectedEthicsCourse, currentEthicsDeductionCategory]);
 
@@ -209,8 +213,8 @@ export default function AdditionalQuestions({
         if (isDemoMode) {
             const demoData = {
                 tookEthics,
-                selectedEthicsCourse,
-                deductedCategory,
+                selectedEthicsCourse: tookEthics ? selectedEthicsCourse : "",
+                deductedCategory: tookEthics ? deductedCategory : null,
                 tookTechie5901,
             };
             localStorage.setItem('additionalQuestionsDemo', JSON.stringify(demoData));
@@ -230,40 +234,44 @@ export default function AdditionalQuestions({
         }
         
         try {
-            // Validate inputs
+            // Validate inputs only when ethics course is being set
             if (hasEthicsCourse && (!course || !deductFromCategory)) {
                 throw new Error(
                     "Course and deduction category are required when ethics course is selected"
                 );
             }
 
-            // Validate course exists in selected courses
-            if (course && !selectedCourses.some((c) => c.id === course.id)) {
+            // Validate course exists in selected courses (only when setting ethics course)
+            if (hasEthicsCourse && course && !selectedCourses.some((c) => c.id === course.id)) {
                 throw new Error(
                     "Selected course must be in the list of selected courses"
                 );
             }
 
-            // Validate category exists in course plan
+            // Validate category exists in course plan (only when setting ethics course)
             if (
+                hasEthicsCourse &&
                 deductFromCategory &&
                 !Object.keys(coursePlan).includes(deductFromCategory)
             ) {
                 throw new Error("Deduction category must exist in course plan");
             }
 
+            // Prepare the request body based on whether we're setting or clearing the ethics course
+            const requestBody = {
+                requirementType: "ethics_course",
+                selectedCourseId: hasEthicsCourse ? course?.code : null,
+                deductedFromCategory: hasEthicsCourse ? deductFromCategory : null,
+                creditAmount: hasEthicsCourse ? (course?.credits || -1) : null,
+                addedToCategory: hasEthicsCourse ? "JacobsTechnicalCore" : null, // Always add 1 credit to JacobsTechnicalCore when setting
+            };
+
             const response = await fetch("/api/course-special-requirements", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    requirementType: "ethics_course",
-                    selectedCourseId: course?.code,
-                    deductedFromCategory: deductFromCategory,
-                    creditAmount: course?.credits || -1,
-                    addedToCategory: "JacobsTechnicalCore", // Always add 1 credit to JacobsTechnicalCore
-                }),
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
@@ -272,17 +280,25 @@ export default function AdditionalQuestions({
             }
         } catch (error) {
             console.error("Error saving ethics requirement:", error);
-            // Revert state on error
-            setTookEthics(false);
-            setSelectedEthicsCourse("");
-            setDeductedCategory(null);
-            try {
-                await onEthicsCourseChange(false);
-            } catch (innerError) {
-                console.error(
-                    "Error reverting ethics course change:",
-                    innerError
-                );
+            
+            // Revert state on error based on the original intent
+            if (hasEthicsCourse) {
+                // If we were trying to set ethics course, revert to cleared state
+                setTookEthics(false);
+                setSelectedEthicsCourse("");
+                setDeductedCategory(null);
+                try {
+                    await onEthicsCourseChange(false);
+                } catch (innerError) {
+                    console.error(
+                        "Error reverting ethics course change:",
+                        innerError
+                    );
+                }
+            } else {
+                // If we were trying to clear ethics course, revert to previous state
+                // Note: This is tricky since we don't have previous state here
+                // The calling component should handle the revert in this case
             }
             throw error;
         }
@@ -351,10 +367,23 @@ export default function AdditionalQuestions({
         setTookEthics(newValue);
 
         if (!newValue) {
+            // Clear all ethics-related state
             setSelectedEthicsCourse("");
             setDeductedCategory(null);
+            
+            // Notify parent component to clear its state
             onEthicsCourseChange(false);
-            await saveEthicsRequirement(false);
+            
+            try {
+                // Save the cleared state to database/localStorage
+                await saveEthicsRequirement(false);
+            } catch (error) {
+                console.error("Error clearing ethics requirement:", error);
+                // Revert UI state on error
+                setTookEthics(true);
+                // Re-throw to let calling component handle it
+                throw error;
+            }
         }
     };
 

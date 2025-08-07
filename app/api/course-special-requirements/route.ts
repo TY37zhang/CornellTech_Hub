@@ -43,11 +43,13 @@ export async function POST(req: Request) {
                 },
             });
 
-            // Insert a new row only if any of these fields are provided
-            if (selectedCourseId || deductedFromCategory || addedToCategory) {
+            // Insert a new row only if we're actually setting a requirement (not clearing it)
+            // For clearing, we just delete (above) and don't create a new record
+            if (selectedCourseId && (deductedFromCategory || addedToCategory)) {
                 // Validate credit amount when provided and non-zero
                 if (
                     creditAmount !== undefined &&
+                    creditAmount !== null &&
                     (typeof creditAmount !== "number" || creditAmount === 0)
                 ) {
                     throw new Error("Invalid credit amount");

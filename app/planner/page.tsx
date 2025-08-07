@@ -1374,20 +1374,24 @@ export default function PlannerPage() {
             setEthicsDeductionCategory(deductFromCategory);
             console.log("Ethics course set:", course.code, "deducting from:", deductFromCategory);
         } else {
+            // Clear the ethics course state
             setSelectedEthicsCourse(null);
             setEthicsDeductionCategory(null);
             console.log("Ethics course cleared");
         }
         
-        // Simplified for demo mode - just save to localStorage
+        // Handle demo mode vs production mode differently
         if (isDemoMode) {
+            // In demo mode, save to localStorage immediately
             setTimeout(() => saveDemoData(), 0);
         } else {
-            // Reload special requirements to reflect the change in the database
+            // In production mode, reload special requirements to reflect the database change
+            // This ensures we get the updated state from the server
             try {
                 await loadSpecialRequirements();
             } catch (error) {
                 console.error("Error reloading special requirements after ethics course change:", error);
+                // Don't throw here - the UI should still reflect the change even if reload fails
             }
         }
     };
