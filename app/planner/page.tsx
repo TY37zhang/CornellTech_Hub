@@ -24,13 +24,15 @@ import { useSession, signIn } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
-    sampleCourses, 
-    sampleSelectedCourses, 
-    sampleCoursePlan, 
-    sampleUserProgram
+import {
+    sampleCourses,
+    sampleSelectedCourses,
+    sampleCoursePlan,
+    sampleUserProgram,
 } from "@/lib/sampleData";
 import CreditTransferModal from "./components/CreditTransferModal";
+import CreditTransferList from "./components/CreditTransferList";
+import EditCreditTransferModal from "./components/EditCreditTransferModal";
 
 /**
  * How to Use the Planner:
@@ -540,24 +542,32 @@ const programRequirements: ProgramRequirements = {
 
 const CourseSelector = dynamic(() => import("./components/CourseSelector"), {
     ssr: false,
-    loading: () => <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+    loading: () => (
+        <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+    ),
 });
 
 const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
     ssr: true,
-    loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+    loading: () => (
+        <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+    ),
 });
 
 const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
     ssr: true,
-    loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+    loading: () => (
+        <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+    ),
 });
 
 const AdditionalQuestions = dynamic(
     () => import("./components/AdditionalQuestions"),
     {
         ssr: true,
-        loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+        loading: () => (
+            <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+        ),
     }
 );
 
@@ -587,23 +597,32 @@ export default function PlannerPage() {
         useState(true);
     const [expandedAdditionalRequirements, setExpandedAdditionalRequirements] =
         useState(true);
-    
+
     // Demo mode state
     const [isDemoMode, setIsDemoMode] = useState(false);
     const [showDemoBanner, setShowDemoBanner] = useState(true);
-    
+
     // Ethics course tracking state
-    const [selectedEthicsCourse, setSelectedEthicsCourse] = useState<Course | null>(null);
-    const [ethicsDeductionCategory, setEthicsDeductionCategory] = useState<string | null>(null);
-    
+    const [selectedEthicsCourse, setSelectedEthicsCourse] =
+        useState<Course | null>(null);
+    const [ethicsDeductionCategory, setEthicsDeductionCategory] = useState<
+        string | null
+    >(null);
+
     // Anchor course tracking state for INFO 5920
-    const [selectedAnchorCourse, setSelectedAnchorCourse] = useState<Course | null>(null);
-    
+    const [selectedAnchorCourse, setSelectedAnchorCourse] =
+        useState<Course | null>(null);
+
     // Special requirements state
     const [specialRequirements, setSpecialRequirements] = useState<any[]>([]);
-    
+
     // Credit transfer state
-    const [creditTransfers, setCreditTransfers] = useState<CreditTransfer[]>([]);
+    const [creditTransfers, setCreditTransfers] = useState<CreditTransfer[]>(
+        []
+    );
+    const [editingTransfer, setEditingTransfer] =
+        useState<CreditTransfer | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // Helper: toggle expanded state for a requirement card
     const toggleRequirement = (key: string) => {
@@ -719,19 +738,19 @@ export default function PlannerPage() {
             try {
                 setIsLoading(true);
 
-                if (status === 'loading') {
+                if (status === "loading") {
                     // Don't initialize while session is still loading
                     return;
                 }
 
-                if (status === 'authenticated' && session?.user?.program) {
+                if (status === "authenticated" && session?.user?.program) {
                     setUserProgram(session.user.program);
                     setIsDemoMode(false);
                     await Promise.all([
                         loadSavedCoursePlans(),
-                        loadCreditTransfers()
+                        loadCreditTransfers(),
                     ]);
-                } else if (status === 'authenticated' && session) {
+                } else if (status === "authenticated" && session) {
                     setIsDemoMode(false);
                     // Parallel fetch user program and prepare for course plans
                     const [userProgram] = await Promise.all([
@@ -742,10 +761,10 @@ export default function PlannerPage() {
                         setUserProgram(userProgram);
                         await Promise.all([
                             loadSavedCoursePlans(),
-                            loadCreditTransfers()
+                            loadCreditTransfers(),
                         ]);
                     }
-                } else if (status === 'unauthenticated') {
+                } else if (status === "unauthenticated") {
                     // No session - initialize demo mode
                     initializeDemoMode();
                 }
@@ -758,7 +777,7 @@ export default function PlannerPage() {
                 });
             } finally {
                 // Only stop loading if we're not in the 'loading' status
-                if (status !== 'loading') {
+                if (status !== "loading") {
                     setIsLoading(false);
                 }
             }
@@ -770,33 +789,49 @@ export default function PlannerPage() {
             setUserProgram(sampleUserProgram);
             setSelectedCourses([...sampleSelectedCourses]);
             setCoursePlan(JSON.parse(JSON.stringify(sampleCoursePlan))); // Deep copy
-            
+
             // Check if we should force refresh demo data (can be controlled via URL param or localStorage flag)
             const urlParams = new URLSearchParams(window.location.search);
-            const forceRefresh = urlParams.get('refresh') === 'true' || localStorage.getItem('forceRefreshDemo') === 'true';
-            
+            const forceRefresh =
+                urlParams.get("refresh") === "true" ||
+                localStorage.getItem("forceRefreshDemo") === "true";
+
             if (forceRefresh) {
                 // Clear all demo-related localStorage and use fresh sample data
-                localStorage.removeItem('plannerDemoData');
-                localStorage.removeItem('demoScheduleData');
-                localStorage.removeItem('additionalQuestionsDemo');
-                localStorage.removeItem('showTakenCoursesDemo');
-                localStorage.removeItem('forceRefreshDemo');
-                console.log('Demo data refreshed with latest sample data');
+                localStorage.removeItem("plannerDemoData");
+                localStorage.removeItem("demoScheduleData");
+                localStorage.removeItem("additionalQuestionsDemo");
+                localStorage.removeItem("showTakenCoursesDemo");
+                localStorage.removeItem("forceRefreshDemo");
+                console.log("Demo data refreshed with latest sample data");
             } else {
                 // Load from localStorage if available (preserving user changes)
-                const savedDemoData = localStorage.getItem('plannerDemoData');
+                const savedDemoData = localStorage.getItem("plannerDemoData");
                 if (savedDemoData) {
                     try {
                         const demoData = JSON.parse(savedDemoData);
-                        setSelectedCourses(demoData.selectedCourses || [...sampleSelectedCourses]);
-                        setCoursePlan(demoData.coursePlan || JSON.parse(JSON.stringify(sampleCoursePlan)));
-                        setUserProgram(demoData.userProgram || sampleUserProgram);
+                        setSelectedCourses(
+                            demoData.selectedCourses || [
+                                ...sampleSelectedCourses,
+                            ]
+                        );
+                        setCoursePlan(
+                            demoData.coursePlan ||
+                                JSON.parse(JSON.stringify(sampleCoursePlan))
+                        );
+                        setUserProgram(
+                            demoData.userProgram || sampleUserProgram
+                        );
                     } catch (error) {
-                        console.warn('Failed to load demo data from localStorage:', error);
+                        console.warn(
+                            "Failed to load demo data from localStorage:",
+                            error
+                        );
                         // Fall back to fresh sample data
                         setSelectedCourses([...sampleSelectedCourses]);
-                        setCoursePlan(JSON.parse(JSON.stringify(sampleCoursePlan)));
+                        setCoursePlan(
+                            JSON.parse(JSON.stringify(sampleCoursePlan))
+                        );
                         setUserProgram(sampleUserProgram);
                     }
                 }
@@ -804,7 +839,7 @@ export default function PlannerPage() {
         };
 
         // Initialize when we have a definitive authentication status
-        if (status !== 'loading' && !userProgram) {
+        if (status !== "loading" && !userProgram) {
             initializePage();
         }
     }, [session, status]);
@@ -841,7 +876,7 @@ export default function PlannerPage() {
             // Single pass through data for better performance
             for (const plan of data) {
                 const courseId = plan.course.id;
-                
+
                 // Handle unique courses map
                 const existing = uniqueCoursesMap.get(courseId);
                 if (!existing || plan.course.taken) {
@@ -864,7 +899,7 @@ export default function PlannerPage() {
             // Store the plan IDs in state
             setCoursePlanIds(coursePlanIds);
             setCoursePlan(newCoursePlan);
-            
+
             // Load special requirements with the loaded courses and course plan
             await loadSpecialRequirements(loadedCourses, newCoursePlan);
         } catch (error) {
@@ -881,14 +916,19 @@ export default function PlannerPage() {
         }
     };
 
-    const loadSpecialRequirements = async (coursesForLookup?: Course[], coursePlanForLookup?: { [key: string]: Course[] }) => {
+    const loadSpecialRequirements = async (
+        coursesForLookup?: Course[],
+        coursePlanForLookup?: { [key: string]: Course[] }
+    ) => {
         try {
             const response = await fetch("/api/course-special-requirements");
 
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error("Error loading special requirements:", errorText);
-                throw new Error(`Failed to load special requirements: ${errorText}`);
+                throw new Error(
+                    `Failed to load special requirements: ${errorText}`
+                );
             }
 
             const requirements = await response.json();
@@ -906,7 +946,9 @@ export default function PlannerPage() {
                 );
                 if (course) {
                     setSelectedEthicsCourse(course);
-                    setEthicsDeductionCategory(ethicsReq.deducted_from_category);
+                    setEthicsDeductionCategory(
+                        ethicsReq.deducted_from_category
+                    );
                 }
             }
 
@@ -922,13 +964,23 @@ export default function PlannerPage() {
                 );
                 if (course) {
                     setSelectedAnchorCourse(course);
-                    console.log("Anchor course loaded from database:", course.code);
-                    
+                    console.log(
+                        "Anchor course loaded from database:",
+                        course.code
+                    );
+
                     // Move the anchor course to JacobsProgrammaticCore if it's not already there
                     // Helper function to find course in the provided course plan (not state)
-                    const findCourseInProvidedPlan = (courseId: string, planToSearch: { [key: string]: Course[] }) => {
-                        for (const [category, courses] of Object.entries(planToSearch)) {
-                            if (courses.some(course => course.id === courseId)) {
+                    const findCourseInProvidedPlan = (
+                        courseId: string,
+                        planToSearch: { [key: string]: Course[] }
+                    ) => {
+                        for (const [category, courses] of Object.entries(
+                            planToSearch
+                        )) {
+                            if (
+                                courses.some((course) => course.id === courseId)
+                            ) {
                                 return category;
                             }
                         }
@@ -936,25 +988,46 @@ export default function PlannerPage() {
                     };
 
                     const planToUse = coursePlanForLookup || coursePlan;
-                    const currentCategory = findCourseInProvidedPlan(course.id, planToUse);
-                    
-                    if (currentCategory && currentCategory !== "JacobsProgrammaticCore") {
+                    const currentCategory = findCourseInProvidedPlan(
+                        course.id,
+                        planToUse
+                    );
+
+                    if (
+                        currentCategory &&
+                        currentCategory !== "JacobsProgrammaticCore"
+                    ) {
                         // Remove from current category and add to JacobsProgrammaticCore
-                        setCoursePlan(prev => ({
+                        setCoursePlan((prev) => ({
                             ...prev,
-                            [currentCategory]: prev[currentCategory]?.filter(c => c.id !== course.id) || [],
-                            JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), course]
+                            [currentCategory]:
+                                prev[currentCategory]?.filter(
+                                    (c) => c.id !== course.id
+                                ) || [],
+                            JacobsProgrammaticCore: [
+                                ...(prev.JacobsProgrammaticCore || []),
+                                course,
+                            ],
                         }));
-                        console.log(`Moved anchor course ${course.code} from ${currentCategory} to JacobsProgrammaticCore during load`);
+                        console.log(
+                            `Moved anchor course ${course.code} from ${currentCategory} to JacobsProgrammaticCore during load`
+                        );
                     } else if (!currentCategory) {
                         // Add directly to JacobsProgrammaticCore if not in any category
-                        setCoursePlan(prev => ({
+                        setCoursePlan((prev) => ({
                             ...prev,
-                            JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), course]
+                            JacobsProgrammaticCore: [
+                                ...(prev.JacobsProgrammaticCore || []),
+                                course,
+                            ],
                         }));
-                        console.log(`Added anchor course ${course.code} to JacobsProgrammaticCore during load`);
+                        console.log(
+                            `Added anchor course ${course.code} to JacobsProgrammaticCore during load`
+                        );
                     } else {
-                        console.log(`Anchor course ${course.code} is already in JacobsProgrammaticCore`);
+                        console.log(
+                            `Anchor course ${course.code} is already in JacobsProgrammaticCore`
+                        );
                     }
                 }
             }
@@ -997,18 +1070,23 @@ export default function PlannerPage() {
                 coursePlan,
                 userProgram,
             };
-            localStorage.setItem('plannerDemoData', JSON.stringify(demoData));
+            localStorage.setItem("plannerDemoData", JSON.stringify(demoData));
         }
     };
 
     // Demo mode handler for requirement assignment
-    const handleAddToRequirementDemo = (course: Course, requirementKey: string | null) => {
+    const handleAddToRequirementDemo = (
+        course: Course,
+        requirementKey: string | null
+    ) => {
         if (!requirementKey) {
             // Remove from all requirements
             setCoursePlan((prevPlan: { [key: string]: Course[] }) => {
                 const newPlan = { ...prevPlan };
                 for (const key in newPlan) {
-                    newPlan[key] = newPlan[key].filter((c) => c.id !== course.id);
+                    newPlan[key] = newPlan[key].filter(
+                        (c) => c.id !== course.id
+                    );
                 }
                 setTimeout(() => saveDemoData(), 0);
                 return newPlan;
@@ -1021,7 +1099,9 @@ export default function PlannerPage() {
             const newPlan = { ...prevPlan };
             for (const key in newPlan) {
                 if (key !== requirementKey) {
-                    newPlan[key] = newPlan[key].filter((c) => c.id !== course.id);
+                    newPlan[key] = newPlan[key].filter(
+                        (c) => c.id !== course.id
+                    );
                 }
             }
             return newPlan;
@@ -1039,7 +1119,6 @@ export default function PlannerPage() {
         });
     };
 
-
     const calculateTotalCredits = () => {
         if (!userProgram) return 0;
 
@@ -1049,7 +1128,7 @@ export default function PlannerPage() {
         let totalTransferDeductions = 0;
         let totalTransferAdditions = 0;
 
-        Object.keys(coursePlan).forEach(categoryKey => {
+        Object.keys(coursePlan).forEach((categoryKey) => {
             const creditInfo = calculateCategoryCredits(categoryKey);
             totalCredits += creditInfo.totalCredits;
             totalEthicsDeductions += creditInfo.ethicsDeduction;
@@ -1058,7 +1137,13 @@ export default function PlannerPage() {
             totalTransferAdditions += creditInfo.transferAdditions;
         });
 
-        return totalCredits - totalEthicsDeductions + totalEthicsAdditions - totalTransferDeductions + totalTransferAdditions;
+        return (
+            totalCredits -
+            totalEthicsDeductions +
+            totalEthicsAdditions -
+            totalTransferDeductions +
+            totalTransferAdditions
+        );
     };
 
     const calculateRequirementProgress = (requirementKey: string) => {
@@ -1100,21 +1185,109 @@ export default function PlannerPage() {
             }
 
             setCreditTransfers((prev) => [...prev, transfer]);
-            
+
             toast({
                 title: "Success",
-                description: `Transferred ${transfer.amount} credit${transfer.amount > 1 ? 's' : ''} from ${transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
+                description: `Transferred ${transfer.amount} credit${transfer.amount > 1 ? "s" : ""} from ${transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
                 variant: "default",
             });
         } catch (error) {
             toast({
                 title: "Error",
-                description: "Failed to create credit transfer. Please try again.",
+                description:
+                    "Failed to create credit transfer. Please try again.",
                 variant: "destructive",
             });
         }
     };
 
+    const handleEditTransfer = (transfer: CreditTransfer) => {
+        setEditingTransfer(transfer);
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateTransfer = async (updatedTransfer: CreditTransfer) => {
+        try {
+            if (!isDemoMode) {
+                const response = await fetch(
+                    `/api/credit-transfers/${updatedTransfer.id}`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            fromCategory: updatedTransfer.fromCategory,
+                            toCategory: updatedTransfer.toCategory,
+                            creditAmount: updatedTransfer.amount,
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to update credit transfer");
+                }
+            }
+
+            setCreditTransfers((prev) =>
+                prev.map((transfer) =>
+                    transfer.id === updatedTransfer.id
+                        ? updatedTransfer
+                        : transfer
+                )
+            );
+
+            toast({
+                title: "Success",
+                description: `Updated credit transfer: ${updatedTransfer.amount} credit${updatedTransfer.amount > 1 ? "s" : ""} from ${updatedTransfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${updatedTransfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
+                variant: "default",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description:
+                    "Failed to update credit transfer. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleDeleteTransfer = async (transferId: string) => {
+        try {
+            if (!isDemoMode) {
+                const response = await fetch(
+                    `/api/credit-transfers/${transferId}`,
+                    {
+                        method: "DELETE",
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to delete credit transfer");
+                }
+            }
+
+            setCreditTransfers((prev) =>
+                prev.filter((transfer) => transfer.id !== transferId)
+            );
+
+            toast({
+                title: "Success",
+                description: "Credit transfer deleted successfully.",
+                variant: "default",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description:
+                    "Failed to delete credit transfer. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setEditingTransfer(null);
+    };
 
     const handleAddToRequirement = async (
         course: Course,
@@ -1424,14 +1597,19 @@ export default function PlannerPage() {
         if (hasEthicsCourse && course && deductFromCategory) {
             setSelectedEthicsCourse(course);
             setEthicsDeductionCategory(deductFromCategory);
-            console.log("Ethics course set:", course.code, "deducting from:", deductFromCategory);
+            console.log(
+                "Ethics course set:",
+                course.code,
+                "deducting from:",
+                deductFromCategory
+            );
         } else {
             // Clear the ethics course state
             setSelectedEthicsCourse(null);
             setEthicsDeductionCategory(null);
             console.log("Ethics course cleared");
         }
-        
+
         // Handle demo mode vs production mode differently
         if (isDemoMode) {
             // In demo mode, save to localStorage immediately
@@ -1442,39 +1620,61 @@ export default function PlannerPage() {
             try {
                 await loadSpecialRequirements();
             } catch (error) {
-                console.error("Error reloading special requirements after ethics course change:", error);
+                console.error(
+                    "Error reloading special requirements after ethics course change:",
+                    error
+                );
                 // Don't throw here - the UI should still reflect the change even if reload fails
             }
         }
     };
 
-    const handleTechie5901Change = async (hasTechie5901: boolean, anchorCourse?: Course) => {
+    const handleTechie5901Change = async (
+        hasTechie5901: boolean,
+        anchorCourse?: Course
+    ) => {
         // Simplified for demo mode - just save to localStorage
         if (isDemoMode) {
             setTimeout(() => saveDemoData(), 0);
         }
-        
+
         if (hasTechie5901 && anchorCourse) {
             // Update selected anchor course state
             setSelectedAnchorCourse(anchorCourse);
-            
+
             // Move the anchor course to JacobsProgrammaticCore
             const currentCategory = findCourseInPlan(anchorCourse.id);
-            if (currentCategory && currentCategory !== "JacobsProgrammaticCore") {
+            if (
+                currentCategory &&
+                currentCategory !== "JacobsProgrammaticCore"
+            ) {
                 // Remove from current category
-                setCoursePlan(prev => ({
+                setCoursePlan((prev) => ({
                     ...prev,
-                    [currentCategory]: prev[currentCategory]?.filter(c => c.id !== anchorCourse.id) || [],
-                    JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), anchorCourse]
+                    [currentCategory]:
+                        prev[currentCategory]?.filter(
+                            (c) => c.id !== anchorCourse.id
+                        ) || [],
+                    JacobsProgrammaticCore: [
+                        ...(prev.JacobsProgrammaticCore || []),
+                        anchorCourse,
+                    ],
                 }));
-                console.log(`Moved ${anchorCourse.code} from ${currentCategory} to JacobsProgrammaticCore as anchor course`);
+                console.log(
+                    `Moved ${anchorCourse.code} from ${currentCategory} to JacobsProgrammaticCore as anchor course`
+                );
             } else if (!currentCategory) {
                 // Add directly to JacobsProgrammaticCore if not in any category
-                setCoursePlan(prev => ({
+                setCoursePlan((prev) => ({
                     ...prev,
-                    JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), anchorCourse]
+                    JacobsProgrammaticCore: [
+                        ...(prev.JacobsProgrammaticCore || []),
+                        anchorCourse,
+                    ],
                 }));
-                console.log(`Added ${anchorCourse.code} to JacobsProgrammaticCore as anchor course`);
+                console.log(
+                    `Added ${anchorCourse.code} to JacobsProgrammaticCore as anchor course`
+                );
             }
         } else if (!hasTechie5901) {
             // Clear selected anchor course when unchecking
@@ -1488,18 +1688,25 @@ export default function PlannerPage() {
             try {
                 await loadSpecialRequirements();
             } catch (error) {
-                console.error("Error reloading special requirements after anchor course change:", error);
+                console.error(
+                    "Error reloading special requirements after anchor course change:",
+                    error
+                );
                 // Don't throw here - the UI should still reflect the change even if reload fails
             }
         }
-        
-        console.log("Techie 5901 change:", hasTechie5901, anchorCourse ? `with anchor course ${anchorCourse.code}` : "");
+
+        console.log(
+            "Techie 5901 change:",
+            hasTechie5901,
+            anchorCourse ? `with anchor course ${anchorCourse.code}` : ""
+        );
     };
 
     // Helper function to find which requirement category a course is in
     const findCourseInPlan = (courseId: string): string | null => {
         for (const [category, courses] of Object.entries(coursePlan)) {
-            if (courses.some(course => course.id === courseId)) {
+            if (courses.some((course) => course.id === courseId)) {
                 return category;
             }
         }
@@ -1522,37 +1729,51 @@ export default function PlannerPage() {
     const getEthicsFulfillmentInfo = () => {
         // Check Additional Questions state for selected ethics course
         // For demo mode, we'll assume INFO 5910 is the ethics course if it's assigned
-        const ethicsCourse = Object.values(coursePlan).flat().find(course => 
-            isEthicsCourse(course.code)
-        );
+        const ethicsCourse = Object.values(coursePlan)
+            .flat()
+            .find((course) => isEthicsCourse(course.code));
         return ethicsCourse;
     };
 
     // Helper function to calculate credits for a category including ethics deduction and addition
     const calculateCategoryCredits = (categoryKey: string) => {
         const courses = coursePlan[categoryKey] || [];
-        const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
-        
+        const totalCredits = courses.reduce(
+            (sum, course) => sum + course.credits,
+            0
+        );
+
         // Check if this category should have ethics deduction based on user selection
-        const shouldDeductEthicsCredit = selectedEthicsCourse && 
+        const shouldDeductEthicsCredit =
+            selectedEthicsCourse &&
             ethicsDeductionCategory === categoryKey &&
-            courses.some(course => course.id === selectedEthicsCourse.id);
-        
+            courses.some((course) => course.id === selectedEthicsCourse.id);
+
         // Programs that have ethics requirements typically include MS IS programs
         const programsWithEthicsRequirements = [
-            "ms-is-cm", "ms-is-ht", "ms-is-ut"  // MS Information Systems programs
+            "ms-is-cm",
+            "ms-is-ht",
+            "ms-is-ut", // MS Information Systems programs
         ];
-        const ethicsDeduction = shouldDeductEthicsCredit && 
-            userProgram && 
-            programsWithEthicsRequirements.includes(userProgram) ? 1 : 0;
-        
+        const ethicsDeduction =
+            shouldDeductEthicsCredit &&
+            userProgram &&
+            programsWithEthicsRequirements.includes(userProgram)
+                ? 1
+                : 0;
+
         // Check if this category should have ethics addition (specifically for JacobsTechnicalCore)
         let ethicsAddition = 0;
-        if (categoryKey === "JacobsTechnicalCore" && userProgram && programsWithEthicsRequirements.includes(userProgram)) {
+        if (
+            categoryKey === "JacobsTechnicalCore" &&
+            userProgram &&
+            programsWithEthicsRequirements.includes(userProgram)
+        ) {
             // Check if there's an ethics requirement with a selected course (regardless of credit count)
             const ethicsReq = specialRequirements.find(
-                (req: any) => req.requirement_type === "ethics_course" && 
-                             req.selected_course_id // Only if a course is actually selected
+                (req: any) =>
+                    req.requirement_type === "ethics_course" &&
+                    req.selected_course_id // Only if a course is actually selected
             );
             if (ethicsReq) {
                 ethicsAddition = 1; // Always add 1 credit to JacobsTechnicalCore when ethics course is selected
@@ -1562,7 +1783,7 @@ export default function PlannerPage() {
         // Calculate custom credit transfers
         let transferDeductions = 0;
         let transferAdditions = 0;
-        
+
         creditTransfers.forEach((transfer) => {
             if (transfer.fromCategory === categoryKey) {
                 transferDeductions += transfer.amount;
@@ -1571,14 +1792,19 @@ export default function PlannerPage() {
                 transferAdditions += transfer.amount;
             }
         });
-            
+
         return {
             totalCredits,
             ethicsDeduction,
             ethicsAddition,
             transferDeductions,
             transferAdditions,
-            netCredits: totalCredits - ethicsDeduction + ethicsAddition - transferDeductions + transferAdditions
+            netCredits:
+                totalCredits -
+                ethicsDeduction +
+                ethicsAddition -
+                transferDeductions +
+                transferAdditions,
         };
     };
 
@@ -1647,7 +1873,7 @@ export default function PlannerPage() {
         }
     };
 
-    if (isLoading || status === 'loading') {
+    if (isLoading || status === "loading") {
         return (
             <div>
                 {/* Loading Skeleton */}
@@ -1667,7 +1893,10 @@ export default function PlannerPage() {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                         <div className="md:col-span-4 space-y-4">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                                <div
+                                    key={i}
+                                    className="h-32 bg-gray-200 rounded-lg animate-pulse"
+                                ></div>
                             ))}
                         </div>
                         <div className="md:col-span-8 space-y-6">
@@ -1679,7 +1908,6 @@ export default function PlannerPage() {
             </div>
         );
     }
-
 
     if (!userProgram || !programRequirements[userProgram]) {
         return (
@@ -1845,28 +2073,39 @@ export default function PlannerPage() {
                                     <BookOpen className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg">You're viewing the Course Planner in Demo Mode</h3>
+                                    <h3 className="font-semibold text-lg">
+                                        You're viewing the Course Planner in
+                                        Demo Mode
+                                    </h3>
                                     <p className="text-blue-100 text-sm md:text-base">
-                                        Explore all features with sample data. Your changes are saved locally. 
-                                        <span className="font-medium"> Create an account to save your real course plan!</span>
+                                        Explore all features with sample data.
+                                        Your changes are saved locally.
+                                        <span className="font-medium">
+                                            {" "}
+                                            Create an account to save your real
+                                            course plan!
+                                        </span>
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                <Button 
-                                    variant="secondary" 
+                                <Button
+                                    variant="secondary"
                                     size="sm"
                                     onClick={() => {
                                         // Reset demo data to fresh Connective Media sample
-                                        localStorage.setItem('forceRefreshDemo', 'true');
+                                        localStorage.setItem(
+                                            "forceRefreshDemo",
+                                            "true"
+                                        );
                                         window.location.reload();
                                     }}
                                     className="bg-white/20 text-white hover:bg-white/30 border-white/30"
                                 >
                                     Reset Demo
                                 </Button>
-                                <Button 
-                                    variant="secondary" 
+                                <Button
+                                    variant="secondary"
                                     size="sm"
                                     onClick={() => signIn()}
                                     className="bg-white text-blue-600 hover:bg-blue-50"
@@ -2032,43 +2271,77 @@ export default function PlannerPage() {
                                             </span>
                                             <span className="text-sm text-muted-foreground font-normal">
                                                 {(() => {
-                                                    const creditInfo = calculateCategoryCredits(key);
+                                                    const creditInfo =
+                                                        calculateCategoryCredits(
+                                                            key
+                                                        );
                                                     const adjustments = [];
-                                                    
-                                                    if (creditInfo.ethicsDeduction > 0) {
-                                                        adjustments.push(`-${creditInfo.ethicsDeduction} ethics`);
+
+                                                    if (
+                                                        creditInfo.ethicsDeduction >
+                                                        0
+                                                    ) {
+                                                        adjustments.push(
+                                                            `-${creditInfo.ethicsDeduction} ethics`
+                                                        );
                                                     }
-                                                    if (creditInfo.ethicsAddition > 0) {
-                                                        adjustments.push(`+${creditInfo.ethicsAddition} ethics`);
+                                                    if (
+                                                        creditInfo.ethicsAddition >
+                                                        0
+                                                    ) {
+                                                        adjustments.push(
+                                                            `+${creditInfo.ethicsAddition} ethics`
+                                                        );
                                                     }
-                                                    if (creditInfo.transferDeductions > 0) {
-                                                        adjustments.push(`-${creditInfo.transferDeductions} transfer`);
+                                                    if (
+                                                        creditInfo.transferDeductions >
+                                                        0
+                                                    ) {
+                                                        adjustments.push(
+                                                            `-${creditInfo.transferDeductions} transfer`
+                                                        );
                                                     }
-                                                    if (creditInfo.transferAdditions > 0) {
-                                                        adjustments.push(`+${creditInfo.transferAdditions} transfer`);
+                                                    if (
+                                                        creditInfo.transferAdditions >
+                                                        0
+                                                    ) {
+                                                        adjustments.push(
+                                                            `+${creditInfo.transferAdditions} transfer`
+                                                        );
                                                     }
-                                                    
+
                                                     const baseText = `${creditInfo.netCredits} / ${requirement.credits} cr`;
-                                                    return adjustments.length > 0 
-                                                        ? `${baseText} (${adjustments.join(', ')})`
+                                                    return adjustments.length >
+                                                        0
+                                                        ? `${baseText} (${adjustments.join(", ")})`
                                                         : baseText;
                                                 })()}
                                             </span>
                                         </div>
                                         {/* Transfer Credits Button */}
                                         <CreditTransferModal
-                                            requirements={programRequirements[userProgram].requirements}
+                                            requirements={
+                                                programRequirements[userProgram]
+                                                    .requirements
+                                            }
                                             coursePlan={coursePlan}
-                                            calculateCategoryCredits={calculateCategoryCredits}
-                                            onTransferCredits={handleTransferCredits}
+                                            calculateCategoryCredits={
+                                                calculateCategoryCredits
+                                            }
+                                            onTransferCredits={
+                                                handleTransferCredits
+                                            }
                                             existingTransfers={creditTransfers}
                                             sourceRequirement={key}
                                         >
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                onClick={(e) => e.stopPropagation()}
+                                                className="ml-2 opacity-60 group-hover:opacity-100 transition-opacity hover:bg-accent"
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                                title="Transfer credits from this requirement"
                                             >
                                                 <ArrowRightLeft className="h-4 w-4" />
                                             </Button>
@@ -2105,31 +2378,64 @@ export default function PlannerPage() {
                                         <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
                                             {requirement.description}
                                         </p>
-                                        
+
                                         {/* Credit Transfer Information */}
-                                        {creditTransfers.some(t => t.fromCategory === key || t.toCategory === key) && (
+                                        {creditTransfers.some(
+                                            (t) =>
+                                                t.fromCategory === key ||
+                                                t.toCategory === key
+                                        ) && (
                                             <div className="mt-3 space-y-1">
                                                 {creditTransfers
-                                                    .filter(t => t.fromCategory === key || t.toCategory === key)
-                                                    .map(transfer => (
-                                                        <div 
+                                                    .filter(
+                                                        (t) =>
+                                                            t.fromCategory ===
+                                                                key ||
+                                                            t.toCategory === key
+                                                    )
+                                                    .map((transfer) => (
+                                                        <div
                                                             key={transfer.id}
                                                             className="flex items-center gap-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded"
                                                         >
-                                                            {transfer.fromCategory === key ? (
+                                                            {transfer.fromCategory ===
+                                                            key ? (
                                                                 <>
                                                                     <ArrowRightLeft className="h-3 w-3" />
-                                                                    <span>-{transfer.amount} cr to {transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}</span>
+                                                                    <span>
+                                                                        -
+                                                                        {
+                                                                            transfer.amount
+                                                                        }{" "}
+                                                                        cr to{" "}
+                                                                        {transfer.toCategory
+                                                                            .replace(
+                                                                                /([A-Z])/g,
+                                                                                " $1"
+                                                                            )
+                                                                            .trim()}
+                                                                    </span>
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     <ArrowRightLeft className="h-3 w-3" />
-                                                                    <span>+{transfer.amount} cr from {transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()}</span>
+                                                                    <span>
+                                                                        +
+                                                                        {
+                                                                            transfer.amount
+                                                                        }{" "}
+                                                                        cr from{" "}
+                                                                        {transfer.fromCategory
+                                                                            .replace(
+                                                                                /([A-Z])/g,
+                                                                                " $1"
+                                                                            )
+                                                                            .trim()}
+                                                                    </span>
                                                                 </>
                                                             )}
                                                         </div>
-                                                    ))
-                                                }
+                                                    ))}
                                             </div>
                                         )}
                                         {/* Selected Courses for this category */}
@@ -2140,79 +2446,131 @@ export default function PlannerPage() {
                                                         <div
                                                             key={course.id}
                                                             className={`flex justify-between items-start text-sm p-2 rounded-lg ${
-                                                                selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                    ? "bg-blue-50 border border-blue-300" 
-                                                                    : selectedAnchorCourse && selectedAnchorCourse.id === course.id
-                                                                        ? "bg-purple-50 border border-purple-300"
-                                                                        : "bg-gray-100"
+                                                                selectedEthicsCourse &&
+                                                                selectedEthicsCourse.id ===
+                                                                    course.id
+                                                                    ? "bg-blue-50 border border-blue-300"
+                                                                    : selectedAnchorCourse &&
+                                                                        selectedAnchorCourse.id ===
+                                                                            course.id
+                                                                      ? "bg-purple-50 border border-purple-300"
+                                                                      : "bg-gray-100"
                                                             }`}
                                                         >
                                                             <div className="flex-1 min-w-0">
-                                                                <div className={`font-normal text-sm ${
-                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                        ? "text-blue-800" 
-                                                                        : selectedAnchorCourse && selectedAnchorCourse.id === course.id
-                                                                            ? "text-purple-800"
-                                                                            : "text-black"
-                                                                }`}>
-                                                                    {course.code}
-                                                                    {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (Ethics)"}
-                                                                    {selectedAnchorCourse && selectedAnchorCourse.id === course.id && " (Anchor Course)"}
+                                                                <div
+                                                                    className={`font-normal text-sm ${
+                                                                        selectedEthicsCourse &&
+                                                                        selectedEthicsCourse.id ===
+                                                                            course.id
+                                                                            ? "text-blue-800"
+                                                                            : selectedAnchorCourse &&
+                                                                                selectedAnchorCourse.id ===
+                                                                                    course.id
+                                                                              ? "text-purple-800"
+                                                                              : "text-black"
+                                                                    }`}
+                                                                >
+                                                                    {
+                                                                        course.code
+                                                                    }
+                                                                    {selectedEthicsCourse &&
+                                                                        selectedEthicsCourse.id ===
+                                                                            course.id &&
+                                                                        " (Ethics)"}
+                                                                    {selectedAnchorCourse &&
+                                                                        selectedAnchorCourse.id ===
+                                                                            course.id &&
+                                                                        " (Anchor Course)"}
                                                                 </div>
-                                                                <div className={`text-xs ${
-                                                                    selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                        ? "text-blue-600" 
-                                                                        : selectedAnchorCourse && selectedAnchorCourse.id === course.id
-                                                                            ? "text-purple-600"
-                                                                            : "text-gray-600"
-                                                                }`}>
-                                                                    {course.name}
-                                                                    {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " - fulfills ethics requirement"}
-                                                                    {selectedAnchorCourse && selectedAnchorCourse.id === course.id && " - anchor course for INFO 5920"}
+                                                                <div
+                                                                    className={`text-xs ${
+                                                                        selectedEthicsCourse &&
+                                                                        selectedEthicsCourse.id ===
+                                                                            course.id
+                                                                            ? "text-blue-600"
+                                                                            : selectedAnchorCourse &&
+                                                                                selectedAnchorCourse.id ===
+                                                                                    course.id
+                                                                              ? "text-purple-600"
+                                                                              : "text-gray-600"
+                                                                    }`}
+                                                                >
+                                                                    {
+                                                                        course.name
+                                                                    }
+                                                                    {selectedEthicsCourse &&
+                                                                        selectedEthicsCourse.id ===
+                                                                            course.id &&
+                                                                        " - fulfills ethics requirement"}
+                                                                    {selectedAnchorCourse &&
+                                                                        selectedAnchorCourse.id ===
+                                                                            course.id &&
+                                                                        " - anchor course for INFO 5920"}
                                                                 </div>
                                                             </div>
-                                                            <div className={`ml-2 font-normal text-sm ${
-                                                                selectedEthicsCourse && selectedEthicsCourse.id === course.id
-                                                                    ? "text-blue-800" 
-                                                                    : selectedAnchorCourse && selectedAnchorCourse.id === course.id
-                                                                        ? "text-purple-800"
-                                                                        : "text-black"
-                                                            }`}>
-                                                                {course.credits} cr
-                                                                {selectedEthicsCourse && selectedEthicsCourse.id === course.id && " (-1)"}
+                                                            <div
+                                                                className={`ml-2 font-normal text-sm ${
+                                                                    selectedEthicsCourse &&
+                                                                    selectedEthicsCourse.id ===
+                                                                        course.id
+                                                                        ? "text-blue-800"
+                                                                        : selectedAnchorCourse &&
+                                                                            selectedAnchorCourse.id ===
+                                                                                course.id
+                                                                          ? "text-purple-800"
+                                                                          : "text-black"
+                                                                }`}
+                                                            >
+                                                                {course.credits}{" "}
+                                                                cr
+                                                                {selectedEthicsCourse &&
+                                                                    selectedEthicsCourse.id ===
+                                                                        course.id &&
+                                                                    " (-1)"}
                                                             </div>
                                                         </div>
                                                     )
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {/* Ethics Credit Addition Card for JacobsTechnicalCore */}
-                                        {key === "JacobsTechnicalCore" && 
-                                         userProgram && 
-                                         ["ms-is-cm", "ms-is-ht", "ms-is-ut"].includes(userProgram) &&
-                                         selectedEthicsCourse && (
-                                            <div className="mt-2">
-                                                <div className="flex justify-between items-start text-sm p-2 rounded-lg bg-green-50 border border-green-300">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-normal text-sm text-green-800">
-                                                            Ethics Credit Transfer
+                                        {key === "JacobsTechnicalCore" &&
+                                            userProgram &&
+                                            [
+                                                "ms-is-cm",
+                                                "ms-is-ht",
+                                                "ms-is-ut",
+                                            ].includes(userProgram) &&
+                                            selectedEthicsCourse && (
+                                                <div className="mt-2">
+                                                    <div className="flex justify-between items-start text-sm p-2 rounded-lg bg-green-50 border border-green-300">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-normal text-sm text-green-800">
+                                                                Ethics Credit
+                                                                Transfer
+                                                            </div>
+                                                            <div className="text-xs text-green-600">
+                                                                1 credit from{" "}
+                                                                {
+                                                                    selectedEthicsCourse.code
+                                                                }{" "}
+                                                                ethics
+                                                                requirement
+                                                            </div>
                                                         </div>
-                                                        <div className="text-xs text-green-600">
-                                                            1 credit from {selectedEthicsCourse.code} ethics requirement
+                                                        <div className="ml-2 font-normal text-sm text-green-800">
+                                                            +1 cr
                                                         </div>
-                                                    </div>
-                                                    <div className="ml-2 font-normal text-sm text-green-800">
-                                                        +1 cr
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
                                     </div>
                                 </Card>
                             );
                         })}
-                        
+
                         {/* Collapsible Additional Questions Card */}
                         <Card className="p-0 hover:shadow-md transition-shadow group">
                             <div
@@ -2266,9 +2624,15 @@ export default function PlannerPage() {
                                     selectedCourses={selectedCourses}
                                     coursePlan={coursePlan}
                                     isDemoMode={isDemoMode}
-                                    currentSelectedEthicsCourse={selectedEthicsCourse}
-                                    currentEthicsDeductionCategory={ethicsDeductionCategory}
-                                    currentSelectedAnchorCourse={selectedAnchorCourse}
+                                    currentSelectedEthicsCourse={
+                                        selectedEthicsCourse
+                                    }
+                                    currentEthicsDeductionCategory={
+                                        ethicsDeductionCategory
+                                    }
+                                    currentSelectedAnchorCourse={
+                                        selectedAnchorCourse
+                                    }
                                 />
                             </div>
                         </Card>
@@ -2380,10 +2744,14 @@ export default function PlannerPage() {
 
                                             // Demo mode - just save locally
                                             if (isDemoMode) {
-                                                setTimeout(() => saveDemoData(), 0);
+                                                setTimeout(
+                                                    () => saveDemoData(),
+                                                    0
+                                                );
                                                 toast({
                                                     title: "Success",
-                                                    description: "Course added to your plan",
+                                                    description:
+                                                        "Course added to your plan",
                                                     variant: "default",
                                                 });
                                                 return;
@@ -2464,7 +2832,9 @@ export default function PlannerPage() {
                                         }
                                     }}
                                     searchQuery={searchQuery}
-                                    sampleCourses={isDemoMode ? sampleCourses : undefined}
+                                    sampleCourses={
+                                        isDemoMode ? sampleCourses : undefined
+                                    }
                                 />
                             </div>
                         </Card>
@@ -2489,8 +2859,32 @@ export default function PlannerPage() {
                             )}
                             isDemoMode={isDemoMode}
                         />
+
+                        {/* Credit Transfer Management */}
+                        <CreditTransferList
+                            transfers={creditTransfers}
+                            onEditTransfer={handleEditTransfer}
+                            onDeleteTransfer={handleDeleteTransfer}
+                            requirements={
+                                programRequirements[userProgram!].requirements
+                            }
+                        />
                     </div>
                 </div>
+
+                {/* Edit Transfer Modal */}
+                <EditCreditTransferModal
+                    transfer={editingTransfer}
+                    isOpen={isEditModalOpen}
+                    onClose={handleCloseEditModal}
+                    requirements={
+                        programRequirements[userProgram!].requirements
+                    }
+                    coursePlan={coursePlan}
+                    calculateCategoryCredits={calculateCategoryCredits}
+                    onUpdateTransfer={handleUpdateTransfer}
+                    existingTransfers={creditTransfers}
+                />
             </div>
         </div>
     );
