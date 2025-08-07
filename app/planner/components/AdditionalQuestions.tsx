@@ -78,9 +78,11 @@ export default function AdditionalQuestions({
     // Sync local state with parent component's anchor course state
     useEffect(() => {
         if (currentSelectedAnchorCourse) {
+            setTookTechie5901(true); // Ensure checkbox is checked when anchor course is set
             setSelectedAnchorCourse(currentSelectedAnchorCourse.code);
         } else if (currentSelectedAnchorCourse === null) {
             setSelectedAnchorCourse("");
+            // Don't uncheck tookTechie5901 here as there might be legacy cases without anchor course
         }
     }, [currentSelectedAnchorCourse]);
 
@@ -88,8 +90,8 @@ export default function AdditionalQuestions({
     useEffect(() => {
         const loadSavedRequirements = async () => {
             try {
-                // If parent has already provided ethics course state, don't override it with demo data
-                if (currentSelectedEthicsCourse) {
+                // If parent has already provided state, don't override it with demo data
+                if (currentSelectedEthicsCourse || currentSelectedAnchorCourse) {
                     setIsLoading(false);
                     return;
                 }
@@ -196,40 +198,14 @@ export default function AdditionalQuestions({
                         );
                         
                         if (anchorCourse) {
-                            try {
-                                await onTechie5901Change(true, anchorCourse);
-                            } catch (error) {
-                                console.warn(
-                                    "Error applying Techie 5901 with anchor course:",
-                                    error
-                                );
-                            }
+                            // Don't call onTechie5901Change during initial loading to avoid conflicts
+                            // The parent component will load the anchor course via its own loadSpecialRequirements
+                            console.log("Anchor course loaded in AdditionalQuestions:", anchorCourse.code);
                         }
                     } else {
-                        // Legacy case - just the checkbox without anchor course
-                        const jacobsProgrammaticCore =
-                            coursePlan["JacobsProgrammaticCore"] || [];
-                        const totalCredits = jacobsProgrammaticCore.reduce(
-                            (sum, course) => sum + course.credits,
-                            0
-                        );
-                        if (totalCredits < 17) {
-                            // 17 is the total required credits for JacobsProgrammaticCore
-                            try {
-                                await onTechie5901Change(true);
-                            } catch (error) {
-                                console.warn(
-                                    "Error applying Techie 5901 change:",
-                                    error
-                                );
-                                // Don't throw, just log the error
-                            }
-                        } else {
-                            console.warn(
-                                "Cannot add Techie 5901 credit - Jacobs Programmatic Core is full"
-                            );
-                            setTookTechie5901(false);
-                        }
+                        // Legacy case - just the checkbox without anchor course  
+                        // Let the parent component handle this via its own loading logic
+                        console.log("Techie 5901 requirement found without anchor course");
                     }
                 }
             } catch (error) {

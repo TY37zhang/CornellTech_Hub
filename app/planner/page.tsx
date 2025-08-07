@@ -865,8 +865,8 @@ export default function PlannerPage() {
             setCoursePlanIds(coursePlanIds);
             setCoursePlan(newCoursePlan);
             
-            // Load special requirements with the loaded courses
-            await loadSpecialRequirements(loadedCourses);
+            // Load special requirements with the loaded courses and course plan
+            await loadSpecialRequirements(loadedCourses, newCoursePlan);
         } catch (error) {
             console.error("Error loading course plans:", error);
             toast({
@@ -881,7 +881,7 @@ export default function PlannerPage() {
         }
     };
 
-    const loadSpecialRequirements = async (coursesForLookup?: Course[]) => {
+    const loadSpecialRequirements = async (coursesForLookup?: Course[], coursePlanForLookup?: { [key: string]: Course[] }) => {
         try {
             const response = await fetch("/api/course-special-requirements");
 
@@ -907,6 +907,55 @@ export default function PlannerPage() {
                 if (course) {
                     setSelectedEthicsCourse(course);
                     setEthicsDeductionCategory(ethicsReq.deducted_from_category);
+                }
+            }
+
+            // Find anchor course requirement and update local state
+            const anchorReq = requirements.find(
+                (req: any) => req.requirement_type === "techie_5901"
+            );
+            if (anchorReq && anchorReq.selected_course_id) {
+                // Use provided courses or current selectedCourses state
+                const coursesToSearch = coursesForLookup || selectedCourses;
+                const course = coursesToSearch.find(
+                    (c) => c.code === anchorReq.selected_course_id
+                );
+                if (course) {
+                    setSelectedAnchorCourse(course);
+                    console.log("Anchor course loaded from database:", course.code);
+                    
+                    // Move the anchor course to JacobsProgrammaticCore if it's not already there
+                    // Helper function to find course in the provided course plan (not state)
+                    const findCourseInProvidedPlan = (courseId: string, planToSearch: { [key: string]: Course[] }) => {
+                        for (const [category, courses] of Object.entries(planToSearch)) {
+                            if (courses.some(course => course.id === courseId)) {
+                                return category;
+                            }
+                        }
+                        return null;
+                    };
+
+                    const planToUse = coursePlanForLookup || coursePlan;
+                    const currentCategory = findCourseInProvidedPlan(course.id, planToUse);
+                    
+                    if (currentCategory && currentCategory !== "JacobsProgrammaticCore") {
+                        // Remove from current category and add to JacobsProgrammaticCore
+                        setCoursePlan(prev => ({
+                            ...prev,
+                            [currentCategory]: prev[currentCategory]?.filter(c => c.id !== course.id) || [],
+                            JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), course]
+                        }));
+                        console.log(`Moved anchor course ${course.code} from ${currentCategory} to JacobsProgrammaticCore during load`);
+                    } else if (!currentCategory) {
+                        // Add directly to JacobsProgrammaticCore if not in any category
+                        setCoursePlan(prev => ({
+                            ...prev,
+                            JacobsProgrammaticCore: [...(prev.JacobsProgrammaticCore || []), course]
+                        }));
+                        console.log(`Added anchor course ${course.code} to JacobsProgrammaticCore during load`);
+                    } else {
+                        console.log(`Anchor course ${course.code} is already in JacobsProgrammaticCore`);
+                    }
                 }
             }
         } catch (error) {
@@ -1430,6 +1479,18 @@ export default function PlannerPage() {
         } else if (!hasTechie5901) {
             // Clear selected anchor course when unchecking
             setSelectedAnchorCourse(null);
+        }
+
+        // In production mode, reload special requirements to reflect the database change
+        // This ensures we get the updated state from the server
+        // Only reload if we just made a change (not during initial load)
+        if (!isDemoMode && anchorCourse) {
+            try {
+                await loadSpecialRequirements();
+            } catch (error) {
+                console.error("Error reloading special requirements after anchor course change:", error);
+                // Don't throw here - the UI should still reflect the change even if reload fails
+            }
         }
         
         console.log("Techie 5901 change:", hasTechie5901, anchorCourse ? `with anchor course ${anchorCourse.code}` : "");
