@@ -7,15 +7,18 @@ const prisma = new PrismaClient();
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
-        const transferId = params.id;
+        const { id: transferId } = await params;
         if (!transferId) {
             return NextResponse.json(
                 { error: "Transfer ID required" },
@@ -51,17 +54,21 @@ export async function PUT(
         });
 
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return NextResponse.json(
+                { error: "User not found" },
+                { status: 404 }
+            );
         }
 
         // Verify the transfer exists and belongs to the user
-        const existingTransfer = await prisma.course_special_requirements.findFirst({
-            where: {
-                id: transferId,
-                user_id: user.id,
-                requirement_type: "credit_transfer" as any,
-            },
-        });
+        const existingTransfer =
+            await prisma.course_special_requirements.findFirst({
+                where: {
+                    id: transferId,
+                    user_id: user.id,
+                    requirement_type: "credit_transfer" as any,
+                },
+            });
 
         if (!existingTransfer) {
             return NextResponse.json(
@@ -71,16 +78,18 @@ export async function PUT(
         }
 
         // Update the credit transfer record
-        const updatedTransfer = await prisma.course_special_requirements.update({
-            where: {
-                id: transferId,
-            },
-            data: {
-                deducted_from_category: fromCategory,
-                added_to_category: toCategory,
-                credit_amount: creditAmount,
-            },
-        });
+        const updatedTransfer = await prisma.course_special_requirements.update(
+            {
+                where: {
+                    id: transferId,
+                },
+                data: {
+                    deducted_from_category: fromCategory,
+                    added_to_category: toCategory,
+                    credit_amount: creditAmount,
+                },
+            }
+        );
 
         return NextResponse.json({
             success: true,
@@ -102,15 +111,18 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
         }
 
-        const transferId = params.id;
+        const { id: transferId } = await params;
         if (!transferId) {
             return NextResponse.json(
                 { error: "Transfer ID required" },
@@ -123,17 +135,21 @@ export async function DELETE(
         });
 
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return NextResponse.json(
+                { error: "User not found" },
+                { status: 404 }
+            );
         }
 
         // Verify the transfer exists and belongs to the user before deleting
-        const existingTransfer = await prisma.course_special_requirements.findFirst({
-            where: {
-                id: transferId,
-                user_id: user.id,
-                requirement_type: "credit_transfer" as any,
-            },
-        });
+        const existingTransfer =
+            await prisma.course_special_requirements.findFirst({
+                where: {
+                    id: transferId,
+                    user_id: user.id,
+                    requirement_type: "credit_transfer" as any,
+                },
+            });
 
         if (!existingTransfer) {
             return NextResponse.json(

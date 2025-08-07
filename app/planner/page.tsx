@@ -2860,15 +2860,18 @@ export default function PlannerPage() {
                             isDemoMode={isDemoMode}
                         />
 
-                        {/* Credit Transfer Management */}
-                        <CreditTransferList
-                            transfers={creditTransfers}
-                            onEditTransfer={handleEditTransfer}
-                            onDeleteTransfer={handleDeleteTransfer}
-                            requirements={
-                                programRequirements[userProgram!].requirements
-                            }
-                        />
+                        {/* Credit Transfer Management - Only show if transfers exist */}
+                        {creditTransfers.length > 0 && (
+                            <CreditTransferList
+                                transfers={creditTransfers}
+                                onEditTransfer={handleEditTransfer}
+                                onDeleteTransfer={handleDeleteTransfer}
+                                requirements={
+                                    programRequirements[userProgram!]
+                                        .requirements
+                                }
+                            />
+                        )}
                     </div>
                 </div>
 
