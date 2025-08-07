@@ -437,6 +437,7 @@ enum requirement_type {
   ethics_course
   techie_5901
   credit_transfer
+  specialization_track
 }
 
 enum user_role {

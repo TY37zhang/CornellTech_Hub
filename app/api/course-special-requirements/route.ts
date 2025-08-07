@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         }
 
         // Validate requirement type
-        if (!["ethics_course", "techie_5901"].includes(requirementType)) {
+        if (!["ethics_course", "techie_5901", "credit_transfer", "specialization_track"].includes(requirementType)) {
             return new NextResponse("Invalid requirement type", {
                 status: 400,
             });
