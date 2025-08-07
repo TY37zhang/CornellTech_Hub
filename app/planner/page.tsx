@@ -31,7 +31,6 @@ import {
     sampleUserProgram,
 } from "@/lib/sampleData";
 import CreditTransferModal from "./components/CreditTransferModal";
-import CreditTransferList from "./components/CreditTransferList";
 import EditCreditTransferModal from "./components/EditCreditTransferModal";
 
 /**
@@ -2633,6 +2632,18 @@ export default function PlannerPage() {
                                     currentSelectedAnchorCourse={
                                         selectedAnchorCourse
                                     }
+                                    // Credit transfer props
+                                    creditTransfers={creditTransfers}
+                                    onTransferCredits={handleTransferCredits}
+                                    onEditTransfer={handleEditTransfer}
+                                    onDeleteTransfer={handleDeleteTransfer}
+                                    requirements={
+                                        programRequirements[userProgram!]
+                                            .requirements
+                                    }
+                                    calculateCategoryCredits={
+                                        calculateCategoryCredits
+                                    }
                                 />
                             </div>
                         </Card>
@@ -2860,18 +2871,6 @@ export default function PlannerPage() {
                             isDemoMode={isDemoMode}
                         />
 
-                        {/* Credit Transfer Management - Only show if transfers exist */}
-                        {creditTransfers.length > 0 && (
-                            <CreditTransferList
-                                transfers={creditTransfers}
-                                onEditTransfer={handleEditTransfer}
-                                onDeleteTransfer={handleDeleteTransfer}
-                                requirements={
-                                    programRequirements[userProgram!]
-                                        .requirements
-                                }
-                            />
-                        )}
                     </div>
                 </div>
 
