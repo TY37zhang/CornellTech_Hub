@@ -15,7 +15,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Reply, Edit, Trash2, ChevronDown, ChevronRight, Flag } from "lucide-react";
+import {
+    Reply,
+    Edit,
+    Trash2,
+    ChevronDown,
+    ChevronRight,
+    Flag,
+} from "lucide-react";
 import { CommentActions } from "@/app/components/CommentActions";
 import { updateForumComment } from "../../actions";
 import { toast } from "@/components/ui/use-toast";
@@ -78,7 +85,10 @@ export default function NestedComment({
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [reportModalOpen, setReportModalOpen] = useState(false);
-    const [reportingComment, setReportingComment] = useState<{id: string, title: string} | null>(null);
+    const [reportingComment, setReportingComment] = useState<{
+        id: string;
+        title: string;
+    } | null>(null);
 
     const canReply = comment.depth < maxDepth;
     const isAuthor = session?.user?.id === comment.author?.id;
@@ -192,7 +202,7 @@ export default function NestedComment({
     const handleReportComment = () => {
         setReportingComment({
             id: comment.id,
-            title: `Comment by ${comment.author?.name || 'user'} in forum thread`
+            title: `Comment by ${comment.author?.name || "user"} in forum thread`,
         });
         setReportModalOpen(true);
     };
@@ -200,7 +210,7 @@ export default function NestedComment({
     const indentationLevel = Math.min(comment.depth, 2); // Max visual indentation reduced for mobile
     const desktopMargin = indentationLevel * 8; // 8px per level for desktop
     const mobileMargin = indentationLevel * 4; // 4px per level for mobile (increased from 2px)
-    
+
     // Calculate responsive margin and threading line position
     const responsiveMargin = `clamp(${mobileMargin}px, 2vw, ${desktopMargin}px)`;
     const threadingLineOffset = 4; // Fixed offset from margin edge
@@ -329,18 +339,17 @@ export default function NestedComment({
                                 </CardDescription>
                             </div>
                         </div>
-                        
-                        {/* Reply button in top right on mobile */}
+
+                        {/* Reply button in top right */}
                         {canReply && !comment.isDeleted && (
                             <Button
                                 variant="ghost"
-                                size="sm"
-                                className="sm:hidden gap-1 text-muted-foreground hover:text-foreground h-8 px-2"
+                                size="icon"
+                                className="text-muted-foreground h-8 w-8"
                                 onClick={() => setShowReplyForm(!showReplyForm)}
                                 disabled={isEditing}
                             >
                                 <Reply className="h-4 w-4" />
-                                <span className="text-xs">Reply</span>
                             </Button>
                         )}
                     </div>
@@ -384,16 +393,16 @@ export default function NestedComment({
                     )}
                 </CardContent>
 
-                <CardFooter className="p-0 pt-0 pb-1 pr-2 sm:pr-6 pl-2 sm:pl-6">
+                <CardFooter className="p-0 pt-0 pb-1 pr-6 pl-6">
                     <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-0.5">
+                        <div className="relative flex items-center">
                             {/* Collapse button for root level comments inside the card */}
                             {hasReplies && comment.depth === 0 && (
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={toggleCollapse}
-                                    className="h-4 w-4 p-0 bg-transparent border-0 hover:bg-transparent mr-2"
+                                    className="absolute left-0 h-4 w-4 p-0 bg-transparent border-0 hover:bg-transparent"
                                 >
                                     {isCollapsed ? (
                                         <ChevronRight className="h-2 w-2" />
@@ -446,9 +455,15 @@ export default function NestedComment({
                                                     Delete comment
                                                 </AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Are you sure you want to delete this comment?<br/>
-                                                    This action cannot be undone.<br/>
-                                                    This will permanently remove your comment and all replies to it.
+                                                    Are you sure you want to
+                                                    delete this comment?
+                                                    <br />
+                                                    This action cannot be
+                                                    undone.
+                                                    <br />
+                                                    This will permanently remove
+                                                    your comment and all replies
+                                                    to it.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>

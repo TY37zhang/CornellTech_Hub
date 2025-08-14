@@ -919,7 +919,7 @@ export default function ThreadContent({
                                                     
                                                     {thread.tags && thread.tags.length > 0 && (
                                                         <div className="flex flex-wrap gap-1">
-                                                            {thread.tags.slice(0, 2).map((tag) => (
+                                                            {thread.tags.slice(0, 2).map((tag: string) => (
                                                                 <Badge 
                                                                     key={tag}
                                                                     variant="secondary" 
