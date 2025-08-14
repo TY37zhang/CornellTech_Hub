@@ -8,6 +8,8 @@ declare global {
     var prisma: PrismaClient | undefined;
 }
 
+// Using Neon direct connection; no PgBouncer parameter needed.
+
 export const prisma =
     globalThis.prisma ||
     new PrismaClient({

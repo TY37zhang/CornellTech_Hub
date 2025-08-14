@@ -36,11 +36,12 @@ class CornellCourseScraperV2:
         default_params = {
             'q': '',
             'days-type': 'any',
-            'campus[]': 'NYT',
+            'location[]': 'NYCTECH',
             'distrReqs-type': 'any',
             'explStudies-type': 'any',
             'pi': ''
         }
+        
         
         # Allow custom parameters to override defaults
         if url_params:
@@ -111,6 +112,24 @@ class CornellCourseScraperV2:
             raise ValueError(f"Invalid year code: {year_code}. Must be a 2-digit number")
         
         return season_map[season_code], year
+    
+    def is_duplicate_course(self, course1, course2):
+        """Check if two courses are duplicates (cross-listed)"""
+        if not course1 or not course2:
+            return False
+        
+        # Same course code is definitely a duplicate
+        if course1.get('code') == course2.get('code'):
+            return True
+        
+        # Check for cross-listed courses (same name, credits, and description similarity)
+        if (course1.get('name') == course2.get('name') and 
+            course1.get('credits') == course2.get('credits') and
+            course1.get('professor_id') == course2.get('professor_id')):
+            return True
+        
+        return False
+    
     
     def validate_url(self, url):
         """Validate that a URL is accessible before scraping"""
@@ -198,7 +217,8 @@ class CornellCourseScraperV2:
                 if credit_elem:
                     try:
                         credits_text = credit_elem.get_text(strip=True)
-                        course_data['credits'] = int(credits_text)
+                        # Handle fractional credits (common in MBA courses)
+                        course_data['credits'] = float(credits_text)
                     except (ValueError, AttributeError):
                         course_data['credits'] = 3  # Default
                 else:
@@ -265,9 +285,15 @@ class CornellCourseScraperV2:
             # Method 2: Fallback to regex parsing if structured parsing fails
             section_text = self.extract_text_from_element(course_section)
             
-            # Find course code pattern - looking for patterns like "CS 5112", "INFO 5320", etc.
-            code_pattern = r'\b([A-Z]{2,4}\s+\d{4})\b'
+            # Find course code pattern - looking for patterns like "CS 5112", "INFO 5320", "NBAY 6170", etc.
+            # Updated to handle all Cornell Tech departments
+            code_pattern = r'\b((?:CS|DESIGN|ECE|HADM|INFO|LAW|NBA|NBAY|NCCY|ORIE|TECH|TECHIE)\s+\d{4})\b'
             code_matches = re.findall(code_pattern, section_text)
+            
+            # Fallback pattern for any department code format
+            if not code_matches:
+                code_pattern = r'\b([A-Z]{2,6}\s+\d{4})\b'
+                code_matches = re.findall(code_pattern, section_text)
             
             if not code_matches:
                 return None
@@ -302,11 +328,11 @@ class CornellCourseScraperV2:
             else:
                 course_data['name'] = f"Course {course_code}"
             
-            # Extract credits more carefully
+            # Extract credits more carefully - handle fractional credits
             credits_patterns = [
-                r'(\d+)\s+Credit(?:s?)\s',
-                r'Credits?\s+(\d+)',
-                r'<span class="credit-val">(\d+)</span>'
+                r'([0-9.]+)\s+Credit(?:s?)\s',
+                r'Credits?\s+([0-9.]+)',
+                r'<span class="credit-val">([0-9.]+)</span>'
             ]
             
             credits = 3  # Default
@@ -314,8 +340,8 @@ class CornellCourseScraperV2:
                 credits_match = re.search(pattern, section_text)
                 if credits_match:
                     try:
-                        credits = int(credits_match.group(1))
-                        if 1 <= credits <= 12:  # Reasonable credit range
+                        credits = float(credits_match.group(1))
+                        if 0.5 <= credits <= 12:  # Reasonable credit range (including 0.5, 1.5 for MBA)
                             break
                     except ValueError:
                         continue
@@ -378,19 +404,19 @@ class CornellCourseScraperV2:
             logger.error(f"Failed to parse course from HTML: {e}")
             return None
 
-    def scrape_courses(self) -> List[Dict]:
-        """Scrape all courses from the Cornell course roster"""
+    def scrape_courses_from_url(self, url, search_type="general") -> List[Dict]:
+        """Scrape courses from a specific URL"""
         courses = []
         
         try:
-            logger.info(f"Fetching course listings from Cornell for {self.semester} {self.year} ({self.term})...")
-            logger.info(f"URL: {self.search_url}")
+            logger.info(f"Fetching courses from {search_type}: {url}")
             
             # Validate URL before attempting to scrape
-            if not self.validate_url(self.search_url):
-                raise ValueError(f"URL validation failed for {self.search_url}. Cannot proceed with scraping.")
+            if not self.validate_url(url):
+                logger.warning(f"URL validation failed for {url}. Skipping this search.")
+                return courses
             
-            response = self.session.get(self.search_url)
+            response = self.session.get(url)
             
             # Check for specific error conditions
             if response.status_code == 404:
@@ -555,12 +581,58 @@ class CornellCourseScraperV2:
                 logger.info("Added sample courses based on known Cornell Tech offerings")
             
         except Exception as e:
-            logger.error(f"Failed to scrape courses: {e}")
-            # Re-raise the exception to indicate failure
-            raise
+            logger.error(f"Failed to scrape courses from {search_type}: {e}")
+            # Don't re-raise for individual searches, just return empty list
+            return courses
             
-        logger.info(f"Successfully scraped {len(courses)} courses")
+        logger.info(f"Successfully scraped {len(courses)} courses from {search_type}")
         return courses
+    
+    def scrape_courses(self) -> List[Dict]:
+        """Scrape all courses using general search strategy"""
+        all_courses = []
+        seen_codes = set()  # Track unique course codes to avoid duplicates
+        
+        logger.info(f"Starting course scraping for {self.semester} {self.year} ({self.term})...")
+        
+        # General search for all Cornell Tech courses
+        try:
+            logger.info("Performing general search for all Cornell Tech courses...")
+            general_courses = self.scrape_courses_from_url(self.search_url, "general search")
+            
+            # Add unique courses with deduplication
+            for course in general_courses:
+                if course and course.get('code'):
+                    # Check for exact code match
+                    if course['code'] not in seen_codes:
+                        # Check for cross-listed duplicates
+                        is_duplicate = False
+                        for existing_course in all_courses:
+                            if self.is_duplicate_course(course, existing_course):
+                                is_duplicate = True
+                                break
+                        
+                        if not is_duplicate:
+                            seen_codes.add(course['code'])
+                            all_courses.append(course)
+                    
+            logger.info(f"General search: Found {len(general_courses)} courses, {len(all_courses)} unique")
+            
+        except Exception as e:
+            logger.error(f"Failed to perform general search: {e}")
+            return all_courses
+        
+        # Log department coverage statistics
+        dept_stats = {}
+        for course in all_courses:
+            dept = course.get('department', 'Unknown')
+            dept_stats[dept] = dept_stats.get(dept, 0) + 1
+        
+        logger.info(f"Final results: {len(all_courses)} total courses across {len(dept_stats)} departments")
+        for dept, count in sorted(dept_stats.items()):
+            logger.info(f"  {dept}: {count} courses")
+        
+        return all_courses
 
     def save_to_json(self, courses: List[Dict], filename: str = 'cornell_courses.json'):
         """Save courses to JSON file"""

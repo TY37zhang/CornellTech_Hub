@@ -134,7 +134,7 @@ model course_special_requirements {
   requirement_type       requirement_type
   selected_course_id     String?          @db.VarChar(255)
   deducted_from_category String?          @db.VarChar(255)
-  credit_amount          Int              @default(-1)
+  credit_amount          Float            @default(-1)
   added_to_category      String?          @db.VarChar(255)
   created_at             DateTime?        @default(now()) @db.Timestamptz(6)
   updated_at             DateTime?        @default(now()) @db.Timestamptz(6)
@@ -148,7 +148,7 @@ model courses {
   code                     String                     @db.VarChar(20)
   name                     String                     @db.VarChar(255)
   description              String?
-  credits                  Int
+  credits                  Float
   department               String                     @db.VarChar(100)
   semester                 String                     @db.VarChar(20)
   year                     Int
