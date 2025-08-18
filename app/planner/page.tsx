@@ -611,6 +611,10 @@ export default function PlannerPage() {
     // Anchor course tracking state for INFO 5920
     const [selectedAnchorCourse, setSelectedAnchorCourse] =
         useState<Course | null>(null);
+    
+    // Track the original category of the anchor course so we can restore it when unchecked
+    const [anchorCourseOriginalCategory, setAnchorCourseOriginalCategory] = 
+        useState<string | null>(null);
 
     // Special requirements state
     const [specialRequirements, setSpecialRequirements] = useState<any[]>([]);
@@ -996,6 +1000,10 @@ export default function PlannerPage() {
                         currentCategory &&
                         currentCategory !== "JacobsProgrammaticCore"
                     ) {
+                        // Track the original category before moving
+                        setAnchorCourseOriginalCategory(currentCategory);
+                        console.log(`Tracking original category for ${course.code} during load: ${currentCategory}`);
+                        
                         // Remove from current category and add to JacobsProgrammaticCore
                         setCoursePlan((prev) => ({
                             ...prev,
@@ -1012,6 +1020,10 @@ export default function PlannerPage() {
                             `Moved anchor course ${course.code} from ${currentCategory} to JacobsProgrammaticCore during load`
                         );
                     } else if (!currentCategory) {
+                        // Course not in any category, track this as null
+                        setAnchorCourseOriginalCategory(null);
+                        console.log(`${course.code} not in any category during load, tracking as null`);
+                        
                         // Add directly to JacobsProgrammaticCore if not in any category
                         setCoursePlan((prev) => ({
                             ...prev,
@@ -1026,6 +1038,21 @@ export default function PlannerPage() {
                     } else {
                         console.log(
                             `Anchor course ${course.code} is already in JacobsProgrammaticCore`
+                        );
+                    }
+
+                    // Add 1-credit INFO 5920 to JacobsProgrammaticCore if not already present
+                    if (!hasOneCreditInfo5920InCore()) {
+                        const oneCreditInfo5920 = createOneCreditInfo5920();
+                        setCoursePlan((prev) => ({
+                            ...prev,
+                            JacobsProgrammaticCore: [
+                                ...(prev.JacobsProgrammaticCore || []),
+                                oneCreditInfo5920,
+                            ],
+                        }));
+                        console.log(
+                            "Added 1-credit INFO 5920 to JacobsProgrammaticCore during load (anchor course exists)"
                         );
                     }
                 }
@@ -1641,13 +1668,23 @@ export default function PlannerPage() {
             // Update selected anchor course state
             setSelectedAnchorCourse(anchorCourse);
 
-            // Move the anchor course to JacobsProgrammaticCore
+            // Track the original category before moving the anchor course
             const currentCategory = findCourseInPlan(anchorCourse.id);
+            if (currentCategory && currentCategory !== "JacobsProgrammaticCore") {
+                setAnchorCourseOriginalCategory(currentCategory);
+                console.log(`Tracking original category for ${anchorCourse.code}: ${currentCategory}`);
+            } else if (!currentCategory) {
+                // Course isn't in any category yet, track this as null
+                setAnchorCourseOriginalCategory(null);
+                console.log(`${anchorCourse.code} not in any category, tracking as null`);
+            }
+
+            // Move the anchor course to JacobsProgrammaticCore
             if (
                 currentCategory &&
                 currentCategory !== "JacobsProgrammaticCore"
             ) {
-                // Remove from current category
+                // Remove from current category and add to JacobsProgrammaticCore
                 setCoursePlan((prev) => ({
                     ...prev,
                     [currentCategory]:
@@ -1675,9 +1712,65 @@ export default function PlannerPage() {
                     `Added ${anchorCourse.code} to JacobsProgrammaticCore as anchor course`
                 );
             }
+
+            // Add 1-credit INFO 5920 to JacobsProgrammaticCore if not already present
+            if (!hasOneCreditInfo5920InCore()) {
+                const oneCreditInfo5920 = createOneCreditInfo5920();
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore: [
+                        ...(prev.JacobsProgrammaticCore || []),
+                        oneCreditInfo5920,
+                    ],
+                }));
+                console.log(
+                    "Added 1-credit INFO 5920 to JacobsProgrammaticCore for anchor course"
+                );
+            }
         } else if (!hasTechie5901) {
-            // Clear selected anchor course when unchecking
+            // Restore anchor course to its original category if we have one selected
+            const currentAnchorCourse = selectedAnchorCourse;
+            if (currentAnchorCourse && anchorCourseOriginalCategory) {
+                // Move the anchor course back to its original category
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore: (prev.JacobsProgrammaticCore || []).filter(
+                        (c) => c.id !== currentAnchorCourse.id
+                    ),
+                    [anchorCourseOriginalCategory]: [
+                        ...(prev[anchorCourseOriginalCategory] || []),
+                        currentAnchorCourse,
+                    ],
+                }));
+                console.log(`Restored ${currentAnchorCourse.code} from JacobsProgrammaticCore to ${anchorCourseOriginalCategory}`);
+            } else if (currentAnchorCourse && anchorCourseOriginalCategory === null) {
+                // Course wasn't in any category originally, just remove it from JacobsProgrammaticCore
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore: (prev.JacobsProgrammaticCore || []).filter(
+                        (c) => c.id !== currentAnchorCourse.id
+                    ),
+                }));
+                console.log(`Removed ${currentAnchorCourse.code} from JacobsProgrammaticCore (wasn't in any category originally)`);
+            } else if (currentAnchorCourse) {
+                // We have an anchor course but no tracked original category (edge case)
+                // Just remove from JacobsProgrammaticCore and log a warning
+                setCoursePlan((prev) => ({
+                    ...prev,
+                    JacobsProgrammaticCore: (prev.JacobsProgrammaticCore || []).filter(
+                        (c) => c.id !== currentAnchorCourse.id
+                    ),
+                }));
+                console.warn(`No original category tracked for ${currentAnchorCourse.code}, just removed from JacobsProgrammaticCore`);
+            }
+
+            // Clear selected anchor course state and original category tracking
             setSelectedAnchorCourse(null);
+            setAnchorCourseOriginalCategory(null);
+            
+            // Remove 1-credit INFO 5920
+            removeOneCreditInfo5920FromCore();
+            console.log("Cleared anchor course selection and removed 1-credit INFO 5920 from JacobsProgrammaticCore");
         }
 
         // In production mode, reload special requirements to reflect the database change
@@ -1710,6 +1803,42 @@ export default function PlannerPage() {
             }
         }
         return null;
+    };
+
+    // Utility function to create a 1-credit INFO 5920 course object
+    const createOneCreditInfo5920 = (): Course => {
+        return {
+            id: "info-5920-1cr-anchor",
+            code: "INFO 5920",
+            name: "Specialization Project (1cr)",
+            credits: 1,
+            description: "1-credit component of INFO 5920 added when taking with anchor course.",
+            department: "INFO",
+            semester: "Spring", // This can be adjusted as needed
+            year: new Date().getFullYear(),
+        };
+    };
+
+    // Utility function to check if 1-credit INFO 5920 already exists in programmatic core
+    const hasOneCreditInfo5920InCore = (): boolean => {
+        const corecourses = coursePlan.JacobsProgrammaticCore || [];
+        return corecourses.some(course => 
+            course.code === "INFO 5920" && 
+            course.credits === 1 && 
+            course.id === "info-5920-1cr-anchor"
+        );
+    };
+
+    // Utility function to remove 1-credit INFO 5920 from programmatic core
+    const removeOneCreditInfo5920FromCore = () => {
+        setCoursePlan((prev) => ({
+            ...prev,
+            JacobsProgrammaticCore: (prev.JacobsProgrammaticCore || []).filter(
+                course => !(course.code === "INFO 5920" && 
+                           course.credits === 1 && 
+                           course.id === "info-5920-1cr-anchor")
+            ),
+        }));
     };
 
     // Helper function to check if a course fulfills ethics requirement
