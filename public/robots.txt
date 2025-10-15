@@ -1,9 +1,20 @@
 # *
 User-agent: *
 Allow: /
+Allow: /planner
+Allow: /courses
+Allow: /reviews
+Allow: /forum
+Allow: /contact
+Allow: /faq
+Allow: /privacy-policy
+Allow: /terms-of-service
 Disallow: /api/*
 Disallow: /auth/*
+Disallow: /admin/*
 Disallow: /settings
+Disallow: /my-reviews
+Disallow: /user
 Disallow: /_next/*
 Disallow: /*.json
 
