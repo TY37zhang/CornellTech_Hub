@@ -7,152 +7,20 @@ A student-built community platform for Cornell Tech students to collaboratively 
 ## Table of Contents
 
 - [Features](#features)
-  - [🎓 Course Management System](#-course-management-system)
-  - [📚 Academic Planning Suite](#-academic-planning-suite)
-  - [💬 Community Forum](#-community-forum)
-  - [🔐 Authentication & User Profiles](#-authentication--user-profiles)
-  - [✨ Advanced UI & Experience](#-advanced-ui--experience)
-  - [🛡️ Administration & Security](#️-administration--security)
-  - [🛠️ Support & Information](#️-support--information)
-- [Tech Stack](#tech-stack)
-  - [Frontend](#frontend)
-  - [Backend & Infrastructure](#backend--infrastructure)
-  - [Development & Optimization](#development--optimization)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Cornell Course Data](#cornell-course-data)
-- [Architecture & Design](#architecture--design)
-  - [Application Architecture](#application-architecture)
-  - [Design Principles](#design-principles)
 - [Project Structure](#project-structure)
-  - [Key Directories Explained](#key-directories-explained)
 - [Environment Variables](#environment-variables)
 - [Database Architecture](#database-architecture)
-  - [Core Entities](#core-entities)
-  - [Community Features](#community-features)
-  - [Administrative Features](#administrative-features)
-  - [Advanced Features](#advanced-features)
-  - [Data Relationships](#data-relationships)
-- [Usage Guidelines](#usage-guidelines)
-  - [Authentication & Authorization](#authentication--authorization)
-  - [Academic Programs Supported](#academic-programs-supported)
-  - [Key Features Usage](#key-features-usage)
 - [Development Workflow](#development-workflow)
-  - [Scripts & Commands](#scripts--commands)
-  - [Performance Monitoring](#performance-monitoring)
-- [Deployment](#deployment)
-  - [Vercel Deployment (Recommended)](#vercel-deployment-recommended)
-  - [Environment-Specific Configuration](#environment-specific-configuration)
 - [Contributing](#contributing)
-  - [Development Setup](#development-setup)
-  - [Contribution Guidelines](#contribution-guidelines)
-- [Community & Support](#community--support)
-  - [Getting Help](#getting-help)
-  - [Project Status](#project-status)
 
 ## Features
 
-### 🎓 Course Management System
-
-- **Comprehensive Catalog**: Browse 500+ Cornell Tech courses with detailed information
-- **Advanced Search & Filtering**: Find courses by department, credits, semester, or keywords
-- **Peer Reviews**: Multi-dimensional rating system (overall rating, difficulty, workload)
-- **Professor Information**: View instructor assignments and course history
-- **Department Organization**: Courses organized by CS, ECE, ORIE, INFO, TECH, and more
-
-### 📚 Academic Planning Suite
-
-- **Program-Specific Planning**: Tailored for all Cornell Tech programs:
-    - **MEng**: Computer Science, Data Science, Electrical & Computer Engineering, Operations Research
-    - **MS**: Design Technology, Information Systems (3 specialized tracks)
-    - **MBA**: Johnson Cornell Tech
-    - **LLM**: Law, Technology & Entrepreneurship
-- **Intelligent Requirement Tracking**: Automatic progress monitoring for degree requirements
-- **Credit Management**: Real-time credit counting and validation
-- **Interactive Scheduling**: Weekly timetable with drag-and-drop course planning
-- **Demo Mode**: Full functionality without login using sample data
-- **Auto-Save**: Persistent data storage for authenticated users, localStorage for demo users
-
-### 💬 Community Forum
-
-- **Organized Discussions**: 7 specialized categories (Academics, Campus Life, Career, Events, General, Housing, Technology)
-- **Threaded Comments**: Nested comment system with upvote/downvote functionality
-- **Rich Post Management**: Create, edit, save posts with markdown support
-- **Engagement Tracking**: Like system, view analytics, and notification preferences
-- **Advanced Search**: Find discussions by keywords, categories, and user activity
-
-### 🔐 Authentication & User Profiles
-
-- **Cornell Email Restriction**: Exclusive access for @cornell.edu email addresses
-- **Google OAuth Integration**: Seamless sign-in with Cornell Google accounts
-- **Program Association**: Links users to their specific Cornell Tech program
-- **Profile Customization**: Avatar upload via Cloudinary, program selection, personal settings
-
-### ✨ Advanced UI & Experience
-
-- **Animated Components**: Sophisticated motion design with Framer Motion
-- **Interactive Demos**: Showcase page for advanced animation patterns
-- **Responsive Design**: Mobile-first approach with collapsible navigation
-- **Loading Optimization**: Skeleton screens and progressive loading states
-- **Accessibility**: ARIA labels and keyboard navigation support
-
-### 🛡️ Administration & Security
-
-- **Comprehensive Admin Dashboard**: Real-time statistics, system health monitoring, and user analytics
-- **Advanced User Management**: Role-based access control with Student/Faculty/Staff/Admin/Moderator roles
-- **Content Moderation System**: Complete moderation workflow with flagging, hiding, deletion, and audit trails
-- **Security Monitoring**: Real-time security event tracking, rate limiting, and IP-based suspicious activity detection
-- **Report Management**: User reporting system with admin review workflow and content moderation
-- **Database Administration**: Performance metrics, connection monitoring, and health checks with live table stats
-- **Feedback System**: Admin interface for processing user suggestions and bug reports
-- **Moderation Logs**: Complete audit trails for all administrative actions with searchable history
-- **Online User Tracking**: Real-time monitoring of active users and session management
-- **Rate Limiting**: Campus-scale rate limiting (800+ users) with endpoint-specific configurations
-
-### 🛠️ Support & Information
-
-- **FAQ System**: Comprehensive help with accordion-style organization
-- **Contact System**: Direct communication with platform maintainers
-- **Feedback Collection**: User suggestions and bug reporting system
-- **Legal Compliance**: Privacy policy and terms of service
-
-## Tech Stack
-
-### Frontend
-
-- **Next.js 15.3.1** - React framework with App Router
-- **React 18.3.1** - UI library with concurrent features
-- **TypeScript** - Type safety and enhanced developer experience
-- **Tailwind CSS v4.1.11** - Modern utility-first CSS framework
-- **Radix UI** - Accessible, unstyled UI primitives
-- **Framer Motion 12.9.2** - Advanced animations and transitions
-- **DnD Kit** - Drag-and-drop interactions for course planning
-- **Lucide React** - Beautiful, customizable icons
-- **React Hook Form** - Performant form management
-- **Zod** - Schema validation for type safety
-- **Sonner** - Modern toast notifications
-- **Class Variance Authority** - Component styling utilities
-
-### Backend & Infrastructure
-
-- **Next.js API Routes** - Full-stack API with comprehensive routing
-- **Prisma ORM 6.12.0** - Type-safe database client with migrations
-- **PostgreSQL** - Production database with 35+ table schema
-- **NextAuth.js** - Secure authentication with Google OAuth
-- **Cloudinary** - Image upload, optimization, and CDN
-- **Resend** - Transactional email service for notifications
-- **Vercel** - Deployment platform with analytics and monitoring
-
-### Development & Optimization
-
-- **ESLint** - Code linting and formatting
-- **TypeScript** - Static type checking
-- **Next Bundle Analyzer** - Bundle size optimization
-- **Vercel Analytics** - Performance monitoring
-- **Vercel Speed Insights** - Core Web Vitals tracking
-- **Next Sitemap** - SEO optimization
-- **PostCSS** - CSS processing and optimization
+- **🎓 Course Catalog**: Browse 500+ Cornell Tech courses with peer reviews and ratings
+- **📚 Academic Planner**: Program-specific course planning with requirement tracking and scheduling
+- **💬 Community Forum**: Discussion platform with 7 specialized categories and threaded comments
+- **👤 User Profiles**: Cornell email authentication with Google OAuth and profile customization
+- **🛡️ Admin Dashboard**: Comprehensive administration with moderation, security monitoring, and analytics
 
 ## Getting Started
 
@@ -162,7 +30,6 @@ A student-built community platform for Cornell Tech students to collaboratively 
 - **PostgreSQL database** (local installation or cloud service like Neon)
 - **Cornell email address** (@cornell.edu required for authentication)
 - **Google Cloud Console project** (for OAuth setup)
-- **Environment variables** (see configuration section below)
 
 ### Installation
 
@@ -219,26 +86,6 @@ cd scraper
 python3 scripts/update_database.py cornell_courses.json
 ```
 
-For detailed scraper documentation, see [scraper/README.md](scraper/README.md).
-
-## Architecture & Design
-
-### Application Architecture
-
-- **Full-Stack**: Next.js with App Router for both frontend and API
-- **Database**: PostgreSQL with Prisma ORM for type safety
-- **Authentication**: NextAuth.js with Google OAuth provider
-- **File Storage**: Cloudinary for avatar and media uploads
-- **Deployment**: Vercel with analytics and performance monitoring
-
-### Design Principles
-
-- **Student-Centric**: Designed specifically for Cornell Tech workflows
-- **Performance-First**: Optimized loading, caching, and bundle size
-- **Accessibility**: WCAG compliant with proper ARIA labels
-- **Mobile-Responsive**: Touch-friendly interface for all devices
-- **Type Safety**: Full TypeScript coverage with Zod validation
-
 ## Project Structure
 
 ```
@@ -253,9 +100,6 @@ cornell-tech-hub/
 │   │   └── users/         # User role management and analytics
 │   ├── api/               # Full-stack API routes
 │   │   ├── admin/         # Admin-only API endpoints
-│   │   │   ├── moderation/ # Content moderation APIs
-│   │   │   ├── reports/   # User report management
-│   │   │   └── users/     # User management APIs
 │   │   ├── auth/          # NextAuth.js authentication
 │   │   ├── courses/       # Course CRUD and search
 │   │   ├── forum/         # Forum posts and comments
@@ -300,30 +144,9 @@ cornell-tech-hub/
 └── styles/                # Global CSS and Tailwind config
 ```
 
-- **app/components/**: Shared components used within the app directory.
-- **components/**: Global components, including UI primitives and providers.
-- **middleware/**: Contains middleware logic, such as validation.
-- **lib/**: Utility functions, database/auth/prisma/email helpers, and validations.
-- **prisma/**: Database schema and migrations (ensure this directory exists if using Prisma).
-- **db-info/**: Supplemental database documentation or ER diagrams.
-- **misc/**: Miscellaneous scripts, experiments, or one-off utilities.
-
-### Key Directories Explained
-
-- **app/api/**: RESTful API endpoints with Next.js App Router
-- **app/admin/**: Comprehensive admin dashboard with user management, moderation, security monitoring
-- **app/planner/**: Interactive course planning with drag-and-drop
-- **app/forum/**: Community discussion system with categories
-- **app/courses/**: Course catalog, search, and review system
-- **components/ui/**: Radix UI components styled with Tailwind CSS
-- **lib/**: Core utilities including auth, database, validation, and role management
-- **middleware/**: Rate limiting, request validation, and security middleware
-- **scraper/**: Python tools for importing Cornell course data
-- **prisma/**: Database schema with comprehensive academic models
-
 ## Environment Variables
 
-Add the following keys to `.env.local` (values shown are examples):
+Add the following keys to `.env.local`:
 
 ```env
 # Database Configuration
@@ -332,8 +155,8 @@ DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE"
 # Authentication (Google OAuth)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
-NEXTAUTH_URL="http://localhost:3000"     # Your application URL
-NEXTAUTH_SECRET="your-nextauth-secret"   # Random string for JWT signing
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
 
 # File Storage (Cloudinary)
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
@@ -342,112 +165,63 @@ CLOUDINARY_API_SECRET="your-cloudinary-secret"
 
 # Email Service (Resend)
 RESEND_API_KEY="your-resend-api-key"
-ADMIN_EMAIL="admin@yourdomain.com"       # Receives contact & feedback emails
-EMAIL_DOMAIN="yourdomain.com"            # Optional — custom sending domain
+ADMIN_EMAIL="admin@yourdomain.com"
+EMAIL_DOMAIN="yourdomain.com"
 
 # Application Configuration
-APP_URL="http://localhost:3000"          # Base URL of the application
-NODE_ENV="development"                   # Environment mode
+APP_URL="http://localhost:3000"
+NODE_ENV="development"
 
 # Analytics & Monitoring (Production)
-NEXT_PUBLIC_VERCEL_ANALYTICS_ID="your-analytics-id"  # Optional
-VERCEL_URL="your-production-url"                     # Auto-set by Vercel
+NEXT_PUBLIC_VERCEL_ANALYTICS_ID="your-analytics-id"
+VERCEL_URL="your-production-url"
 ```
-
-> **Important**:
->
-> - For Google OAuth, add your domain to authorized origins in Google Console
-> - For production deployment on Vercel, set these variables in project settings
-> - The `NEXTAUTH_SECRET` should be a random 32+ character string
-> - Cornell email restriction is enforced at the application level
 
 ## Database Architecture
 
-The application uses a PostgreSQL database with Prisma ORM, featuring a comprehensive schema designed for academic planning and community engagement:
-
-### Core Entities
-
-- **Users**: Authentication, profiles, program associations
-- **Courses**: Complete Cornell Tech catalog with metadata
-- **Course Reviews**: Multi-dimensional rating system
-- **Course Planner**: User-specific academic planning and progress tracking
-- **Course Schedules**: Weekly timetable management
-- **Course Categories**: Department and subject organization
-
-### Community Features
-
-- **Forum Posts**: Discussion threads with categorization
-- **Forum Comments**: Nested comment system with voting
-- **Forum Categories**: Organized discussion topics
-- **Forum Likes & Views**: Engagement tracking
-- **Forum Saved Posts**: User bookmarking system
-- **Content Moderation**: Comprehensive moderation system with flagging, review, and resolution workflows
-- **User Reporting**: Community-driven content reporting with admin review process
-
-### Administrative Features
-
-- **User Role Management**: Student/Faculty/Staff roles with Admin/Moderator elevation system
-- **Content Moderation Dashboard**: Complete moderation interface with audit trails
-- **Security Event Monitoring**: Real-time tracking of authentication failures, rate limiting, and suspicious activity
-- **Database Administration**: Performance monitoring, connection management, and health checks
-- **Report Processing**: Structured workflow for handling user reports and content violations
-- **Feedback Management**: Admin interface for processing user suggestions and bug reports
-
-### Advanced Features
-
-- **Hot Post Algorithm**: Intelligent ranking based on engagement, views, and recency
-- **Search Cache**: Optimized search performance with caching layer
-- **User Token Usage**: Analytics and usage tracking for future AI features
-- **Rate Limiting**: Campus-scale protection (800+ users) with endpoint-specific configurations
-- **Security Logging**: Comprehensive audit trails for all administrative and moderation actions
-- **Special Requirements**: Custom academic requirement handling (ethics courses, program-specific)
-- **Real-time Statistics**: Live database metrics and system health monitoring
-- **Chat Infrastructure**: Database schema ready for future AI integration
-
-### Data Relationships
-
-- Users can create multiple course plans and reviews with full CRUD operations
-- Courses support many-to-many relationships with categories and cross-listing
-- Forum posts support nested comments with upvote/downvote voting system
-- Comprehensive indexing for performance optimization across 35+ tables
-- Moderation system with complete audit trails and content status tracking
-- Future-ready infrastructure for chat/AI and marketplace features
-
-## Usage Guidelines
-
-### Authentication & Authorization
-
-- **Cornell Email Only**: Users must sign in with a @cornell.edu email address
-- **Google OAuth**: Authentication is handled through Cornell's Google Workspace
-- **Program Association**: Users select their Cornell Tech program during onboarding
-- **Role-Based Access**: Student/Faculty/Staff roles with Admin/Moderator elevation capabilities
-- **Route Protection**: Middleware-enforced access control for admin and moderation features
-
-### Academic Programs Supported
-
-- **Master of Engineering (MEng)**:
-    - Computer Science
-    - Data Science
-    - Electrical & Computer Engineering
-    - Operations Research & Information Engineering
-- **Master of Science (MS)**:
-    - Design Technology
-    - Information Systems (3 specialized tracks)
-- **Master of Business Administration (MBA)**:
-    - Johnson Cornell Tech
-- **Master of Laws (LLM)**:
-    - Law, Technology & Entrepreneurship
-
-### Key Features Usage
-
-1. **Course Planning**: Build your academic plan with drag-and-drop scheduling and progress tracking
-2. **Course Reviews**: Share detailed course experiences with multi-dimensional ratings
-3. **Forum Discussions**: Engage in 7 specialized categories with threaded comments and voting
-4. **Demo Mode**: Try the planner without logging in using sample data
-5. **Community Moderation**: Report inappropriate content and participate in community governance
-6. **Admin Dashboard**: Access comprehensive administration tools (Admin/Moderator roles only)
-7. **Hot Posts**: Discover trending discussions with intelligent ranking algorithms
-8. **Post Management**: Save posts, track views, and manage notification preferences
+```
+PostgreSQL Database (35+ Tables)
+│
+├── 👤 User Management
+│   ├── User (auth, profiles, roles)
+│   ├── Account (OAuth providers)
+│   ├── Session (active sessions)
+│   └── VerificationToken
+│
+├── 📚 Academic System
+│   ├── Course (catalog data)
+│   ├── CourseCategory (departments)
+│   ├── CourseReview (ratings, feedback)
+│   ├── CoursePlanner (user plans)
+│   ├── CourseSchedule (timetables)
+│   └── SpecialRequirement (program rules)
+│
+├── 💬 Community Features
+│   ├── ForumPost (discussions)
+│   ├── ForumComment (nested threads)
+│   ├── ForumCategory (topics)
+│   ├── ForumLike (engagement)
+│   ├── ForumView (analytics)
+│   └── ForumSavedPost (bookmarks)
+│
+├── 🛡️ Moderation & Security
+│   ├── ContentModeration (flags, reviews)
+│   ├── UserReport (community reports)
+│   ├── ModerationLog (audit trails)
+│   ├── SecurityEvent (monitoring)
+│   └── RateLimit (protection)
+│
+├── 📊 Analytics & Performance
+│   ├── HotPostAlgorithm (trending)
+│   ├── SearchCache (optimization)
+│   ├── UserTokenUsage (tracking)
+│   └── DatabaseMetrics (health)
+│
+└── 🔮 Future Features
+    ├── ChatMessage (AI integration)
+    ├── ChatConversation
+    └── MarketplaceItem
+```
 
 ## Development Workflow
 
@@ -456,7 +230,7 @@ The application uses a PostgreSQL database with Prisma ORM, featuring a comprehe
 ```bash
 # Development
 npm run dev                 # Start development server
-npm run build              # Build for production (includes Prisma generation and sitemap)
+npm run build              # Build for production
 npm run start              # Start production server
 npm run lint               # Run ESLint
 
@@ -467,33 +241,7 @@ npx prisma generate        # Generate Prisma client
 
 # Analytics & Optimization
 ANALYZE=true npm run build # Analyze bundle size
-npm run compress-assets    # Compress static assets
 ```
-
-### Performance Monitoring
-
-The application includes several performance optimization features:
-
-- **Vercel Analytics**: Real-time performance monitoring
-- **Speed Insights**: Core Web Vitals tracking
-- **Bundle Analyzer**: Bundle size optimization
-- **Search Caching**: Optimized search performance
-- **Image Optimization**: Cloudinary integration with Next.js Image
-
-## Deployment
-
-### Vercel Deployment (Recommended)
-
-1. **Connect Repository**: Link your GitHub repository to Vercel
-2. **Environment Variables**: Configure all required environment variables
-3. **Database**: Ensure your PostgreSQL database is accessible
-4. **Domain Setup**: Configure custom domain if needed
-
-### Environment-Specific Configuration
-
-- **Development**: Uses local database and `localhost:3000`
-- **Preview**: Vercel preview deployments with preview database
-- **Production**: Production database with custom domain
 
 ## Contributing
 
@@ -515,17 +263,3 @@ The application includes several performance optimization features:
 - Test authentication flows with Cornell email
 - Ensure mobile responsiveness
 - Update documentation as needed
-
-## Community & Support
-
-### Getting Help
-
-- **Issues**: Report bugs or feature requests via GitHub Issues
-- **Discussions**: Use GitHub Discussions for questions
-- **Contact**: Use the in-app contact form for direct communication
-
-### Project Status
-
-- **Maintenance**: Actively maintained by Cornell Tech students
-- **Independent**: Not officially affiliated with Cornell Tech
-- **Community-Driven**: Built by students, for students
