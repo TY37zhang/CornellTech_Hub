@@ -11,12 +11,11 @@ export function AnimatedToaster() {
         className: "toast",
         duration: 5000,
         style: {
-          background: "white",
-          color: "rgb(17 24 39)",
-          border: "1px solid rgb(229 231 235)",
+          background: "black",
+          color: "rgb(229 229 229)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
           borderRadius: "0",
-          boxShadow:
-            "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+          boxShadow: "none",
         },
       }}
     />
@@ -29,7 +28,7 @@ export const Toast = ({ children, ...props }) => (
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
     transition={{ duration: 0.2, ease: "easeOut" }}
-    className="bg-white text-gray-900 border border-gray-200 rounded-none p-4 shadow-lg"
+    className="bg-black text-neutral-200 border border-white/[0.08] rounded-none p-4"
     {...props}
   >
     {children}

@@ -15,7 +15,7 @@ const Card = React.forwardRef<
       <motion.div
         ref={ref}
         className={cn(
-          "rounded-none border bg-card text-card-foreground shadow-sm",
+          "rounded-none border bg-card text-card-foreground",
           className,
         )}
         whileHover={{
@@ -33,7 +33,7 @@ const Card = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "rounded-none border bg-card text-card-foreground shadow-sm",
+        "rounded-none border bg-card text-card-foreground",
         className,
       )}
       {...props}

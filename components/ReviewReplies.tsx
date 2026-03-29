@@ -223,7 +223,7 @@ export default function ReviewReplies({
           {replies.map((reply) => (
             <Card
               key={reply.id}
-              className="bg-blue-500/10 border-blue-500/20 shadow-sm ml-4"
+              className="bg-blue-500/10 border-blue-500/20 ml-4"
             >
               <CardHeader className="pb-2 pt-4">
                 <div className="flex items-start justify-between">
@@ -326,7 +326,7 @@ export default function ReviewReplies({
             </div>
           ) : (
             <div className="ml-4">
-              <Card className="border-blue-500/20 bg-blue-500/10 shadow-sm">
+              <Card className="border-blue-500/20 bg-blue-500/10">
                 <CardContent className="px-6 py-5">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium text-blue-400 pt-2 pb-0">

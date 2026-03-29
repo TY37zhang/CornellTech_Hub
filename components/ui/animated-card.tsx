@@ -27,7 +27,7 @@ export function AnimatedCard({
     return (
       <motion.div
         className={cn(
-          "rounded-none border bg-card text-card-foreground shadow-sm",
+          "rounded-none border bg-card text-card-foreground",
           className,
         )}
         initial={{ opacity: 0, y: 20 }}
@@ -51,7 +51,7 @@ export function AnimatedCard({
   return (
     <motion.div
       className={cn(
-        "rounded-none border bg-card text-card-foreground shadow-sm",
+        "rounded-none border bg-card text-card-foreground",
         className,
       )}
       initial={{ opacity: 0, y: 20 }}
