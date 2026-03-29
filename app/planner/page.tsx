@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+
 import { Input } from "@/components/ui/input";
 import dynamic from "next/dynamic";
 import { useToast } from "@/components/ui/use-toast";
@@ -32,6 +25,17 @@ import {
 } from "@/lib/sampleData";
 import CreditTransferModal from "./components/CreditTransferModal";
 import EditCreditTransferModal from "./components/EditCreditTransferModal";
+import HelpSection from "./components/HelpSection";
+import DemoBanner from "./components/DemoBanner";
+import ProgressOverview from "./components/ProgressOverview";
+import RequirementCard from "./components/RequirementCard";
+import type {
+  Course,
+  Requirement,
+  ProgramRequirement,
+  CreditTransfer,
+} from "./types";
+import { programRequirements } from "./data/programRequirements";
 
 /**
  * How to Use the Planner:
@@ -49,524 +53,26 @@ import EditCreditTransferModal from "./components/EditCreditTransferModal";
  * - The progress bars show your completion status for each requirement
  */
 
-interface Course {
-  id: string;
-  code: string;
-  name: string;
-  credits: number;
-  description?: string;
-  department: string;
-  semester: string;
-  year: number;
-  taken?: boolean;
-}
-
-interface Requirement {
-  credits: number;
-  description: string;
-  courses?: Course[];
-  categories?: {
-    [key: string]: string[];
-  };
-}
-
-interface ProgramRequirement {
-  name: string;
-  totalCredits: number;
-  requirements: {
-    [key: string]: Requirement;
-  };
-  additionalRequirements?: string[];
-  optionalCertificate?: {
-    name: string;
-    requirements: string[];
-  };
-}
-
-interface ProgramRequirements {
-  [key: string]: ProgramRequirement;
-}
-
-interface CreditTransfer {
-  id: string;
-  fromCategory: string;
-  toCategory: string;
-  amount: number;
-}
-
-// Program requirements data structure
-const programRequirements: ProgramRequirements = {
-  "meng-cs": {
-    name: "MEng in Computer Science",
-    totalCredits: 30,
-    requirements: {
-      TechnicalCourses: {
-        credits: 18,
-        description:
-          "15 credits must be CS courses (5000-level or above). The remaining 3 credits must be Technical Electives (5000-level or above, choose from CS, ORIE, ECE, and INFO courses).",
-        courses: [],
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4 credits), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3 credits), and TECH Studio Elective (1 credit). All Studio courses must be taken for a letter grade and require a grade of B or higher.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 4,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses. Maximum 2 credits can be taken S/U.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester",
-      "Maximum 18 credits per semester without Program Director approval",
-      "Maximum 2 credit hours graded as S/U towards degree requirements",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-    ],
-  },
-  "meng-ds": {
-    name: "MEng in Data Science & Decision Analytics",
-    totalCredits: 30,
-    requirements: {
-      DataScienceCourses: {
-        credits: 9,
-        description:
-          "Three courses total with at least one from each category. Category 1 - ML/Data Science: CS 5304 Data Science in the Wild, ORIE 5355 Applied Data Science, CS 5785 Applied Machine Learning, CS 5781 Machine Learning Engineering, CS 5787 Deep Learning, ORIE 5381 Optimization for AI. Category 2 - Modeling and Decision-Making: ECE 5242 Intelligent Autonomous Systems, ORIE 5751 Learning & Decision-Making, ECE 5260 Data Science for Networked Systems, ORIE 5380 Optimization Methods, ORIE 5530 Modeling Under Uncertainty.",
-        categories: {
-          mlDataScience: [
-            "CS 5304",
-            "ORIE 5355",
-            "CS 5785",
-            "CS 5781",
-            "CS 5787",
-            "ORIE 5381",
-          ],
-          modelingDecisionMaking: [
-            "ECE 5242",
-            "ORIE 5751",
-            "ECE 5260",
-            "ORIE 5380",
-            "ORIE 5530",
-          ],
-        },
-        courses: [],
-      },
-      TechnicalCourses: {
-        credits: 9,
-        description:
-          "9 credits of Technical Electives (choose from any ECE, CS, ORIE, or INFO course offerings). Note: Any data science core classes not taken to fulfill the core requirement can be taken to fulfill the technical course requirements. You should discuss your choices with the program director.",
-        courses: [],
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4 credits), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3 credits), and TECH Studio Elective (1 credit). All Studio courses must be taken for a letter grade and require a grade of B or higher. Note: TECHIE prefix classes do not qualify as Studio electives.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 4,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses. Students must complete coursework focusing on social and ethical implications of technology-driven decision-making through courses like TECH 5010 or INFO 5325.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester",
-      "Maximum 18 credits per semester without Program Director approval",
-      "Maximum 2 credit hours graded as S/U towards degree requirements",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-    ],
-  },
-  "meng-ece": {
-    name: "MEng in Electrical and Computer Engineering",
-    totalCredits: 30,
-    requirements: {
-      TechnicalCourses: {
-        credits: 18,
-        description:
-          "Required core courses (6 credits): ECE 5414 Applied Machine Learning OR CS 5781 Machine Learning Engineering (3 credits), AND ECE 5415 Applied Digital Signal Processing and Communications OR ECE 5746 Applied Digital ASIC Design OR ECE 5755 Computer Systems & Architecture (3 credits). Additional requirements: 6 credits of ECE Electives, and 6 credits of Technical Electives (choose from any ECE, CS, ORIE, or INFO course offerings).",
-        courses: [],
-        categories: {
-          mlCore: ["ECE 5414", "CS 5781"],
-          systemsCore: ["ECE 5415", "ECE 5746", "ECE 5755"],
-        },
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4 credits), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3 credits), and TECH Studio Elective (1 credit). All Studio courses must be taken for a letter grade and require a grade of B or higher. Note: TECHIE prefix classes do not qualify as Studio electives.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 4,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses. Maximum 2 credits can be taken S/U.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester",
-      "Maximum 18 credits per semester without Program Director approval",
-      "Maximum 2 credit hours graded as S/U towards degree requirements",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-    ],
-  },
-  "meng-orie": {
-    name: "MEng in Operations Research and Information Engineering",
-    totalCredits: 30,
-    requirements: {
-      TechnicalCourses: {
-        credits: 18,
-        description:
-          "Students must take at least 18 credits from advanced technical courses, with at least 12 credits from ORIE courses. Required core: ORIE 5530 Modeling Under Uncertainty (3cr), ORIE 5380 Optimization Methods (3cr), ORIE 5750 Applied Machine Learning OR CS 5781 Machine Learning Engineering (3cr)*. Additional requirements: 3 credits of ORIE electives, and 6 credits of Technical Electives (choose from any ECE, CS, ORIE, or INFO course offerings). *Note: CS 5781 counts towards 18 technical credits but not towards 12 required ORIE credits.",
-        courses: [],
-        categories: {
-          requiredCore: ["ORIE 5530", "ORIE 5380"],
-          mlCore: ["ORIE 5750", "CS 5781"],
-        },
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4 credits), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3 credits), and TECH Studio Elective (1 credit). All Studio courses must be taken for a letter grade and require a grade of B or higher. Note: TECHIE prefix classes do not qualify as Studio electives.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 4,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses. Maximum 2 credits can be taken S/U.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester",
-      "Maximum 18 credits per semester without Program Director approval",
-      "Maximum 2 credit hours graded as S/U towards degree requirements",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-    ],
-  },
-  "ms-dt": {
-    name: "MS in Design Technology",
-    totalCredits: 60,
-    requirements: {
-      FirstYearCore: {
-        credits: 30,
-        description:
-          "First year core courses (both tracks): Fall - DESIGN 6151 Design and Making Across Disciplines I (6cr), DESIGN 6397 Design for Physical Interaction I (3cr), DESIGN 6297 Coding for Design I (3cr), Minor/Open Elective (3cr). Spring - DESIGN 6152 Design and Making Across Disciplines II (6cr), DESIGN 6398 Design for Physical Interaction II (3cr), DESIGN 6298 Coding for Design II (3cr), Minor/Open Elective (3cr).",
-        courses: [],
-      },
-      ThesisTrack: {
-        credits: 24,
-        description:
-          "Thesis Research Track (Ithaca-based): Fall - DESIGN 8151 Design Topic Research I (9cr), Minor/Open Elective (3cr). Spring - DESIGN 8905 Independent Design Thesis (9cr), Minor/Open Elective (3cr). Optional summer research: GRAD 9016 Thesis Research (6cr).",
-        courses: [],
-      },
-      StudioTrack: {
-        credits: 26,
-        description:
-          "Studio Professional Track (Cornell Tech-based): Fall - DESIGN 8131 Specialization Project I (3cr), TECH 5900 Product Studio (4cr), Two Minor/Open Electives (6cr). Spring - DESIGN 8935 Specialization Project II (6cr), TECH 5910/5920/5930 Startup/BigCo/PiTech Studio (3cr), Minor/Open Elective (3cr), Studio Elective (1cr).",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Students must select either Thesis Research Track (Ithaca) or Studio Professional Track (Cornell Tech) for their second year",
-      "First year is common to both tracks and focuses on foundational skills in design and technology",
-      "Students are encouraged to work in faculty labs or research programs during summer between first and second year",
-      "Studio track students must complete a collaborative specialization project in teams",
-      "A studio elective is required for graduation in the Studio Professional Track",
-      "Thesis track students must have a two-person special committee by end of first year",
-      "Thesis track students must produce a comprehensive research plan with supporting materials",
-    ],
-  },
-  "ms-is-cm": {
-    name: "MS in Information Systems (Connective Media)",
-    totalCredits: 60,
-    requirements: {
-      JacobsProgrammaticCore: {
-        credits: 17,
-        description:
-          "Studio courses (8cr): TECH 5900 Product Studio (4cr), TECH 5910/5920/5930 Startup/BigCo/PiTech Studio (3cr), TECH Studio Elective (1cr). Note: TECHIE 5300/5310/5320 do not qualify as Studio electives. All studio courses must be taken for letter grade with B or higher. Additionally: TECHIE 5901 Preparing for Spec (1cr, Fall YR1), Specialization Project (8cr over Spring YR1 and Fall YR2) - choose between Anchor Course + Paired-Prototyping Project OR Faculty-Directed Study.",
-        courses: [],
-      },
-      JacobsTechnicalCore: {
-        credits: 10,
-        description:
-          "Required courses: CS 5112 Algorithms and Data Structures for Applications OR CS 5356 Building Startup Systems (3cr); CS 5785 Applied Machine Learning OR CS 5781 Machine Learning Engineering OR INFO 5368 Practice & Applications of Machine Learning (3cr); INFO 6410 HCI & Design (3cr); Ethics requirement (1cr, can be waived with Program Director approval if covered in other courses).",
-        courses: [],
-      },
-      ConcentrationCore: {
-        credits: 9,
-        description:
-          "INFO 5310 Psychological and Social Aspects of Technology (3cr) plus 6 additional credits from approved Concentration Core courses. Check Class Roster for current offerings.",
-        courses: [],
-      },
-      ConcentrationElectives: {
-        credits: 12,
-        description:
-          "12 credits of approved Concentration Electives. Check Class Roster for current offerings.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 12,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester (average 15 credits recommended)",
-      "Maximum 18 credits per semester without Program Director approval",
-      "All classes must be taken for a letter grade (except S/U-only courses)",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-      "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
-    ],
-    optionalCertificate: {
-      name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",
-      requirements: [
-        "Complete 18 credits of advanced technical courses",
-        "At least 15 credits must be CS courses (not practicums/seminars/independent studies/projects)",
-        "All courses must be approved by Cornell and Jacobs",
-        "Must be taken for letter grade with C- or better",
-        "Must maintain 2.5 GPA minimum",
-      ],
-    },
-  },
-  "ms-is-ht": {
-    name: "MS in Information Systems (Health Tech)",
-    totalCredits: 60,
-    requirements: {
-      JacobsProgrammaticCore: {
-        credits: 17,
-        description:
-          "Studio courses (8cr): TECH 5900 Product Studio (4cr), TECH 5910/5920/5930 Startup/BigCo/PiTech Studio (3cr), TECH Studio Elective (1cr). Note: TECHIE 5300/5310/5320 do not qualify as Studio electives. All studio courses must be taken for letter grade with B or higher. Additionally: TECHIE 5901 Preparing for Spec (1cr, Fall YR1), Specialization Project (8cr over Spring YR1 and Fall YR2) - choose between Anchor Course + Paired-Prototyping Project OR Faculty-Directed Study.",
-        courses: [],
-      },
-      JacobsTechnicalCore: {
-        credits: 10,
-        description:
-          "Required courses: CS 5112 Algorithms and Data Structures for Applications OR CS 5356 Building Startup Systems (3cr); CS 5785 Applied Machine Learning OR CS 5781 Machine Learning Engineering OR INFO 5368 Practice & Applications of Machine Learning (3cr); INFO 6410 HCI & Design (3cr); Ethics requirement (1cr, can be waived with Program Director approval if covered in other courses).",
-        courses: [],
-      },
-      ConcentrationCore: {
-        credits: 9,
-        description:
-          "Required courses: INFO 5360 Healthcare Organizations & Delivery (2cr) + TECH 5999 Companion Independent Study (1cr), INFO 5375 Health Tech Oriented Machine Learning (3cr), plus 3 additional credits from approved Weill Cornell offerings or Concentration Core courses. Check Class Roster for current offerings.",
-        courses: [],
-      },
-      ConcentrationElectives: {
-        credits: 12,
-        description:
-          "12 credits of approved Concentration Electives. Choose from available offerings from Weill Cornell and approved elective courses. Check Class Roster for current offerings.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 12,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester (average 15 credits recommended)",
-      "Maximum 18 credits per semester without Program Director approval",
-      "All classes must be taken for a letter grade (except S/U-only courses)",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-      "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
-    ],
-    optionalCertificate: {
-      name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",
-      requirements: [
-        "Complete 18 credits of advanced technical courses",
-        "At least 15 credits must be CS courses (not practicums/seminars/independent studies/projects)",
-        "All courses must be approved by Cornell and Jacobs",
-        "Must be taken for letter grade with C- or better",
-        "Must maintain 2.5 GPA minimum",
-      ],
-    },
-  },
-  "ms-is-ut": {
-    name: "MS in Information Systems (Urban Tech)",
-    totalCredits: 60,
-    requirements: {
-      JacobsProgrammaticCore: {
-        credits: 17,
-        description:
-          "Studio courses (8cr): TECH 5900 Product Studio (4cr), TECH 5910/5920/5930 Startup/BigCo/PiTech Studio (3cr), TECH Studio Elective (1cr). Note: TECHIE 5300/5310/5320 do not qualify as Studio electives. All studio courses must be taken for letter grade with B or higher. Additionally: TECHIE 5901 Preparing for Spec (1cr, Fall YR1), Specialization Project (8cr over Spring YR1 and Fall YR2) - choose between Anchor Course + Paired-Prototyping Project OR Faculty-Directed Study.",
-        courses: [],
-      },
-      JacobsTechnicalCore: {
-        credits: 10,
-        description:
-          "Required courses: CS 5112 Algorithms and Data Structures for Applications OR CS 5356 Building Startup Systems (3cr); CS 5785 Applied Machine Learning OR CS 5781 Machine Learning Engineering OR INFO 5368 Practice & Applications of Machine Learning (3cr); INFO 6410 HCI & Design (3cr); Ethics requirement (1cr, can be waived with Program Director approval if covered in other courses).",
-        courses: [],
-      },
-      ConcentrationCore: {
-        credits: 9,
-        description:
-          "Required courses: INFO 5410 Urban Systems (3cr), INFO 5420 Urban Design Strategies and Case Studies (3cr), and INFO 5430 Urban Data OR CS/INFO 5304 Data Science in the Wild (3cr).",
-        courses: [],
-      },
-      ConcentrationElectives: {
-        credits: 12,
-        description:
-          "12 credits of approved Concentration Electives. Check Class Roster for current offerings.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 12,
-        description:
-          "Select from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBAY, TECH, TECHIE). Note: TECHIE 5310: Business Fundamentals (Fall only) must be taken as a prerequisite for all business courses.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester (average 15 credits recommended)",
-      "Maximum 18 credits per semester without Program Director approval",
-      "All classes must be taken for a letter grade (except S/U-only courses)",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "Minimum grade of C- required for all courses",
-      "Must maintain at least 2.5 GPA",
-      "TECH 5999 (CPT credits) do not count towards degree requirements",
-      "Technion students in proper academic state (GPA ≥ 75, English requirement compliance) may take up to two semesters break during degree",
-    ],
-    optionalCertificate: {
-      name: "Jacobs Technion-Cornell Institute Certificate of Accomplishment in Computer Science",
-      requirements: [
-        "Complete 18 credits of advanced technical courses",
-        "At least 15 credits must be CS courses (not practicums/seminars/independent studies/projects)",
-        "All courses must be approved by Cornell and Jacobs",
-        "Must be taken for letter grade with C- or better",
-        "Must maintain 2.5 GPA minimum",
-      ],
-    },
-  },
-  mba: {
-    name: "Johnson Cornell Tech MBA",
-    totalCredits: 50,
-    requirements: {
-      JohnsonCore: {
-        credits: 20,
-        description:
-          "Required core courses: NCCY 5000 Financial Accounting (2.5cr), NCCY 5020 Microeconomics for Management (2.5cr), NCCY 5030 Marketing Management (2.5cr), NCCY 5040 Leading Teams (1cr), NCCY 5050 Critical & Strategic Thinking (1.5cr), NCCY 5060 Managerial Finance (2.5cr), NCCY 5090 Strategy (2.5cr), NCCY 5010 Data Analytics & Modeling (2.5cr), NCCY 5080 Operations Management (2.5cr). All courses must be taken in specified semesters.",
-        courses: [],
-      },
-      JohnsonRequired: {
-        credits: 4,
-        description:
-          "Required courses: NBAY 6550 Programming for Data Analysis (2cr), NBAY 6150 Demystifying AI Technologies (0.5cr), NBAY 5300 Entrepreneurial Finance (1.5cr).",
-        courses: [],
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4cr, Fall), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3cr, Spring), and TECH Studio Elective (1cr, Spring). Note: TECHIE prefix classes do not qualify as Studio electives. All Studio courses must be taken for a letter grade.",
-        courses: [],
-      },
-      GeneralElectives: {
-        credits: 18,
-        description:
-          "9 credits must come from NBA, NBAY, NCCY, NMI (Fall & Spring). 9 credits selected from any offerings on Cornell Tech's campus (CS, ECE, ORIE, INFO, LAW, NBA, NBAY, TECH, TECHIE).",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester",
-      "Maximum 20 credits per semester without Faculty Program Director approval",
-      "All JCT MBA students must complete a minimum of 50 credits and meet all requirements outlined above to graduate",
-      "Maximum 2 Grade Option courses as Satisfactory/Unsatisfactory (S/U-only courses don't count towards this limit)",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "D- is the minimum grade required for other courses to count towards degree requirements",
-      "Maximum 6 directed reading credits (no more than 3 credits per term)",
-      "Must maintain at least 2.7 GPA overall and 2.5 in core NCCY courses",
-      "Must complete 3 semesters of residency at Johnson/Cornell Tech (minimum 12 credits per semester)",
-      "Curricular Practical Training credits (TECH 5999) do not count towards graduation/degree requirements",
-    ],
-  },
-  llm: {
-    name: "LLM in Law, Technology, and Entrepreneurship",
-    totalCredits: 33,
-    requirements: {
-      CoreRequirements: {
-        credits: 18,
-        description:
-          "Required courses: LAW 6331 Employment Law (1cr), LAW 6470 High Growth Corporate Transactions (2cr), LAW 6512 Intellectual Property Law (3cr), LAW 6568 Internet Law, Privacy and Security (3cr), LAW 6614 Law Team (1cr), LAW 6893 Technology Transactions (2cr), LAW 6896 Technology Transactions II (2cr), NBAY 5301 Introduction to Entrepreneurial Finance: Firm Valuation and Term Sheets (1cr), TECHIE 5300 Fundamentals of Modern Software (2cr), TECHIE 5310 Business Fundamentals (1cr).",
-        courses: [],
-      },
-      StudioCourses: {
-        credits: 8,
-        description:
-          "TECH 5900 Product Studio (4cr), TECH 5910/5920/5930 Startup/BigCo/PiTech Impact Studio (3cr), and TECH Studio Elective (1cr). Note: TECHIE prefix classes do not qualify as Studio electives. All Studio courses must be taken for a letter grade.",
-        courses: [],
-      },
-      Electives: {
-        credits: 7,
-        description:
-          "6 credits of LAW electives (at least 2 credits must be from approved Corporate Law electives) and 1 credit of Free Electives. Maximum of 12 credits permitted for electives.",
-        courses: [],
-      },
-    },
-    additionalRequirements: [
-      "Must maintain minimum 12 credits enrollment each semester (average 15 credits recommended)",
-      "Maximum 20 credits per semester without Program Director approval",
-      "Students must receive a passing grade to receive credit (audited electives do not count)",
-      "Must receive a B or higher in TECH 5900 or TECH 5910/5920/5930",
-      "All required courses must be taken for a letter grade",
-      "At least 3 credits of law electives must be taken for a letter grade",
-      "Other courses may be taken graded or S/U",
-      "Students with merit point ratio below 2.50 after first semester will be placed on informal probation",
-      "Must meet with Program Director if placed on probation before continued enrollment",
-      "Curricular Practical Training credits (TECH 5999) do not count towards graduation/degree requirements",
-    ],
-  },
-};
-
 const CourseSelector = dynamic(() => import("./components/CourseSelector"), {
   ssr: false,
-  loading: () => (
-    <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
-  ),
+  loading: () => <div className="h-48 bg-white/[0.04] animate-pulse"></div>,
 });
 
 const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
   ssr: true,
-  loading: () => (
-    <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
-  ),
+  loading: () => <div className="h-64 bg-white/[0.04] animate-pulse"></div>,
 });
 
 const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
   ssr: true,
-  loading: () => (
-    <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
-  ),
+  loading: () => <div className="h-64 bg-white/[0.04] animate-pulse"></div>,
 });
 
 const AdditionalQuestions = dynamic(
   () => import("./components/AdditionalQuestions"),
   {
     ssr: true,
-    loading: () => (
-      <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
-    ),
+    loading: () => <div className="h-32 bg-white/[0.04] animate-pulse"></div>,
   },
 );
 
@@ -1943,31 +1449,31 @@ export default function PlannerPage() {
     return (
       <div className="pt-24">
         {/* Loading Skeleton */}
-        <div className="w-full bg-gradient-to-b from-pink-50 to-white">
-          <div className="container mx-auto p-4">
+        <div className="w-full bg-black">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="text-center py-12">
-              <div className="h-12 bg-gray-200 rounded-md w-64 mx-auto mb-4 animate-pulse"></div>
-              <div className="h-6 bg-gray-200 rounded-md w-96 mx-auto animate-pulse"></div>
+              <div className="h-12 bg-white/[0.04] w-64 mx-auto mb-4 animate-pulse"></div>
+              <div className="h-6 bg-white/[0.04] w-96 mx-auto animate-pulse"></div>
             </div>
             <div className="text-center mb-8">
-              <div className="h-8 bg-gray-200 rounded-md w-80 mx-auto animate-pulse"></div>
+              <div className="h-8 bg-white/[0.04] w-80 mx-auto animate-pulse"></div>
             </div>
           </div>
         </div>
-        <div className="container mx-auto p-4 space-y-6">
-          <div className="h-24 bg-gray-200 rounded-lg animate-pulse"></div>
+        <div className="mx-auto max-w-[980px] px-6 py-12 space-y-8">
+          <div className="h-24 bg-white/[0.04] animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-4 space-y-4">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-32 bg-gray-200 rounded-lg animate-pulse"
+                  className="h-32 bg-white/[0.04] animate-pulse"
                 ></div>
               ))}
             </div>
             <div className="md:col-span-8 space-y-6">
-              <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="h-48 bg-white/[0.04] animate-pulse"></div>
+              <div className="h-64 bg-white/[0.04] animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -1982,24 +1488,29 @@ export default function PlannerPage() {
           <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
             <div className="w-full px-4 md:px-6 lg:px-8">
               <div className="flex flex-col items-center text-center space-y-4">
-                <Card className="w-full max-w-2xl">
-                  <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl">Program Not Set</CardTitle>
-                    <CardDescription>
+                <div className="w-full max-w-2xl border border-white/[0.06] bg-black">
+                  <div className="space-y-1 px-6 py-4">
+                    <h2 className="text-2xl font-mono text-neutral-200">
+                      Program Not Set
+                    </h2>
+                    <p className="text-neutral-500">
                       Please set your program in the settings page before using
                       the course planner.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center space-y-4">
-                    <p className="text-muted-foreground">
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center space-y-4 px-6 pb-6">
+                    <p className="text-neutral-500">
                       You need to select your program to start planning your
                       courses.
                     </p>
-                    <Button asChild>
+                    <Button
+                      asChild
+                      className="bg-white text-black hover:bg-neutral-200 rounded-none font-mono"
+                    >
                       <Link href="/settings">Go to Settings</Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -2010,99 +1521,26 @@ export default function PlannerPage() {
 
   return (
     <div className="pt-24">
-      {/* Help Icon Floating Button (when help is hidden) */}
-      {!showHelp && (
-        <button
-          className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-colors"
-          aria-label="Show How to Use the Planner"
-          onClick={() => setShowHelpModal(true)}
-        >
-          <HelpCircle className="h-6 w-6" />
-        </button>
-      )}
-      {/* Modal Popup for Help */}
-      {showHelpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <Card className="relative w-full max-w-2xl mx-4 p-6 bg-blue-50 border-blue-200 shadow-xl">
-            <button
-              className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
-              aria-label="Close How to Use the Planner"
-              onClick={() => setShowHelpModal(false)}
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <CardHeader className="pb-0">
-              <CardTitle className="flex items-center gap-2 justify-center text-center w-full">
-                <BookOpen className="h-5 w-5 text-blue-600" />
-                How to Use the Planner
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Getting Started</h3>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
-                    <li>
-                      Select your program in the <b>settings</b> page
-                    </li>
-                    <li>
-                      Use the course search to find and add courses to your plan
-                    </li>
-                    <li>
-                      Assign courses to specific requirements using the dropdown
-                      menu on the right
-                    </li>
-                    <li>
-                      Track your progress through the progress bars and credit
-                      counters
-                    </li>
-                    <li>
-                      Add your courses to the Course Schedule section to plan
-                      your weekly timetable
-                    </li>
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Tips & Tricks</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                    <li>
-                      Hover over requirement sections to see detailed
-                      descriptions
-                    </li>
-                    <li>Use the search bar to quickly find specific courses</li>
-                    <li>
-                      Mark courses as "taken" if you've already completed them
-                    </li>
-                    <li>
-                      Selected Courses and Course Schedule are collapsible
-                    </li>
-                    <li>
-                      Your plan will be automatically saved as you make changes
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      {/* Top Section with Gradient Background */}
-      <div className="w-full bg-gradient-to-b from-pink-50 to-white">
-        <div className="container mx-auto p-4">
+      {/* Top Section */}
+      <div className="w-full border-b border-white/[0.06]">
+        <div className="mx-auto max-w-[980px] px-6">
           {/* Program Title */}
           <div className="text-center py-12">
-            <h1 className="text-2xl font-mono tracking-tighter sm:text-3xl md:text-4xl mb-4">
-              Course Planner
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+              Planner
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Course Planner.
             </h1>
-            <p className="text-gray-600 text-base md:text-lg font-mono">
+            <p className="mt-3 text-base text-neutral-500">
               Plan and track your academic journey.
             </p>
           </div>
           {/* Program Info */}
           <div className="text-center mb-4">
             <div className="flex items-center justify-center gap-3">
-              <GraduationCap className="h-6 w-6" />
-              <h2 className="text-xl font-mono font-semibold tracking-tighter">
+              <GraduationCap className="h-6 w-6 text-neutral-300" />
+              <h2 className="text-xl font-mono font-semibold tracking-tighter text-neutral-300">
                 {programRequirements[userProgram].name}
               </h2>
             </div>
@@ -2111,411 +1549,66 @@ export default function PlannerPage() {
       </div>
 
       {/* Demo Mode Banner */}
-      {isDemoMode && showDemoBanner && (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-          <div className="container mx-auto p-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 rounded-full p-2 flex-shrink-0">
-                  <BookOpen className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    You're viewing the Course Planner in Demo Mode
-                  </h3>
-                  <p className="text-blue-100 text-sm md:text-base">
-                    Explore all features with sample data. Your changes are
-                    saved locally.
-                    <span className="font-medium">
-                      {" "}
-                      Create an account to save your real course plan!
-                    </span>
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 flex-shrink-0">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    // Reset demo data to fresh Connective Media sample
-                    localStorage.setItem("forceRefreshDemo", "true");
-                    window.location.reload();
-                  }}
-                  className="bg-white/20 text-white hover:bg-white/30 border-white/30"
-                >
-                  Reset Demo
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => signIn()}
-                  className="bg-white text-blue-600 hover:bg-blue-50"
-                >
-                  Sign In
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDemoBanner(false)}
-                  className="text-white hover:bg-white/20"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DemoBanner
+        isDemoMode={isDemoMode}
+        showDemoBanner={showDemoBanner}
+        onHideBanner={() => setShowDemoBanner(false)}
+        onResetDemo={() => {
+          localStorage.setItem("forceRefreshDemo", "true");
+          window.location.reload();
+        }}
+        onSignIn={() => signIn()}
+      />
 
       {/* Main Content */}
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Help Section (hidable) */}
-        {showHelp && !showHelpModal && (
-          <Card className="relative p-6 bg-blue-50 border-blue-200">
-            <button
-              className="absolute top-4 right-4 text-blue-500 hover:text-blue-700"
-              aria-label="Hide How to Use the Planner"
-              onClick={() => toggleShowHelp(false)}
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <CardHeader className="pb-0">
-              <CardTitle className="flex items-center gap-2 justify-center text-center w-full">
-                <BookOpen className="h-5 w-5 text-blue-600" />
-                How to Use the Planner
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Getting Started</h3>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
-                    <li>
-                      Select your program from the{" "}
-                      <b>dropdown menu in the settings page</b>
-                    </li>
-                    <li>
-                      Use the course search to find and add courses to your plan
-                    </li>
-                    <li>
-                      Assign courses to specific requirements using the dropdown
-                      menu on the right
-                    </li>
-                    <li>
-                      Track your progress through the progress bars and credit
-                      counters
-                    </li>
-                    <li>
-                      Add your courses to the Course Schedule section to plan
-                      your weekly timetable
-                    </li>
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Tips & Tricks</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                    <li>
-                      Hover over requirement sections to see detailed
-                      descriptions
-                    </li>
-                    <li>Use the search bar to quickly find specific courses</li>
-                    <li>
-                      Mark courses as "taken" if you've already completed them
-                    </li>
-                    <li>
-                      Selected Courses and Course Schedule are collapsible
-                    </li>
-                    <li>
-                      Your plan will be automatically saved as you make changes
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      <div className="mx-auto max-w-[980px] px-6 py-12 space-y-8">
+        <HelpSection
+          showHelp={showHelp}
+          showHelpModal={showHelpModal}
+          onToggleHelp={toggleShowHelp}
+          onToggleHelpModal={setShowHelpModal}
+        />
         {/* Overall Progress */}
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Overall Progress</h2>
-              <span className="text-sm text-muted-foreground">
-                {calculateTotalCredits()} /{" "}
-                {programRequirements[userProgram].totalCredits} credits
-              </span>
-            </div>
-            <Progress value={calculateOverallProgress()} className="h-3" />
-          </div>
-        </Card>
+        <ProgressOverview
+          totalCredits={calculateTotalCredits()}
+          requiredCredits={programRequirements[userProgram].totalCredits}
+          overallProgress={calculateOverallProgress()}
+        />
         {/* Main Content - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Left Column - Categories */}
           <div ref={coursePlanRef} className="md:col-span-4 space-y-4">
             {Object.entries(programRequirements[userProgram].requirements).map(
               ([key, requirement]) => {
-                // Responsive: expanded by default on desktop, toggle on mobile
                 const isMobile =
                   typeof window !== "undefined" && window.innerWidth < 768;
                 const expanded = expandedRequirements[key] ?? !isMobile;
 
                 return (
-                  <Card
+                  <RequirementCard
                     key={key}
-                    className="p-0 hover:shadow-md transition-shadow group"
-                  >
-                    {/* Header as button on mobile, static on desktop */}
-                    <div
-                      className={`flex flex-wrap items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
-                      onClick={() => {
-                        if (window.innerWidth < 768) toggleRequirement(key);
-                      }}
-                      aria-expanded={expanded}
-                      aria-controls={`requirement-content-${key}`}
-                      role={isMobile ? "button" : undefined}
-                      tabIndex={isMobile ? 0 : -1}
-                    >
-                      {/* Title and status row */}
-                      <div className="flex-1 flex flex-col items-start gap-y-1 min-w-0">
-                        <span className="font-medium truncate">
-                          {key.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                        <span className="text-sm text-muted-foreground font-normal">
-                          {(() => {
-                            const creditInfo = calculateCategoryCredits(key);
-                            const adjustments = [];
-
-                            if (creditInfo.ethicsDeduction > 0) {
-                              adjustments.push(
-                                `-${creditInfo.ethicsDeduction} ethics`,
-                              );
-                            }
-                            if (creditInfo.ethicsAddition > 0) {
-                              adjustments.push(
-                                `+${creditInfo.ethicsAddition} ethics`,
-                              );
-                            }
-                            if (creditInfo.transferDeductions > 0) {
-                              adjustments.push(
-                                `-${creditInfo.transferDeductions} transfer`,
-                              );
-                            }
-                            if (creditInfo.transferAdditions > 0) {
-                              adjustments.push(
-                                `+${creditInfo.transferAdditions} transfer`,
-                              );
-                            }
-
-                            const baseText = `${creditInfo.netCredits} / ${requirement.credits} cr`;
-                            return adjustments.length > 0
-                              ? `${baseText} (${adjustments.join(", ")})`
-                              : baseText;
-                          })()}
-                        </span>
-                      </div>
-                      {/* Transfer Credits Button */}
-                      <CreditTransferModal
-                        requirements={
-                          programRequirements[userProgram].requirements
-                        }
-                        coursePlan={coursePlan}
-                        calculateCategoryCredits={calculateCategoryCredits}
-                        onTransferCredits={handleTransferCredits}
-                        existingTransfers={creditTransfers}
-                        sourceRequirement={key}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-2 opacity-60 group-hover:opacity-100 transition-opacity hover:bg-accent"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Transfer credits from this requirement"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                        </Button>
-                      </CreditTransferModal>
-                      {/* Chevron for mobile */}
-                      <span className="ml-2 md:hidden">
-                        <svg
-                          className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </span>
-                    </div>
-                    {/* Collapsible content */}
-                    <div
-                      id={`requirement-content-${key}`}
-                      className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expanded ? "block" : "hidden"} md:block`}
-                    >
-                      <Progress
-                        value={calculateRequirementProgress(key)}
-                        className="h-2 mb-3"
-                      />
-                      <p className="text-sm text-muted-foreground opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
-                        {requirement.description}
-                      </p>
-
-                      {/* Credit Transfer Information */}
-                      {creditTransfers.some(
-                        (t) => t.fromCategory === key || t.toCategory === key,
-                      ) && (
-                        <div className="mt-3 space-y-1">
-                          {creditTransfers
-                            .filter(
-                              (t) =>
-                                t.fromCategory === key || t.toCategory === key,
-                            )
-                            .map((transfer) => (
-                              <div
-                                key={transfer.id}
-                                className="flex items-center gap-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded"
-                              >
-                                {transfer.fromCategory === key ? (
-                                  <>
-                                    <ArrowRightLeft className="h-3 w-3" />
-                                    <span>
-                                      -{transfer.amount} cr to{" "}
-                                      {transfer.toCategory
-                                        .replace(/([A-Z])/g, " $1")
-                                        .trim()}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <ArrowRightLeft className="h-3 w-3" />
-                                    <span>
-                                      +{transfer.amount} cr from{" "}
-                                      {transfer.fromCategory
-                                        .replace(/([A-Z])/g, " $1")
-                                        .trim()}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                      {/* Selected Courses for this category */}
-                      {(coursePlan[key] || []).length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {coursePlan[key].map((course) => (
-                            <div
-                              key={course.id}
-                              className={`flex justify-between items-start text-sm p-2 rounded-lg ${
-                                selectedEthicsCourse &&
-                                selectedEthicsCourse.id === course.id
-                                  ? "bg-blue-50 border border-blue-300"
-                                  : selectedAnchorCourse &&
-                                      selectedAnchorCourse.id === course.id
-                                    ? "bg-purple-50 border border-purple-300"
-                                    : "bg-gray-100"
-                              }`}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <div
-                                  className={`font-normal text-sm ${
-                                    selectedEthicsCourse &&
-                                    selectedEthicsCourse.id === course.id
-                                      ? "text-blue-800"
-                                      : selectedAnchorCourse &&
-                                          selectedAnchorCourse.id === course.id
-                                        ? "text-purple-800"
-                                        : "text-black"
-                                  }`}
-                                >
-                                  {course.code}
-                                  {selectedEthicsCourse &&
-                                    selectedEthicsCourse.id === course.id &&
-                                    " (Ethics)"}
-                                  {selectedAnchorCourse &&
-                                    selectedAnchorCourse.id === course.id &&
-                                    " (Anchor Course)"}
-                                </div>
-                                <div
-                                  className={`text-xs ${
-                                    selectedEthicsCourse &&
-                                    selectedEthicsCourse.id === course.id
-                                      ? "text-blue-600"
-                                      : selectedAnchorCourse &&
-                                          selectedAnchorCourse.id === course.id
-                                        ? "text-purple-600"
-                                        : "text-gray-600"
-                                  }`}
-                                >
-                                  {course.name}
-                                  {selectedEthicsCourse &&
-                                    selectedEthicsCourse.id === course.id &&
-                                    " - fulfills ethics requirement"}
-                                  {selectedAnchorCourse &&
-                                    selectedAnchorCourse.id === course.id &&
-                                    " - anchor course for INFO 5920"}
-                                </div>
-                              </div>
-                              <div
-                                className={`ml-2 font-normal text-sm ${
-                                  selectedEthicsCourse &&
-                                  selectedEthicsCourse.id === course.id
-                                    ? "text-blue-800"
-                                    : selectedAnchorCourse &&
-                                        selectedAnchorCourse.id === course.id
-                                      ? "text-purple-800"
-                                      : "text-black"
-                                }`}
-                              >
-                                {course.credits} cr
-                                {selectedEthicsCourse &&
-                                  selectedEthicsCourse.id === course.id &&
-                                  " (-1)"}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Ethics Credit Addition Card for JacobsTechnicalCore */}
-                      {key === "JacobsTechnicalCore" &&
-                        userProgram &&
-                        ["ms-is-cm", "ms-is-ht", "ms-is-ut"].includes(
-                          userProgram,
-                        ) &&
-                        selectedEthicsCourse && (
-                          <div className="mt-2">
-                            <div className="flex justify-between items-start text-sm p-2 rounded-lg bg-green-50 border border-green-300">
-                              <div className="flex-1 min-w-0">
-                                <div className="font-normal text-sm text-green-800">
-                                  Ethics Credit Transfer
-                                </div>
-                                <div className="text-xs text-green-600">
-                                  1 credit from {selectedEthicsCourse.code}{" "}
-                                  ethics requirement
-                                </div>
-                              </div>
-                              <div className="ml-2 font-normal text-sm text-green-800">
-                                +1 cr
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </Card>
+                    requirementKey={key}
+                    requirement={requirement}
+                    expanded={expanded}
+                    onToggle={toggleRequirement}
+                    coursePlan={coursePlan}
+                    creditTransfers={creditTransfers}
+                    calculateCategoryCredits={calculateCategoryCredits}
+                    calculateRequirementProgress={calculateRequirementProgress}
+                    selectedEthicsCourse={selectedEthicsCourse}
+                    selectedAnchorCourse={selectedAnchorCourse}
+                    userProgram={userProgram}
+                    requirements={programRequirements[userProgram].requirements}
+                    onTransferCredits={handleTransferCredits}
+                  />
                 );
               },
             )}
 
             {/* Collapsible Additional Questions Card */}
-            <Card className="p-0 hover:shadow-md transition-shadow group">
+            <div className="border border-white/[0.06]">
               <div
-                className={`flex justify-between items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                className={`flex justify-between items-center border-b border-white/[0.06] px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
                 onClick={toggleAdditionalQuestions}
                 aria-expanded={expandedAdditionalQuestions}
                 aria-controls="additional-questions-content"
@@ -2530,7 +1623,9 @@ export default function PlannerPage() {
                     : -1
                 }
               >
-                <h3 className="font-medium">Additional Questions</h3>
+                <h3 className="font-mono text-sm text-neutral-300">
+                  Additional Questions
+                </h3>
                 {/* Chevron for mobile */}
                 <span className="ml-2 md:hidden">
                   <svg
@@ -2571,12 +1666,12 @@ export default function PlannerPage() {
                   calculateCategoryCredits={calculateCategoryCredits}
                 />
               </div>
-            </Card>
+            </div>
             {/* Additional Requirements Card */}
             {programRequirements[userProgram].additionalRequirements && (
-              <Card className="p-0 hover:shadow-md transition-shadow group">
+              <div className="border border-white/[0.06]">
                 <div
-                  className={`flex justify-between items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                  className={`flex justify-between items-center border-b border-white/[0.06] px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
                   onClick={toggleAdditionalRequirements}
                   aria-expanded={expandedAdditionalRequirements}
                   aria-controls="additional-requirements-content"
@@ -2591,7 +1686,9 @@ export default function PlannerPage() {
                       : -1
                   }
                 >
-                  <h3 className="font-medium">Additional Requirements</h3>
+                  <h3 className="font-mono text-sm text-neutral-300">
+                    Additional Requirements
+                  </h3>
                   {/* Chevron for mobile */}
                   <span className="ml-2 md:hidden">
                     <svg
@@ -2615,33 +1712,33 @@ export default function PlannerPage() {
                   className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
                 >
                   <div className="space-y-3">
-                    <ul className="text-sm text-muted-foreground space-y-2">
+                    <ul className="text-sm text-neutral-500 space-y-2">
                       {programRequirements[
                         userProgram
                       ].additionalRequirements.map((requirement, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted-foreground"></span>
+                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neutral-500"></span>
                           <span>{requirement}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
           {/* Right Column - Course Search and Management */}
           <div className="md:col-span-8 space-y-6">
             {/* Search Section */}
-            <Card className="p-6">
+            <div className="border border-white/[0.06] p-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <Search className="h-5 w-5 text-muted-foreground" />
+                  <Search className="h-5 w-5 text-neutral-600" />
                   <Input
                     placeholder="Search for courses..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1"
+                    className="flex-1 bg-white/[0.03] border border-white/[0.08] text-neutral-200 placeholder:text-neutral-600 font-mono text-sm rounded-none"
                   />
                 </div>
                 {/* Course Selector */}
@@ -2726,7 +1823,7 @@ export default function PlannerPage() {
                   sampleCourses={isDemoMode ? sampleCourses : undefined}
                 />
               </div>
-            </Card>
+            </div>
             {/* Selected Courses List */}
             <div ref={selectedCoursesRef}>
               <SelectedCourses
