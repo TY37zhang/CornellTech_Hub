@@ -25,12 +25,12 @@ function ForumPreview({ forumPosts, forumError }: ForumPreviewProps) {
             <Link
               key={post.id}
               href={`/forum/${post.id}`}
-              className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors"
+              className="flex items-center justify-between px-4 py-3 border-b border-subtle hover:bg-surface-hover transition-colors"
             >
-              <span className="text-sm text-neutral-300 truncate mr-4">
+              <span className="text-sm text-t2 truncate mr-4">
                 {post.title}
               </span>
-              <span className="text-xs text-neutral-500 font-mono whitespace-nowrap">
+              <span className="text-xs text-t3 font-mono whitespace-nowrap">
                 {post.reply_count} replies
               </span>
             </Link>
@@ -40,7 +40,7 @@ function ForumPreview({ forumPosts, forumError }: ForumPreviewProps) {
       <div className="pt-4 px-4">
         <Link
           href="/forum"
-          className="text-neutral-500 hover:text-white text-sm font-mono transition-colors"
+          className="text-t3 hover:text-t1 text-sm font-mono transition-colors"
         >
           Join Discussions →
         </Link>

@@ -133,15 +133,13 @@ export default function CourseSelector({
                 onSelectCourse(course);
                 setSearchResults([]);
               }}
-              className="relative p-3 border rounded-none hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-neutral-950"
+              className="relative p-3 border rounded-none hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-surface"
             >
               <div className="w-full">
                 <div className="font-medium text-base truncate">
                   {course.name}
                 </div>
-                <div className="text-sm text-neutral-500 mt-1">
-                  {course.code}
-                </div>
+                <div className="text-sm text-t3 mt-1">{course.code}</div>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-xs px-2 py-0.5">
                     {course.department}

@@ -422,26 +422,26 @@ function ForumClient({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-surface text-t1">
       <div className="flex-1">
         {/* HERO */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 pt-28 pb-12 md:pt-36 md:pb-16">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Forum
             </p>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               Student Forum.
             </h1>
-            <p className="mt-3 text-base text-neutral-500">
+            <p className="mt-3 text-base text-t3">
               Connect, discuss, and share knowledge.
             </p>
             <div className="mt-8 w-full max-w-lg relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-t4" />
               <input
                 type="search"
                 placeholder="Search discussions by topic, keyword, or author..."
-                className="w-full pl-9 h-10 bg-white/[0.03] border border-white/[0.08] text-neutral-200 placeholder:text-neutral-600 font-mono text-sm focus:outline-none focus:border-white/[0.15] rounded-none"
+                className="w-full pl-9 h-10 bg-surface-hover border border-strong text-t1 placeholder:text-t4 font-mono text-sm focus:outline-none focus:border-cta-outline rounded-none"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -453,11 +453,11 @@ function ForumClient({
         </section>
 
         {/* MAIN SECTION */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-12 md:py-16">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
                   Browse
                 </p>
                 <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -469,14 +469,14 @@ function ForumClient({
               {/* LEFT COLUMN */}
               <div className="flex-1 min-w-0">
                 <div className="w-full">
-                  <div className="flex w-full items-center justify-between border-b border-white/[0.06] pb-4">
+                  <div className="flex w-full items-center justify-between border-b border-subtle pb-4">
                     {isMobile ? (
                       <div className="flex items-center">
                         <Select value={activeTab} onValueChange={setActiveTab}>
-                          <SelectTrigger className="w-[200px] rounded-none bg-white/[0.03] border-white/[0.08] text-neutral-300 font-mono text-sm">
+                          <SelectTrigger className="w-[200px] rounded-none bg-surface-hover border-strong text-t2 font-mono text-sm">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-none bg-neutral-950 border-white/[0.08]">
+                          <SelectContent className="rounded-none bg-surface border-strong">
                             {[
                               "all",
                               "Academics",
@@ -489,7 +489,7 @@ function ForumClient({
                               <SelectItem
                                 key={cat}
                                 value={cat}
-                                className="font-mono text-sm text-neutral-400 focus:text-white focus:bg-white/[0.04] rounded-none"
+                                className="font-mono text-sm text-t2 focus:text-t1 focus:bg-surface-active rounded-none"
                               >
                                 {cat === "all" ? "All Discussions" : cat}
                               </SelectItem>
@@ -513,8 +513,8 @@ function ForumClient({
                             onClick={() => setActiveTab(cat)}
                             className={`font-mono text-sm px-3 py-1.5 border-b-2 transition-colors whitespace-nowrap ${
                               activeTab === cat
-                                ? "border-white text-white"
-                                : "border-transparent text-neutral-500 hover:text-neutral-300"
+                                ? "border-cta-outline text-t1"
+                                : "border-transparent text-t3 hover:text-t2"
                             }`}
                           >
                             {cat === "all" ? "All Discussions" : cat}
@@ -524,7 +524,7 @@ function ForumClient({
                     )}
                     <div className="flex items-center gap-2 shrink-0 ml-4">
                       <Link href="/forum/create">
-                        <Button className="gap-1.5 bg-white text-black hover:bg-neutral-200 rounded-none font-mono text-sm h-9 px-4">
+                        <Button className="gap-1.5 bg-cta text-cta hover:bg-cta-hover rounded-none font-mono text-sm h-9 px-4">
                           <PlusCircle className="h-4 w-4" />
                           {!isMobile && <span>New Discussion</span>}
                         </Button>
@@ -534,12 +534,12 @@ function ForumClient({
 
                   <div className="mt-6">
                     {loading ? (
-                      <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
+                      <div className="divide-y divide-subtle border-t border-subtle">
                         {[...Array(6)].map((_, i) => (
                           <div key={i} className="py-5 px-1 space-y-2">
-                            <div className="h-5 w-2/3 bg-white/[0.04] animate-pulse" />
-                            <div className="h-4 w-full bg-white/[0.03] animate-pulse" />
-                            <div className="h-3 w-1/3 bg-white/[0.02] animate-pulse" />
+                            <div className="h-5 w-2/3 bg-surface-active animate-pulse" />
+                            <div className="h-4 w-full bg-surface-hover animate-pulse" />
+                            <div className="h-3 w-1/3 bg-surface-hover animate-pulse" />
                           </div>
                         ))}
                       </div>
@@ -559,14 +559,14 @@ function ForumClient({
                         </button>
                       </div>
                     ) : filteredThreads.length > 0 ? (
-                      <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
+                      <div className="divide-y divide-subtle border-t border-subtle">
                         {filteredThreads.map((thread) => (
                           <ForumThreadCard key={thread.id} thread={thread} />
                         ))}
                       </div>
                     ) : (
                       <div className="text-center py-16">
-                        <p className="font-mono text-sm text-neutral-500">
+                        <p className="font-mono text-sm text-t3">
                           No discussions found matching your search criteria.
                         </p>
                       </div>
@@ -579,9 +579,9 @@ function ForumClient({
               <div className="lg:w-[280px] flex-none">
                 <div className="space-y-6">
                   {/* Forum Categories */}
-                  <div className="border border-white/[0.06] divide-y divide-white/[0.06] hidden sm:block">
+                  <div className="border border-subtle divide-y divide-subtle hidden sm:block">
                     <div className="px-4 py-3">
-                      <span className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+                      <span className="font-mono text-xs uppercase tracking-wider text-t3">
                         Forum Categories
                       </span>
                     </div>
@@ -597,13 +597,13 @@ function ForumClient({
                         <Link
                           href={`/forum/categories/${String(name).toLowerCase().replace(" ", "-")}`}
                           key={String(name)}
-                          className="flex items-center gap-3 px-2 py-2 hover:bg-white/[0.02] transition-colors"
+                          className="flex items-center gap-3 px-2 py-2 hover:bg-surface-hover transition-colors"
                         >
                           <span
                             className={`w-1.5 h-1.5 ${dotColor} shrink-0`}
                             style={{ backgroundColor: "currentColor" }}
                           />
-                          <span className="font-mono text-xs text-neutral-400 hover:text-white transition-colors">
+                          <span className="font-mono text-xs text-t2 hover:text-t1 transition-colors">
                             {String(name)}
                           </span>
                         </Link>
@@ -612,9 +612,9 @@ function ForumClient({
                   </div>
 
                   {/* Forum Stats */}
-                  <div className="border border-white/[0.06] divide-y divide-white/[0.06]">
+                  <div className="border border-subtle divide-y divide-subtle">
                     <div className="px-4 py-3">
-                      <span className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+                      <span className="font-mono text-xs uppercase tracking-wider text-t3">
                         Forum Stats
                       </span>
                     </div>
@@ -628,10 +628,10 @@ function ForumClient({
                           key={label}
                           className="flex items-center justify-between py-2"
                         >
-                          <span className="font-mono text-xs text-neutral-500">
+                          <span className="font-mono text-xs text-t3">
                             {label}
                           </span>
-                          <span className="font-mono text-sm text-neutral-200">
+                          <span className="font-mono text-sm text-t1">
                             {val}
                           </span>
                         </div>
@@ -640,9 +640,9 @@ function ForumClient({
                   </div>
 
                   {/* Top Contributors */}
-                  <div className="border border-white/[0.06] divide-y divide-white/[0.06]">
+                  <div className="border border-subtle divide-y divide-subtle">
                     <div className="px-4 py-3">
-                      <span className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+                      <span className="font-mono text-xs uppercase tracking-wider text-t3">
                         Top Contributors
                       </span>
                     </div>
@@ -652,19 +652,17 @@ function ForumClient({
                           key={c.id}
                           className="flex items-center gap-3 py-2"
                         >
-                          <span className="font-mono text-xs text-neutral-600 w-6 h-6 flex items-center justify-center bg-white/[0.04] border border-white/[0.06] shrink-0">
+                          <span className="font-mono text-xs text-t4 w-6 h-6 flex items-center justify-center bg-surface-active border border-subtle shrink-0">
                             {getInitials(c.name)}
                           </span>
-                          <span className="text-sm text-neutral-300">
-                            {c.name}
-                          </span>
-                          <span className="font-mono text-xs text-neutral-600 ml-auto">
+                          <span className="text-sm text-t2">{c.name}</span>
+                          <span className="font-mono text-xs text-t4 ml-auto">
                             {c.post_count} posts
                           </span>
                         </div>
                       ))}
                       {topContributors.length === 0 && (
-                        <div className="text-center py-4 font-mono text-xs text-neutral-600">
+                        <div className="text-center py-4 font-mono text-xs text-t4">
                           No contributors yet
                         </div>
                       )}
@@ -677,10 +675,10 @@ function ForumClient({
         </section>
 
         {/* PAGINATION + FOOTER CTA */}
-        <section className="w-full border-t border-white/[0.06]">
+        <section className="w-full border-t border-subtle">
           <div className="mx-auto max-w-[980px] px-6">
             {totalPages > 1 && (
-              <div className="w-full flex justify-center py-8 border-b border-white/[0.06]">
+              <div className="w-full flex justify-center py-8 border-b border-subtle">
                 <nav
                   className="flex items-center gap-2"
                   aria-label="Pagination"
@@ -690,7 +688,7 @@ function ForumClient({
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
                     aria-label="First page"
-                    className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                    className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                   >
                     <ChevronsLeft className="w-5 h-5" />
                   </Button>
@@ -701,7 +699,7 @@ function ForumClient({
                     }
                     disabled={currentPage === 1}
                     aria-label="Previous page"
-                    className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                    className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </Button>
@@ -713,8 +711,8 @@ function ForumClient({
                         onClick={() => setCurrentPage(page)}
                         className={`w-10 h-10 rounded-none font-mono text-sm ${
                           currentPage === page
-                            ? "bg-white text-black hover:bg-neutral-200"
-                            : "border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white"
+                            ? "bg-cta text-cta hover:bg-cta-hover"
+                            : "border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1"
                         }`}
                       >
                         {page}
@@ -728,7 +726,7 @@ function ForumClient({
                     }
                     disabled={currentPage === totalPages}
                     aria-label="Next page"
-                    className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                    className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </Button>
@@ -737,7 +735,7 @@ function ForumClient({
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
                     aria-label="Last page"
-                    className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                    className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                   >
                     <ChevronsRight className="w-5 h-5" />
                   </Button>
@@ -748,11 +746,11 @@ function ForumClient({
               <h2 className="text-2xl font-bold tracking-tight">
                 Join the Conversation
               </h2>
-              <p className="mt-2 text-neutral-500 text-sm">
+              <p className="mt-2 text-t3 text-sm">
                 Have something to share? Start a new discussion.
               </p>
               <Link href="/forum/create">
-                <Button className="mt-6 h-11 rounded-none px-6 font-mono text-sm bg-white text-black hover:bg-neutral-200">
+                <Button className="mt-6 h-11 rounded-none px-6 font-mono text-sm bg-cta text-cta hover:bg-cta-hover">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Create New Thread
                 </Button>
@@ -770,12 +768,12 @@ const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
   return (
     <Link
       href={`/forum/${thread.id}`}
-      className="group block border-b border-white/[0.06] py-5 px-1 hover:bg-white/[0.02] transition-colors"
+      className="group block border-b border-subtle py-5 px-1 hover:bg-surface-hover transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors truncate-title">
+            <h3 className="text-base font-semibold text-t1 group-hover:text-t1 transition-colors truncate-title">
               {thread.title}
             </h3>
             {thread.isNew && (
@@ -793,17 +791,17 @@ const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
               </span>
             )}
           </div>
-          <p className="text-sm text-neutral-500 mt-1 line-clamp-1">
+          <p className="text-sm text-t3 mt-1 line-clamp-1">
             {thread.content.length > 120
               ? thread.content.slice(0, 120) + "..."
               : thread.content}
           </p>
         </div>
-        <span className="font-mono text-xs text-neutral-600 shrink-0 uppercase px-2 py-0.5 bg-white/[0.03] border border-white/[0.06]">
+        <span className="font-mono text-xs text-t4 shrink-0 uppercase px-2 py-0.5 bg-surface-hover border border-subtle">
           {thread.category}
         </span>
       </div>
-      <div className="flex items-center gap-4 mt-3 font-mono text-xs text-neutral-600">
+      <div className="flex items-center gap-4 mt-3 font-mono text-xs text-t4">
         <span>{thread.author.name}</span>
         <span>{thread.createdAt}</span>
         <span>{thread.replies} replies</span>
@@ -815,7 +813,7 @@ const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
           {thread.tags.map((tag) => (
             <span
               key={tag}
-              className="font-mono text-[10px] text-neutral-600 border border-white/[0.06] px-1.5 py-0.5"
+              className="font-mono text-[10px] text-t4 border border-subtle px-1.5 py-0.5"
             >
               {tag}
             </span>

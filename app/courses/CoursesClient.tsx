@@ -212,26 +212,24 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-surface text-t1">
       <div className="flex-1">
         {/* HERO */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 pt-28 pb-12 md:pt-36 md:pb-16">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Courses
             </p>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               Course Reviews.
             </h1>
-            <p className="mt-3 text-base text-neutral-500">
-              Find and share reviews.
-            </p>
+            <p className="mt-3 text-base text-t3">Find and share reviews.</p>
             <div className="mt-8 w-full max-w-lg relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-neutral-600" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-t4" />
               <input
                 type="search"
                 placeholder="Search courses by name, professor, or keyword..."
-                className="w-full pl-9 h-10 bg-white/[0.03] border border-white/[0.08] text-neutral-200 placeholder:text-neutral-600 font-mono text-sm focus:outline-none focus:border-white/[0.15] rounded-none"
+                className="w-full pl-9 h-10 bg-surface-hover border border-strong text-t1 placeholder:text-t4 font-mono text-sm focus:outline-none focus:border-cta-outline rounded-none"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -243,7 +241,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
         </section>
 
         {/* FILTER BAR */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-4">
             <div className="flex w-full items-center justify-between">
               {/* Program filter & sort */}
@@ -257,15 +255,15 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-white/[0.03] border-white/[0.08] text-neutral-300 rounded-none font-mono text-sm">
+                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
-                    <SelectContent className="bg-neutral-950 border border-white/[0.08] rounded-none">
+                    <SelectContent className="bg-surface-raised border border-strong rounded-none">
                       {programOptions.map((opt) => (
                         <SelectItem
                           key={opt.value}
                           value={opt.value}
-                          className="text-neutral-300 font-mono text-sm focus:bg-white/[0.04] focus:text-white"
+                          className="text-t2 font-mono text-sm focus:bg-surface-active focus:text-t1"
                         >
                           {opt.label}
                         </SelectItem>
@@ -278,7 +276,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                     size="icon"
                     aria-label="Sort options"
                     onClick={() => setShowSortModal(true)}
-                    className="bg-white/[0.03] border-white/[0.08] text-neutral-300 rounded-none hover:bg-white/[0.06] hover:text-white"
+                    className="bg-surface-hover border-strong text-t2 rounded-none hover:bg-surface-active hover:text-t1"
                   >
                     <Filter className="h-5 w-5" />
                   </Button>
@@ -288,10 +286,10 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       onClick={() => setShowSortModal(false)}
                     >
                       <div
-                        className="bg-neutral-950 border border-white/[0.08] p-4 w-56 rounded-none"
+                        className="bg-surface-raised border border-strong p-4 w-56 rounded-none"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <h3 className="font-mono text-sm font-bold text-neutral-200 mb-3 text-center uppercase tracking-[0.1em]">
+                        <h3 className="font-mono text-sm font-bold text-t1 mb-3 text-center uppercase tracking-[0.1em]">
                           Sort by
                         </h3>
                         <ul className="space-y-1">
@@ -300,8 +298,8 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                               <button
                                 className={`w-full text-center px-3 py-2 font-mono text-sm rounded-none transition-colors ${
                                   sortBy === opt.value
-                                    ? "bg-white text-black font-bold"
-                                    : "text-neutral-400 hover:bg-white/[0.04] hover:text-white"
+                                    ? "bg-cta text-cta font-bold"
+                                    : "text-t2 hover:bg-surface-active hover:text-t1"
                                 }`}
                                 onClick={() => {
                                   setSortBy(opt.value);
@@ -328,15 +326,15 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-white/[0.03] border-white/[0.08] text-neutral-300 rounded-none font-mono text-sm">
+                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
-                    <SelectContent className="bg-neutral-950 border border-white/[0.08] rounded-none">
+                    <SelectContent className="bg-surface-raised border border-strong rounded-none">
                       {programOptions.map((opt) => (
                         <SelectItem
                           key={opt.value}
                           value={opt.value}
-                          className="text-neutral-300 font-mono text-sm focus:bg-white/[0.04] focus:text-white"
+                          className="text-t2 font-mono text-sm focus:bg-surface-active focus:text-t1"
                         >
                           {opt.label}
                         </SelectItem>
@@ -351,15 +349,15 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-white/[0.03] border-white/[0.08] text-neutral-300 rounded-none font-mono text-sm">
+                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
-                    <SelectContent className="bg-neutral-950 border border-white/[0.08] rounded-none min-w-[200px]">
+                    <SelectContent className="bg-surface-raised border border-strong rounded-none min-w-[200px]">
                       {sortOptions.map((opt) => (
                         <SelectItem
                           key={opt.value}
                           value={opt.value}
-                          className="text-neutral-300 font-mono text-sm focus:bg-white/[0.04] focus:text-white"
+                          className="text-t2 font-mono text-sm focus:bg-surface-active focus:text-t1"
                         >
                           {opt.label}
                         </SelectItem>
@@ -377,12 +375,12 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       <Button
                         size="icon"
                         aria-label="Add new review"
-                        className="bg-white text-black hover:bg-neutral-200 rounded-none"
+                        className="bg-cta text-cta hover:bg-cta-hover rounded-none"
                       >
                         <PlusCircle className="h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button className="gap-1 bg-white text-black hover:bg-neutral-200 rounded-none font-mono text-sm">
+                      <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover rounded-none font-mono text-sm">
                         <PlusCircle className="h-4 w-4" />
                         <span>New Review</span>
                       </Button>
@@ -399,12 +397,12 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
           <div className="mx-auto max-w-[980px] px-6 py-6">
             {isLoading ? (
               // skeletons
-              <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
+              <div className="divide-y divide-subtle border-t border-subtle">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="py-5 px-1 space-y-2">
-                    <div className="h-5 w-2/3 bg-white/[0.04] animate-pulse" />
-                    <div className="h-4 w-1/2 bg-white/[0.03] animate-pulse" />
-                    <div className="h-3 w-1/3 bg-white/[0.02] animate-pulse" />
+                    <div className="h-5 w-2/3 bg-surface-active animate-pulse" />
+                    <div className="h-4 w-1/2 bg-surface-hover animate-pulse" />
+                    <div className="h-3 w-1/3 bg-surface-hover animate-pulse" />
                   </div>
                 ))}
               </div>
@@ -413,7 +411,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                 <p className="text-red-400 font-mono text-sm">{error}</p>
                 <Button
                   variant="outline"
-                  className="mt-4 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white font-mono text-sm"
+                  className="mt-4 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 font-mono text-sm"
                   onClick={() => window.location.reload()}
                 >
                   Try Again
@@ -421,7 +419,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
               </div>
             ) : (
               <>
-                <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
+                <div className="divide-y divide-subtle border-t border-subtle">
                   {filteredCourses.map((course, index) => (
                     <CourseCard
                       key={`${course.id}-${course.professor}-${index}`}
@@ -433,7 +431,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
 
                 {filteredCourses.length === 0 && (
                   <div className="text-center py-10">
-                    <p className="text-neutral-500 font-mono text-sm">
+                    <p className="text-t3 font-mono text-sm">
                       No courses found matching your search criteria.
                     </p>
                   </div>
@@ -456,13 +454,13 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       }
                       disabled={currentPage === 1}
                       aria-label="Previous page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </Button>
-                    <div className="flex items-center gap-1 font-mono text-sm text-neutral-400 px-2 min-w-[60px] justify-center">
+                    <div className="flex items-center gap-1 font-mono text-sm text-t2 px-2 min-w-[60px] justify-center">
                       {currentPage > 2 && <span>...</span>}
-                      <span className="text-white">{currentPage}</span>
+                      <span className="text-t1">{currentPage}</span>
                       <span className="mx-1">/</span>
                       <span>{totalPages}</span>
                       {currentPage < totalPages - 1 && <span>...</span>}
@@ -474,7 +472,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       }
                       disabled={currentPage === totalPages}
                       aria-label="Next page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </Button>
@@ -489,7 +487,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
                       aria-label="First page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronsLeft className="w-5 h-5" />
                     </Button>
@@ -500,7 +498,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       }
                       disabled={currentPage === 1}
                       aria-label="Previous page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </Button>
@@ -512,8 +510,8 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                           onClick={() => setCurrentPage(page)}
                           className={`w-10 h-10 font-mono text-sm ${
                             currentPage === page
-                              ? "bg-white text-black hover:bg-neutral-200 rounded-none"
-                              : "rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white"
+                              ? "bg-cta text-cta hover:bg-cta-hover rounded-none"
+                              : "rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1"
                           }`}
                         >
                           {page}
@@ -527,7 +525,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       }
                       disabled={currentPage === totalPages}
                       aria-label="Next page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </Button>
@@ -536,7 +534,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
                       aria-label="Last page"
-                      className="w-10 h-10 p-0 rounded-none border-white/[0.08] bg-transparent text-neutral-400 hover:bg-white/[0.04] hover:text-white disabled:opacity-30"
+                      className="w-10 h-10 p-0 rounded-none border-strong bg-transparent text-t2 hover:bg-surface-active hover:text-t1 disabled:opacity-30"
                     >
                       <ChevronsRight className="w-5 h-5" />
                     </Button>
@@ -548,16 +546,16 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
         </section>
 
         {/* CTA */}
-        <section className="w-full border-t border-white/[0.06]">
+        <section className="w-full border-t border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-16 text-center">
             <h2 className="text-2xl font-bold tracking-tight">
               Can&apos;t find what you&apos;re looking for?
             </h2>
-            <p className="mt-2 text-neutral-500 text-sm">
+            <p className="mt-2 text-t3 text-sm">
               Help your fellow students by adding a review.
             </p>
             <Link href="/courses/new-review">
-              <Button className="mt-6 h-11 rounded-none px-6 font-mono text-sm bg-white text-black hover:bg-neutral-200">
+              <Button className="mt-6 h-11 rounded-none px-6 font-mono text-sm bg-cta text-cta hover:bg-cta-hover">
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add a New Course Review
               </Button>
@@ -591,14 +589,14 @@ const CourseCard = memo(
     return (
       <Link
         href={`/courses/${course.id}`}
-        className="group block border-b border-white/[0.06] py-5 px-1 hover:bg-white/[0.02] transition-colors"
+        className="group block border-b border-subtle py-5 px-1 hover:bg-surface-hover transition-colors"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors truncate">
+            <h3 className="text-base font-semibold text-t1 group-hover:text-t1 transition-colors truncate">
               {course.title}
             </h3>
-            <p className="text-sm text-neutral-500 mt-1 line-clamp-1">
+            <p className="text-sm text-t3 mt-1 line-clamp-1">
               &ldquo;{course.review}&rdquo;
             </p>
           </div>
@@ -607,22 +605,22 @@ const CourseCard = memo(
               uniqueDepts.map((dept, idx) => (
                 <span
                   key={`${dept}-${idx}`}
-                  className="inline-flex items-center justify-center px-2 py-0.5 bg-white/[0.05] border border-white/[0.08] text-neutral-400 font-mono text-xs rounded-none"
+                  className="inline-flex items-center justify-center px-2 py-0.5 bg-surface-active border border-strong text-t2 font-mono text-xs rounded-none"
                 >
                   {dept}
                 </span>
               ))
             ) : (
-              <span className="inline-flex items-center justify-center px-2 py-0.5 bg-white/[0.05] border border-white/[0.08] text-neutral-400 font-mono text-xs rounded-none">
+              <span className="inline-flex items-center justify-center px-2 py-0.5 bg-surface-active border border-strong text-t2 font-mono text-xs rounded-none">
                 {course.category.toUpperCase()}
               </span>
             )}
-            <span className="font-mono text-sm text-neutral-400">
+            <span className="font-mono text-sm text-t2">
               {course.rating.toFixed(1)}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4 mt-3 font-mono text-xs text-neutral-600">
+        <div className="flex items-center gap-4 mt-3 font-mono text-xs text-t4">
           <span>difficulty {course.difficulty.toFixed(1)}</span>
           <span>workload {course.workload.toFixed(1)}</span>
           <span>value {course.value.toFixed(1)}</span>

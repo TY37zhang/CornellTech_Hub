@@ -20,7 +20,7 @@ export default function HelpSection({
       {/* Help Icon Floating Button (when help is hidden) */}
       {!showHelp && (
         <button
-          className="fixed bottom-6 right-6 z-50 bg-white text-black hover:bg-neutral-200 rounded-none p-3 shadow-lg transition-colors"
+          className="fixed bottom-6 right-6 z-50 bg-cta text-cta hover:bg-cta-hover rounded-none p-3 shadow-lg transition-colors"
           aria-label="Show How to Use the Planner"
           onClick={() => onToggleHelpModal(true)}
         >
@@ -31,27 +31,25 @@ export default function HelpSection({
       {/* Modal Popup for Help */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="relative w-full max-w-2xl mx-4 p-6 border border-white/[0.06] bg-black rounded-none shadow-xl">
+          <div className="relative w-full max-w-2xl mx-4 p-6 border border-subtle bg-surface rounded-none shadow-xl">
             <button
-              className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-t3 hover:text-t1 transition-colors"
               aria-label="Close How to Use the Planner"
               onClick={() => onToggleHelpModal(false)}
             >
               <X className="h-5 w-5" />
             </button>
             <div className="pb-0">
-              <h2 className="flex items-center gap-2 justify-center text-center w-full text-neutral-200 font-mono text-lg">
-                <BookOpen className="h-5 w-5 text-neutral-400" />
+              <h2 className="flex items-center gap-2 justify-center text-center w-full text-t1 font-mono text-lg">
+                <BookOpen className="h-5 w-5 text-t2" />
                 How to Use the Planner
               </h2>
             </div>
             <div className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
                 <div className="space-y-2">
-                  <h3 className="text-neutral-300 font-mono text-sm">
-                    Getting Started
-                  </h3>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-neutral-500">
+                  <h3 className="text-t2 font-mono text-sm">Getting Started</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-t3">
                     <li>
                       Select your program in the <b>settings</b> page
                     </li>
@@ -73,10 +71,8 @@ export default function HelpSection({
                   </ol>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-neutral-300 font-mono text-sm">
-                    Tips & Tricks
-                  </h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-neutral-500">
+                  <h3 className="text-t2 font-mono text-sm">Tips & Tricks</h3>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-t3">
                     <li>
                       Hover over requirement sections to see detailed
                       descriptions
@@ -102,27 +98,25 @@ export default function HelpSection({
 
       {/* Inline Help Section (hidable) */}
       {showHelp && !showHelpModal && (
-        <div className="relative p-6 border border-white/[0.06] bg-black rounded-none">
+        <div className="relative p-6 border border-subtle bg-surface rounded-none">
           <button
-            className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
+            className="absolute top-4 right-4 text-t3 hover:text-t1 transition-colors"
             aria-label="Hide How to Use the Planner"
             onClick={() => onToggleHelp(false)}
           >
             <X className="h-5 w-5" />
           </button>
           <div className="pb-0">
-            <h2 className="flex items-center gap-2 justify-center text-center w-full text-neutral-200 font-mono text-lg">
-              <BookOpen className="h-5 w-5 text-neutral-400" />
+            <h2 className="flex items-center gap-2 justify-center text-center w-full text-t1 font-mono text-lg">
+              <BookOpen className="h-5 w-5 text-t2" />
               How to Use the Planner
             </h2>
           </div>
           <div className="pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
               <div className="space-y-2">
-                <h3 className="text-neutral-300 font-mono text-sm">
-                  Getting Started
-                </h3>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-neutral-500">
+                <h3 className="text-t2 font-mono text-sm">Getting Started</h3>
+                <ol className="list-decimal list-inside space-y-1 text-sm text-t3">
                   <li>
                     Select your program from the{" "}
                     <b>dropdown menu in the settings page</b>
@@ -145,10 +139,8 @@ export default function HelpSection({
                 </ol>
               </div>
               <div className="space-y-2">
-                <h3 className="text-neutral-300 font-mono text-sm">
-                  Tips & Tricks
-                </h3>
-                <ul className="list-disc list-inside space-y-1 text-sm text-neutral-500">
+                <h3 className="text-t2 font-mono text-sm">Tips & Tricks</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-t3">
                   <li>
                     Hover over requirement sections to see detailed descriptions
                   </li>

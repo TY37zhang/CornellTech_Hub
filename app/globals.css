@@ -4,10 +4,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@utility text-balance {
+  text-wrap: balance;
 }
 
 @layer base {
@@ -45,7 +43,32 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Terminal-core design tokens — light mode */
+    --tc-surface: 0 0% 100%;
+    --tc-surface-hover: 0 0% 97%;
+    --tc-surface-active: 0 0% 94%;
+    --tc-surface-raised: 0 0% 99%;
+    --tc-subtle-border: 0 0% 88%;
+    --tc-strong-border: 0 0% 78%;
+    --tc-t1: 0 0% 5%;
+    --tc-t2: 0 0% 25%;
+    --tc-t3: 0 0% 45%;
+    --tc-t4: 0 0% 65%;
+    --tc-inverted: 0 0% 98%;
+    --tc-dot-grid: 0 0% 0%;
+    --tc-code-comment: 0 0% 55%;
+    --tc-accent-red: 0 72% 51%;
+    --tc-cta-bg: 0 0% 9%;
+    --tc-cta-text: 0 0% 98%;
+    --tc-cta-hover: 0 0% 20%;
+    --tc-cta-outline-border: 0 0% 0% / 0.15;
+    --tc-cta-outline-text: 0 0% 25%;
+    --tc-cta-outline-hover: 0 0% 0% / 0.05;
+    --tc-island-bg: 0 0% 100% / 0.85;
+    --tc-island-border: 0 0% 0% / 0.08;
   }
+
   .dark {
     --background: 0 0% 0%;
     --foreground: 0 0% 93%;
@@ -80,6 +103,30 @@ body {
     --sidebar-accent-foreground: 0 0% 93%;
     --sidebar-border: 0 0% 10%;
     --sidebar-ring: 0 0% 83.1%;
+
+    /* Terminal-core design tokens — dark mode */
+    --tc-surface: 0 0% 0%;
+    --tc-surface-hover: 0 0% 4%;
+    --tc-surface-active: 0 0% 7%;
+    --tc-surface-raised: 0 0% 3%;
+    --tc-subtle-border: 0 0% 15%;
+    --tc-strong-border: 0 0% 20%;
+    --tc-t1: 0 0% 93%;
+    --tc-t2: 0 0% 70%;
+    --tc-t3: 0 0% 50%;
+    --tc-t4: 0 0% 35%;
+    --tc-inverted: 0 0% 0%;
+    --tc-dot-grid: 0 0% 100%;
+    --tc-code-comment: 0 0% 40%;
+    --tc-accent-red: 0 72% 51%;
+    --tc-cta-bg: 0 0% 93%;
+    --tc-cta-text: 0 0% 0%;
+    --tc-cta-hover: 0 0% 83%;
+    --tc-cta-outline-border: 0 0% 100% / 0.15;
+    --tc-cta-outline-text: 0 0% 75%;
+    --tc-cta-outline-hover: 0 0% 100% / 0.05;
+    --tc-island-bg: 0 0% 0% / 0.7;
+    --tc-island-border: 0 0% 100% / 0.08;
   }
 }
 
@@ -93,4 +140,78 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* ─── Theme-aware utility classes ─── */
+@utility bg-surface {
+  background-color: hsl(var(--tc-surface));
+}
+@utility bg-surface-hover {
+  background-color: hsl(var(--tc-surface-hover));
+}
+@utility bg-surface-active {
+  background-color: hsl(var(--tc-surface-active));
+}
+@utility bg-surface-raised {
+  background-color: hsl(var(--tc-surface-raised));
+}
+
+@utility border-subtle {
+  border-color: hsl(var(--tc-subtle-border));
+}
+@utility border-strong {
+  border-color: hsl(var(--tc-strong-border));
+}
+@utility divide-subtle {
+  & > :not(:last-child) {
+    border-bottom-color: hsl(var(--tc-subtle-border));
+  }
+}
+
+@utility text-t1 {
+  color: hsl(var(--tc-t1));
+}
+@utility text-t2 {
+  color: hsl(var(--tc-t2));
+}
+@utility text-t3 {
+  color: hsl(var(--tc-t3));
+}
+@utility text-t4 {
+  color: hsl(var(--tc-t4));
+}
+@utility text-inverted {
+  color: hsl(var(--tc-inverted));
+}
+@utility text-code-comment {
+  color: hsl(var(--tc-code-comment));
+}
+@utility text-accent-red {
+  color: hsl(var(--tc-accent-red));
+}
+
+@utility bg-cta {
+  background-color: hsl(var(--tc-cta-bg));
+}
+@utility text-cta {
+  color: hsl(var(--tc-cta-text));
+}
+@utility bg-cta-hover {
+  background-color: hsl(var(--tc-cta-hover));
+}
+@utility border-cta-outline {
+  border-color: hsl(var(--tc-cta-outline-border));
+}
+@utility text-cta-outline {
+  color: hsl(var(--tc-cta-outline-text));
+}
+@utility bg-cta-outline-hover {
+  background-color: hsl(var(--tc-cta-outline-hover));
+}
+
+@utility bg-island {
+  background: hsl(var(--tc-island-bg));
+}
+@utility border-island {
+  border-color: hsl(var(--tc-island-border));
 }

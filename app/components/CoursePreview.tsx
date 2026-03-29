@@ -34,19 +34,19 @@ function CoursePreview({ topCourses, topCourseError }: CoursePreviewProps) {
 
   return (
     <div className="w-full">
-      <div className="divide-y divide-white/[0.06]">
+      <div className="divide-y divide-subtle">
         {topCourses.map((course) => (
           <Link
             key={course.id}
             href={`/courses/${course.id}`}
-            className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors"
+            className="flex items-center justify-between px-4 py-3 hover:bg-surface-hover transition-colors"
           >
-            <span className="text-sm text-neutral-300 truncate pr-4">
+            <span className="text-sm text-t2 truncate pr-4">
               {course.title}
             </span>
             <span className="flex items-center gap-2 shrink-0">
               <RatingDot rating={course.rating} />
-              <span className="font-mono text-sm text-neutral-400">
+              <span className="font-mono text-sm text-t2">
                 {course.rating.toFixed(1)}
               </span>
             </span>
@@ -56,7 +56,7 @@ function CoursePreview({ topCourses, topCourseError }: CoursePreviewProps) {
       <div className="pt-4 px-4">
         <Link
           href="/courses"
-          className="text-neutral-500 hover:text-white text-sm font-mono transition-colors"
+          className="text-t3 hover:text-t1 text-sm font-mono transition-colors"
         >
           View All Courses →
         </Link>

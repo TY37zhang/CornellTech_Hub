@@ -55,24 +55,24 @@ import { programRequirements } from "./data/programRequirements";
 
 const CourseSelector = dynamic(() => import("./components/CourseSelector"), {
   ssr: false,
-  loading: () => <div className="h-48 bg-white/[0.04] animate-pulse"></div>,
+  loading: () => <div className="h-48 bg-surface-active animate-pulse"></div>,
 });
 
 const SelectedCourses = dynamic(() => import("./components/SelectedCourses"), {
   ssr: true,
-  loading: () => <div className="h-64 bg-white/[0.04] animate-pulse"></div>,
+  loading: () => <div className="h-64 bg-surface-active animate-pulse"></div>,
 });
 
 const CourseSchedule = dynamic(() => import("./components/CourseSchedule"), {
   ssr: true,
-  loading: () => <div className="h-64 bg-white/[0.04] animate-pulse"></div>,
+  loading: () => <div className="h-64 bg-surface-active animate-pulse"></div>,
 });
 
 const AdditionalQuestions = dynamic(
   () => import("./components/AdditionalQuestions"),
   {
     ssr: true,
-    loading: () => <div className="h-32 bg-white/[0.04] animate-pulse"></div>,
+    loading: () => <div className="h-32 bg-surface-active animate-pulse"></div>,
   },
 );
 
@@ -1449,31 +1449,31 @@ export default function PlannerPage() {
     return (
       <div className="pt-24">
         {/* Loading Skeleton */}
-        <div className="w-full bg-black">
+        <div className="w-full bg-surface">
           <div className="mx-auto max-w-[980px] px-6">
             <div className="text-center py-12">
-              <div className="h-12 bg-white/[0.04] w-64 mx-auto mb-4 animate-pulse"></div>
-              <div className="h-6 bg-white/[0.04] w-96 mx-auto animate-pulse"></div>
+              <div className="h-12 bg-surface-active w-64 mx-auto mb-4 animate-pulse"></div>
+              <div className="h-6 bg-surface-active w-96 mx-auto animate-pulse"></div>
             </div>
             <div className="text-center mb-8">
-              <div className="h-8 bg-white/[0.04] w-80 mx-auto animate-pulse"></div>
+              <div className="h-8 bg-surface-active w-80 mx-auto animate-pulse"></div>
             </div>
           </div>
         </div>
         <div className="mx-auto max-w-[980px] px-6 py-12 space-y-8">
-          <div className="h-24 bg-white/[0.04] animate-pulse"></div>
+          <div className="h-24 bg-surface-active animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-4 space-y-4">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-32 bg-white/[0.04] animate-pulse"
+                  className="h-32 bg-surface-active animate-pulse"
                 ></div>
               ))}
             </div>
             <div className="md:col-span-8 space-y-6">
-              <div className="h-48 bg-white/[0.04] animate-pulse"></div>
-              <div className="h-64 bg-white/[0.04] animate-pulse"></div>
+              <div className="h-48 bg-surface-active animate-pulse"></div>
+              <div className="h-64 bg-surface-active animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -1488,24 +1488,24 @@ export default function PlannerPage() {
           <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
             <div className="mx-auto max-w-[980px] px-6">
               <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-full max-w-2xl border border-white/[0.06] bg-black">
+                <div className="w-full max-w-2xl border border-subtle bg-surface">
                   <div className="space-y-1 px-6 py-4">
-                    <h2 className="text-2xl font-mono text-neutral-200">
+                    <h2 className="text-2xl font-mono text-t1">
                       Program Not Set
                     </h2>
-                    <p className="text-neutral-500">
+                    <p className="text-t3">
                       Please set your program in the settings page before using
                       the course planner.
                     </p>
                   </div>
                   <div className="flex flex-col items-center space-y-4 px-6 pb-6">
-                    <p className="text-neutral-500">
+                    <p className="text-t3">
                       You need to select your program to start planning your
                       courses.
                     </p>
                     <Button
                       asChild
-                      className="bg-white text-black hover:bg-neutral-200 rounded-none font-mono"
+                      className="bg-cta text-cta hover:bg-cta-hover rounded-none font-mono"
                     >
                       <Link href="/settings">Go to Settings</Link>
                     </Button>
@@ -1522,25 +1522,25 @@ export default function PlannerPage() {
   return (
     <div className="pt-24">
       {/* Top Section */}
-      <div className="w-full border-b border-white/[0.06]">
+      <div className="w-full border-b border-subtle">
         <div className="mx-auto max-w-[980px] px-6">
           {/* Program Title */}
           <div className="text-center py-12">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Planner
             </p>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               Course Planner.
             </h1>
-            <p className="mt-3 text-base text-neutral-500">
+            <p className="mt-3 text-base text-t3">
               Plan and track your academic journey.
             </p>
           </div>
           {/* Program Info */}
           <div className="text-center mb-4">
             <div className="flex items-center justify-center gap-3">
-              <GraduationCap className="h-6 w-6 text-neutral-300" />
-              <h2 className="text-xl font-mono font-semibold tracking-tighter text-neutral-300">
+              <GraduationCap className="h-6 w-6 text-t2" />
+              <h2 className="text-xl font-mono font-semibold tracking-tighter text-t2">
                 {programRequirements[userProgram].name}
               </h2>
             </div>
@@ -1606,9 +1606,9 @@ export default function PlannerPage() {
             )}
 
             {/* Collapsible Additional Questions Card */}
-            <div className="border border-white/[0.06]">
+            <div className="border border-subtle">
               <div
-                className={`flex justify-between items-center border-b border-white/[0.06] px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                className={`flex justify-between items-center border-b border-subtle px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
                 onClick={toggleAdditionalQuestions}
                 aria-expanded={expandedAdditionalQuestions}
                 aria-controls="additional-questions-content"
@@ -1623,7 +1623,7 @@ export default function PlannerPage() {
                     : -1
                 }
               >
-                <h3 className="font-mono text-sm text-neutral-300">
+                <h3 className="font-mono text-sm text-t2">
                   Additional Questions
                 </h3>
                 {/* Chevron for mobile */}
@@ -1669,9 +1669,9 @@ export default function PlannerPage() {
             </div>
             {/* Additional Requirements Card */}
             {programRequirements[userProgram].additionalRequirements && (
-              <div className="border border-white/[0.06]">
+              <div className="border border-subtle">
                 <div
-                  className={`flex justify-between items-center border-b border-white/[0.06] px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
+                  className={`flex justify-between items-center border-b border-subtle px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
                   onClick={toggleAdditionalRequirements}
                   aria-expanded={expandedAdditionalRequirements}
                   aria-controls="additional-requirements-content"
@@ -1686,7 +1686,7 @@ export default function PlannerPage() {
                       : -1
                   }
                 >
-                  <h3 className="font-mono text-sm text-neutral-300">
+                  <h3 className="font-mono text-sm text-t2">
                     Additional Requirements
                   </h3>
                   {/* Chevron for mobile */}
@@ -1712,12 +1712,12 @@ export default function PlannerPage() {
                   className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
                 >
                   <div className="space-y-3">
-                    <ul className="text-sm text-neutral-500 space-y-2">
+                    <ul className="text-sm text-t3 space-y-2">
                       {programRequirements[
                         userProgram
                       ].additionalRequirements.map((requirement, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neutral-500"></span>
+                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--tc-t3))]"></span>
                           <span>{requirement}</span>
                         </li>
                       ))}
@@ -1730,15 +1730,15 @@ export default function PlannerPage() {
           {/* Right Column - Course Search and Management */}
           <div className="md:col-span-8 space-y-6">
             {/* Search Section */}
-            <div className="border border-white/[0.06] p-6">
+            <div className="border border-subtle p-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <Search className="h-5 w-5 text-neutral-600" />
+                  <Search className="h-5 w-5 text-t4" />
                   <Input
                     placeholder="Search for courses..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-white/[0.03] border border-white/[0.08] text-neutral-200 placeholder:text-neutral-600 font-mono text-sm rounded-none"
+                    className="flex-1 bg-surface-hover border border-strong text-t1 placeholder:text-t4 font-mono text-sm rounded-none"
                   />
                 </div>
                 {/* Course Selector */}

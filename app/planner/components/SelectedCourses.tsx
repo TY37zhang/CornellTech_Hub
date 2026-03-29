@@ -111,13 +111,15 @@ export default function SelectedCourses({
                 id="show-taken-courses"
                 onClick={() => setShowTakenCourses(!showTakenCourses)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-none transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:ring-offset-2 ${
-                  showTakenCourses ? "bg-neutral-200" : "bg-neutral-700"
+                  showTakenCourses
+                    ? "bg-[hsl(var(--tc-strong-border))]"
+                    : "bg-surface-active"
                 }`}
                 role="switch"
                 aria-checked={showTakenCourses}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-none bg-neutral-950 transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-none bg-surface transition-transform ${
                     showTakenCourses ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
@@ -138,13 +140,15 @@ export default function SelectedCourses({
               id="show-taken-courses-mobile"
               onClick={() => setShowTakenCourses(!showTakenCourses)}
               className={`relative inline-flex h-6 w-11 items-center rounded-none transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:ring-offset-2 ${
-                showTakenCourses ? "bg-neutral-200" : "bg-neutral-700"
+                showTakenCourses
+                  ? "bg-[hsl(var(--tc-strong-border))]"
+                  : "bg-surface-active"
               }`}
               role="switch"
               aria-checked={showTakenCourses}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-none bg-neutral-950 transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-none bg-surface transition-transform ${
                   showTakenCourses ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -182,7 +186,7 @@ export default function SelectedCourses({
                       variant="ghost"
                       size="sm"
                       onClick={() => onRemoveCourse(course)}
-                      className="absolute top-0 right-2 z-10 hover:bg-transparent hover:text-neutral-400"
+                      className="absolute top-0 right-2 z-10 hover:bg-transparent hover:text-t2"
                       aria-label="Remove course"
                     >
                       <X className="h-4 w-4" />
@@ -192,10 +196,10 @@ export default function SelectedCourses({
                         <h4 className="font-medium truncate w-full mb-1">
                           {course.code}
                         </h4>
-                        <p className="text-sm text-neutral-500 truncate w-full mb-2">
+                        <p className="text-sm text-t3 truncate w-full mb-2">
                           {course.name}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500 w-full">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-t3 w-full">
                           <span>{course.department.toUpperCase()}</span>
                           <span>•</span>
                           <span className="whitespace-nowrap">

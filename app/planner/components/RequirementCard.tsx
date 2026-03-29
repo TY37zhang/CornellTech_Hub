@@ -49,7 +49,7 @@ export default function RequirementCard({
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   return (
-    <div className="border border-white/[0.06] group hover:border-white/[0.1] transition-colors p-0">
+    <div className="border border-subtle group hover:border-strong transition-colors p-0">
       {/* Header as button on mobile, static on desktop */}
       <div
         className={`flex flex-wrap items-center px-4 py-3 cursor-pointer md:cursor-default select-none md:select-text`}
@@ -63,10 +63,10 @@ export default function RequirementCard({
       >
         {/* Title and status row */}
         <div className="flex-1 flex flex-col items-start gap-y-1 min-w-0">
-          <span className="font-medium truncate text-neutral-200">
+          <span className="font-medium truncate text-t1">
             {requirementKey.replace(/([A-Z])/g, " $1").trim()}
           </span>
-          <span className="text-neutral-500 font-mono text-xs">
+          <span className="text-t3 font-mono text-xs">
             {(() => {
               const creditInfo = calculateCategoryCredits(requirementKey);
               const adjustments: string[] = [];
@@ -103,7 +103,7 @@ export default function RequirementCard({
           <Button
             variant="ghost"
             size="sm"
-            className="ml-2 opacity-60 group-hover:opacity-100 transition-opacity text-neutral-400 hover:bg-white/[0.06]"
+            className="ml-2 opacity-60 group-hover:opacity-100 transition-opacity text-t2 hover:bg-surface-active"
             onClick={(e) => e.stopPropagation()}
             title="Transfer credits from this requirement"
           >
@@ -111,7 +111,7 @@ export default function RequirementCard({
           </Button>
         </CreditTransferModal>
         {/* Chevron for mobile */}
-        <span className="ml-2 md:hidden text-neutral-600">
+        <span className="ml-2 md:hidden text-t4">
           <svg
             className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`}
             fill="none"
@@ -135,9 +135,9 @@ export default function RequirementCard({
       >
         <Progress
           value={calculateRequirementProgress(requirementKey)}
-          className="h-1.5 bg-white/[0.06] mb-3"
+          className="h-1.5 bg-surface-active mb-3"
         />
-        <p className="text-neutral-600 text-xs opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
+        <p className="text-t4 text-xs opacity-0 h-0 group-hover:opacity-100 group-hover:h-auto group-hover:mt-2 transition-all duration-300 overflow-hidden">
           {requirement.description}
         </p>
 
@@ -157,7 +157,7 @@ export default function RequirementCard({
               .map((transfer) => (
                 <div
                   key={transfer.id}
-                  className="flex items-center gap-2 text-xs bg-white/[0.03] text-neutral-400 border border-white/[0.06] font-mono px-2 py-1 rounded"
+                  className="flex items-center gap-2 text-xs bg-surface-hover text-t2 border border-subtle font-mono px-2 py-1 rounded"
                 >
                   {transfer.fromCategory === requirementKey ? (
                     <>
@@ -194,7 +194,7 @@ export default function RequirementCard({
                     : selectedAnchorCourse &&
                         selectedAnchorCourse.id === course.id
                       ? "bg-purple-500/[0.06] border border-purple-500/20"
-                      : "bg-white/[0.03]"
+                      : "bg-surface-hover"
                 }`}
               >
                 <div className="flex-1 min-w-0">
@@ -206,7 +206,7 @@ export default function RequirementCard({
                         : selectedAnchorCourse &&
                             selectedAnchorCourse.id === course.id
                           ? "text-purple-400"
-                          : "text-neutral-200"
+                          : "text-t1"
                     }`}
                   >
                     {course.code}
@@ -225,7 +225,7 @@ export default function RequirementCard({
                         : selectedAnchorCourse &&
                             selectedAnchorCourse.id === course.id
                           ? "text-purple-400/70"
-                          : "text-neutral-500"
+                          : "text-t3"
                     }`}
                   >
                     {course.name}
@@ -245,7 +245,7 @@ export default function RequirementCard({
                       : selectedAnchorCourse &&
                           selectedAnchorCourse.id === course.id
                         ? "text-purple-400"
-                        : "text-neutral-200"
+                        : "text-t1"
                   }`}
                 >
                   {course.credits} cr

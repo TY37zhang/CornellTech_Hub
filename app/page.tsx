@@ -9,13 +9,13 @@ import type { Metadata } from "next";
 
 const CoursePreview = dynamic(() => import("./components/CoursePreview"), {
   loading: () => (
-    <div className="w-full h-40 bg-white/[0.01] animate-pulse border border-white/[0.06]" />
+    <div className="w-full h-40 bg-surface-hover animate-pulse border border-subtle" />
   ),
 });
 
 const ForumPreview = dynamic(() => import("./components/ForumPreview"), {
   loading: () => (
-    <div className="w-full h-40 bg-white/[0.01] animate-pulse border border-white/[0.06]" />
+    <div className="w-full h-40 bg-surface-hover animate-pulse border border-subtle" />
   ),
 });
 
@@ -106,27 +106,27 @@ export default async function Dashboard() {
   const session = await sessionPromise;
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-surface text-t1">
       <main className="flex-1">
         {/* ════════════════════ HERO ════════════════════ */}
-        <section className="relative w-full overflow-hidden border-b border-white/[0.06]">
+        <section className="relative w-full overflow-hidden border-b border-subtle">
           {/* Dot grid */}
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div
               className="absolute inset-0 opacity-[0.07]"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle, #fff 0.5px, transparent 0.5px)",
+                  "radial-gradient(circle, hsl(var(--tc-dot-grid)) 0.5px, transparent 0.5px)",
                 backgroundSize: "24px 24px",
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/60 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(var(--tc-surface)/.6)] to-[hsl(var(--tc-surface))]" />
           </div>
 
           <div className="mx-auto max-w-[980px] px-6 pt-28 pb-20 md:pt-40 md:pb-28 lg:pt-48 lg:pb-32">
             <div className="flex flex-col items-start">
               {/* Terminal prompt */}
-              <p className="font-mono text-sm text-neutral-500 mb-6">
+              <p className="font-mono text-sm text-t3 mb-6">
                 <span className="text-red-500">$</span> cat /welcome.md
               </p>
 
@@ -135,7 +135,7 @@ export default async function Dashboard() {
                 Cornell Tech Hub
               </h1>
 
-              <p className="mt-6 max-w-[540px] text-base leading-relaxed text-neutral-400 md:text-lg">
+              <p className="mt-6 max-w-[540px] text-base leading-relaxed text-t2 md:text-lg">
                 Course reviews, student discussions, and every resource you
                 need. Built by students, for students.
               </p>
@@ -145,7 +145,7 @@ export default async function Dashboard() {
                 <Link href="/courses">
                   <Button
                     size="lg"
-                    className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
+                    className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
                   >
                     Browse Courses
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -155,7 +155,7 @@ export default async function Dashboard() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-11 rounded-none px-6 text-sm font-mono font-medium border-white/[0.15] bg-transparent text-neutral-300 hover:bg-white/[0.05] hover:text-white transition-colors"
+                    className="h-11 rounded-none px-6 text-sm font-mono font-medium border-cta-outline bg-transparent text-cta-outline hover:bg-cta-outline-hover hover:text-t1 transition-colors"
                   >
                     Join Forum
                   </Button>
@@ -163,7 +163,7 @@ export default async function Dashboard() {
               </div>
 
               {/* Disclaimer */}
-              <p className="mt-16 font-mono text-[11px] text-neutral-600 leading-relaxed">
+              <p className="mt-16 font-mono text-[11px] text-code-comment leading-relaxed">
                 // not affiliated with Cornell Tech. this is a student project.
               </p>
             </div>
@@ -171,9 +171,9 @@ export default async function Dashboard() {
         </section>
 
         {/* ════════════════════ NAVIGATE ════════════════════ */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-20 md:py-28">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Navigate
             </p>
             <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -181,90 +181,88 @@ export default async function Dashboard() {
             </h2>
 
             {/* Flat rows — no cards */}
-            <div className="mt-12 divide-y divide-white/[0.06] border-y border-white/[0.06]">
+            <div className="mt-12 divide-y divide-subtle border-y border-subtle">
               <Link
                 href="/courses"
-                className="group flex items-center justify-between py-5 px-1 hover:bg-white/[0.02] transition-colors"
+                className="group flex items-center justify-between py-5 px-1 hover:bg-surface-hover transition-colors"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <span className="font-mono text-sm text-neutral-600 w-6 shrink-0">
+                  <span className="font-mono text-sm text-t4 w-6 shrink-0">
                     01
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                    <h3 className="text-base font-semibold text-t1 group-hover:text-t1 transition-colors">
                       Course Reviews
                     </h3>
-                    <p className="text-sm text-neutral-500 mt-0.5 truncate">
+                    <p className="text-sm text-t3 mt-0.5 truncate">
                       Honest reviews from students who took the class
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-neutral-700 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-t4 group-hover:text-t1 group-hover:translate-x-1 transition-all" />
               </Link>
 
               <Link
                 href="/forum"
-                className="group flex items-center justify-between py-5 px-1 hover:bg-white/[0.02] transition-colors"
+                className="group flex items-center justify-between py-5 px-1 hover:bg-surface-hover transition-colors"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <span className="font-mono text-sm text-neutral-600 w-6 shrink-0">
+                  <span className="font-mono text-sm text-t4 w-6 shrink-0">
                     02
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                    <h3 className="text-base font-semibold text-t1 group-hover:text-t1 transition-colors">
                       Student Forum
                     </h3>
-                    <p className="text-sm text-neutral-500 mt-0.5 truncate">
+                    <p className="text-sm text-t3 mt-0.5 truncate">
                       Questions, advice, and discussions across programs
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-neutral-700 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-t4 group-hover:text-t1 group-hover:translate-x-1 transition-all" />
               </Link>
 
               <Link
                 href="/planner"
-                className="group flex items-center justify-between py-5 px-1 hover:bg-white/[0.02] transition-colors"
+                className="group flex items-center justify-between py-5 px-1 hover:bg-surface-hover transition-colors"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <span className="font-mono text-sm text-neutral-600 w-6 shrink-0">
+                  <span className="font-mono text-sm text-t4 w-6 shrink-0">
                     03
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                    <h3 className="text-base font-semibold text-t1 group-hover:text-t1 transition-colors">
                       Course Planner
                     </h3>
-                    <p className="text-sm text-neutral-500 mt-0.5 truncate">
+                    <p className="text-sm text-t3 mt-0.5 truncate">
                       Map your semesters and track requirements
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-neutral-700 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-t4 group-hover:text-t1 group-hover:translate-x-1 transition-all" />
               </Link>
             </div>
           </div>
         </section>
 
         {/* ════════════════════ LIVE DATA ════════════════════ */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-20 md:py-28">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Live
             </p>
             <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
               Latest activity.
             </h2>
 
-            <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-px bg-white/[0.06]">
+            <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-px bg-[hsl(var(--tc-subtle-border))]">
               {/* Courses column */}
-              <div className="bg-black">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-                  <span className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+              <div className="bg-surface">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
+                  <span className="font-mono text-xs uppercase tracking-wider text-t3">
                     Top Courses
                   </span>
-                  <span className="font-mono text-xs text-neutral-600">
-                    rating
-                  </span>
+                  <span className="font-mono text-xs text-t4">rating</span>
                 </div>
                 <CoursePreview
                   topCourses={topCourses}
@@ -273,14 +271,12 @@ export default async function Dashboard() {
               </div>
 
               {/* Forum column */}
-              <div className="bg-black">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-                  <span className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+              <div className="bg-surface">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
+                  <span className="font-mono text-xs uppercase tracking-wider text-t3">
                     Recent Discussions
                   </span>
-                  <span className="font-mono text-xs text-neutral-600">
-                    replies
-                  </span>
+                  <span className="font-mono text-xs text-t4">replies</span>
                 </div>
                 <ForumPreview forumPosts={forumPosts} forumError={forumError} />
               </div>
@@ -289,16 +285,16 @@ export default async function Dashboard() {
         </section>
 
         {/* ════════════════════ RESOURCES ════════════════════ */}
-        <section className="w-full border-b border-white/[0.06]">
+        <section className="w-full border-b border-subtle">
           <div className="mx-auto max-w-[980px] px-6 py-20 md:py-28">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
               Resources
             </p>
             <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
               Quick links.
             </h2>
 
-            <div className="mt-12 divide-y divide-white/[0.06] border-y border-white/[0.06]">
+            <div className="mt-12 divide-y divide-subtle border-y border-subtle">
               {[
                 {
                   title: "Campus Events",
@@ -326,17 +322,17 @@ export default async function Dashboard() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-between py-4 px-1 hover:bg-white/[0.02] transition-colors"
+                  className="group flex items-center justify-between py-4 px-1 hover:bg-surface-hover transition-colors"
                 >
                   <div className="flex items-baseline gap-3 min-w-0">
-                    <span className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors shrink-0">
+                    <span className="text-sm font-medium text-t1 group-hover:text-t1 transition-colors shrink-0">
                       {link.title}
                     </span>
-                    <span className="font-mono text-xs text-neutral-600 truncate hidden sm:inline">
+                    <span className="font-mono text-xs text-t4 truncate hidden sm:inline">
                       {link.desc}
                     </span>
                   </div>
-                  <span className="font-mono text-xs text-neutral-700 group-hover:text-neutral-400 shrink-0 ml-4 transition-colors">
+                  <span className="font-mono text-xs text-t4 group-hover:text-t2 shrink-0 ml-4 transition-colors">
                     ↗
                   </span>
                 </Link>
@@ -347,16 +343,16 @@ export default async function Dashboard() {
 
         {/* ════════════════════ CTA (logged-out) ════════════════════ */}
         {!session && (
-          <section className="w-full border-b border-white/[0.06]">
+          <section className="w-full border-b border-subtle">
             <div className="mx-auto max-w-[980px] px-6 py-24 md:py-32">
               <div className="max-w-lg">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 mb-2">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-t3 mb-2">
                   Get Started
                 </p>
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                   Join the community.
                 </h2>
-                <p className="mt-4 text-base text-neutral-400 leading-relaxed">
+                <p className="mt-4 text-base text-t2 leading-relaxed">
                   Create an account and make the most of your Cornell Tech
                   experience.
                 </p>
@@ -364,7 +360,7 @@ export default async function Dashboard() {
                   <Link href="/auth/signup">
                     <Button
                       size="lg"
-                      className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
+                      className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
                     >
                       Sign Up
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -372,7 +368,7 @@ export default async function Dashboard() {
                   </Link>
                   <Link
                     href="/auth/signin"
-                    className="font-mono text-sm text-neutral-500 hover:text-white transition-colors"
+                    className="font-mono text-sm text-t3 hover:text-t1 transition-colors"
                   >
                     or sign in →
                   </Link>

@@ -660,16 +660,16 @@ export default function AdditionalQuestions({
               value={selectedEthicsCourse}
               onValueChange={handleEthicsCourseSelect}
             >
-              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-none h-10">
+              <SelectTrigger className="w-full bg-surface border border-input rounded-none h-10">
                 <SelectValue placeholder="Select course" className="text-sm" />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-950">
+              <SelectContent className="bg-surface">
                 {selectedCourses.length > 0 ? (
                   selectedCourses.map((course) => (
                     <SelectItem
                       key={course.id}
                       value={course.code}
-                      className="text-sm py-2.5 pl-3 pr-6 hover:bg-white/[0.04] cursor-pointer"
+                      className="text-sm py-2.5 pl-3 pr-6 hover:bg-surface-active cursor-pointer"
                     >
                       {course.code} - {course.name}
                     </SelectItem>
@@ -678,7 +678,7 @@ export default function AdditionalQuestions({
                   <SelectItem
                     value=""
                     disabled
-                    className="text-sm py-2.5 pl-3 pr-6 text-neutral-500"
+                    className="text-sm py-2.5 pl-3 pr-6 text-t3"
                   >
                     No courses selected
                   </SelectItem>
@@ -713,19 +713,19 @@ export default function AdditionalQuestions({
               value={selectedAnchorCourse}
               onValueChange={handleAnchorCourseSelect}
             >
-              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-none h-10">
+              <SelectTrigger className="w-full bg-surface border border-input rounded-none h-10">
                 <SelectValue
                   placeholder="Select anchor course"
                   className="text-sm"
                 />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-950">
+              <SelectContent className="bg-surface">
                 {selectedCourses.length > 0 ? (
                   selectedCourses.map((course) => (
                     <SelectItem
                       key={course.id}
                       value={course.code}
-                      className="text-sm py-2.5 pl-3 pr-6 hover:bg-white/[0.04] cursor-pointer"
+                      className="text-sm py-2.5 pl-3 pr-6 hover:bg-surface-active cursor-pointer"
                     >
                       {course.code} - {course.name}
                     </SelectItem>
@@ -734,7 +734,7 @@ export default function AdditionalQuestions({
                   <SelectItem
                     value=""
                     disabled
-                    className="text-sm py-2.5 pl-3 pr-6 text-neutral-500"
+                    className="text-sm py-2.5 pl-3 pr-6 text-t3"
                   >
                     No courses selected
                   </SelectItem>
@@ -886,7 +886,7 @@ export default function AdditionalQuestions({
               {creditTransfers.map((transfer) => (
                 <div
                   key={transfer.id}
-                  className="group relative p-4 border border-border/60 rounded-none bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-200 hover:shadow-sm hover:border-border"
+                  className="group relative p-4 border border-border/60 rounded-none bg-surface-hover hover:bg-surface-active transition-all duration-200 hover:shadow-sm hover:border-border"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -903,11 +903,11 @@ export default function AdditionalQuestions({
                       {/* Transfer Flow */}
                       <div className="flex-1 min-w-0 flex items-center">
                         <div className="flex items-center justify-center gap-3 text-sm w-full">
-                          <span className="font-semibold text-neutral-200 leading-tight truncate">
+                          <span className="font-semibold text-t1 leading-tight truncate">
                             {getRequirementDisplayName(transfer.fromCategory)}
                           </span>
                           <ArrowRight className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                          <span className="font-semibold text-neutral-200 leading-tight truncate">
+                          <span className="font-semibold text-t1 leading-tight truncate">
                             {getRequirementDisplayName(transfer.toCategory)}
                           </span>
                         </div>
@@ -931,7 +931,7 @@ export default function AdditionalQuestions({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 text-neutral-200 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            className="h-6 w-6 p-0 text-t1 hover:text-destructive hover:bg-destructive/10 transition-colors"
                             disabled={deletingTransferId === transfer.id}
                           >
                             <Trash2 className="h-3 w-3" />

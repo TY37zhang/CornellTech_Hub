@@ -23,18 +23,18 @@ export default function DemoBanner({
   }
 
   return (
-    <div className="bg-white/[0.02] border-b border-white/[0.06] text-neutral-200">
+    <div className="bg-surface-hover border-b border-subtle text-t1">
       <div className="mx-auto max-w-[980px] px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="bg-white/[0.06] p-2 flex-shrink-0">
+            <div className="bg-surface-active p-2 flex-shrink-0">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-neutral-200 font-mono text-lg">
+              <h3 className="text-t1 font-mono text-lg">
                 You're viewing the Course Planner in Demo Mode
               </h3>
-              <p className="text-neutral-500 font-mono text-sm">
+              <p className="text-t3 font-mono text-sm">
                 Explore all features with sample data. Your changes are saved
                 locally.
                 <span className="font-medium">
@@ -49,7 +49,7 @@ export default function DemoBanner({
               variant="secondary"
               size="sm"
               onClick={onResetDemo}
-              className="bg-white/[0.06] text-neutral-300 hover:bg-white/[0.1] border-white/[0.08] rounded-none font-mono"
+              className="bg-surface-active text-t2 hover:bg-surface-active border-strong rounded-none font-mono"
             >
               Reset Demo
             </Button>
@@ -57,7 +57,7 @@ export default function DemoBanner({
               variant="secondary"
               size="sm"
               onClick={onSignIn}
-              className="bg-white text-black hover:bg-neutral-200 rounded-none font-mono"
+              className="bg-cta text-cta hover:bg-cta-hover rounded-none font-mono"
             >
               Sign In
             </Button>
@@ -65,7 +65,7 @@ export default function DemoBanner({
               variant="ghost"
               size="sm"
               onClick={onHideBanner}
-              className="text-neutral-500 hover:text-white hover:bg-white/[0.06]"
+              className="text-t3 hover:text-t1 hover:bg-surface-active"
             >
               <X className="h-4 w-4" />
             </Button>

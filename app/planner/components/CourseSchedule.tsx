@@ -125,7 +125,7 @@ function CourseTimeCard({
             <h3 className="font-medium text-lg leading-snug">
               {course.courseName}
             </h3>
-            <div className="flex items-center gap-2 mt-1 text-base text-neutral-500">
+            <div className="flex items-center gap-2 mt-1 text-base text-t3">
               <Clock className="h-4 w-4" />
               <span>
                 {course.startTime} - {course.endTime}
@@ -151,8 +151,11 @@ function CourseTimeCard({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-80 p-4 text-neutral-200"
-              style={{ backgroundColor: "#0a0a0a", color: "#e5e5e5" }}
+              className="w-80 p-4 text-t1"
+              style={{
+                backgroundColor: "hsl(var(--tc-surface))",
+                color: "hsl(var(--tc-t1))",
+              }}
             >
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -165,10 +168,10 @@ function CourseTimeCard({
                       />
                     </SelectTrigger>
                     <SelectContent
-                      className="bg-neutral-950 text-neutral-200 border-white/[0.08]"
+                      className="bg-surface text-t1 border-strong"
                       style={{
-                        backgroundColor: "#0a0a0a",
-                        color: "#e5e5e5",
+                        backgroundColor: "hsl(var(--tc-surface))",
+                        color: "hsl(var(--tc-t1))",
                       }}
                     >
                       {DAYS.map((day) => (
@@ -749,7 +752,7 @@ export default function CourseSchedule({
                           <h3 className="font-medium truncate">
                             {course.code}
                           </h3>
-                          <p className="text-neutral-500 text-sm leading-tight line-clamp-2 break-words">
+                          <p className="text-t3 text-sm leading-tight line-clamp-2 break-words">
                             {course.name}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -763,7 +766,7 @@ export default function CourseSchedule({
                         <Button
                           variant="ghost"
                           onClick={() => openAddSlot(course)}
-                          className="p-1.5 sm:p-2 border border-white/[0.08] hover:bg-white/[0.03] flex-shrink-0"
+                          className="p-1.5 sm:p-2 border border-strong hover:bg-surface-hover flex-shrink-0"
                           aria-label="Add to Schedule"
                         >
                           <Plus className="h-5 w-5" />
@@ -779,10 +782,10 @@ export default function CourseSchedule({
                           <span></span>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-80 p-4 text-neutral-200"
+                          className="w-80 p-4 text-t1"
                           style={{
-                            backgroundColor: "#0a0a0a",
-                            color: "#e5e5e5",
+                            backgroundColor: "hsl(var(--tc-surface))",
+                            color: "hsl(var(--tc-t1))",
                           }}
                         >
                           <div className="space-y-4">
@@ -799,10 +802,10 @@ export default function CourseSchedule({
                                   />
                                 </SelectTrigger>
                                 <SelectContent
-                                  className="bg-neutral-950 text-neutral-200 border-white/[0.08]"
+                                  className="bg-surface text-t1 border-strong"
                                   style={{
-                                    backgroundColor: "#0a0a0a",
-                                    color: "#e5e5e5",
+                                    backgroundColor: "hsl(var(--tc-surface))",
+                                    color: "hsl(var(--tc-t1))",
                                   }}
                                 >
                                   {DAYS.map((day) => (
@@ -922,12 +925,12 @@ export default function CourseSchedule({
                                 >
                                   {course.courseName}
                                 </h3>
-                                <div className="flex items-center gap-2 mt-1 text-sm text-neutral-500">
+                                <div className="flex items-center gap-2 mt-1 text-sm text-t3">
                                   <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                                   <span className="truncate">
                                     {course.startTime} - {course.endTime}
                                   </span>
-                                  <span className="text-xs text-neutral-500">
+                                  <span className="text-xs text-t3">
                                     (
                                     {formatDuration(
                                       course.startTime,
@@ -951,17 +954,18 @@ export default function CourseSchedule({
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-5 w-5 p-0 hover:bg-white/[0.03]"
+                                          className="h-5 w-5 p-0 hover:bg-surface-hover"
                                           title="Edit Time"
                                         >
                                           <Edit className="h-3 w-3" />
                                         </Button>
                                       </PopoverTrigger>
                                       <PopoverContent
-                                        className="w-80 p-4 text-neutral-200"
+                                        className="w-80 p-4 text-t1"
                                         style={{
-                                          backgroundColor: "#0a0a0a",
-                                          color: "#e5e5e5",
+                                          backgroundColor:
+                                            "hsl(var(--tc-surface))",
+                                          color: "hsl(var(--tc-t1))",
                                         }}
                                       >
                                         <div className="space-y-4">
@@ -980,10 +984,11 @@ export default function CourseSchedule({
                                                 />
                                               </SelectTrigger>
                                               <SelectContent
-                                                className="bg-neutral-950 text-neutral-200 border-white/[0.08]"
+                                                className="bg-surface text-t1 border-strong"
                                                 style={{
-                                                  backgroundColor: "#0a0a0a",
-                                                  color: "#e5e5e5",
+                                                  backgroundColor:
+                                                    "hsl(var(--tc-surface))",
+                                                  color: "hsl(var(--tc-t1))",
                                                 }}
                                               >
                                                 {DAYS.map((d) => (
@@ -1052,17 +1057,18 @@ export default function CourseSchedule({
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-5 w-5 p-0 hover:bg-white/[0.03]"
+                                          className="h-5 w-5 p-0 hover:bg-surface-hover"
                                           title="Add Time Slot"
                                         >
                                           <Plus className="h-3 w-3" />
                                         </Button>
                                       </PopoverTrigger>
                                       <PopoverContent
-                                        className="w-80 p-4 text-neutral-200"
+                                        className="w-80 p-4 text-t1"
                                         style={{
-                                          backgroundColor: "#0a0a0a",
-                                          color: "#e5e5e5",
+                                          backgroundColor:
+                                            "hsl(var(--tc-surface))",
+                                          color: "hsl(var(--tc-t1))",
                                         }}
                                       >
                                         <div className="space-y-4">
@@ -1081,10 +1087,11 @@ export default function CourseSchedule({
                                                 />
                                               </SelectTrigger>
                                               <SelectContent
-                                                className="bg-neutral-950 text-neutral-200 border-white/[0.08]"
+                                                className="bg-surface text-t1 border-strong"
                                                 style={{
-                                                  backgroundColor: "#0a0a0a",
-                                                  color: "#e5e5e5",
+                                                  backgroundColor:
+                                                    "hsl(var(--tc-surface))",
+                                                  color: "hsl(var(--tc-t1))",
                                                 }}
                                               >
                                                 {DAYS.map((day) => (
@@ -1170,7 +1177,7 @@ export default function CourseSchedule({
                       ))}
                     </div>
                     {sorted.length === 0 && (
-                      <p className="text-sm text-neutral-500 py-2">
+                      <p className="text-sm text-t3 py-2">
                         No courses scheduled
                       </p>
                     )}

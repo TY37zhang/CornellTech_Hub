@@ -58,13 +58,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={inter.className} suppressHydrationWarning={true}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <AuthProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
               <AnimationProvider>{children}</AnimationProvider>
@@ -73,8 +73,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Toaster />
             <Analytics />
             <SpeedInsights />
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
