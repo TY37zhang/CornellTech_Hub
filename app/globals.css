@@ -149,6 +149,14 @@ body {
   }
 }
 
+/* ─── Hide scrollbar but keep scroll functionality ─── */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
 /* ─── Theme-aware utility classes ─── */
 @utility bg-surface {
   background-color: hsl(var(--tc-surface));

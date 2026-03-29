@@ -498,7 +498,7 @@ function ForumClient({
                         </Select>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1 overflow-x-auto">
+                      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
                         {[
                           "all",
                           "Academics",
