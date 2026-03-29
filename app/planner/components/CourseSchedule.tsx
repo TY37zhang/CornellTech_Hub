@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Plus,
   Edit,
+  Download,
 } from "lucide-react";
 import {
   Popover,
@@ -216,6 +217,103 @@ export default function CourseSchedule({
   const [addSlotCardEnd, setAddSlotCardEnd] = useState("10:15");
 
   const [collapsed, setCollapsed] = useState(false);
+
+  // ── Export to ICS ──
+  const exportToICS = () => {
+    if (courseTimes.length === 0) {
+      toast({
+        title: "No schedule to export",
+        description: "Add courses to your schedule first.",
+        variant: "warning",
+      });
+      return;
+    }
+
+    // Map day names to the next occurrence from today
+    const dayMap: Record<string, number> = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
+    };
+
+    // Find the next Monday as the base date for the schedule
+    const now = new Date();
+    const currentDay = now.getDay(); // 0=Sun
+    const daysUntilMonday =
+      currentDay === 0 ? 1 : currentDay === 1 ? 0 : 8 - currentDay;
+    const baseMonday = new Date(now);
+    baseMonday.setDate(now.getDate() + daysUntilMonday);
+    baseMonday.setHours(0, 0, 0, 0);
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+
+    const formatICSDate = (date: Date, time: string) => {
+      const [h, m] = time.split(":").map(Number);
+      const d = new Date(date);
+      d.setHours(h, m, 0, 0);
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    };
+
+    const uid = () =>
+      `${Date.now()}-${Math.random().toString(36).slice(2, 9)}@cornelltechhub`;
+
+    let ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Cornell Tech Hub//Course Planner//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "X-WR-CALNAME:Course Schedule",
+    ];
+
+    for (const ct of courseTimes) {
+      const targetDayNum = dayMap[ct.day];
+      if (targetDayNum === undefined) continue;
+
+      // Calculate the date for this day relative to base Monday
+      const eventDate = new Date(baseMonday);
+      const offset = targetDayNum === 0 ? 6 : targetDayNum - 1; // Mon=0 offset
+      eventDate.setDate(baseMonday.getDate() + offset);
+
+      // RRULE for weekly recurrence (16 weeks ~ one semester)
+      const rrule = "RRULE:FREQ=WEEKLY;COUNT=16";
+
+      ics.push(
+        "BEGIN:VEVENT",
+        `UID:${uid()}`,
+        `DTSTART:${formatICSDate(eventDate, ct.startTime)}`,
+        `DTEND:${formatICSDate(eventDate, ct.endTime)}`,
+        rrule,
+        `SUMMARY:${ct.courseName}`,
+        `DESCRIPTION:${ct.courseName} — ${ct.startTime} to ${ct.endTime}`,
+        "END:VEVENT",
+      );
+    }
+
+    ics.push("END:VCALENDAR");
+
+    const blob = new Blob([ics.join("\r\n")], {
+      type: "text/calendar;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "course-schedule.ics";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Success",
+      description: "Schedule exported as .ics file",
+      variant: "success",
+    });
+  };
 
   useEffect(() => {
     loadSchedule();
@@ -941,6 +1039,17 @@ export default function CourseSchedule({
               ({courseTimes.length} slot{courseTimes.length !== 1 ? "s" : ""})
             </span>
           </h3>
+          {courseTimes.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exportToICS}
+              className="text-t3 hover:text-t1 h-7 w-7 p-0"
+              title="Export as .ics calendar file"
+            >
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
 
         {!collapsed && (
