@@ -1,128 +1,117 @@
 import Link from "next/link";
 
 export function Footer() {
-    return (
-        <footer className="w-full border-t bg-muted/40">
-            <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between md:py-6">
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        {/* <Image
-                            src="/images/favicon_io/favicon.png"
-                            alt="Cornell Tech Hub Logo"
-                            width={32}
-                            height={32}
-                            className="rounded-md"
-                        /> */}
-                        <span className="text-lg font-mono">
-                            <span className="text-red-600 font-bold">[</span>
-                            <span className="mx-1">Cornell Tech Hub</span>
-                            <span className="text-red-600 font-bold">]</span>
-                        </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        A resource platform for Cornell Tech students
-                    </p>
-                </div>
-                <nav className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-                    <div className="grid gap-3 text-sm">
-                        <h3 className="font-semibold">Resources</h3>
-                        <Link
-                            href="/forum"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Forum
-                        </Link>
-                        <Link
-                            href="https://admissions.tech.cornell.edu/dnu-admitted/resources/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Resources
-                        </Link>
-                        <Link
-                            href="https://cornelltech.campusgroups.com/events"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Events
-                        </Link>
-                    </div>
-                    <div className="grid gap-3 text-sm">
-                        <h3 className="font-semibold">Support</h3>
-                        <Link
-                            href="/feedback"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Feedback
-                        </Link>
-                        <Link
-                            href="/coming-soon"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Help Center
-                        </Link>
-                        {/* <Link
-                            href="/coming-soon"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Contact Us
-                        </Link> */}
-                        <Link
-                            href="/faq"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            FAQ
-                        </Link>
-                    </div>
-                    <div className="grid gap-3 text-sm">
-                        <h3 className="font-semibold">Legal</h3>
-                        <Link
-                            href="/privacy-policy"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Privacy Policy
-                        </Link>
-                        <Link
-                            href="/terms-of-service"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Terms of Service
-                        </Link>
-                        <Link
-                            href="/contact"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            Contact
-                        </Link>
-                    </div>
-                </nav>
-            </div>
-            <div className="w-full border-t">
-                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 text-center text-sm text-muted-foreground">
-                    <div>
-                        &copy; {new Date().getFullYear()} Cornell Tech Hub. All
-                        rights reserved.
-                    </div>
-                    <div className="text-xs mt-1">
-                        This is a student-built independent project and is not
-                        officially affiliated with Cornell Tech.
-                    </div>
-                    <div className="text-xs mt-1">
-                        Designed and developed by{" "}
-                        <Link
-                            href="https://www.tianyinzhang.com/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                        >
-                            Ty Zhang
-                        </Link>{" "}
-                        with ♡
-                    </div>
-                </div>
-            </div>
-        </footer>
-    );
+  return (
+    <footer className="w-full border-t border-white/[0.06] bg-black">
+      <div className="w-full max-w-[980px] mx-auto px-6 flex flex-col gap-10 py-12 md:flex-row md:items-start md:justify-between md:py-16">
+        <div className="flex flex-col gap-4">
+          <span className="font-mono text-sm text-white">
+            <span className="text-red-500">[</span>
+            cornell-tech-hub
+            <span className="text-red-500">]</span>
+          </span>
+          <p className="text-sm text-neutral-600 max-w-xs leading-relaxed font-mono">
+            // a student-built resource platform
+            <br />
+            // not affiliated with Cornell Tech
+          </p>
+        </div>
+        <nav className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+          <div className="grid gap-2.5 text-sm">
+            <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-neutral-500 mb-1">
+              Resources
+            </h3>
+            <Link
+              href="/courses"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /courses
+            </Link>
+            <Link
+              href="/forum"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /forum
+            </Link>
+            <Link
+              href="/planner"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /planner
+            </Link>
+            <Link
+              href="https://cornelltech.campusgroups.com/events"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /events ↗
+            </Link>
+          </div>
+          <div className="grid gap-2.5 text-sm">
+            <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-neutral-500 mb-1">
+              Support
+            </h3>
+            <Link
+              href="/feedback"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /feedback
+            </Link>
+            <Link
+              href="/faq"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /faq
+            </Link>
+            <Link
+              href="/coming-soon"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /help
+            </Link>
+          </div>
+          <div className="grid gap-2.5 text-sm">
+            <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-neutral-500 mb-1">
+              Legal
+            </h3>
+            <Link
+              href="/privacy-policy"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /privacy
+            </Link>
+            <Link
+              href="/terms-of-service"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /terms
+            </Link>
+            <Link
+              href="/contact"
+              className="text-neutral-500 hover:text-white transition-colors font-mono text-xs"
+            >
+              /contact
+            </Link>
+          </div>
+        </nav>
+      </div>
+      <div className="w-full border-t border-white/[0.06]">
+        <div className="w-full max-w-[980px] mx-auto px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 font-mono text-[11px] text-neutral-600">
+          <span>&copy; {new Date().getFullYear()} cornell-tech-hub</span>
+          <span>
+            built by{" "}
+            <Link
+              href="https://www.tianyinzhang.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 hover:text-white transition-colors"
+            >
+              @tyzhang
+            </Link>
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
 }

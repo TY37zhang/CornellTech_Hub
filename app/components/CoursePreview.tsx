@@ -1,102 +1,68 @@
 "use client";
 
-import { useMemo, memo } from "react";
+import { memo } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface Course {
-    id: string;
-    title: string;
-    rating: number;
+  id: string;
+  title: string;
+  rating: number;
 }
 
 interface CoursePreviewProps {
-    topCourses: Course[];
-    topCourseError: string | null;
+  topCourses: Course[];
+  topCourseError: string | null;
 }
 
-// Memoized star rating component for performance
-const StarRating = memo(({ rating }: { rating: number }) => {
-    const stars = useMemo(() => {
-        return [1, 2, 3, 4, 5].map((i) => (
-            <Star
-                key={i}
-                className={`h-4 w-4 ${
-                    i <= Math.round(rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-muted-foreground"
-                }`}
-            />
-        ));
-    }, [rating]);
+const RatingDot = memo(({ rating }: { rating: number }) => {
+  const color =
+    rating >= 4 ? "bg-green-500" : rating >= 3 ? "bg-yellow-500" : "bg-red-500";
 
-    return <div className="flex items-center">{stars}</div>;
+  return <span className={`inline-block h-1.5 w-1.5 rounded-full ${color}`} />;
 });
 
-StarRating.displayName = 'StarRating';
+RatingDot.displayName = "RatingDot";
 
 function CoursePreview({ topCourses, topCourseError }: CoursePreviewProps) {
+  if (topCourseError) {
     return (
-        <Card className="w-full">
-            <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
-                    <div className="h-5 w-5 text-red-600">📚</div>
-                    Course Reviews
-                </CardTitle>
-                <CardDescription>
-                    Find and share reviews for Cornell Tech courses
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="pb-2">
-                <div className="space-y-2">
-                    {topCourseError ? (
-                        <div className="text-red-500 text-sm">{topCourseError}</div>
-                    ) : (
-                        topCourses.map((course) => (
-                            <div
-                                className="flex items-center justify-between"
-                                key={course.id}
-                            >
-                                <Link
-                                    href={`/courses/${course.id}`}
-                                    className="font-medium hover:underline max-w-[70%] truncate"
-                                    style={{
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        display: "block",
-                                    }}
-                                >
-                                    {course.title}
-                                </Link>
-                                <StarRating rating={course.rating} />
-                            </div>
-                        ))
-                    )}
-                </div>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-                <Link href="/courses">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full shadow-sm hover:shadow-md transition-shadow"
-                    >
-                        View All Courses
-                    </Button>
-                </Link>
-            </CardFooter>
-        </Card>
+      <div className="w-full">
+        <p className="font-mono text-sm text-red-500">{topCourseError}</p>
+      </div>
     );
+  }
+
+  return (
+    <div className="w-full">
+      <div className="divide-y divide-white/[0.06]">
+        {topCourses.map((course) => (
+          <Link
+            key={course.id}
+            href={`/courses/${course.id}`}
+            className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors"
+          >
+            <span className="text-sm text-neutral-300 truncate pr-4">
+              {course.title}
+            </span>
+            <span className="flex items-center gap-2 shrink-0">
+              <RatingDot rating={course.rating} />
+              <span className="font-mono text-sm text-neutral-400">
+                {course.rating.toFixed(1)}
+              </span>
+            </span>
+          </Link>
+        ))}
+      </div>
+      <div className="pt-4 px-4">
+        <Link
+          href="/courses"
+          className="text-neutral-500 hover:text-white text-sm font-mono transition-colors"
+        >
+          View All Courses →
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export default memo(CoursePreview);

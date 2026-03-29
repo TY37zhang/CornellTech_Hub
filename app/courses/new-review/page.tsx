@@ -9,775 +9,713 @@ import { isStudent } from "@/lib/roles";
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 
 interface Course {
-    id: string;
-    code: string;
-    codes: string[];
-    name: string;
-    credits: number;
-    description?: string;
-    department: string;
-    departments: string[];
-    semester: string;
-    year: number;
-    professor_id?: string;
-    isCrossListed: boolean;
+  id: string;
+  code: string;
+  codes: string[];
+  name: string;
+  credits: number;
+  description?: string;
+  department: string;
+  departments: string[];
+  semester: string;
+  year: number;
+  professor_id?: string;
+  isCrossListed: boolean;
 }
 
 interface Professor {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export default function NewReviewPage() {
-    const router = useRouter();
-    const { data: session, status } = useSession();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<Course[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [searchError, setSearchError] = useState<string | null>(null);
-    const debouncedSearch = useDebounce(searchQuery, 300);
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Course[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-    // Professor selection state
-    const [professors, setProfessors] = useState<Professor[]>([]);
-    const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
-    const [isManualProfessorEntry, setIsManualProfessorEntry] = useState(false);
-    const [manualProfessorName, setManualProfessorName] = useState("");
+  // Professor selection state
+  const [professors, setProfessors] = useState<Professor[]>([]);
+  const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
+  const [isManualProfessorEntry, setIsManualProfessorEntry] = useState(false);
+  const [manualProfessorName, setManualProfessorName] = useState("");
 
-    const [formData, setFormData] = useState({
-        title: "",
-        professor: "",
-        category: "",
-        categories: [] as string[],
-        difficulty: 3,
-        workload: 3,
-        value: 3,
-        overall_rating: 3,
-        review: "",
-        courseId: "",
-        courseCode: "",
-        grade: "",
-    });
+  const [formData, setFormData] = useState({
+    title: "",
+    professor: "",
+    category: "",
+    categories: [] as string[],
+    difficulty: 3,
+    workload: 3,
+    value: 3,
+    overall_rating: 3,
+    review: "",
+    courseId: "",
+    courseCode: "",
+    grade: "",
+  });
 
-    useEffect(() => {
-        // Get URL parameters
-        const params = new URLSearchParams(window.location.search);
-        const courseId = params.get("courseId");
-        const courseName = params.get("courseName");
-        const professor = params.get("professor");
-        const category = params.get("category");
+  useEffect(() => {
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get("courseId");
+    const courseName = params.get("courseName");
+    const professor = params.get("professor");
+    const category = params.get("category");
 
-        if (courseId && courseName) {
-            setFormData((prev) => ({
-                ...prev,
-                title: courseName,
-                courseId: courseId,
-                professor:
-                    professor === "Unknown Professor" ? "" : professor || "",
-                category: category || "",
-                categories: category ? category.split(", ") : [],
-            }));
+    if (courseId && courseName) {
+      setFormData((prev) => ({
+        ...prev,
+        title: courseName,
+        courseId: courseId,
+        professor: professor === "Unknown Professor" ? "" : professor || "",
+        category: category || "",
+        categories: category ? category.split(", ") : [],
+      }));
 
-            // Reset professor list and fetch professors for the pre-selected course
-            setProfessors([]);
-            fetchProfessorsForCourse(courseName);
-        }
-    }, []);
+      // Reset professor list and fetch professors for the pre-selected course
+      setProfessors([]);
+      fetchProfessorsForCourse(courseName);
+    }
+  }, []);
 
-    useEffect(() => {
-        const fetchCourses = async () => {
-            if (!debouncedSearch) {
-                setSearchResults([]);
-                setSearchError(null);
-                return;
-            }
-
-            setIsSearching(true);
-            setSearchError(null);
-
-            try {
-                const response = await fetch(
-                    `/api/courses/search?q=${encodeURIComponent(debouncedSearch)}`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch courses");
-                }
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                setSearchResults(data);
-            } catch (error) {
-                console.error("Error fetching courses:", error);
-                setSearchError(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to fetch courses"
-                );
-                setSearchResults([]);
-            } finally {
-                setIsSearching(false);
-            }
-        };
-
-        fetchCourses();
-    }, [debouncedSearch]);
-
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (formData.title.length < 2) {
-            newErrors.title = "Title must be at least 2 characters";
-        }
-
-        if (formData.review.length < 10) {
-            newErrors.review = "Review must be at least 10 characters";
-        }
-
-        const validGrades = [
-            "A+",
-            "A",
-            "A-",
-            "B+",
-            "B",
-            "B-",
-            "C+",
-            "C",
-            "C-",
-            "D+",
-            "D",
-            "D-",
-            "F",
-            "S",
-            "U",
-            "HH",
-            "H",
-            "Dropped",
-            "", // allow blank (optional)
-            "none", // allow 'Not wish to share' option
-        ];
-        if (formData.grade && !validGrades.includes(formData.grade)) {
-            newErrors.grade = "Invalid grade selected";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            toast.error("Please fix the errors in the form");
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const response = await fetch("/api/courses/reviews", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    grade: formData.grade === "none" || formData.grade === "" ? null : formData.grade,
-                    courseId: formData.courseCode || formData.courseId,
-                    category: formData.categories.join(", "),
-                    professor: isManualProfessorEntry ? manualProfessorName : formData.professor,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Failed to submit review");
-            }
-
-            toast.success("Review submitted successfully!");
-            router.back();
-        } catch (error) {
-            console.error("Error submitting review:", error);
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to submit review"
-            );
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleSelectCourse = (course: Course) => {
-        setFormData((prev) => ({
-            ...prev,
-            title: course.name,
-            courseId: course.id,
-            professor: "", // Reset professor selection
-            category: course.departments[0] || "",
-            categories: course.departments,
-            courseCode: course.codes[0],
-        }));
-        setSearchQuery("");
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!debouncedSearch) {
         setSearchResults([]);
+        setSearchError(null);
+        return;
+      }
 
-        // Reset professor list to ensure UI updates correctly
-        setProfessors([]);
-        setIsManualProfessorEntry(false);
-        setManualProfessorName("");
+      setIsSearching(true);
+      setSearchError(null);
 
-        // Fetch professors for this course
-        fetchProfessorsForCourse(course.name);
-    };
-
-    const fetchProfessorsForCourse = async (courseName: string) => {
-        if (!courseName) return;
-
-        setIsLoadingProfessors(true);
-        try {
-            const response = await fetch(
-                `/api/courses/${encodeURIComponent(courseName)}/professors`
-            );
-            if (response.ok) {
-                const professors = await response.json();
-                setProfessors(professors);
-            } else {
-                console.error("Failed to fetch professors");
-                setProfessors([]);
-            }
-        } catch (error) {
-            console.error("Error fetching professors:", error);
-            setProfessors([]);
-        } finally {
-            setIsLoadingProfessors(false);
+      try {
+        const response = await fetch(
+          `/api/courses/search?q=${encodeURIComponent(debouncedSearch)}`,
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch courses");
         }
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        setSearchResults(data);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+        setSearchError(
+          error instanceof Error ? error.message : "Failed to fetch courses",
+        );
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
     };
 
-    // Authentication and role checking
-    if (status === "loading") {
-        return (
-            <div className="min-h-screen bg-background">
-                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
-                    <div className="max-w-2xl mx-auto">
-                        <div className="flex flex-col items-center justify-center space-y-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                            <p>Loading...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+    fetchCourses();
+  }, [debouncedSearch]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (formData.title.length < 2) {
+      newErrors.title = "Title must be at least 2 characters";
     }
 
-    if (status === "unauthenticated") {
-        return (
-            <div className="min-h-screen bg-background">
-                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
-                    <div className="max-w-2xl mx-auto">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Authentication Required</CardTitle>
-                                <CardDescription>
-                                    You need to be signed in to write course reviews.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button onClick={() => router.push("/auth/signin")}>
-                                    Sign In
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        );
+    if (formData.review.length < 10) {
+      newErrors.review = "Review must be at least 10 characters";
     }
 
-    // Check user role - only students can create course reviews
-    const userRole = (session?.user as any)?.role;
-    if (!isStudent(userRole)) {
-        return (
-            <div className="min-h-screen bg-background">
-                <div className="w-full px-4 md:px-6 lg:px-8 py-10">
-                    <div className="max-w-2xl mx-auto">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Access Restricted</CardTitle>
-                                <CardDescription>
-                                    Only students can create course reviews. Faculty members can reply to existing reviews.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button onClick={() => router.push("/courses")}>
-                                    Browse Courses
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        );
+    const validGrades = [
+      "A+",
+      "A",
+      "A-",
+      "B+",
+      "B",
+      "B-",
+      "C+",
+      "C",
+      "C-",
+      "D+",
+      "D",
+      "D-",
+      "F",
+      "S",
+      "U",
+      "HH",
+      "H",
+      "Dropped",
+      "", // allow blank (optional)
+      "none", // allow 'Not wish to share' option
+    ];
+    if (formData.grade && !validGrades.includes(formData.grade)) {
+      newErrors.grade = "Invalid grade selected";
     }
 
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/courses/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          grade:
+            formData.grade === "none" || formData.grade === ""
+              ? null
+              : formData.grade,
+          courseId: formData.courseCode || formData.courseId,
+          category: formData.categories.join(", "),
+          professor: isManualProfessorEntry
+            ? manualProfessorName
+            : formData.professor,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit review");
+      }
+
+      toast.success("Review submitted successfully!");
+      router.back();
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit review",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSelectCourse = (course: Course) => {
+    setFormData((prev) => ({
+      ...prev,
+      title: course.name,
+      courseId: course.id,
+      professor: "", // Reset professor selection
+      category: course.departments[0] || "",
+      categories: course.departments,
+      courseCode: course.codes[0],
+    }));
+    setSearchQuery("");
+    setSearchResults([]);
+
+    // Reset professor list to ensure UI updates correctly
+    setProfessors([]);
+    setIsManualProfessorEntry(false);
+    setManualProfessorName("");
+
+    // Fetch professors for this course
+    fetchProfessorsForCourse(course.name);
+  };
+
+  const fetchProfessorsForCourse = async (courseName: string) => {
+    if (!courseName) return;
+
+    setIsLoadingProfessors(true);
+    try {
+      const response = await fetch(
+        `/api/courses/${encodeURIComponent(courseName)}/professors`,
+      );
+      if (response.ok) {
+        const professors = await response.json();
+        setProfessors(professors);
+      } else {
+        console.error("Failed to fetch professors");
+        setProfessors([]);
+      }
+    } catch (error) {
+      console.error("Error fetching professors:", error);
+      setProfessors([]);
+    } finally {
+      setIsLoadingProfessors(false);
+    }
+  };
+
+  // Authentication and role checking
+  if (status === "loading") {
     return (
-        <div className="min-h-screen bg-background">
-            <div className="w-full px-4 md:px-6 lg:px-8 py-10">
-                <div className="max-w-2xl mx-auto">
-                    <Button
-                        variant="ghost"
-                        className="mb-6"
-                        onClick={() => router.back()}
-                        disabled={isSubmitting}
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Courses
-                    </Button>
-
-                    <Card>
-                <CardHeader>
-                    <CardTitle>Add a New Course Review</CardTitle>
-                    <CardDescription>
-                        Share your experience with a Cornell Tech course to help
-                        other students make informed decisions.
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Course Title</Label>
-                            {!formData.title ? (
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="title"
-                                        placeholder="Search for a course..."
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                        className="pl-8 rounded-xl"
-                                        autoComplete="off"
-                                    />
-                                    {searchResults.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded-lg shadow-lg z-50">
-                                            {searchResults.map((course) => (
-                                                <div
-                                                    key={course.id}
-                                                    onClick={() =>
-                                                        handleSelectCourse(
-                                                            course
-                                                        )
-                                                    }
-                                                    className="flex items-center p-3 hover:bg-gray-100 transition-colors cursor-pointer text-gray-900"
-                                                >
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium">
-                                                            {course.codes.join(
-                                                                " / "
-                                                            )}
-                                                        </div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {course.name}
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-2 mt-1">
-                                                            {course.departments.map(
-                                                                (
-                                                                    dept,
-                                                                    index
-                                                                ) => (
-                                                                    <Badge
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        variant={dept.toLowerCase() as any}
-                                                                        className="text-xs"
-                                                                    >
-                                                                        {dept}
-                                                                    </Badge>
-                                                                )
-                                                            )}
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="text-xs"
-                                                            >
-                                                                {
-                                                                    course.semester
-                                                                }{" "}
-                                                                {course.year}
-                                                            </Badge>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="text-xs border-gray-300"
-                                                            >
-                                                                {course.credits}{" "}
-                                                                credits
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium">
-                                            Selected Course:
-                                        </span>
-                                        <span className="text-sm text-muted-foreground">
-                                            {formData.title}
-                                        </span>
-                                    </div>
-                                    {formData.categories.length > 0 && (
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.categories.map(
-                                                (dept, index) => (
-                                                    <Badge
-                                                        key={index}
-                                                        variant={
-                                                            dept.toLowerCase() as any
-                                                        }
-                                                        className="min-w-[56px] justify-center text-center"
-                                                    >
-                                                        {dept.toUpperCase()}
-                                                    </Badge>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            {errors.title && (
-                                <p className="text-sm text-red-500">
-                                    {errors.title}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Professor Selection - Show only when course is selected */}
-                        {formData.courseId && (
-                            <div className="space-y-2">
-                                <Label htmlFor="professor">Professor</Label>
-                                {isLoadingProfessors ? (
-                                    <div className="flex items-center space-x-2">
-                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
-                                        <span className="text-sm text-muted-foreground">
-                                            Loading professors...
-                                        </span>
-                                    </div>
-                                ) : professors.length > 0 &&
-                                  !professors.every(
-                                      (prof) =>
-                                          prof.name === "Unknown Professor"
-                                  ) ? (
-                                    !isManualProfessorEntry ? (
-                                        <div className="space-y-2">
-                                            <Select
-                                                value={formData.professor}
-                                                onValueChange={(value) => {
-                                                    if (value === "manual_entry") {
-                                                        setIsManualProfessorEntry(true);
-                                                        setFormData({
-                                                            ...formData,
-                                                            professor: "",
-                                                        });
-                                                    } else {
-                                                        setFormData({
-                                                            ...formData,
-                                                            professor: value,
-                                                        });
-                                                    }
-                                                }}
-                                            >
-                                                <SelectTrigger
-                                                    id="professor"
-                                                    className={
-                                                        errors.professor
-                                                            ? "border-red-500"
-                                                            : ""
-                                                    }
-                                                >
-                                                    <SelectValue placeholder="Select a professor" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {professors.map((prof) => (
-                                                        <SelectItem
-                                                            key={prof.id}
-                                                            value={prof.id}
-                                                        >
-                                                            {prof.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                    <SelectItem value="manual_entry">
-                                                        ✏️ Add Custom Professor
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <Input
-                                                id="professor"
-                                                placeholder="Enter professor name"
-                                                value={manualProfessorName}
-                                                onChange={(e) =>
-                                                    setManualProfessorName(e.target.value)
-                                                }
-                                                className={
-                                                    errors.professor
-                                                        ? "border-red-500"
-                                                        : ""
-                                                }
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setIsManualProfessorEntry(false);
-                                                    setManualProfessorName("");
-                                                }}
-                                            >
-                                                ← Back to professor list
-                                            </Button>
-                                        </div>
-                                    )
-                                ) : (
-                                    <div className="space-y-2">
-                                        <Input
-                                            id="professor"
-                                            placeholder="Enter professor name (optional)"
-                                            value={
-                                                formData.professor ===
-                                                "Unknown Professor"
-                                                    ? ""
-                                                    : formData.professor
-                                            }
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    professor: e.target.value,
-                                                })
-                                            }
-                                            className={
-                                                errors.professor
-                                                    ? "border-red-500"
-                                                    : ""
-                                            }
-                                        />
-                                        <p className="text-sm text-muted-foreground">
-                                            No professors found. You can enter
-                                            the professor's name manually.
-                                        </p>
-                                    </div>
-                                )}
-                                {errors.professor && (
-                                    <p className="text-sm text-red-500">
-                                        {errors.professor}
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Overall Rating (1-5)</Label>
-                                <Slider
-                                    value={[formData.overall_rating]}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            overall_rating: value[0],
-                                        })
-                                    }
-                                    min={1}
-                                    max={5}
-                                    step={1}
-                                />
-                                <div className="text-sm text-muted-foreground">
-                                    Current value: {formData.overall_rating}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Difficulty (1-5)</Label>
-                                <Slider
-                                    value={[formData.difficulty]}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            difficulty: value[0],
-                                        })
-                                    }
-                                    min={1}
-                                    max={5}
-                                    step={1}
-                                />
-                                <div className="text-sm text-muted-foreground">
-                                    Current value: {formData.difficulty}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Workload (1-5)</Label>
-                                <Slider
-                                    value={[formData.workload]}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            workload: value[0],
-                                        })
-                                    }
-                                    min={1}
-                                    max={5}
-                                    step={1}
-                                />
-                                <div className="text-sm text-muted-foreground">
-                                    Current value: {formData.workload}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Value (1-5)</Label>
-                                <Slider
-                                    value={[formData.value]}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            value: value[0],
-                                        })
-                                    }
-                                    min={1}
-                                    max={5}
-                                    step={1}
-                                />
-                                <div className="text-sm text-muted-foreground">
-                                    Current value: {formData.value}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="grade">Grade</Label>
-                                <Select
-                                    value={formData.grade}
-                                    onValueChange={(value) =>
-                                        setFormData({
-                                            ...formData,
-                                            grade: value,
-                                        })
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="grade"
-                                        className={
-                                            errors.grade ? "border-red-500" : ""
-                                        }
-                                    >
-                                        <SelectValue placeholder="Select grade (optional)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            Not wish to share
-                                        </SelectItem>
-                                        <SelectItem value="A+">A+</SelectItem>
-                                        <SelectItem value="A">A</SelectItem>
-                                        <SelectItem value="A-">A-</SelectItem>
-                                        <SelectItem value="B+">B+</SelectItem>
-                                        <SelectItem value="B">B</SelectItem>
-                                        <SelectItem value="B-">B-</SelectItem>
-                                        <SelectItem value="C+">C+</SelectItem>
-                                        <SelectItem value="C">C</SelectItem>
-                                        <SelectItem value="C-">C-</SelectItem>
-                                        <SelectItem value="D+">D+</SelectItem>
-                                        <SelectItem value="D">D</SelectItem>
-                                        <SelectItem value="D-">D-</SelectItem>
-                                        <SelectItem value="F">F</SelectItem>
-                                        <SelectItem value="S">
-                                            S (Satisfactory)
-                                        </SelectItem>
-                                        <SelectItem value="U">
-                                            U (Unsatisfactory)
-                                        </SelectItem>
-                                        <SelectItem value="HH">
-                                            HH (High Honors)
-                                        </SelectItem>
-                                        <SelectItem value="H">
-                                            H (Honors)
-                                        </SelectItem>
-                                        <SelectItem value="Dropped">
-                                            Dropped
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {errors.grade && (
-                                    <p className="text-sm text-red-500">
-                                        {errors.grade}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="review">Review</Label>
-                            <Textarea
-                                id="review"
-                                placeholder="Share your experience with this course..."
-                                value={formData.review}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        review: e.target.value,
-                                    })
-                                }
-                                required
-                                className={`min-h-[150px] ${
-                                    errors.review ? "border-red-500" : ""
-                                }`}
-                            />
-                            {errors.review && (
-                                <p className="text-sm text-red-500">
-                                    {errors.review}
-                                </p>
-                            )}
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button
-                            type="submit"
-                            className="w-full bg-black text-white hover:bg-gray-800"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? "Submitting..." : "Submit Review"}
-                        </Button>
-                    </CardFooter>
-                </form>
-                    </Card>
-                </div>
+      <div className="min-h-screen bg-background">
+        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <p>Loading...</p>
             </div>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Authentication Required</CardTitle>
+                <CardDescription>
+                  You need to be signed in to write course reviews.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button onClick={() => router.push("/auth/signin")}>
+                  Sign In
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check user role - only students can create course reviews
+  const userRole = (session?.user as any)?.role;
+  if (!isStudent(userRole)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Restricted</CardTitle>
+                <CardDescription>
+                  Only students can create course reviews. Faculty members can
+                  reply to existing reviews.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button onClick={() => router.push("/courses")}>
+                  Browse Courses
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
+        <div className="max-w-2xl mx-auto">
+          <Button
+            variant="ghost"
+            className="mb-6"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Courses
+          </Button>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Add a New Course Review</CardTitle>
+              <CardDescription>
+                Share your experience with a Cornell Tech course to help other
+                students make informed decisions.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Course Title</Label>
+                  {!formData.title ? (
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="title"
+                        placeholder="Search for a course..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8 rounded-xl"
+                        autoComplete="off"
+                      />
+                      {searchResults.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded-lg shadow-lg z-50">
+                          {searchResults.map((course) => (
+                            <div
+                              key={course.id}
+                              onClick={() => handleSelectCourse(course)}
+                              className="flex items-center p-3 hover:bg-gray-100 transition-colors cursor-pointer text-gray-900"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">
+                                  {course.codes.join(" / ")}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {course.name}
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {course.departments.map((dept, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant={dept.toLowerCase() as any}
+                                      className="text-xs"
+                                    >
+                                      {dept}
+                                    </Badge>
+                                  ))}
+                                  <Badge variant="outline" className="text-xs">
+                                    {course.semester} {course.year}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-gray-300"
+                                  >
+                                    {course.credits} credits
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          Selected Course:
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {formData.title}
+                        </span>
+                      </div>
+                      {formData.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {formData.categories.map((dept, index) => (
+                            <Badge
+                              key={index}
+                              variant={dept.toLowerCase() as any}
+                              className="min-w-[56px] justify-center text-center"
+                            >
+                              {dept.toUpperCase()}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {errors.title && (
+                    <p className="text-sm text-red-500">{errors.title}</p>
+                  )}
+                </div>
+
+                {/* Professor Selection - Show only when course is selected */}
+                {formData.courseId && (
+                  <div className="space-y-2">
+                    <Label htmlFor="professor">Professor</Label>
+                    {isLoadingProfessors ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
+                        <span className="text-sm text-muted-foreground">
+                          Loading professors...
+                        </span>
+                      </div>
+                    ) : professors.length > 0 &&
+                      !professors.every(
+                        (prof) => prof.name === "Unknown Professor",
+                      ) ? (
+                      !isManualProfessorEntry ? (
+                        <div className="space-y-2">
+                          <Select
+                            value={formData.professor}
+                            onValueChange={(value) => {
+                              if (value === "manual_entry") {
+                                setIsManualProfessorEntry(true);
+                                setFormData({
+                                  ...formData,
+                                  professor: "",
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  professor: value,
+                                });
+                              }
+                            }}
+                          >
+                            <SelectTrigger
+                              id="professor"
+                              className={
+                                errors.professor ? "border-red-500" : ""
+                              }
+                            >
+                              <SelectValue placeholder="Select a professor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {professors.map((prof) => (
+                                <SelectItem key={prof.id} value={prof.id}>
+                                  {prof.name}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="manual_entry">
+                                ✏️ Add Custom Professor
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Input
+                            id="professor"
+                            placeholder="Enter professor name"
+                            value={manualProfessorName}
+                            onChange={(e) =>
+                              setManualProfessorName(e.target.value)
+                            }
+                            className={errors.professor ? "border-red-500" : ""}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsManualProfessorEntry(false);
+                              setManualProfessorName("");
+                            }}
+                          >
+                            ← Back to professor list
+                          </Button>
+                        </div>
+                      )
+                    ) : (
+                      <div className="space-y-2">
+                        <Input
+                          id="professor"
+                          placeholder="Enter professor name (optional)"
+                          value={
+                            formData.professor === "Unknown Professor"
+                              ? ""
+                              : formData.professor
+                          }
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              professor: e.target.value,
+                            })
+                          }
+                          className={errors.professor ? "border-red-500" : ""}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          No professors found. You can enter the professor's
+                          name manually.
+                        </p>
+                      </div>
+                    )}
+                    {errors.professor && (
+                      <p className="text-sm text-red-500">{errors.professor}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Overall Rating (1-5)</Label>
+                    <Slider
+                      value={[formData.overall_rating]}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          overall_rating: value[0],
+                        })
+                      }
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Current value: {formData.overall_rating}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Difficulty (1-5)</Label>
+                    <Slider
+                      value={[formData.difficulty]}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          difficulty: value[0],
+                        })
+                      }
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Current value: {formData.difficulty}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Workload (1-5)</Label>
+                    <Slider
+                      value={[formData.workload]}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          workload: value[0],
+                        })
+                      }
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Current value: {formData.workload}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Value (1-5)</Label>
+                    <Slider
+                      value={[formData.value]}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          value: value[0],
+                        })
+                      }
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Current value: {formData.value}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="grade">Grade</Label>
+                    <Select
+                      value={formData.grade}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          grade: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger
+                        id="grade"
+                        className={errors.grade ? "border-red-500" : ""}
+                      >
+                        <SelectValue placeholder="Select grade (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Not wish to share</SelectItem>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A">A</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B">B</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="C+">C+</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="C-">C-</SelectItem>
+                        <SelectItem value="D+">D+</SelectItem>
+                        <SelectItem value="D">D</SelectItem>
+                        <SelectItem value="D-">D-</SelectItem>
+                        <SelectItem value="F">F</SelectItem>
+                        <SelectItem value="S">S (Satisfactory)</SelectItem>
+                        <SelectItem value="U">U (Unsatisfactory)</SelectItem>
+                        <SelectItem value="HH">HH (High Honors)</SelectItem>
+                        <SelectItem value="H">H (Honors)</SelectItem>
+                        <SelectItem value="Dropped">Dropped</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.grade && (
+                      <p className="text-sm text-red-500">{errors.grade}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="review">Review</Label>
+                  <Textarea
+                    id="review"
+                    placeholder="Share your experience with this course..."
+                    value={formData.review}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        review: e.target.value,
+                      })
+                    }
+                    required
+                    className={`min-h-[150px] ${
+                      errors.review ? "border-red-500" : ""
+                    }`}
+                  />
+                  {errors.review && (
+                    <p className="text-sm text-red-500">{errors.review}</p>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  type="submit"
+                  className="w-full bg-black text-white hover:bg-gray-800"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Review"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 }
