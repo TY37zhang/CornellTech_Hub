@@ -85,7 +85,7 @@ export default function SelectedCourses({
   }, [showTakenCourses, isDemoMode]);
 
   return (
-    <Card className="p-6 w-full overflow-hidden">
+    <Card className="p-6 w-full">
       <div className="space-y-4">
         {/* Header Row */}
         <div className="flex items-center justify-between">
@@ -180,77 +180,71 @@ export default function SelectedCourses({
                 return (
                   <div
                     key={course.id}
-                    className="relative flex flex-col space-y-2 p-4 border rounded-none w-full overflow-x-auto sm:overflow-visible"
+                    className="relative border border-subtle p-4 w-full"
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemoveCourse(course)}
-                      className="absolute top-0 right-2 z-10 hover:bg-transparent hover:text-t2"
-                      aria-label="Remove course"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
-                      <div className="min-w-0 flex-1 w-full">
-                        <h4 className="font-medium truncate w-full mb-1">
-                          {course.code}
-                        </h4>
-                        <p className="text-sm text-t3 truncate w-full mb-2">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-t1">{course.code}</h4>
+                        <p className="text-sm text-t3 truncate">
                           {course.name}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-t3 w-full">
-                          <span>{course.department.toUpperCase()}</span>
-                          <span>•</span>
-                          <span className="whitespace-nowrap">
-                            {course.credits} credits
-                          </span>
-                          <div className="flex items-center space-x-2 ml-2">
-                            <Checkbox
-                              id={`taken-${course.id}`}
-                              checked={course.taken}
-                              onCheckedChange={(checked) =>
-                                onCourseTaken(course, checked as boolean)
-                              }
-                            />
-                            <label
-                              htmlFor={`taken-${course.id}`}
-                              className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {course.taken ? "Taken" : "Taken?"}
-                            </label>
-                          </div>
-                        </div>
                       </div>
-                      {/* Requirement Assignment Dropdown - right side */}
-                      <div className="flex-shrink-0 flex items-center justify-end min-w-[180px] mt-3 sm:mt-2">
-                        <Select
-                          value={currentAssignment || "unassigned"}
-                          onValueChange={(value) =>
-                            onAddToRequirement(
-                              course,
-                              value === "unassigned" ? null : value,
-                            )
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveCourse(course)}
+                        className="shrink-0 h-7 w-7 p-0 hover:bg-surface-active hover:text-t1"
+                        aria-label="Remove course"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-t3 mb-3">
+                      <span className="font-mono">
+                        {course.department.toUpperCase()}
+                      </span>
+                      <span>•</span>
+                      <span className="font-mono whitespace-nowrap">
+                        {course.credits} credits
+                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <Checkbox
+                          id={`taken-${course.id}`}
+                          checked={course.taken}
+                          onCheckedChange={(checked) =>
+                            onCourseTaken(course, checked as boolean)
                           }
+                        />
+                        <label
+                          htmlFor={`taken-${course.id}`}
+                          className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Assign to requirement" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="unassigned">
-                              Unassigned
-                            </SelectItem>
-                            {Object.entries(requirements).map(
-                              ([reqKey, req]) => (
-                                <SelectItem key={reqKey} value={reqKey}>
-                                  {reqKey.replace(/([A-Z])/g, " $1").trim()}
-                                </SelectItem>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
+                          {course.taken ? "Taken" : "Taken?"}
+                        </label>
                       </div>
                     </div>
+                    {/* Requirement Assignment Dropdown - full width below */}
+                    <Select
+                      value={currentAssignment || "unassigned"}
+                      onValueChange={(value) =>
+                        onAddToRequirement(
+                          course,
+                          value === "unassigned" ? null : value,
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-full text-xs h-8">
+                        <SelectValue placeholder="Assign to requirement" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        {Object.entries(requirements).map(([reqKey, req]) => (
+                          <SelectItem key={reqKey} value={reqKey}>
+                            {reqKey.replace(/([A-Z])/g, " $1").trim()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 );
               })}
