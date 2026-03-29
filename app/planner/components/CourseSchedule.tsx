@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,7 +13,6 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import {
   Loader2,
-  Clock,
   X,
   ChevronDown,
   AlertTriangle,
@@ -26,6 +25,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+} from "@dnd-kit/core";
 
 interface Course {
   id: string;
@@ -81,157 +90,95 @@ function formatDuration(start: string, end: string) {
   return `${mins} min`;
 }
 
-function CourseTimeCard({
+const BLOCK_COLORS = [
+  { bg: "bg-red-500/15", border: "border-red-500/30", text: "text-red-400" },
+  { bg: "bg-blue-500/15", border: "border-blue-500/30", text: "text-blue-400" },
+  {
+    bg: "bg-green-500/15",
+    border: "border-green-500/30",
+    text: "text-green-400",
+  },
+  {
+    bg: "bg-purple-500/15",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
+  },
+  {
+    bg: "bg-amber-500/15",
+    border: "border-amber-500/30",
+    text: "text-amber-400",
+  },
+  { bg: "bg-cyan-500/15", border: "border-cyan-500/30", text: "text-cyan-400" },
+];
+
+const CALENDAR_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const CALENDAR_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const HOUR_START = 8;
+const HOUR_END = 20;
+const HOUR_COUNT = HOUR_END - HOUR_START;
+const PX_PER_MINUTE = 1;
+const HOUR_HEIGHT = 60; // 60px per hour
+const GRID_PADDING_TOP = 16; // px padding at top of grid so 8:00 label isn't clipped
+
+function DraggableCourseBlock({
   course,
-  onDelete,
-  onUpdate,
-  onAddTimeSlot,
+  top,
+  height,
+  color,
+  isOverlapping,
+  children,
 }: {
   course: CourseTime;
-  onDelete: (id: string) => Promise<void>;
-  onUpdate: (id: string, updates: Partial<CourseTime>) => Promise<void>;
-  onAddTimeSlot: (course: Course) => Promise<void>;
+  top: number;
+  height: number;
+  color: { bg: string; border: string; text: string };
+  isOverlapping: boolean;
+  children: React.ReactNode;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editDay, setEditDay] = useState(course.day);
-  const [editStartTime, setEditStartTime] = useState(course.startTime);
-  const [editEndTime, setEditEndTime] = useState(course.endTime);
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: course.id || course.courseId,
+      data: { course },
+    });
 
-  // Reset local state when opening the popup
-  useEffect(() => {
-    if (isEditing) {
-      setEditDay(course.day);
-      setEditStartTime(course.startTime);
-      setEditEndTime(course.endTime);
-    }
-  }, [isEditing, course.day, course.startTime, course.endTime]);
-
-  const handleSave = () => {
-    if (course.id) {
-      onUpdate(course.id, {
-        day: editDay,
-        startTime: editStartTime,
-        endTime: editEndTime,
-      });
-    }
-    setIsEditing(false);
+  const style: React.CSSProperties = {
+    top: `${top}px`,
+    height: `${height}px`,
+    ...(transform
+      ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
+      : {}),
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 1,
   };
 
   return (
-    <Card className="group relative hover:shadow-md transition-shadow">
-      <CardContent className="px-4 pt-3 pb-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-medium text-lg leading-snug">
-              {course.courseName}
-            </h3>
-            <div className="flex items-center gap-2 mt-1 text-base text-t3">
-              <Clock className="h-4 w-4" />
-              <span>
-                {course.startTime} - {course.endTime}
-              </span>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => course.id && onDelete(course.id)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`absolute left-0.5 right-0.5 ${color.bg} ${color.border} border overflow-hidden cursor-grab active:cursor-grabbing group ${isOverlapping ? "border-l-2 !border-l-red-500" : ""}`}
+      style={style}
+    >
+      {children}
+    </div>
+  );
+}
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Popover open={isEditing} onOpenChange={setIsEditing}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8">
-                Edit Time
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-80 p-4 text-t1"
-              style={{
-                backgroundColor: "hsl(var(--tc-surface))",
-                color: "hsl(var(--tc-t1))",
-              }}
-            >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Day</label>
-                  <Select value={editDay} onValueChange={setEditDay}>
-                    <SelectTrigger className="h-8 flex items-center justify-between">
-                      <SelectValue
-                        placeholder="Select day"
-                        className="flex-1 text-left"
-                      />
-                    </SelectTrigger>
-                    <SelectContent
-                      className="bg-surface text-t1 border-strong"
-                      style={{
-                        backgroundColor: "hsl(var(--tc-surface))",
-                        color: "hsl(var(--tc-t1))",
-                      }}
-                    >
-                      {DAYS.map((day) => (
-                        <SelectItem key={day} value={day}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Start Time</label>
-                    <input
-                      type="time"
-                      className="w-full border rounded px-2 py-1"
-                      value={editStartTime}
-                      onChange={(e) => setEditStartTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">End Time</label>
-                    <input
-                      type="time"
-                      className="w-full border rounded px-2 py-1"
-                      value={editEndTime}
-                      onChange={(e) => setEditEndTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end pt-2">
-                  <Button variant="default" size="sm" onClick={handleSave}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              onAddTimeSlot({
-                id: course.courseId,
-                name: course.courseName,
-                code: "", // This will be filled from the course data
-                credits: 0,
-                department: "",
-                semester: "",
-                year: 0,
-              });
-            }}
-          >
-            Add Time Slot
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+function DroppableDay({
+  day,
+  children,
+}: {
+  day: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: day });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`relative border-l border-subtle ${isOver ? "bg-surface-hover" : ""}`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -242,6 +189,13 @@ export default function CourseSchedule({
   const [courseTimes, setCourseTimes] = useState<CourseTime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [draggingCourse, setDraggingCourse] = useState<CourseTime | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  );
 
   // Editing state for weekly schedule popovers
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
@@ -700,78 +654,290 @@ export default function CourseSchedule({
     }
   };
 
+  // Build a stable color map for courseIds
+  const uniqueCourseIds = Array.from(
+    new Set(courseTimes.map((ct) => ct.courseId)),
+  );
+  const courseColorMap: Record<string, (typeof BLOCK_COLORS)[number]> = {};
+  uniqueCourseIds.forEach((id, idx) => {
+    courseColorMap[id] = BLOCK_COLORS[idx % BLOCK_COLORS.length];
+  });
+
+  // Build overlap sets for each day (used in both desktop and mobile views)
+  const overlapsByDay: Record<string, Set<string>> = {};
+  DAYS.forEach((day) => {
+    const sorted = (coursesByDay[day] || [])
+      .slice()
+      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+    const overlaps = new Set<string>();
+    for (let i = 1; i < sorted.length; ++i) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      if (timeToMinutes(curr.startTime) < timeToMinutes(prev.endTime)) {
+        overlaps.add(prev.id!);
+        overlaps.add(curr.id!);
+      }
+    }
+    overlapsByDay[day] = overlaps;
+  });
+
+  // --- Popover form helper (reused for edit, addSlot, addSlotCard) ---
+  const renderEditPopoverContent = (course: CourseTime) => (
+    <PopoverContent
+      className="w-80 p-4 text-t1"
+      style={{
+        backgroundColor: "hsl(var(--tc-surface))",
+        color: "hsl(var(--tc-t1))",
+      }}
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-mono font-medium">Day</label>
+          <Select value={editDay} onValueChange={setEditDay}>
+            <SelectTrigger className="h-8 flex items-center justify-between">
+              <SelectValue
+                placeholder="Select day"
+                className="flex-1 text-left"
+              />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-surface text-t1 border-strong"
+              style={{
+                backgroundColor: "hsl(var(--tc-surface))",
+                color: "hsl(var(--tc-t1))",
+              }}
+            >
+              {DAYS.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">Start Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={editStartTime}
+              onChange={(e) => setEditStartTime(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">End Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={editEndTime}
+              onChange={(e) => setEditEndTime(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" size="sm" onClick={closeEditPopover}>
+            Cancel
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => handleSaveEdit(course.id!)}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  );
+
+  const renderAddSlotPopoverContent = (course: Course) => (
+    <PopoverContent
+      className="w-80 p-4 text-t1"
+      style={{
+        backgroundColor: "hsl(var(--tc-surface))",
+        color: "hsl(var(--tc-t1))",
+      }}
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-mono font-medium">Day</label>
+          <Select value={addSlotDay} onValueChange={setAddSlotDay}>
+            <SelectTrigger className="h-8 flex items-center justify-between">
+              <SelectValue
+                placeholder="Select day"
+                className="flex-1 text-left"
+              />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-surface text-t1 border-strong"
+              style={{
+                backgroundColor: "hsl(var(--tc-surface))",
+                color: "hsl(var(--tc-t1))",
+              }}
+            >
+              {DAYS.map((day) => (
+                <SelectItem key={day} value={day}>
+                  {day}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">Start Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={addSlotStart}
+              onChange={(e) => setAddSlotStart(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">End Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={addSlotEnd}
+              onChange={(e) => setAddSlotEnd(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" size="sm" onClick={closeAddSlot}>
+            Cancel
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => handleSaveAddSlot(course)}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  );
+
+  const renderAddSlotCardPopoverContent = (course: CourseTime) => (
+    <PopoverContent
+      className="w-80 p-4 text-t1"
+      style={{
+        backgroundColor: "hsl(var(--tc-surface))",
+        color: "hsl(var(--tc-t1))",
+      }}
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-mono font-medium">Day</label>
+          <Select value={addSlotCardDay} onValueChange={setAddSlotCardDay}>
+            <SelectTrigger className="h-8 flex items-center justify-between">
+              <SelectValue
+                placeholder="Select day"
+                className="flex-1 text-left"
+              />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-surface text-t1 border-strong"
+              style={{
+                backgroundColor: "hsl(var(--tc-surface))",
+                color: "hsl(var(--tc-t1))",
+              }}
+            >
+              {DAYS.map((day) => (
+                <SelectItem key={day} value={day}>
+                  {day}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">Start Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={addSlotCardStart}
+              onChange={(e) => setAddSlotCardStart(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-mono font-medium">End Time</label>
+            <input
+              type="time"
+              className="w-full border border-subtle px-2 py-1 font-mono text-sm bg-transparent"
+              value={addSlotCardEnd}
+              onChange={(e) => setAddSlotCardEnd(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" size="sm" onClick={closeAddSlotCard}>
+            Cancel
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => handleSaveAddSlotCard(course)}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  );
+
+  // --- Loading state ---
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Loading schedule...</span>
-        </CardContent>
-      </Card>
+      <div className="border border-subtle p-6 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin mr-2 text-t3" />
+        <span className="text-t3 font-mono text-sm">Loading schedule...</span>
+      </div>
     );
   }
 
+  // Unscheduled courses
+  const unscheduledCourses = selectedCourses.filter(
+    (c) => !courseTimes.some((ct) => ct.courseId === c.id),
+  );
+
   return (
-    <Card className="p-6 w-full overflow-hidden">
+    <div className="border border-subtle p-4 w-full overflow-hidden">
       <div className="space-y-4">
+        {/* Header with collapse toggle */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
+          <h3 className="font-mono text-sm font-medium text-t1 flex items-center gap-2">
             <button
               type="button"
               aria-label={collapsed ? "Expand" : "Collapse"}
               onClick={() => setCollapsed((c) => !c)}
-              className="focus:outline-none"
+              className="focus:outline-none text-t2 hover:text-t1 transition-colors"
             >
               {collapsed ? (
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               ) : (
-                <ChevronDown className="w-5 h-5" />
+                <ChevronDown className="w-4 h-4" />
               )}
             </button>
             Course Schedule
+            <span className="text-t4 font-normal">
+              ({courseTimes.length} slot{courseTimes.length !== 1 ? "s" : ""})
+            </span>
           </h3>
         </div>
+
         {!collapsed && (
-          <div className="space-y-6">
-            {/* Available Courses */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold mb-4">Available Courses</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedCourses
-                  .filter(
-                    (course) =>
-                      !courseTimes.some((ct) => ct.courseId === course.id),
-                  )
-                  .map((course) => (
-                    <Card
-                      key={course.id}
-                      className="flex flex-col justify-between p-2 sm:p-3 [container-type:inline-size] hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex justify-between items-start gap-2 min-w-0">
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          <h3 className="font-medium truncate">
-                            {course.code}
-                          </h3>
-                          <p className="text-t3 text-sm leading-tight line-clamp-2 break-words">
-                            {course.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{course.department}</span>
-                            <span>•</span>
-                            <span className="whitespace-nowrap">
-                              {course.credits} credits
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          onClick={() => openAddSlot(course)}
-                          className="p-1.5 sm:p-2 border border-strong hover:bg-surface-hover flex-shrink-0"
-                          aria-label="Add to Schedule"
-                        >
-                          <Plus className="h-5 w-5" />
-                        </Button>
-                      </div>
+          <div className="space-y-4">
+            {/* Available Courses - compact horizontal row */}
+            {unscheduledCourses.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-mono text-xs text-t3">Available Courses</p>
+                <div className="flex flex-wrap gap-2">
+                  {unscheduledCourses.map((course) => (
+                    <div key={course.id} className="relative">
                       <Popover
                         open={addSlotOpen === course.id}
                         onOpenChange={(open) =>
@@ -779,272 +945,213 @@ export default function CourseSchedule({
                         }
                       >
                         <PopoverTrigger asChild>
-                          <span></span>
+                          <button
+                            onClick={() => openAddSlot(course)}
+                            className="flex items-center gap-2 px-3 py-1.5 border border-subtle text-xs font-mono text-t2 hover:bg-surface-hover hover:text-t1 transition-colors"
+                          >
+                            <Plus className="h-3 w-3" />
+                            {course.code}
+                          </button>
                         </PopoverTrigger>
-                        <PopoverContent
-                          className="w-80 p-4 text-t1"
+                        {renderAddSlotPopoverContent(course)}
+                      </Popover>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* === DESKTOP: Weekly Calendar Grid (md and above) === */}
+            <div className="hidden md:block">
+              <div className="relative">
+                {/* Header row */}
+                <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-subtle">
+                  <div className="py-2" />
+                  {CALENDAR_DAY_LABELS.map((day) => (
+                    <div
+                      key={day}
+                      className="py-2 text-center font-mono text-xs text-t3 border-l border-subtle"
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Time grid body */}
+                <DndContext
+                  sensors={sensors}
+                  onDragStart={(event: DragStartEvent) => {
+                    const course = event.active.data.current?.course;
+                    setDraggingCourse(course || null);
+                  }}
+                  onDragEnd={(event: DragEndEvent) => {
+                    setDraggingCourse(null);
+                    const { active, over, delta } = event;
+                    if (!active.data.current?.course) return;
+
+                    const course = active.data.current.course as CourseTime;
+
+                    // Calculate new time based on vertical drag distance (stepless — 1 minute precision)
+                    const rawMinutesDelta = Math.round(delta.y / PX_PER_MINUTE);
+                    const currentStartMin = timeToMinutes(course.startTime);
+                    const currentEndMin = timeToMinutes(course.endTime);
+                    const duration = currentEndMin - currentStartMin;
+
+                    // Determine target day
+                    let targetDay = course.day;
+                    if (over && CALENDAR_DAYS.includes(over.id as string)) {
+                      targetDay = over.id as string;
+                    }
+
+                    // Clamp to valid range (no snapping)
+                    const newStartMin = Math.max(
+                      HOUR_START * 60,
+                      Math.min(
+                        currentStartMin + rawMinutesDelta,
+                        HOUR_END * 60 - duration,
+                      ),
+                    );
+                    const newEndMin = newStartMin + duration;
+
+                    const newStartTime = `${Math.floor(newStartMin / 60)}:${(newStartMin % 60).toString().padStart(2, "0")}`;
+                    const newEndTime = `${Math.floor(newEndMin / 60)}:${(newEndMin % 60).toString().padStart(2, "0")}`;
+
+                    // Only update if something changed
+                    if (
+                      targetDay !== course.day ||
+                      newStartTime !== course.startTime ||
+                      newEndTime !== course.endTime
+                    ) {
+                      if (course.id) {
+                        // Optimistic update — move block immediately in local state
+                        setCourseTimes((prev) =>
+                          prev.map((ct) =>
+                            ct.id === course.id
+                              ? {
+                                  ...ct,
+                                  day: targetDay,
+                                  startTime: newStartTime,
+                                  endTime: newEndTime,
+                                }
+                              : ct,
+                          ),
+                        );
+                        // Persist in background (no await — fire and forget)
+                        handleUpdateSchedule(course.id, {
+                          day: targetDay,
+                          startTime: newStartTime,
+                          endTime: newEndTime,
+                        });
+                      }
+                    }
+                  }}
+                >
+                  <div
+                    className="grid grid-cols-[60px_repeat(5,1fr)] relative"
+                    style={{
+                      height: `${HOUR_COUNT * HOUR_HEIGHT + GRID_PADDING_TOP}px`,
+                    }}
+                  >
+                    {/* Time labels */}
+                    <div className="relative">
+                      {Array.from(
+                        { length: HOUR_COUNT + 1 },
+                        (_, i) => i + HOUR_START,
+                      ).map((hour) => (
+                        <div
+                          key={hour}
+                          className="absolute w-full text-right pr-2 font-mono text-[10px] text-t4"
                           style={{
-                            backgroundColor: "hsl(var(--tc-surface))",
-                            color: "hsl(var(--tc-t1))",
+                            top: `${(hour - HOUR_START) * HOUR_HEIGHT + GRID_PADDING_TOP - 6}px`,
                           }}
                         >
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Day</label>
-                              <Select
-                                value={addSlotDay}
-                                onValueChange={setAddSlotDay}
-                              >
-                                <SelectTrigger className="h-8 flex items-center justify-between">
-                                  <SelectValue
-                                    placeholder="Select day"
-                                    className="flex-1 text-left"
-                                  />
-                                </SelectTrigger>
-                                <SelectContent
-                                  className="bg-surface text-t1 border-strong"
-                                  style={{
-                                    backgroundColor: "hsl(var(--tc-surface))",
-                                    color: "hsl(var(--tc-t1))",
-                                  }}
-                                >
-                                  {DAYS.map((day) => (
-                                    <SelectItem key={day} value={day}>
-                                      {day}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                  Start Time
-                                </label>
-                                <input
-                                  type="time"
-                                  className="w-full border rounded px-2 py-1"
-                                  value={addSlotStart}
-                                  onChange={(e) =>
-                                    setAddSlotStart(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                  End Time
-                                </label>
-                                <input
-                                  type="time"
-                                  className="w-full border rounded px-2 py-1"
-                                  value={addSlotEnd}
-                                  onChange={(e) =>
-                                    setAddSlotEnd(e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={closeAddSlot}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => handleSaveAddSlot(course)}
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </Card>
-                  ))}
-              </div>
-            </div>
+                          {hour}:00
+                        </div>
+                      ))}
+                    </div>
 
-            {/* Weekly Schedule */}
-            <div className="space-y-6">
-              {DAYS.map((day) => {
-                const sorted = (coursesByDay[day] || [])
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
-                  );
-                const overlaps: Set<string> = new Set();
-                for (let i = 1; i < sorted.length; ++i) {
-                  const prev = sorted[i - 1];
-                  const curr = sorted[i];
-                  if (
-                    timeToMinutes(curr.startTime) < timeToMinutes(prev.endTime)
-                  ) {
-                    overlaps.add(prev.id!);
-                    overlaps.add(curr.id!);
-                  }
-                }
-                return (
-                  <div key={day} className="space-y-4">
-                    <h3 className="text-lg font-semibold border-b pb-2">
-                      {day}
-                    </h3>
-                    <div className="grid gap-2">
-                      {sorted.map((course) => (
-                        <div
-                          key={course.id}
-                          className={`relative border rounded-none ${overlaps.has(course.id!) ? "border-red-500 bg-red-500/10" : ""}`}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-1 right-1 z-10 h-6 w-6 flex items-center justify-center text-muted-foreground"
-                            onClick={() =>
-                              course.id && handleDeleteSchedule(course.id)
-                            }
-                            aria-label="Remove scheduled course"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    {/* Day columns */}
+                    {CALENDAR_DAYS.map((day) => {
+                      const dayCourses = coursesByDay[day] || [];
+                      const overlaps = overlapsByDay[day] || new Set();
 
-                          {/* Course content */}
-                          <div className="p-3 pb-3">
-                            <div className="space-y-2">
-                              {/* Course Info */}
-                              <div className="min-w-0 flex-1 overflow-hidden">
-                                <h3
-                                  className="font-medium text-sm leading-tight break-words hyphens-auto pr-2"
-                                  style={{
-                                    wordBreak: "break-word",
-                                    overflowWrap: "break-word",
-                                  }}
-                                >
-                                  {course.courseName}
-                                </h3>
-                                <div className="flex items-center gap-2 mt-1 text-sm text-t3">
-                                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                                  <span className="truncate">
-                                    {course.startTime} - {course.endTime}
-                                  </span>
-                                  <span className="text-xs text-t3">
-                                    (
-                                    {formatDuration(
-                                      course.startTime,
-                                      course.endTime,
-                                    )}
-                                    )
-                                  </span>
+                      return (
+                        <DroppableDay key={day} day={day}>
+                          {/* Horizontal hour lines */}
+                          {Array.from({ length: HOUR_COUNT + 1 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="absolute w-full border-t border-subtle"
+                              style={{
+                                top: `${i * HOUR_HEIGHT + GRID_PADDING_TOP}px`,
+                              }}
+                            />
+                          ))}
 
-                                  {/* Edit and Add buttons inline with time */}
-                                  <div className="flex gap-1 ml-auto">
-                                    {/* Edit Button */}
-                                    <Popover
-                                      open={editingCourseId === course.id}
-                                      onOpenChange={(open) =>
-                                        open
-                                          ? openEditPopover(course)
-                                          : closeEditPopover()
-                                      }
+                          {/* Course blocks */}
+                          {dayCourses.map((course) => {
+                            const startMin = timeToMinutes(course.startTime);
+                            const endMin = timeToMinutes(course.endTime);
+                            const blockTop =
+                              (startMin - HOUR_START * 60) * PX_PER_MINUTE +
+                              GRID_PADDING_TOP;
+                            const height = Math.max(
+                              (endMin - startMin) * PX_PER_MINUTE,
+                              20,
+                            );
+                            const color =
+                              courseColorMap[course.courseId] ||
+                              BLOCK_COLORS[0];
+                            const isOverlapping = overlaps.has(course.id!);
+
+                            return (
+                              <Popover
+                                key={course.id}
+                                open={editingCourseId === course.id}
+                                onOpenChange={(open) =>
+                                  open
+                                    ? openEditPopover(course)
+                                    : closeEditPopover()
+                                }
+                              >
+                                <PopoverTrigger asChild>
+                                  <DraggableCourseBlock
+                                    course={course}
+                                    top={blockTop}
+                                    height={height}
+                                    color={color}
+                                    isOverlapping={isOverlapping}
+                                  >
+                                    <div
+                                      className="p-1 h-full flex flex-col cursor-pointer"
+                                      onClick={() => openEditPopover(course)}
                                     >
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 w-5 p-0 hover:bg-surface-hover"
-                                          title="Edit Time"
-                                        >
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent
-                                        className="w-80 p-4 text-t1"
-                                        style={{
-                                          backgroundColor:
-                                            "hsl(var(--tc-surface))",
-                                          color: "hsl(var(--tc-t1))",
-                                        }}
+                                      <p
+                                        className={`font-mono text-[10px] font-medium text-t1 truncate`}
                                       >
-                                        <div className="space-y-4">
-                                          <div className="space-y-2">
-                                            <label className="text-sm font-medium">
-                                              Day
-                                            </label>
-                                            <Select
-                                              value={editDay}
-                                              onValueChange={setEditDay}
-                                            >
-                                              <SelectTrigger className="h-8 flex items-center justify-between">
-                                                <SelectValue
-                                                  placeholder="Select day"
-                                                  className="flex-1 text-left"
-                                                />
-                                              </SelectTrigger>
-                                              <SelectContent
-                                                className="bg-surface text-t1 border-strong"
-                                                style={{
-                                                  backgroundColor:
-                                                    "hsl(var(--tc-surface))",
-                                                  color: "hsl(var(--tc-t1))",
-                                                }}
-                                              >
-                                                {DAYS.map((d) => (
-                                                  <SelectItem key={d} value={d}>
-                                                    {d}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                              <label className="text-sm font-medium">
-                                                Start Time
-                                              </label>
-                                              <input
-                                                type="time"
-                                                className="w-full border rounded px-2 py-1"
-                                                value={editStartTime}
-                                                onChange={(e) =>
-                                                  setEditStartTime(
-                                                    e.target.value,
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            <div className="space-y-2">
-                                              <label className="text-sm font-medium">
-                                                End Time
-                                              </label>
-                                              <input
-                                                type="time"
-                                                className="w-full border rounded px-2 py-1"
-                                                value={editEndTime}
-                                                onChange={(e) =>
-                                                  setEditEndTime(e.target.value)
-                                                }
-                                              />
-                                            </div>
-                                          </div>
-                                          <div className="flex justify-end pt-2">
-                                            <Button
-                                              variant="default"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleSaveEdit(course.id!)
-                                              }
-                                            >
-                                              Save
-                                            </Button>
-                                          </div>
+                                        {course.courseName}
+                                      </p>
+                                      <p className="font-mono text-[9px] text-t3 truncate">
+                                        {course.startTime}-{course.endTime}
+                                      </p>
+                                      {isOverlapping && (
+                                        <div className="flex items-center mt-auto">
+                                          <AlertTriangle className="h-2.5 w-2.5 text-red-500" />
                                         </div>
-                                      </PopoverContent>
-                                    </Popover>
-
-                                    {/* Add Button */}
+                                      )}
+                                    </div>
+                                    {/* Delete button on hover */}
+                                    <button
+                                      className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 h-4 w-4 flex items-center justify-center text-t3 hover:text-t1 transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        course.id &&
+                                          handleDeleteSchedule(course.id);
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                    {/* Add slot button on hover */}
                                     <Popover
                                       open={addSlotCardOpen === course.id}
                                       onOpenChange={(open) =>
@@ -1054,140 +1161,174 @@ export default function CourseSchedule({
                                       }
                                     >
                                       <PopoverTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 w-5 p-0 hover:bg-surface-hover"
-                                          title="Add Time Slot"
+                                        <button
+                                          className="absolute bottom-0.5 right-0.5 opacity-0 group-hover:opacity-100 h-4 w-4 flex items-center justify-center text-t3 hover:text-t1 transition-opacity"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openAddSlotCard(course);
+                                          }}
                                         >
                                           <Plus className="h-3 w-3" />
-                                        </Button>
+                                        </button>
                                       </PopoverTrigger>
-                                      <PopoverContent
-                                        className="w-80 p-4 text-t1"
-                                        style={{
-                                          backgroundColor:
-                                            "hsl(var(--tc-surface))",
-                                          color: "hsl(var(--tc-t1))",
-                                        }}
-                                      >
-                                        <div className="space-y-4">
-                                          <div className="space-y-2">
-                                            <label className="text-sm font-medium">
-                                              Day
-                                            </label>
-                                            <Select
-                                              value={addSlotCardDay}
-                                              onValueChange={setAddSlotCardDay}
-                                            >
-                                              <SelectTrigger className="h-8 flex items-center justify-between">
-                                                <SelectValue
-                                                  placeholder="Select day"
-                                                  className="flex-1 text-left"
-                                                />
-                                              </SelectTrigger>
-                                              <SelectContent
-                                                className="bg-surface text-t1 border-strong"
-                                                style={{
-                                                  backgroundColor:
-                                                    "hsl(var(--tc-surface))",
-                                                  color: "hsl(var(--tc-t1))",
-                                                }}
-                                              >
-                                                {DAYS.map((day) => (
-                                                  <SelectItem
-                                                    key={day}
-                                                    value={day}
-                                                  >
-                                                    {day}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                              <label className="text-sm font-medium">
-                                                Start Time
-                                              </label>
-                                              <input
-                                                type="time"
-                                                className="w-full border rounded px-2 py-1"
-                                                value={addSlotCardStart}
-                                                onChange={(e) =>
-                                                  setAddSlotCardStart(
-                                                    e.target.value,
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            <div className="space-y-2">
-                                              <label className="text-sm font-medium">
-                                                End Time
-                                              </label>
-                                              <input
-                                                type="time"
-                                                className="w-full border rounded px-2 py-1"
-                                                value={addSlotCardEnd}
-                                                onChange={(e) =>
-                                                  setAddSlotCardEnd(
-                                                    e.target.value,
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                          </div>
-                                          <div className="flex justify-end gap-2 pt-2">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={closeAddSlotCard}
-                                            >
-                                              Cancel
-                                            </Button>
-                                            <Button
-                                              variant="default"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleSaveAddSlotCard(course)
-                                              }
-                                            >
-                                              Save
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      </PopoverContent>
+                                      {renderAddSlotCardPopoverContent(course)}
                                     </Popover>
-                                  </div>
+                                  </DraggableCourseBlock>
+                                </PopoverTrigger>
+                                {renderEditPopoverContent(course)}
+                              </Popover>
+                            );
+                          })}
+                        </DroppableDay>
+                      );
+                    })}
+                  </div>
+                </DndContext>
+              </div>
+            </div>
 
-                                  {overlaps.has(course.id!) && (
-                                    <span
-                                      className="flex items-center text-red-600 ml-2"
-                                      title="This time slot overlaps with another."
-                                    >
-                                      <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-                                      Overlap
-                                    </span>
+            {/* === MOBILE: Stacked day-by-day list (below md) === */}
+            <div className="md:hidden space-y-3">
+              {DAYS.map((day) => {
+                const sorted = (coursesByDay[day] || [])
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+                  );
+                const overlaps = overlapsByDay[day] || new Set();
+
+                if (sorted.length === 0) return null;
+
+                return (
+                  <div key={day} className="border border-subtle">
+                    <div className="px-3 py-2 border-b border-subtle">
+                      <p className="font-mono text-xs text-t2 font-medium">
+                        {day}
+                      </p>
+                    </div>
+                    <div className="divide-y divide-subtle">
+                      {sorted.map((course) => {
+                        const color =
+                          courseColorMap[course.courseId] || BLOCK_COLORS[0];
+                        const isOverlapping = overlaps.has(course.id!);
+
+                        return (
+                          <div
+                            key={course.id}
+                            className={`flex items-center gap-3 px-3 py-2 group ${isOverlapping ? "border-l-2 border-l-red-500" : ""}`}
+                          >
+                            {/* Color indicator */}
+                            <div
+                              className={`w-1.5 h-8 flex-shrink-0 ${color.bg} ${color.border} border`}
+                            />
+
+                            {/* Course info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-mono text-xs font-medium text-t1 truncate">
+                                {course.courseName}
+                              </p>
+                              <p className="font-mono text-[10px] text-t3">
+                                {course.startTime} - {course.endTime}
+                                <span className="ml-1 text-t4">
+                                  (
+                                  {formatDuration(
+                                    course.startTime,
+                                    course.endTime,
                                   )}
-                                </div>
-                              </div>
+                                  )
+                                </span>
+                              </p>
+                            </div>
+
+                            {/* Overlap warning */}
+                            {isOverlapping && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {/* Edit popover */}
+                              <Popover
+                                open={editingCourseId === course.id}
+                                onOpenChange={(open) =>
+                                  open
+                                    ? openEditPopover(course)
+                                    : closeEditPopover()
+                                }
+                              >
+                                <PopoverTrigger asChild>
+                                  <button
+                                    className="h-6 w-6 flex items-center justify-center text-t3 hover:text-t1 transition-colors"
+                                    title="Edit Time"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </button>
+                                </PopoverTrigger>
+                                {renderEditPopoverContent(course)}
+                              </Popover>
+
+                              {/* Add slot popover */}
+                              <Popover
+                                open={addSlotCardOpen === course.id}
+                                onOpenChange={(open) =>
+                                  open
+                                    ? openAddSlotCard(course)
+                                    : closeAddSlotCard()
+                                }
+                              >
+                                <PopoverTrigger asChild>
+                                  <button
+                                    className="h-6 w-6 flex items-center justify-center text-t3 hover:text-t1 transition-colors"
+                                    title="Add Time Slot"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </button>
+                                </PopoverTrigger>
+                                {renderAddSlotCardPopoverContent(course)}
+                              </Popover>
+
+                              {/* Delete */}
+                              <button
+                                className="h-6 w-6 flex items-center justify-center text-t3 hover:text-t1 transition-colors"
+                                onClick={() =>
+                                  course.id && handleDeleteSchedule(course.id)
+                                }
+                                title="Remove"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                    {sorted.length === 0 && (
-                      <p className="text-sm text-t3 py-2">
-                        No courses scheduled
-                      </p>
-                    )}
                   </div>
                 );
               })}
+
+              {/* Empty state for mobile */}
+              {courseTimes.length === 0 && (
+                <div className="border border-subtle p-6 text-center">
+                  <p className="font-mono text-xs text-t4">
+                    No courses scheduled. Add courses from the list above.
+                  </p>
+                </div>
+              )}
             </div>
+
+            {/* Empty state for desktop */}
+            {courseTimes.length === 0 && (
+              <div className="hidden md:flex border border-subtle p-8 items-center justify-center">
+                <p className="font-mono text-xs text-t4">
+                  No courses scheduled. Add courses from the available list
+                  above.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
