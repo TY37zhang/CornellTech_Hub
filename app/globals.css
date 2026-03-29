@@ -134,6 +134,13 @@ body {
   * {
     border-color: hsl(var(--border));
   }
+  html {
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+  }
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));

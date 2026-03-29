@@ -108,8 +108,8 @@ export function SiteHeader() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="relative flex h-6 w-6 items-center justify-center outline-none">
-                  <Avatar className="h-5 w-5">
+                <button className="relative flex h-[30px] w-[30px] items-center justify-center outline-none">
+                  <Avatar className="h-[30px] w-[30px]">
                     <AvatarImage
                       src={session.user?.image || ""}
                       alt={session.user?.name || ""}
