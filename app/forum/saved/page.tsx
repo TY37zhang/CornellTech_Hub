@@ -137,7 +137,7 @@ export default function SavedPostsPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">Saved Posts</h1>
               <p className="text-muted-foreground text-lg mt-2">
@@ -147,96 +147,100 @@ export default function SavedPostsPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
-          <div className="space-y-6">
-            {savedPosts.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <BookmarkPlus className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    No saved posts yet
-                  </h3>
-                  <p className="text-muted-foreground text-center mb-4">
-                    When you save a post, it will appear here for easy access
-                    later.
-                  </p>
-                  <Button asChild>
-                    <a href="/forum">Browse Forum</a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              savedPosts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/forum/${post.id}`}
-                  className="block"
-                >
-                  <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <CardTitle>{post.title}</CardTitle>
-                          <CardDescription>
-                            Posted by {post.author_name} •{" "}
-                            {formatDate(post.created_at)}
-                          </CardDescription>
+        <section className="w-full py-6">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="space-y-6">
+              {savedPosts.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <BookmarkPlus className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      No saved posts yet
+                    </h3>
+                    <p className="text-muted-foreground text-center mb-4">
+                      When you save a post, it will appear here for easy access
+                      later.
+                    </p>
+                    <Button asChild>
+                      <a href="/forum">Browse Forum</a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                savedPosts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/forum/${post.id}`}
+                    className="block"
+                  >
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle>{post.title}</CardTitle>
+                            <CardDescription>
+                              Posted by {post.author_name} •{" "}
+                              {formatDate(post.created_at)}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {post.category_name}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) =>
+                                showConfirmDialog(post.id, post.title, e)
+                              }
+                              disabled={unsavingPosts.has(post.id)}
+                              className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600"
+                              title="Remove from saved posts"
+                            >
+                              {unsavingPosts.has(post.id) ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <BookmarkX className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{post.category_name}</Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) =>
-                              showConfirmDialog(post.id, post.title, e)
-                            }
-                            disabled={unsavingPosts.has(post.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600"
-                            title="Remove from saved posts"
-                          >
-                            {unsavingPosts.has(post.id) ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <BookmarkX className="h-4 w-4" />
-                            )}
-                          </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground line-clamp-2">
+                          {post.content}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {post.tags.map((tag: string) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground line-clamp-2">
-                        {post.content}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {post.tags.map((tag: string) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <span>{post.reply_count} replies</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{post.like_count} likes</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{post.view_count} views</span>
-                      </div>
-                      <div className="ml-auto text-xs">
-                        Saved {formatDate(post.saved_at)}
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))
-            )}
+                      </CardContent>
+                      <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <span>{post.reply_count} replies</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span>{post.like_count} likes</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span>{post.view_count} views</span>
+                        </div>
+                        <div className="ml-auto text-xs">
+                          Saved {formatDate(post.saved_at)}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         </section>
       </div>

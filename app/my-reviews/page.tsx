@@ -159,7 +159,7 @@ export default function MyReviewsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="container mx-auto pt-24 px-4 pb-4">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-4">
         <div className="flex justify-center items-center min-h-[50vh]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
@@ -169,7 +169,7 @@ export default function MyReviewsPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto pt-24 px-4 pb-4">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-4">
         <div className="text-center text-red-500">{error}</div>
       </div>
     );
@@ -179,7 +179,7 @@ export default function MyReviewsPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">My Reviews</h1>
               <p className="text-muted-foreground text-lg mt-2">
@@ -189,7 +189,7 @@ export default function MyReviewsPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-[980px] px-6 py-6">
           <Tabs
             defaultValue="all"
             value={activeTab}

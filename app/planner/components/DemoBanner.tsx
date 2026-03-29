@@ -24,7 +24,7 @@ export default function DemoBanner({
 
   return (
     <div className="bg-white/[0.02] border-b border-white/[0.06] text-neutral-200">
-      <div className="container mx-auto p-4">
+      <div className="mx-auto max-w-[980px] px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="bg-white/[0.06] p-2 flex-shrink-0">

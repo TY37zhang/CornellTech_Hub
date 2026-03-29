@@ -199,7 +199,7 @@ export default function EditReviewPage({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container max-w-2xl pt-24 pb-10 mx-auto">
+        <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
           <div className="flex justify-center items-center min-h-[50vh]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           </div>
@@ -214,7 +214,7 @@ export default function EditReviewPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl pt-24 pb-10 mx-auto">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
         <Button
           variant="ghost"
           className="mb-6"

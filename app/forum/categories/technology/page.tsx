@@ -195,7 +195,7 @@ export default function TechnologyCategoryPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
                 <div className="flex items-center justify-start">
@@ -217,7 +217,7 @@ export default function TechnologyCategoryPage() {
                   development, blockchain, and other tech topics.
                 </p>
               </div>
-              <div className="w-full max-w-2xl mx-auto space-y-2">
+              <div className="w-full max-w-2xl space-y-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -233,142 +233,146 @@ export default function TechnologyCategoryPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold tracking-tight">
-              Technology Discussions
-            </h2>
-            <div className="flex items-center gap-4">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="activity">Most Recent</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="replies">Most Replies</SelectItem>
-                </SelectContent>
-              </Select>
-              <Link href="/forum/create">
-                <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
-                  <PlusCircle className="h-4 w-4" />
-                  New Discussion
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {filteredThreads.length > 0 ? (
-              filteredThreads.map((thread) => (
-                <Link
-                  href={`/forum/${thread.id}`}
-                  key={thread.id}
-                  className="group"
-                >
-                  <Card className="hover:bg-muted/50 transition-colors">
-                    <CardHeader className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={thread.author.avatar}
-                              alt={thread.author.name}
-                            />
-                            <AvatarFallback>
-                              {thread.author.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1">
-                            <CardTitle className="text-lg font-semibold">
-                              {thread.title}
-                            </CardTitle>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>{thread.author.name}</span>
-                              <span>•</span>
-                              <span>{thread.createdAt}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className={thread.categoryColor}
-                        >
-                          {thread.category}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                        {thread.content}
-                      </p>
-                    </CardHeader>
-                    <CardFooter className="p-4 pt-0">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                          {thread.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="text-xs font-normal"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MessageSquare className="h-4 w-4" />
-                              <span>{thread.replies} replies</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <ThumbsUp className="h-4 w-4" />
-                              <span>{thread.likes} likes</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{thread.views} views</span>
-                            </div>
-                          </div>
-                          {thread.isNew && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-                            >
-                              New
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardFooter>
-                  </Card>
+        <section className="w-full py-6">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Technology Discussions
+              </h2>
+              <div className="flex items-center gap-4">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="activity">Most Recent</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="replies">Most Replies</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Link href="/forum/create">
+                  <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
+                    <PlusCircle className="h-4 w-4" />
+                    New Discussion
+                  </Button>
                 </Link>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">
-                  No discussions found matching your search criteria.
-                </p>
               </div>
-            )}
+            </div>
+
+            <div className="grid gap-4">
+              {filteredThreads.length > 0 ? (
+                filteredThreads.map((thread) => (
+                  <Link
+                    href={`/forum/${thread.id}`}
+                    key={thread.id}
+                    className="group"
+                  >
+                    <Card className="hover:bg-muted/50 transition-colors">
+                      <CardHeader className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={thread.author.avatar}
+                                alt={thread.author.name}
+                              />
+                              <AvatarFallback>
+                                {thread.author.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-1">
+                              <CardTitle className="text-lg font-semibold">
+                                {thread.title}
+                              </CardTitle>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span>{thread.author.name}</span>
+                                <span>•</span>
+                                <span>{thread.createdAt}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className={thread.categoryColor}
+                          >
+                            {thread.category}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                          {thread.content}
+                        </p>
+                      </CardHeader>
+                      <CardFooter className="p-4 pt-0">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-4">
+                            {thread.tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                className="text-xs font-normal"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <MessageSquare className="h-4 w-4" />
+                                <span>{thread.replies} replies</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <ThumbsUp className="h-4 w-4" />
+                                <span>{thread.likes} likes</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>{thread.views} views</span>
+                              </div>
+                            </div>
+                            {thread.isNew && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                              >
+                                New
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">
+                    No discussions found matching your search criteria.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
-        <section className="container px-4 py-8 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">
-                Join the Conversation
-              </h2>
-              <p className="text-muted-foreground">
-                Have a question about technology or something to share? Start a
-                new discussion thread.
-              </p>
+        <section className="w-full py-8">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Join the Conversation
+                </h2>
+                <p className="text-muted-foreground">
+                  Have a question about technology or something to share? Start
+                  a new discussion thread.
+                </p>
+              </div>
+              <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
+                <PlusCircle className="h-4 w-4" />
+                <span>Create New Thread</span>
+              </Button>
             </div>
-            <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
-              <PlusCircle className="h-4 w-4" />
-              <span>Create New Thread</span>
-            </Button>
           </div>
         </section>
       </div>

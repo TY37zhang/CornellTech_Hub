@@ -181,7 +181,7 @@ export default function CreateThreadPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" asChild>
@@ -205,171 +205,177 @@ export default function CreateThreadPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
-          <Card className="mx-auto max-w-2xl">
-            <form onSubmit={handleSubmit}>
-              <CardHeader className="text-center">
-                <CardTitle>New Discussion Thread</CardTitle>
-                <CardDescription>
-                  Please provide details about your discussion topic or question
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    placeholder="Enter a descriptive title for your thread"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        title: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Title must be at least 4 characters long. Be specific and
-                    imagine you're asking a question to another person.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value: string) =>
-                      setFormData({
-                        ...formData,
-                        category: value,
-                      })
-                    }
-                    required
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="academics">Academics</SelectItem>
-                      <SelectItem value="career">Career</SelectItem>
-                      <SelectItem value="campus-life">Campus Life</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Describe your question or discussion topic in detail..."
-                    className="min-h-[200px]"
-                    value={formData.content}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        content: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Content must be at least 20 characters long. Include all the
-                    information someone would need to answer your question.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Tags</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="tags"
-                      placeholder="Add up to 5 tags (press Enter or comma to add)"
-                      value={tagInput}
-                      onChange={(e) => {
-                        // Only allow letters and numbers in the input
-                        const value = e.target.value.replace(
-                          /[^a-zA-Z0-9]/g,
-                          "",
-                        );
-                        setTagInput(value);
-                      }}
-                      onKeyDown={handleKeyDown}
-                    />
-                    <Button type="button" variant="outline" onClick={addTag}>
-                      Add
-                    </Button>
-                  </div>
+        <section className="w-full py-6">
+          <div className="mx-auto max-w-[980px] px-6">
+            <Card className="mx-auto max-w-2xl">
+              <form onSubmit={handleSubmit}>
+                <CardHeader className="text-center">
+                  <CardTitle>New Discussion Thread</CardTitle>
+                  <CardDescription>
+                    Please provide details about your discussion topic or
+                    question
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      Add up to 5 tags to help categorize your thread
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-yellow-600">Note:</span>{" "}
-                      Tags must be single words containing only letters and
-                      numbers (A-Z, a-z, 0-9). Special characters and spaces are
-                      not allowed.
-                    </p>
-                  </div>
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="flex items-center gap-1"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            className="ml-1 rounded-full text-muted-foreground hover:text-foreground"
-                            onClick={() => removeTag(tag)}
-                          >
-                            ×
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="notify"
-                      className="h-4 w-4"
-                      checked={formData.notifyOnReply}
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      placeholder="Enter a descriptive title for your thread"
+                      value={formData.title}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          notifyOnReply: e.target.checked,
+                          title: e.target.value,
                         })
                       }
+                      required
                     />
-                    <Label htmlFor="notify" className="text-sm font-normal">
-                      Notify me when someone replies to this thread
-                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Title must be at least 4 characters long. Be specific and
+                      imagine you're asking a question to another person.
+                    </p>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" asChild>
-                  <Link href="/forum">Cancel</Link>
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-white text-black hover:bg-neutral-200"
-                >
-                  {isLoading ? "Creating..." : "Create Thread"}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value: string) =>
+                        setFormData({
+                          ...formData,
+                          category: value,
+                        })
+                      }
+                      required
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="academics">Academics</SelectItem>
+                        <SelectItem value="career">Career</SelectItem>
+                        <SelectItem value="campus-life">Campus Life</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="events">Events</SelectItem>
+                        <SelectItem value="general">General</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content</Label>
+                    <Textarea
+                      id="content"
+                      placeholder="Describe your question or discussion topic in detail..."
+                      className="min-h-[200px]"
+                      value={formData.content}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          content: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Content must be at least 20 characters long. Include all
+                      the information someone would need to answer your
+                      question.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tags">Tags</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="tags"
+                        placeholder="Add up to 5 tags (press Enter or comma to add)"
+                        value={tagInput}
+                        onChange={(e) => {
+                          // Only allow letters and numbers in the input
+                          const value = e.target.value.replace(
+                            /[^a-zA-Z0-9]/g,
+                            "",
+                          );
+                          setTagInput(value);
+                        }}
+                        onKeyDown={handleKeyDown}
+                      />
+                      <Button type="button" variant="outline" onClick={addTag}>
+                        Add
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Add up to 5 tags to help categorize your thread
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium text-yellow-600">
+                          Note:
+                        </span>{" "}
+                        Tags must be single words containing only letters and
+                        numbers (A-Z, a-z, 0-9). Special characters and spaces
+                        are not allowed.
+                      </p>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              className="ml-1 rounded-full text-muted-foreground hover:text-foreground"
+                              onClick={() => removeTag(tag)}
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="notify"
+                        className="h-4 w-4"
+                        checked={formData.notifyOnReply}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            notifyOnReply: e.target.checked,
+                          })
+                        }
+                      />
+                      <Label htmlFor="notify" className="text-sm font-normal">
+                        Notify me when someone replies to this thread
+                      </Label>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" asChild>
+                    <Link href="/forum">Cancel</Link>
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-white text-black hover:bg-neutral-200"
+                  >
+                    {isLoading ? "Creating..." : "Create Thread"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </div>
         </section>
       </div>
     </div>

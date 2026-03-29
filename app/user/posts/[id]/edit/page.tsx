@@ -237,7 +237,7 @@ export default function EditPostPage({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="container px-4 pt-24 pb-6 md:px-6">
+        <section className="mx-auto max-w-[980px] px-6 pt-24 pb-6">
           <div className="flex items-center gap-2 mb-6">
             <Button variant="ghost" size="icon" asChild>
               <Link href="/user/posts">
@@ -247,7 +247,7 @@ export default function EditPostPage({
             </Button>
             <p className="text-sm text-muted-foreground">Back to my posts</p>
           </div>
-          <Card className="mx-auto max-w-2xl">
+          <Card>
             <form onSubmit={handleSubmit}>
               <CardHeader className="text-center">
                 <CardTitle>Edit Your Post</CardTitle>

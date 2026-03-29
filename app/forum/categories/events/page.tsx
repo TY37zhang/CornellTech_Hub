@@ -195,7 +195,7 @@ export default function EventsCategoryPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
-          <div className="container px-4 md:px-6">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
                 <div className="flex items-center justify-start">
@@ -217,7 +217,7 @@ export default function EventsCategoryPage() {
                   hackathons, career fairs, and networking opportunities.
                 </p>
               </div>
-              <div className="w-full max-w-2xl mx-auto space-y-2">
+              <div className="w-full space-y-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -233,7 +233,7 @@ export default function EventsCategoryPage() {
           </div>
         </section>
 
-        <section className="container px-4 py-6 md:px-6">
+        <section className="mx-auto max-w-[980px] px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold tracking-tight">
               Events Discussions
@@ -349,7 +349,7 @@ export default function EventsCategoryPage() {
           </div>
         </section>
 
-        <section className="container px-4 py-8 md:px-6">
+        <section className="mx-auto max-w-[980px] px-6 py-8">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-2xl font-bold tracking-tight">

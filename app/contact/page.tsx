@@ -77,7 +77,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl pt-24 pb-8 px-4 mx-auto">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-8">
         <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-6">

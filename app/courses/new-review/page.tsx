@@ -280,12 +280,10 @@ export default function NewReviewPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-background">
-        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-              <p>Loading...</p>
-            </div>
+        <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <p>Loading...</p>
           </div>
         </div>
       </div>
@@ -295,22 +293,20 @@ export default function NewReviewPage() {
   if (status === "unauthenticated") {
     return (
       <div className="min-h-screen bg-background">
-        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>Authentication Required</CardTitle>
-                <CardDescription>
-                  You need to be signed in to write course reviews.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button onClick={() => router.push("/auth/signin")}>
-                  Sign In
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+        <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Authentication Required</CardTitle>
+              <CardDescription>
+                You need to be signed in to write course reviews.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Button onClick={() => router.push("/auth/signin")}>
+                Sign In
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     );
@@ -321,23 +317,21 @@ export default function NewReviewPage() {
   if (!isStudent(userRole)) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>Access Restricted</CardTitle>
-                <CardDescription>
-                  Only students can create course reviews. Faculty members can
-                  reply to existing reviews.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button onClick={() => router.push("/courses")}>
-                  Browse Courses
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+        <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Access Restricted</CardTitle>
+              <CardDescription>
+                Only students can create course reviews. Faculty members can
+                reply to existing reviews.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Button onClick={() => router.push("/courses")}>
+                Browse Courses
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     );
@@ -345,8 +339,8 @@ export default function NewReviewPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
-        <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
+        <div>
           <Button
             variant="ghost"
             className="mb-6"

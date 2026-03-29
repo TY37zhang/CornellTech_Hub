@@ -232,7 +232,7 @@ export default function SettingsPage() {
   if (status === "loading" || isFetching) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] pt-24 pb-10 px-4 mx-auto">
+        <div className="mx-auto max-w-[980px] px-6 flex items-center justify-center min-h-[calc(100vh-4rem)] pt-24 pb-10">
           <p>Loading...</p>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl pt-24 pb-10 px-4 mx-auto">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Settings</h1>

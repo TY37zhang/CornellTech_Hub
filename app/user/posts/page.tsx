@@ -129,7 +129,7 @@ export default function UserPostsPage() {
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">
           <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-            <div className="w-full px-4 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[980px] px-6">
               <div className="flex flex-col items-center justify-center text-center">
                 <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>
                 <p className="text-muted-foreground text-lg mt-2">
@@ -139,7 +139,7 @@ export default function UserPostsPage() {
             </div>
           </section>
 
-          <section className="w-full px-4 py-6 md:px-6 lg:px-8">
+          <section className="mx-auto max-w-[980px] px-6 py-6">
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <p className="text-muted-foreground text-center mb-4">
@@ -161,7 +161,7 @@ export default function UserPostsPage() {
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">
           <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-            <div className="w-full px-4 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[980px] px-6">
               <div className="flex flex-col items-center justify-center text-center">
                 <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>
                 <p className="text-muted-foreground text-lg mt-2">
@@ -171,7 +171,7 @@ export default function UserPostsPage() {
             </div>
           </section>
 
-          <section className="w-full px-4 py-6 md:px-6 lg:px-8">
+          <section className="mx-auto max-w-[980px] px-6 py-6">
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <p className="text-red-500 text-center mb-4">{error}</p>
@@ -188,7 +188,7 @@ export default function UserPostsPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>
               <p className="text-muted-foreground text-lg mt-2">
@@ -198,7 +198,7 @@ export default function UserPostsPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-[980px] px-6 py-6">
           <div className="flex justify-end mb-6">
             <Button asChild>
               <a href="/forum/create">Create Post</a>

@@ -401,7 +401,7 @@ export default function CourseDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full px-4 pt-24 pb-8 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-8">
         <div className="flex flex-col space-y-4">
           <div className="h-8 w-1/4 bg-muted rounded animate-pulse" />
           <div className="h-12 w-3/4 bg-muted rounded animate-pulse" />
@@ -413,7 +413,7 @@ export default function CourseDetailPage() {
 
   if (error || !course) {
     return (
-      <div className="w-full px-4 pt-24 pb-8 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-8">
         <div className="flex flex-col items-center justify-center space-y-4">
           <p className="text-red-500">{error || "Course not found"}</p>
           <Button variant="outline" onClick={() => window.location.reload()}>
@@ -428,7 +428,7 @@ export default function CourseDetailPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col gap-4">
               <div className="w-full">
                 <div className="flex items-center justify-start">
@@ -569,7 +569,7 @@ export default function CourseDetailPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-2 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-[980px] px-6 py-2">
           <Tabs defaultValue="reviews" className="w-full">
             <TabsList className="flex h-10 items-center gap-6 justify-center rounded-none border-b bg-transparent p-0 w-full">
               <TabsTrigger

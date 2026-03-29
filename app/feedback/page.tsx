@@ -85,7 +85,7 @@ export default function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl pt-24 pb-10 px-4 mx-auto">
+      <div className="mx-auto max-w-[980px] px-6 pt-24 pb-10">
         <Card>
           <CardHeader>
             <CardTitle>Submit Feedback</CardTitle>

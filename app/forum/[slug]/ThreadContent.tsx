@@ -485,7 +485,7 @@ export default function ThreadContent({
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
-          <div className="w-full px-4 md:px-6 lg:px-8 overflow-hidden">
+          <div className="mx-auto max-w-[980px] px-6 overflow-hidden">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Button
@@ -530,15 +530,217 @@ export default function ThreadContent({
           </div>
         </section>
 
-        <section className="w-full px-2 sm:px-4 py-6 md:px-6 lg:px-8 overflow-hidden">
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px] max-w-full">
-            <div className="space-y-6 min-w-0 overflow-hidden">
-              {/* Original Post */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
+        <section className="w-full py-6 overflow-hidden">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_300px] max-w-full">
+              <div className="space-y-6 min-w-0 overflow-hidden">
+                {/* Original Post */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={threadData.author.avatar || "/placeholder.svg"}
+                            alt={threadData.author.name}
+                          />
+                          <AvatarFallback>
+                            {threadData.author.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-base">
+                            {threadData.author.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {threadData.author.program}
+                            <span className="hidden sm:inline">
+                              {" "}
+                              • Joined {threadData.author.joinDate}
+                            </span>
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {threadData.createdAt}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="space-y-4">
+                      <div className="whitespace-pre-line text-muted-foreground">
+                        {threadData.content}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {threadData.tags.map((tag: string) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-xs font-normal"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <LikeButton
+                          postId={threadId}
+                          initialLikeCount={threadData.stats.likes}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`gap-1 ${isSaved ? "text-primary" : ""}`}
+                          onClick={handleSave}
+                        >
+                          {isSaved ? (
+                            <BookmarkCheck className="h-4 w-4" />
+                          ) : (
+                            <BookmarkPlus className="h-4 w-4" />
+                          )}
+                          <span>{isSaved ? "Saved" : "Save"}</span>
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {session?.user?.id === threadData.author.id ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleEditPost}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowDeleteDialog(true)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleReportPost}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Flag className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleReportPost}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Flag className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardFooter>
+                </Card>
+
+                {/* Replies */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h2 className="text-xl font-bold tracking-tight">
+                        {threadData.stats.replies}{" "}
+                        {threadData.stats.replies === 1 ? "Reply" : "Replies"}
+                      </h2>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Select
+                        value={sortBy}
+                        onValueChange={handleSort}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="w-[140px] sm:w-[140px] w-full min-w-0">
+                          <SelectValue placeholder="Sort by..." />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                          <SelectItem value="recent">Most Recent</SelectItem>
+                          <SelectItem value="most-liked">Most Liked</SelectItem>
+                          <SelectItem value="most-disliked">
+                            Most Disliked
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {sortedComments.map((comment) => (
+                        <NestedComment
+                          key={comment.id}
+                          comment={comment}
+                          threadId={threadId}
+                          originalPosterId={threadData.author.id}
+                          onCommentDeleted={(commentId) => {
+                            setSortedComments((prev) =>
+                              removeCommentById(prev, commentId),
+                            );
+                            // Decrement reply count in thread stats
+                            setThreadData((prev: any) => ({
+                              ...prev,
+                              stats: {
+                                ...prev.stats,
+                                replies: (prev.stats.replies || 1) - 1,
+                              },
+                            }));
+                          }}
+                          onCommentMarkedDeleted={(commentId) => {
+                            setSortedComments((prev) =>
+                              markCommentAsDeletedById(prev, commentId),
+                            );
+                            // Don't decrement reply count for soft deletion
+                          }}
+                          onCommentUpdated={(commentId, newContent) => {
+                            setSortedComments((prev) =>
+                              updateCommentById(prev, commentId, newContent),
+                            );
+                          }}
+                          onReplyAdded={async () => {
+                            // Refresh comments to get the latest data
+                            const updatedComments =
+                              await getForumComments(threadId);
+                            const formattedComments =
+                              formatNestedComments(updatedComments);
+                            setSortedComments(formattedComments);
+                            setComments(formattedComments);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reply Form */}
+                {replyForm}
+              </div>
+
+              <div className="space-y-6">
+                {/* About the Author */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>About the Author</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-12 w-12">
                         <AvatarImage
                           src={threadData.author.avatar || "/placeholder.svg"}
                           alt={threadData.author.name}
@@ -548,359 +750,161 @@ export default function ThreadContent({
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <CardTitle className="text-base">
-                          {threadData.author.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {threadData.author.program}
-                          <span className="hidden sm:inline">
-                            {" "}
-                            • Joined {threadData.author.joinDate}
-                          </span>
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {threadData.createdAt}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="space-y-4">
-                    <div className="whitespace-pre-line text-muted-foreground">
-                      {threadData.content}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {threadData.tags.map((tag: string) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="text-xs font-normal"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <LikeButton
-                        postId={threadId}
-                        initialLikeCount={threadData.stats.likes}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`gap-1 ${isSaved ? "text-primary" : ""}`}
-                        onClick={handleSave}
-                      >
-                        {isSaved ? (
-                          <BookmarkCheck className="h-4 w-4" />
-                        ) : (
-                          <BookmarkPlus className="h-4 w-4" />
-                        )}
-                        <span>{isSaved ? "Saved" : "Save"}</span>
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {session?.user?.id === threadData.author.id ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleEditPost}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setShowDeleteDialog(true)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleReportPost}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <Flag className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleReportPost}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Flag className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-
-              {/* Replies */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold tracking-tight">
-                      {threadData.stats.replies}{" "}
-                      {threadData.stats.replies === 1 ? "Reply" : "Replies"}
-                    </h2>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Select
-                      value={sortBy}
-                      onValueChange={handleSort}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="w-[140px] sm:w-[140px] w-full min-w-0">
-                        <SelectValue placeholder="Sort by..." />
-                      </SelectTrigger>
-                      <SelectContent align="end">
-                        <SelectItem value="recent">Most Recent</SelectItem>
-                        <SelectItem value="most-liked">Most Liked</SelectItem>
-                        <SelectItem value="most-disliked">
-                          Most Disliked
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {sortedComments.map((comment) => (
-                      <NestedComment
-                        key={comment.id}
-                        comment={comment}
-                        threadId={threadId}
-                        originalPosterId={threadData.author.id}
-                        onCommentDeleted={(commentId) => {
-                          setSortedComments((prev) =>
-                            removeCommentById(prev, commentId),
-                          );
-                          // Decrement reply count in thread stats
-                          setThreadData((prev: any) => ({
-                            ...prev,
-                            stats: {
-                              ...prev.stats,
-                              replies: (prev.stats.replies || 1) - 1,
-                            },
-                          }));
-                        }}
-                        onCommentMarkedDeleted={(commentId) => {
-                          setSortedComments((prev) =>
-                            markCommentAsDeletedById(prev, commentId),
-                          );
-                          // Don't decrement reply count for soft deletion
-                        }}
-                        onCommentUpdated={(commentId, newContent) => {
-                          setSortedComments((prev) =>
-                            updateCommentById(prev, commentId, newContent),
-                          );
-                        }}
-                        onReplyAdded={async () => {
-                          // Refresh comments to get the latest data
-                          const updatedComments =
-                            await getForumComments(threadId);
-                          const formattedComments =
-                            formatNestedComments(updatedComments);
-                          setSortedComments(formattedComments);
-                          setComments(formattedComments);
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Reply Form */}
-              {replyForm}
-            </div>
-
-            <div className="space-y-6">
-              {/* About the Author */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>About the Author</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage
-                        src={threadData.author.avatar || "/placeholder.svg"}
-                        alt={threadData.author.name}
-                      />
-                      <AvatarFallback>
-                        {threadData.author.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{threadData.author.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {threadData.author.program}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Member Since
-                      </span>
-                      <span>{threadData.author.joinDate}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Posts</span>
-                      <span>{threadData.author.postCount}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Likes</span>
-                      <span>{threadData.author.totalLikes}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Related Threads */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    Related Threads
-                  </CardTitle>
-                  <CardDescription>
-                    Similar discussions you might find interesting
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="space-y-4">
-                    {relatedThreads.map((thread, index) => (
-                      <div
-                        key={thread.id}
-                        className="group relative rounded-lg border p-3 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-start gap-2">
-                            <div className="flex-shrink-0 mt-1">
-                              <div className="h-2 w-2 rounded-full bg-primary/60" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <Link
-                                href={`/forum/${thread.id}`}
-                                className="font-medium text-sm hover:text-primary transition-colors line-clamp-2"
-                              >
-                                {thread.title}
-                              </Link>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <div className="flex items-center gap-3">
-                              <span className="flex items-center gap-1">
-                                <MessageSquare className="h-3 w-3" />
-                                {thread.reply_count}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <ThumbsUp className="h-3 w-3" />
-                                {thread.like_count}
-                              </span>
-                            </div>
-                            <span>{formatDate(thread.created_at)}</span>
-                          </div>
-
-                          {thread.author_name && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <span>by</span>
-                              <span className="font-medium">
-                                {thread.author_name}
-                              </span>
-                              {thread.author_id === threadData.author.id && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs px-1 py-0"
-                                >
-                                  Same Author
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-
-                          {thread.tags && thread.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {thread.tags.slice(0, 2).map((tag: string) => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs px-1 py-0"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {thread.tags.length > 2 && (
-                                <span className="text-xs text-muted-foreground">
-                                  +{thread.tags.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {relatedThreads.length === 0 && (
-                      <div className="text-center py-6">
-                        <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                        <p className="font-medium">{threadData.author.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          No related threads found
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Try exploring the category for similar discussions
+                          {threadData.author.program}
                         </p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-                {relatedThreads.length > 0 && (
-                  <CardFooter className="pt-0">
-                    <Link
-                      href={`/forum/categories/${threadData.category.toLowerCase()}`}
-                      className="w-full"
-                    >
-                      <Button variant="outline" size="sm" className="w-full">
-                        Explore {threadData.category}
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                )}
-              </Card>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Member Since
+                        </span>
+                        <span>{threadData.author.joinDate}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Posts</span>
+                        <span>{threadData.author.postCount}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Total Likes
+                        </span>
+                        <span>{threadData.author.totalLikes}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Forum Guidelines */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Forum Guidelines</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>• Be respectful and constructive in your responses</p>
-                    <p>• Stay on topic and avoid unnecessary tangents</p>
-                    <p>• Do not share personal or sensitive information</p>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Related Threads */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Related Threads
+                    </CardTitle>
+                    <CardDescription>
+                      Similar discussions you might find interesting
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="space-y-4">
+                      {relatedThreads.map((thread, index) => (
+                        <div
+                          key={thread.id}
+                          className="group relative rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <div className="flex-shrink-0 mt-1">
+                                <div className="h-2 w-2 rounded-full bg-primary/60" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  href={`/forum/${thread.id}`}
+                                  className="font-medium text-sm hover:text-primary transition-colors line-clamp-2"
+                                >
+                                  {thread.title}
+                                </Link>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1">
+                                  <MessageSquare className="h-3 w-3" />
+                                  {thread.reply_count}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  {thread.like_count}
+                                </span>
+                              </div>
+                              <span>{formatDate(thread.created_at)}</span>
+                            </div>
+
+                            {thread.author_name && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <span>by</span>
+                                <span className="font-medium">
+                                  {thread.author_name}
+                                </span>
+                                {thread.author_id === threadData.author.id && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs px-1 py-0"
+                                  >
+                                    Same Author
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+
+                            {thread.tags && thread.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {thread.tags.slice(0, 2).map((tag: string) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="text-xs px-1 py-0"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {thread.tags.length > 2 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    +{thread.tags.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {relatedThreads.length === 0 && (
+                        <div className="text-center py-6">
+                          <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            No related threads found
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Try exploring the category for similar discussions
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  {relatedThreads.length > 0 && (
+                    <CardFooter className="pt-0">
+                      <Link
+                        href={`/forum/categories/${threadData.category.toLowerCase()}`}
+                        className="w-full"
+                      >
+                        <Button variant="outline" size="sm" className="w-full">
+                          Explore {threadData.category}
+                        </Button>
+                      </Link>
+                    </CardFooter>
+                  )}
+                </Card>
+
+                {/* Forum Guidelines */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Forum Guidelines</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <p>• Be respectful and constructive in your responses</p>
+                      <p>• Stay on topic and avoid unnecessary tangents</p>
+                      <p>• Do not share personal or sensitive information</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>

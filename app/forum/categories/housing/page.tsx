@@ -180,7 +180,7 @@ export default function HousingPage() {
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
         <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
-          <div className="w-full px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
                 <div className="flex items-center justify-start">
@@ -202,7 +202,7 @@ export default function HousingPage() {
                   living arrangements.
                 </p>
               </div>
-              <div className="w-full max-w-2xl mx-auto space-y-2">
+              <div className="w-full max-w-2xl space-y-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -218,109 +218,113 @@ export default function HousingPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 py-6 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold tracking-tight">
-              Housing Discussions
-            </h2>
-            <div className="flex items-center gap-4">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="activity">Recent Activity</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="replies">Most Replies</SelectItem>
-                </SelectContent>
-              </Select>
-              <Link href="/forum/create">
-                <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
-                  <PlusCircle className="h-4 w-4" />
-                  New Discussion
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {filteredThreads.length > 0 ? (
-              filteredThreads.map((thread) => (
-                <Link
-                  href={`/forum/${thread.id}`}
-                  key={thread.id}
-                  className="group"
-                >
-                  <Card className="transition-all hover:border-primary">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-xl group-hover:text-primary">
-                            {thread.title}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-2 mt-1">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage
-                                src={thread.author.avatar || "/placeholder.svg"}
-                                alt={`@${thread.author.name}`}
-                              />
-                              <AvatarFallback>
-                                {thread.author.initials}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{thread.author.name}</span>
-                            <span>•</span>
-                            <span>{thread.createdAt}</span>
-                          </CardDescription>
-                        </div>
-                        <Badge className={thread.categoryColor}>
-                          {thread.category}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-3">
-                      <p className="line-clamp-2 text-muted-foreground">
-                        {thread.content}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {thread.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="outline"
-                            className="text-xs font-normal"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex items-center justify-between pt-1">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>{thread.replies} replies</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span>{thread.likes} likes</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          <span>{thread.views} views</span>
-                        </div>
-                      </div>
-                    </CardFooter>
-                  </Card>
+        <section className="w-full py-6">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Housing Discussions
+              </h2>
+              <div className="flex items-center gap-4">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="activity">Recent Activity</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="replies">Most Replies</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Link href="/forum/create">
+                  <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
+                    <PlusCircle className="h-4 w-4" />
+                    New Discussion
+                  </Button>
                 </Link>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">
-                  No discussions found matching your search criteria.
-                </p>
               </div>
-            )}
+            </div>
+
+            <div className="grid gap-4">
+              {filteredThreads.length > 0 ? (
+                filteredThreads.map((thread) => (
+                  <Link
+                    href={`/forum/${thread.id}`}
+                    key={thread.id}
+                    className="group"
+                  >
+                    <Card className="transition-all hover:border-primary">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-xl group-hover:text-primary">
+                              {thread.title}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2 mt-1">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage
+                                  src={
+                                    thread.author.avatar || "/placeholder.svg"
+                                  }
+                                  alt={`@${thread.author.name}`}
+                                />
+                                <AvatarFallback>
+                                  {thread.author.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{thread.author.name}</span>
+                              <span>•</span>
+                              <span>{thread.createdAt}</span>
+                            </CardDescription>
+                          </div>
+                          <Badge className={thread.categoryColor}>
+                            {thread.category}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pb-3">
+                        <p className="line-clamp-2 text-muted-foreground">
+                          {thread.content}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {thread.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs font-normal"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>{thread.replies} replies</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <ThumbsUp className="h-4 w-4" />
+                            <span>{thread.likes} likes</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{thread.views} views</span>
+                          </div>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">
+                    No discussions found matching your search criteria.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </div>

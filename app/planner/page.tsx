@@ -1486,7 +1486,7 @@ export default function PlannerPage() {
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">
           <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
-            <div className="w-full px-4 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[980px] px-6">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-full max-w-2xl border border-white/[0.06] bg-black">
                   <div className="space-y-1 px-6 py-4">
