@@ -1561,7 +1561,7 @@ export default function PlannerPage() {
       />
 
       {/* Main Content */}
-      <div className="mx-auto max-w-[980px] px-6 py-12 space-y-8">
+      <div className="mx-auto max-w-[980px] px-3 sm:px-6 py-12 space-y-8">
         <HelpSection
           showHelp={showHelp}
           showHelpModal={showHelpModal}
@@ -1730,7 +1730,7 @@ export default function PlannerPage() {
           {/* Right Column - Course Search and Management */}
           <div className="md:col-span-8 space-y-6">
             {/* Search Section */}
-            <div className="border border-subtle p-6">
+            <div className="border border-subtle p-3 sm:p-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <Search className="h-5 w-5 text-t4" />
