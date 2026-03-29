@@ -133,7 +133,7 @@ export default function CourseSelector({
                 onSelectCourse(course);
                 setSearchResults([]);
               }}
-              className="relative p-3 border rounded-lg hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-neutral-950"
+              className="relative p-3 border rounded-none hover:bg-accent/10 hover:border-accent hover:shadow-sm transition-all cursor-pointer group bg-neutral-950"
             >
               <div className="w-full">
                 <div className="font-medium text-base truncate">

@@ -188,7 +188,7 @@ export default function RequirementCard({
             {coursePlan[requirementKey].map((course) => (
               <div
                 key={course.id}
-                className={`flex justify-between items-start text-sm p-2 rounded-lg ${
+                className={`flex justify-between items-start text-sm p-2 rounded-none ${
                   selectedEthicsCourse && selectedEthicsCourse.id === course.id
                     ? "bg-blue-500/[0.06] border border-blue-500/20"
                     : selectedAnchorCourse &&
@@ -264,7 +264,7 @@ export default function RequirementCard({
           ["ms-is-cm", "ms-is-ht", "ms-is-ut"].includes(userProgram) &&
           selectedEthicsCourse && (
             <div className="mt-2">
-              <div className="flex justify-between items-start text-sm p-2 rounded-lg bg-green-500/[0.06] border border-green-500/20">
+              <div className="flex justify-between items-start text-sm p-2 rounded-none bg-green-500/[0.06] border border-green-500/20">
                 <div className="flex-1 min-w-0">
                   <div className="font-normal text-sm text-green-400">
                     Ethics Credit Transfer

@@ -894,7 +894,7 @@ export default function CourseSchedule({
                       {sorted.map((course) => (
                         <div
                           key={course.id}
-                          className={`relative border rounded-lg ${overlaps.has(course.id!) ? "border-red-500 bg-red-500/10" : ""}`}
+                          className={`relative border rounded-none ${overlaps.has(course.id!) ? "border-red-500 bg-red-500/10" : ""}`}
                         >
                           <Button
                             variant="ghost"

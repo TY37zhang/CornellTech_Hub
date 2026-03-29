@@ -110,14 +110,14 @@ export default function SelectedCourses({
               <button
                 id="show-taken-courses"
                 onClick={() => setShowTakenCourses(!showTakenCourses)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:ring-offset-2 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-none transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:ring-offset-2 ${
                   showTakenCourses ? "bg-neutral-200" : "bg-neutral-700"
                 }`}
                 role="switch"
                 aria-checked={showTakenCourses}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-neutral-950 transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-none bg-neutral-950 transition-transform ${
                     showTakenCourses ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
@@ -137,14 +137,14 @@ export default function SelectedCourses({
             <button
               id="show-taken-courses-mobile"
               onClick={() => setShowTakenCourses(!showTakenCourses)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:ring-offset-2 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-none transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:ring-offset-2 ${
                 showTakenCourses ? "bg-neutral-200" : "bg-neutral-700"
               }`}
               role="switch"
               aria-checked={showTakenCourses}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-neutral-950 transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-none bg-neutral-950 transition-transform ${
                   showTakenCourses ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -176,7 +176,7 @@ export default function SelectedCourses({
                 return (
                   <div
                     key={course.id}
-                    className="relative flex flex-col space-y-2 p-4 border rounded-lg w-full overflow-x-auto sm:overflow-visible"
+                    className="relative flex flex-col space-y-2 p-4 border rounded-none w-full overflow-x-auto sm:overflow-visible"
                   >
                     <Button
                       variant="ghost"

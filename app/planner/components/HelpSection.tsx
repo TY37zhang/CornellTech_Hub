@@ -20,7 +20,7 @@ export default function HelpSection({
       {/* Help Icon Floating Button (when help is hidden) */}
       {!showHelp && (
         <button
-          className="fixed bottom-6 right-6 z-50 bg-white text-black hover:bg-neutral-200 rounded-full p-3 shadow-lg transition-colors"
+          className="fixed bottom-6 right-6 z-50 bg-white text-black hover:bg-neutral-200 rounded-none p-3 shadow-lg transition-colors"
           aria-label="Show How to Use the Planner"
           onClick={() => onToggleHelpModal(true)}
         >
@@ -31,7 +31,7 @@ export default function HelpSection({
       {/* Modal Popup for Help */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="relative w-full max-w-2xl mx-4 p-6 border border-white/[0.06] bg-black rounded-lg shadow-xl">
+          <div className="relative w-full max-w-2xl mx-4 p-6 border border-white/[0.06] bg-black rounded-none shadow-xl">
             <button
               className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
               aria-label="Close How to Use the Planner"
@@ -102,7 +102,7 @@ export default function HelpSection({
 
       {/* Inline Help Section (hidable) */}
       {showHelp && !showHelpModal && (
-        <div className="relative p-6 border border-white/[0.06] bg-black rounded-lg">
+        <div className="relative p-6 border border-white/[0.06] bg-black rounded-none">
           <button
             className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
             aria-label="Hide How to Use the Planner"

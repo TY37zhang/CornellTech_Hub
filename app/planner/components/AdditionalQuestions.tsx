@@ -660,7 +660,7 @@ export default function AdditionalQuestions({
               value={selectedEthicsCourse}
               onValueChange={handleEthicsCourseSelect}
             >
-              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-md h-10">
+              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-none h-10">
                 <SelectValue placeholder="Select course" className="text-sm" />
               </SelectTrigger>
               <SelectContent className="bg-neutral-950">
@@ -713,7 +713,7 @@ export default function AdditionalQuestions({
               value={selectedAnchorCourse}
               onValueChange={handleAnchorCourseSelect}
             >
-              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-md h-10">
+              <SelectTrigger className="w-full bg-neutral-950 border border-input rounded-none h-10">
                 <SelectValue
                   placeholder="Select anchor course"
                   className="text-sm"
@@ -785,7 +785,7 @@ export default function AdditionalQuestions({
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-purple-400">
-                    <div className="flex items-center justify-center w-8 h-8 bg-purple-500/10 rounded-full">
+                    <div className="flex items-center justify-center w-8 h-8 bg-purple-500/10 rounded-none">
                       <ArrowRightLeft className="h-4 w-4 text-purple-400" />
                     </div>
                     {editingTransfer ? "Edit Transfer" : "Add Credit Transfer"}
@@ -886,7 +886,7 @@ export default function AdditionalQuestions({
               {creditTransfers.map((transfer) => (
                 <div
                   key={transfer.id}
-                  className="group relative p-4 border border-border/60 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-200 hover:shadow-sm hover:border-border"
+                  className="group relative p-4 border border-border/60 rounded-none bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-200 hover:shadow-sm hover:border-border"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -1034,7 +1034,7 @@ export default function AdditionalQuestions({
                 <Card className="p-5 bg-gradient-to-r from-purple-50/80 to-blue-50/80 border-purple-200 shadow-sm mt-4">
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                            <div className="flex items-center justify-center w-6 h-6 bg-purple-100 rounded-full">
+                            <div className="flex items-center justify-center w-6 h-6 bg-purple-100 rounded-none">
                                 <ArrowRightLeft className="h-3.5 w-3.5 text-purple-700" />
                             </div>
                             <div className="text-sm font-semibold text-purple-800">
