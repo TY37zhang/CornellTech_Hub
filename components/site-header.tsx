@@ -13,11 +13,14 @@ import {
   MessageCircle,
   Shield,
   UserCog,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut } from "next-auth/react";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +43,7 @@ const navItems = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
 
   return (
     <motion.header
@@ -207,6 +211,18 @@ export function SiteHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/[0.06]" />
                 <DropdownMenuItem
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex items-center cursor-pointer text-neutral-400 hover:!text-white font-mono text-xs"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="mr-2 h-3.5 w-3.5" />
+                  ) : (
+                    <Moon className="mr-2 h-3.5 w-3.5" />
+                  )}
+                  {theme === "dark" ? "Light mode" : "Dark mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
+                <DropdownMenuItem
                   onClick={() => signOut()}
                   className="flex items-center cursor-pointer text-red-500 focus:text-red-400 font-mono text-xs"
                 >
@@ -217,6 +233,18 @@ export function SiteHeader() {
             </DropdownMenu>
           ) : (
             <>
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="flex items-center justify-center h-7 w-7 text-neutral-500 hover:text-white transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-3.5 w-3.5" />
+                ) : (
+                  <Moon className="h-3.5 w-3.5" />
+                )}
+              </button>
+              <div className="h-4 w-px bg-white/[0.08] mx-0.5" />
               <Link
                 href="/auth/signin"
                 className="px-2.5 py-1 font-mono text-[13px] text-neutral-500 hover:text-white transition-colors"
