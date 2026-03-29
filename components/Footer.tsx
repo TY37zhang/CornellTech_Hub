@@ -102,7 +102,7 @@ export function Footer() {
           <span>
             built by{" "}
             <Link
-              href="https://www.tianyinzhang.com/"
+              href="https://www.tyz.sh/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-t3 hover:text-t1 transition-colors"
