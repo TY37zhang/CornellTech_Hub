@@ -334,6 +334,7 @@ export default function CourseSchedule({
         toast({
           title: "Success",
           description: "Schedule deleted successfully",
+          variant: "success",
         });
         return;
       }
@@ -350,6 +351,7 @@ export default function CourseSchedule({
       toast({
         title: "Success",
         description: "Schedule deleted successfully",
+        variant: "success",
       });
     } catch (error) {
       console.error("Error deleting schedule:", error);
@@ -407,6 +409,7 @@ export default function CourseSchedule({
       toast({
         title: "Success",
         description: "Schedule updated successfully",
+        variant: "success",
       });
     } catch (error) {
       console.error("Error updating schedule:", error);
@@ -478,6 +481,7 @@ export default function CourseSchedule({
       toast({
         title: "Success",
         description: "Course time slot added",
+        variant: "success",
       });
     } catch (error) {
       console.error("Error adding course:", error);
@@ -545,6 +549,7 @@ export default function CourseSchedule({
         toast({
           title: "Success",
           description: "Course time slot added",
+          variant: "success",
         });
         closeAddSlot();
         return;
@@ -573,7 +578,11 @@ export default function CourseSchedule({
           endTime: addSlotEnd,
         },
       ]);
-      toast({ title: "Success", description: "Course time slot added" });
+      toast({
+        title: "Success",
+        description: "Course time slot added",
+        variant: "success",
+      });
       closeAddSlot();
     } catch (error) {
       console.error("Error adding course:", error);
@@ -613,6 +622,7 @@ export default function CourseSchedule({
         toast({
           title: "Success",
           description: "Course time slot added",
+          variant: "success",
         });
         closeAddSlotCard();
         return;
@@ -641,7 +651,11 @@ export default function CourseSchedule({
           endTime: addSlotCardEnd,
         },
       ]);
-      toast({ title: "Success", description: "Course time slot added" });
+      toast({
+        title: "Success",
+        description: "Course time slot added",
+        variant: "success",
+      });
       closeAddSlotCard();
     } catch (error) {
       console.error("Error adding course:", error);

@@ -217,6 +217,7 @@ export default function EditPostPage({
       toast({
         title: "Success",
         description: "Post updated successfully!",
+        variant: "success",
       });
       router.push("/user/posts");
     } catch (error) {

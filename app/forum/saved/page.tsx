@@ -98,6 +98,7 @@ export default function SavedPostsPage() {
         toast({
           title: "Success",
           description: "Post removed from saved posts.",
+          variant: "success",
         });
       } else {
         // Rollback on failure

@@ -342,6 +342,7 @@ export default function ThreadContent({
             result.action === "saved"
               ? "Thread saved successfully!"
               : "Thread removed from saved items",
+          variant: "success",
         });
       } else {
         toast({

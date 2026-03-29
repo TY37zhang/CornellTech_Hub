@@ -152,6 +152,7 @@ export default function CreateThreadPage() {
         toast({
           title: "Success",
           description: "Thread created successfully!",
+          variant: "success",
         });
         router.back();
       } else {

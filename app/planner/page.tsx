@@ -681,7 +681,7 @@ export default function PlannerPage() {
       toast({
         title: "Success",
         description: `Transferred ${transfer.amount} credit${transfer.amount > 1 ? "s" : ""} from ${transfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${transfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
-        variant: "default",
+        variant: "success",
       });
     } catch (error) {
       toast({
@@ -727,7 +727,7 @@ export default function PlannerPage() {
       toast({
         title: "Success",
         description: `Updated credit transfer: ${updatedTransfer.amount} credit${updatedTransfer.amount > 1 ? "s" : ""} from ${updatedTransfer.fromCategory.replace(/([A-Z])/g, " $1").trim()} to ${updatedTransfer.toCategory.replace(/([A-Z])/g, " $1").trim()}`,
-        variant: "default",
+        variant: "success",
       });
     } catch (error) {
       toast({
@@ -757,7 +757,7 @@ export default function PlannerPage() {
       toast({
         title: "Success",
         description: "Credit transfer deleted successfully.",
-        variant: "default",
+        variant: "success",
       });
     } catch (error) {
       toast({
@@ -868,7 +868,7 @@ export default function PlannerPage() {
           toast({
             title: "Success",
             description: `You have selected the required ${programRequirements[userProgram].totalCredits} credits for your program.`,
-            variant: "default",
+            variant: "success",
           });
         }
 
@@ -993,7 +993,7 @@ export default function PlannerPage() {
         toast({
           title: "Success",
           description: "Course removed successfully",
-          variant: "default",
+          variant: "success",
         });
         return;
       }
@@ -1019,7 +1019,7 @@ export default function PlannerPage() {
       toast({
         title: "Success",
         description: "Course removed successfully",
-        variant: "default",
+        variant: "success",
       });
     } catch (error) {
       console.error("Error removing course:", error);
@@ -1760,7 +1760,7 @@ export default function PlannerPage() {
                         toast({
                           title: "Success",
                           description: "Course added to your plan",
-                          variant: "default",
+                          variant: "success",
                         });
                         return;
                       }
@@ -1801,7 +1801,7 @@ export default function PlannerPage() {
                       toast({
                         title: "Success",
                         description: "Course added to your plan",
-                        variant: "default",
+                        variant: "success",
                       });
                     } catch (error) {
                       console.error("Error saving course:", error);
