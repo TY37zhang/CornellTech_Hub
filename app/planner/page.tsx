@@ -1452,11 +1452,11 @@ export default function PlannerPage() {
         <div className="w-full bg-surface">
           <div className="mx-auto max-w-[980px] px-6">
             <div className="text-center py-12">
-              <div className="h-12 bg-surface-active w-64 mx-auto mb-4 animate-pulse"></div>
-              <div className="h-6 bg-surface-active w-96 mx-auto animate-pulse"></div>
+              <div className="h-12 bg-surface-active w-full max-w-64 mx-auto mb-4 animate-pulse"></div>
+              <div className="h-6 bg-surface-active w-full max-w-96 mx-auto animate-pulse"></div>
             </div>
             <div className="text-center mb-8">
-              <div className="h-8 bg-surface-active w-80 mx-auto animate-pulse"></div>
+              <div className="h-8 bg-surface-active w-full max-w-80 mx-auto animate-pulse"></div>
             </div>
           </div>
         </div>

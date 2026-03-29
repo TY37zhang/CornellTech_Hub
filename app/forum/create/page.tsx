@@ -194,7 +194,7 @@ export default function CreateThreadPage() {
                 <p className="text-sm text-muted-foreground">Back to forum</p>
               </div>
               <div className="flex flex-col items-center justify-center text-center">
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                   Create New Thread
                 </h1>
                 <p className="text-muted-foreground text-lg mt-2">

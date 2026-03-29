@@ -255,7 +255,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
+                    <SelectTrigger className="min-w-0 flex-1 whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-raised border border-strong rounded-none">
@@ -326,7 +326,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="min-w-[200px] whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
+                    <SelectTrigger className="min-w-0 flex-1 whitespace-nowrap bg-surface-hover border-strong text-t2 rounded-none font-mono text-sm">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-raised border border-strong rounded-none">
@@ -600,7 +600,7 @@ const CourseCard = memo(
               &ldquo;{course.review}&rdquo;
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 flex-wrap">
             {uniqueDepts ? (
               uniqueDepts.map((dept, idx) => (
                 <span
@@ -620,7 +620,7 @@ const CourseCard = memo(
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4 mt-3 font-mono text-xs text-t4">
+        <div className="flex items-center gap-4 flex-wrap mt-3 font-mono text-xs text-t4">
           <span>difficulty {course.difficulty.toFixed(1)}</span>
           <span>workload {course.workload.toFixed(1)}</span>
           <span>value {course.value.toFixed(1)}</span>

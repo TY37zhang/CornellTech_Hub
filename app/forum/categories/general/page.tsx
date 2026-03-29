@@ -234,14 +234,16 @@ export default function GeneralCategoryPage() {
 
         <section className="w-full py-6">
           <div className="mx-auto max-w-[980px] px-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-2xl font-bold tracking-tight">Discussions</h2>
-              <Link href="/forum/create">
-                <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover">
-                  <PlusCircle className="h-4 w-4" />
-                  <span>New Thread</span>
-                </Button>
-              </Link>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                <Link href="/forum/create">
+                  <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover">
+                    <PlusCircle className="h-4 w-4" />
+                    <span>New Thread</span>
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-4">

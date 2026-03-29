@@ -140,7 +140,9 @@ export default function SavedPostsPage() {
         <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="mx-auto max-w-[980px] px-6">
             <div className="flex flex-col items-center justify-center text-center">
-              <h1 className="text-4xl font-bold tracking-tight">Saved Posts</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                Saved Posts
+              </h1>
               <p className="text-muted-foreground text-lg mt-2">
                 Your bookmarked forum discussions
               </p>
@@ -177,14 +179,14 @@ export default function SavedPostsPage() {
                     <Card className="hover:shadow-md transition-shadow">
                       <CardHeader>
                         <div className="flex items-start justify-between">
-                          <div className="space-y-1">
+                          <div className="min-w-0 space-y-1">
                             <CardTitle>{post.title}</CardTitle>
                             <CardDescription>
                               Posted by {post.author_name} •{" "}
                               {formatDate(post.created_at)}
                             </CardDescription>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="shrink-0 flex items-center gap-2">
                             <Badge variant="outline">
                               {post.category_name}
                             </Badge>
@@ -223,7 +225,7 @@ export default function SavedPostsPage() {
                           ))}
                         </div>
                       </CardContent>
-                      <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <CardFooter className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <span>{post.reply_count} replies</span>
                         </div>

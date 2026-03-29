@@ -263,7 +263,7 @@ export default function UserPostsPage() {
                       )}
                     </CardContent>
                   </Link>
-                  <CardFooter className="flex items-center gap-4 text-sm text-muted-foreground pt-0">
+                  <CardFooter className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-0">
                     <span>{post.replyCount} replies</span>
                     <span>{post.likeCount} likes</span>
                     <span>{post.viewCount} views</span>

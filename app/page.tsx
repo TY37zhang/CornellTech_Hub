@@ -141,11 +141,11 @@ export default async function Dashboard() {
               </p>
 
               {/* CTA row */}
-              <div className="mt-10 flex items-center gap-4">
+              <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <Link href="/courses">
                   <Button
                     size="lg"
-                    className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
+                    className="h-11 w-full sm:w-auto rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
                   >
                     Browse Courses
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -155,7 +155,7 @@ export default async function Dashboard() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-11 rounded-none px-6 text-sm font-mono font-medium border-cta-outline bg-transparent text-cta-outline hover:bg-cta-outline-hover hover:text-t1 transition-colors"
+                    className="h-11 w-full sm:w-auto rounded-none px-6 text-sm font-mono font-medium border-cta-outline bg-transparent text-cta-outline hover:bg-cta-outline-hover hover:text-t1 transition-colors"
                   >
                     Join Forum
                   </Button>
@@ -356,11 +356,11 @@ export default async function Dashboard() {
                   Create an account and make the most of your Cornell Tech
                   experience.
                 </p>
-                <div className="mt-8 flex items-center gap-4">
-                  <Link href="/auth/signup">
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                  <Link href="/auth/signup" className="w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="h-11 rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
+                      className="w-full sm:w-auto h-11 rounded-none px-6 text-sm font-mono font-medium bg-cta text-cta hover:bg-cta-hover transition-colors"
                     >
                       Sign Up
                       <ArrowRight className="ml-2 h-4 w-4" />

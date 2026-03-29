@@ -196,18 +196,20 @@ export default function MyReviewsPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList>
-              <TabsTrigger value="all">All Courses</TabsTrigger>
-              <TabsTrigger value="CEEE">CEEE</TabsTrigger>
-              <TabsTrigger value="CS">CS</TabsTrigger>
-              <TabsTrigger value="ECE">ECE</TabsTrigger>
-              <TabsTrigger value="HADM">HADM</TabsTrigger>
-              <TabsTrigger value="INFO">INFO</TabsTrigger>
-              <TabsTrigger value="LAW">LAW</TabsTrigger>
-              <TabsTrigger value="ORIE">ORIE</TabsTrigger>
-              <TabsTrigger value="TECH">TECH</TabsTrigger>
-              <TabsTrigger value="TECHIE">TECHIE</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto scrollbar-none">
+              <TabsList className="inline-flex w-max flex-nowrap">
+                <TabsTrigger value="all">All Courses</TabsTrigger>
+                <TabsTrigger value="CEEE">CEEE</TabsTrigger>
+                <TabsTrigger value="CS">CS</TabsTrigger>
+                <TabsTrigger value="ECE">ECE</TabsTrigger>
+                <TabsTrigger value="HADM">HADM</TabsTrigger>
+                <TabsTrigger value="INFO">INFO</TabsTrigger>
+                <TabsTrigger value="LAW">LAW</TabsTrigger>
+                <TabsTrigger value="ORIE">ORIE</TabsTrigger>
+                <TabsTrigger value="TECH">TECH</TabsTrigger>
+                <TabsTrigger value="TECHIE">TECHIE</TabsTrigger>
+              </TabsList>
+            </div>
             <TabsContent value={activeTab} className="mt-6">
               {filteredReviews.length === 0 ? (
                 <div className="text-center text-t3">
@@ -293,7 +295,7 @@ export default function MyReviewsPage() {
                                 Difficulty
                               </span>
                               <div className="flex items-center gap-2 flex-1 justify-end">
-                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
+                                <div className="h-2 w-16 sm:w-24 rounded-full bg-muted flex-shrink-0">
                                   <div
                                     className="h-2 rounded-full bg-yellow-400"
                                     style={{
@@ -316,7 +318,7 @@ export default function MyReviewsPage() {
                                 Workload
                               </span>
                               <div className="flex items-center gap-2 flex-1 justify-end">
-                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
+                                <div className="h-2 w-16 sm:w-24 rounded-full bg-muted flex-shrink-0">
                                   <div
                                     className="h-2 rounded-full bg-yellow-400"
                                     style={{
@@ -337,7 +339,7 @@ export default function MyReviewsPage() {
                                 Value
                               </span>
                               <div className="flex items-center gap-2 flex-1 justify-end">
-                                <div className="h-2 w-24 rounded-full bg-muted flex-shrink-0">
+                                <div className="h-2 w-16 sm:w-24 rounded-full bg-muted flex-shrink-0">
                                   <div
                                     className="h-2 rounded-full bg-yellow-400"
                                     style={{
