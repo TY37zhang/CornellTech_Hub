@@ -11,9 +11,9 @@ export function AnimatedToaster() {
         className: "toast",
         duration: 5000,
         style: {
-          background: "black",
-          color: "rgb(229 229 229)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "hsl(var(--background))",
+          color: "hsl(var(--foreground))",
+          border: "1px solid hsl(var(--border))",
           borderRadius: "0",
           boxShadow: "none",
         },
@@ -28,7 +28,7 @@ export const Toast = ({ children, ...props }) => (
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
     transition={{ duration: 0.2, ease: "easeOut" }}
-    className="bg-black text-neutral-200 border border-white/[0.08] rounded-none p-4"
+    className="bg-background text-foreground border border-border rounded-none p-4"
     {...props}
   >
     {children}

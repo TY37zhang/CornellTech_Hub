@@ -334,7 +334,7 @@ export default function CourseDetailPage() {
           className={`h-4 w-4 ${
             i <= Math.floor(rating)
               ? "fill-yellow-400 text-yellow-400"
-              : "fill-muted text-neutral-700"
+              : "fill-muted text-t4"
           }`}
         />,
       );
@@ -574,19 +574,19 @@ export default function CourseDetailPage() {
             <TabsList className="flex h-10 items-center gap-6 justify-center rounded-none border-b bg-transparent p-0 w-full">
               <TabsTrigger
                 value="reviews"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-t1 data-[state=active]:font-semibold text-t3 hover:text-t1 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Reviews
               </TabsTrigger>
               <TabsTrigger
                 value="overview"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-t1 data-[state=active]:font-semibold text-t3 hover:text-t1 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger
                 value="syllabus"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-t1 data-[state=active]:font-semibold text-t3 hover:text-t1 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Syllabus
               </TabsTrigger>
@@ -609,7 +609,7 @@ export default function CourseDetailPage() {
                       {/* Desktop: Full button with text */}
                       <Button
                         onClick={handleWriteReview}
-                        className="!hidden md:!flex bg-white text-black hover:bg-neutral-200"
+                        className="!hidden md:!flex bg-cta text-cta hover:bg-cta-hover"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Write a Review
@@ -618,7 +618,7 @@ export default function CourseDetailPage() {
                       <Button
                         onClick={handleWriteReview}
                         size="icon"
-                        className="md:!hidden bg-white text-black hover:bg-neutral-200 !h-8 !w-8"
+                        className="md:!hidden bg-cta text-cta hover:bg-cta-hover !h-8 !w-8"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

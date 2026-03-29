@@ -375,12 +375,12 @@ export default function NewReviewPage() {
                         autoComplete="off"
                       />
                       {searchResults.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-neutral-950 border border-white/[0.08] rounded-lg shadow-lg z-50">
+                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-surface-raised border border-strong rounded-lg shadow-lg z-50">
                           {searchResults.map((course) => (
                             <div
                               key={course.id}
                               onClick={() => handleSelectCourse(course)}
-                              className="flex items-center p-3 hover:bg-white/[0.04] transition-colors cursor-pointer text-neutral-200"
+                              className="flex items-center p-3 hover:bg-surface-active transition-colors cursor-pointer text-t1"
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium">
@@ -404,7 +404,7 @@ export default function NewReviewPage() {
                                   </Badge>
                                   <Badge
                                     variant="outline"
-                                    className="text-xs border-white/[0.08]"
+                                    className="text-xs border-strong"
                                   >
                                     {course.credits} credits
                                   </Badge>
@@ -700,7 +700,7 @@ export default function NewReviewPage() {
               <CardFooter>
                 <Button
                   type="submit"
-                  className="w-full bg-white text-black hover:bg-neutral-200"
+                  className="w-full bg-cta text-cta hover:bg-cta-hover"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Review"}

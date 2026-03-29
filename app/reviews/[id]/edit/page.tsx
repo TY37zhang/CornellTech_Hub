@@ -230,9 +230,7 @@ export default function EditReviewPage({
             <CardTitle>Edit Course Review</CardTitle>
             <CardDescription>
               Update your review for{" "}
-              <span className="font-bold text-neutral-200">
-                {formData.courseName}
-              </span>
+              <span className="font-bold text-t1">{formData.courseName}</span>
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -487,7 +485,7 @@ export default function EditReviewPage({
             <CardFooter>
               <Button
                 type="submit"
-                className="w-full bg-white text-black hover:bg-neutral-200"
+                className="w-full bg-cta text-cta hover:bg-cta-hover"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Updating..." : "Update Review"}

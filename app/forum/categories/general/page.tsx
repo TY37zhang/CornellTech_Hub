@@ -237,7 +237,7 @@ export default function GeneralCategoryPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold tracking-tight">Discussions</h2>
               <Link href="/forum/create">
-                <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
+                <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover">
                   <PlusCircle className="h-4 w-4" />
                   <span>New Thread</span>
                 </Button>
@@ -350,7 +350,7 @@ export default function GeneralCategoryPage() {
                 </p>
               </div>
               <Link href="/forum/create">
-                <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
+                <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover">
                   <PlusCircle className="h-4 w-4" />
                   <span>Create New Thread</span>
                 </Button>

@@ -61,7 +61,7 @@ export default function SignIn() {
             <button
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading}
-              className="flex items-center justify-center gap-3 px-6 py-3 mx-auto bg-white/[0.05] border border-white/[0.08] rounded-lg text-neutral-200 hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm"
+              className="flex items-center justify-center gap-3 px-6 py-3 mx-auto bg-surface-active border border-strong rounded-lg text-t1 hover:bg-surface-active disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm"
             >
               <svg
                 className="w-[18px] h-[18px]"

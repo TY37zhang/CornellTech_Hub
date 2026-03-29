@@ -350,7 +350,7 @@ export default function ReviewReplies({
                           setReplyContent("");
                         }}
                         size="sm"
-                        className="hover:bg-white/[0.04]"
+                        className="hover:bg-surface-active"
                       >
                         Cancel
                       </Button>

@@ -27,7 +27,7 @@ const badgeVariants = cva(
           "border-none bg-green-500/10 text-green-400 hover:bg-green-500/15",
         general:
           "border-none bg-orange-500/10 text-orange-400 hover:bg-orange-500/15",
-        tag: "border border-white/[0.08] bg-white/[0.05] text-neutral-400 hover:bg-white/[0.08]",
+        tag: "border border-strong bg-surface-active text-t2 hover:bg-surface-active",
         // Department badges with dark styling
         arch: "border-none bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/15",
         cee: "border-none bg-lime-500/10 text-lime-400 hover:bg-lime-500/15",

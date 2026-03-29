@@ -238,7 +238,7 @@ export default function AcademicsPage() {
                   </SelectContent>
                 </Select>
                 <Link href="/forum/create">
-                  <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
+                  <Button className="gap-2 bg-cta text-cta hover:bg-cta-hover">
                     <PlusCircle className="h-4 w-4" />
                     New Discussion
                   </Button>

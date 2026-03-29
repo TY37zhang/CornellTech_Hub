@@ -108,13 +108,13 @@ export function SiteHeader() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="relative flex h-7 w-7 items-center justify-center outline-none">
-                  <Avatar className="h-6 w-6">
+                <button className="relative flex h-6 w-6 items-center justify-center outline-none">
+                  <Avatar className="h-5 w-5">
                     <AvatarImage
                       src={session.user?.image || ""}
                       alt={session.user?.name || ""}
                     />
-                    <AvatarFallback className="text-[10px] text-t3 bg-surface-active border border-strong">
+                    <AvatarFallback className="text-[9px] text-t3 bg-surface-active border border-strong">
                       {session.user?.name?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -135,12 +135,12 @@ export function SiteHeader() {
                     </p>
                   </div>
                 </div>
-                <DropdownMenuSeparator className="border-subtle" />
+                <DropdownMenuSeparator className="bg-border" />
                 {isAdmin(session.user) && (
                   <DropdownMenuItem asChild>
                     <Link
                       href="/admin"
-                      className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                      className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                     >
                       <UserCog className="mr-2 h-3.5 w-3.5" />
                       Admin Panel
@@ -151,7 +151,7 @@ export function SiteHeader() {
                   <DropdownMenuItem asChild>
                     <Link
                       href="/admin/moderation"
-                      className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                      className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                     >
                       <Shield className="mr-2 h-3.5 w-3.5" />
                       Moderation
@@ -159,12 +159,12 @@ export function SiteHeader() {
                   </DropdownMenuItem>
                 )}
                 {(isAdmin(session.user) || isMod(session.user)) && (
-                  <DropdownMenuSeparator className="border-subtle" />
+                  <DropdownMenuSeparator className="bg-border" />
                 )}
                 <DropdownMenuItem asChild>
                   <Link
                     href="/user/posts"
-                    className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                    className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                   >
                     <FileText className="mr-2 h-3.5 w-3.5" />
                     My Posts
@@ -173,7 +173,7 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link
                     href="/forum/saved"
-                    className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                    className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                   >
                     <BookmarkPlus className="mr-2 h-3.5 w-3.5" />
                     Saved Posts
@@ -182,17 +182,17 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link
                     href="/my-reviews"
-                    className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                    className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                   >
                     <FileText className="mr-2 h-3.5 w-3.5" />
                     My Reviews
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="border-subtle" />
+                <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuItem asChild>
                   <Link
                     href="/settings"
-                    className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                    className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                   >
                     <Settings className="mr-2 h-3.5 w-3.5" />
                     Settings
@@ -201,16 +201,16 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link
                     href="/feedback"
-                    className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                    className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                   >
                     <MessageCircle className="mr-2 h-3.5 w-3.5" />
                     Feedback
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="border-subtle" />
+                <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuItem
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="flex items-center cursor-pointer text-t3 hover:!text-t1 font-mono text-xs"
+                  className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
                 >
                   {theme === "dark" ? (
                     <Sun className="mr-2 h-3.5 w-3.5" />
@@ -219,7 +219,7 @@ export function SiteHeader() {
                   )}
                   {theme === "dark" ? "Light mode" : "Dark mode"}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="border-subtle" />
+                <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuItem
                   onClick={() => signOut()}
                   className="flex items-center cursor-pointer text-red-500 focus:text-red-400 font-mono text-xs"

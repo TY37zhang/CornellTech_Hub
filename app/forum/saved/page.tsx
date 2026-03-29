@@ -259,8 +259,8 @@ export default function SavedPostsPage() {
               <div>
                 Are you sure you want to remove this post from your saved posts?
               </div>
-              <div className="p-3 bg-white/[0.03] rounded-lg border-l-4 border-red-500/20">
-                <p className="font-medium text-neutral-200 text-sm leading-relaxed">
+              <div className="p-3 bg-surface-hover rounded-lg border-l-4 border-red-500/20">
+                <p className="font-medium text-t1 text-sm leading-relaxed">
                   {confirmDialog.postTitle}
                 </p>
               </div>

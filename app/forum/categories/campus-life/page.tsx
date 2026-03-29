@@ -252,7 +252,7 @@ export default function CampusLifeCategoryPage() {
                   </SelectContent>
                 </Select>
                 <Link href="/forum/create">
-                  <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
+                  <Button className="gap-2 bg-cta text-cta hover:bg-cta-hover">
                     <PlusCircle className="h-4 w-4" />
                     New Discussion
                   </Button>
@@ -369,7 +369,7 @@ export default function CampusLifeCategoryPage() {
                 </p>
               </div>
               <Link href="/forum/create">
-                <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
+                <Button className="gap-1 bg-cta text-cta hover:bg-cta-hover">
                   <PlusCircle className="h-4 w-4" />
                   <span>Create New Thread</span>
                 </Button>

@@ -203,7 +203,7 @@ function CoursesClient({ initialCourses, initialTotal }: Props) {
           className={`h-4 w-4 ${
             i <= Math.floor(rating)
               ? "fill-yellow-400 text-yellow-400"
-              : "fill-neutral-800 text-neutral-700"
+              : "fill-muted text-t4"
           }`}
         />,
       );

@@ -368,7 +368,7 @@ export default function CreateThreadPage() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="bg-white text-black hover:bg-neutral-200"
+                    className="bg-cta text-cta hover:bg-cta-hover"
                   >
                     {isLoading ? "Creating..." : "Create Thread"}
                   </Button>

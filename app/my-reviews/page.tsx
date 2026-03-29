@@ -210,7 +210,7 @@ export default function MyReviewsPage() {
             </TabsList>
             <TabsContent value={activeTab} className="mt-6">
               {filteredReviews.length === 0 ? (
-                <div className="text-center text-neutral-500">
+                <div className="text-center text-t3">
                   {reviews.length === 0
                     ? "You haven't written any reviews yet."
                     : "No reviews found in this category."}
@@ -277,7 +277,7 @@ export default function MyReviewsPage() {
                                 className={`h-4 w-4 ${
                                   i < Math.round(review.rating)
                                     ? "fill-yellow-400 text-yellow-400"
-                                    : "text-neutral-700"
+                                    : "text-t4"
                                 }`}
                               />
                             ))}
