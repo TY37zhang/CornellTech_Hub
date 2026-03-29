@@ -1646,7 +1646,7 @@ export default function PlannerPage() {
               </div>
               <div
                 id="additional-questions-content"
-                className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalQuestions ? "block" : "hidden"} md:block`}
+                className={`px-4 pt-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalQuestions ? "block" : "hidden"} md:block`}
               >
                 <AdditionalQuestions
                   onEthicsCourseChange={handleEthicsCourseChange}
@@ -1709,7 +1709,7 @@ export default function PlannerPage() {
                 </div>
                 <div
                   id="additional-requirements-content"
-                  className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
+                  className={`px-4 pt-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
                 >
                   <div className="space-y-3">
                     <ul className="text-sm text-t3 space-y-2">

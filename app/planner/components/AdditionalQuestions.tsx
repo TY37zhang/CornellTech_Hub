@@ -635,9 +635,9 @@ export default function AdditionalQuestions({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Ethics Course Question */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <Checkbox
             id="ethics"
@@ -652,7 +652,7 @@ export default function AdditionalQuestions({
           </label>
         </div>
         {tookEthics && (
-          <div className="pl-6 space-y-2">
+          <div className="pl-6 space-y-3">
             <label className="text-sm font-medium">
               Which course did you take?
             </label>
@@ -690,7 +690,7 @@ export default function AdditionalQuestions({
       </div>
 
       {/* Techie 5901 Question */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <Checkbox
             id="techie5901"
@@ -705,7 +705,7 @@ export default function AdditionalQuestions({
           </label>
         </div>
         {tookTechie5901 && (
-          <div className="pl-6 space-y-2">
+          <div className="pl-6 space-y-3">
             <label className="text-sm font-medium">
               Which course is your anchor course?
             </label>
@@ -746,7 +746,7 @@ export default function AdditionalQuestions({
       </div>
 
       {/* Credit Transfer Section */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Checkbox
