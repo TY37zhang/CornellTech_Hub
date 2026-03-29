@@ -180,7 +180,7 @@ export default function CreateThreadPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export default function CreateThreadPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-black text-white hover:bg-gray-800"
+                  className="bg-white text-black hover:bg-neutral-200"
                 >
                   {isLoading ? "Creating..." : "Create Thread"}
                 </Button>

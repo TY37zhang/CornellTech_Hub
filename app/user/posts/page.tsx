@@ -32,12 +32,13 @@ import { toast } from "sonner";
 // Helper function to get category color
 function getCategoryColor(category: string): string {
   const colors: { [key: string]: string } = {
-    Academics: "bg-red-100 text-red-800 hover:bg-red-100",
-    Career: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-    "Campus Life": "bg-purple-100 text-purple-800 hover:bg-purple-100",
-    Technology: "bg-green-100 text-green-800 hover:bg-green-100",
-    Events: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-    General: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+    Academics: "bg-red-500/10 text-red-400 border border-red-500/20",
+    Career: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    "Campus Life":
+      "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+    Technology: "bg-green-500/10 text-green-400 border border-green-500/20",
+    Events: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    General: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
   };
   return colors[category] || colors.General;
 }
@@ -118,7 +119,7 @@ export default function UserPostsPage() {
   if (status === "loading" || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       </div>
     );
   }
@@ -127,7 +128,7 @@ export default function UserPostsPage() {
     return (
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">
-          <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+          <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
             <div className="w-full px-4 md:px-6 lg:px-8">
               <div className="flex flex-col items-center justify-center text-center">
                 <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>
@@ -159,7 +160,7 @@ export default function UserPostsPage() {
     return (
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">
-          <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+          <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
             <div className="w-full px-4 md:px-6 lg:px-8">
               <div className="flex flex-col items-center justify-center text-center">
                 <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>
@@ -186,7 +187,7 @@ export default function UserPostsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">My Posts</h1>

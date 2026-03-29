@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-background">
       <div className="container max-w-4xl pt-24 pb-8 px-4 mx-auto">
         <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
-        <div className="prose prose-gray">
+        <div className="prose prose-gray prose-invert">
           <p className="text-muted-foreground mb-4">
             Last updated: {new Date().toLocaleDateString()}
           </p>

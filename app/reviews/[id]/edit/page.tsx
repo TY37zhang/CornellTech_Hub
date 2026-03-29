@@ -201,7 +201,7 @@ export default function EditReviewPage({
       <div className="min-h-screen bg-background">
         <div className="container max-w-2xl pt-24 pb-10 mx-auto">
           <div className="flex justify-center items-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           </div>
         </div>
       </div>
@@ -230,7 +230,7 @@ export default function EditReviewPage({
             <CardTitle>Edit Course Review</CardTitle>
             <CardDescription>
               Update your review for{" "}
-              <span className="font-bold text-black">
+              <span className="font-bold text-neutral-200">
                 {formData.courseName}
               </span>
             </CardDescription>
@@ -487,7 +487,7 @@ export default function EditReviewPage({
             <CardFooter>
               <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-gray-800"
+                className="w-full bg-white text-black hover:bg-neutral-200"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Updating..." : "Update Review"}

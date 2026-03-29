@@ -36,7 +36,7 @@ import { getForumPostsByCategory } from "../../actions";
 
 // Helper function to get category color
 function getCategoryColor(category: string): string {
-  return "bg-orange-100 text-orange-800 hover:bg-orange-100";
+  return "bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/10";
 }
 
 // Helper function to format date
@@ -182,7 +182,7 @@ export default function GeneralCategoryPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
           <p className="mt-4 text-lg">Loading general discussions...</p>
         </div>
       </div>
@@ -192,7 +192,7 @@ export default function GeneralCategoryPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16 bg-gradient-to-b from-orange-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
@@ -236,7 +236,7 @@ export default function GeneralCategoryPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold tracking-tight">Discussions</h2>
             <Link href="/forum/create">
-              <Button className="gap-1 bg-black text-white hover:bg-gray-800">
+              <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
                 <PlusCircle className="h-4 w-4" />
                 <span>New Thread</span>
               </Button>
@@ -345,7 +345,7 @@ export default function GeneralCategoryPage() {
               </p>
             </div>
             <Link href="/forum/create">
-              <Button className="gap-1 bg-black text-white hover:bg-gray-800">
+              <Button className="gap-1 bg-white text-black hover:bg-neutral-200">
                 <PlusCircle className="h-4 w-4" />
                 <span>Create New Thread</span>
               </Button>

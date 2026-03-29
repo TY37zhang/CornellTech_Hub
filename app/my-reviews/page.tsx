@@ -52,22 +52,22 @@ interface Review {
 // Helper function to get category color
 function getCategoryColor(category: string | undefined): string {
   if (!category) {
-    return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    return "bg-gray-500/10 text-gray-400 border border-gray-500/20";
   }
   const colors: { [key: string]: string } = {
-    CEEE: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-    CS: "bg-red-100 text-red-800 hover:bg-red-100",
-    ECE: "bg-green-100 text-green-800 hover:bg-green-100",
-    HADM: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-    INFO: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-    LAW: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
-    ORIE: "bg-pink-100 text-pink-800 hover:bg-pink-100",
-    TECH: "bg-orange-100 text-orange-800 hover:bg-orange-100",
-    TECHIE: "bg-teal-100 text-teal-800 hover:bg-teal-100",
+    CEEE: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    CS: "bg-red-500/10 text-red-400 border border-red-500/20",
+    ECE: "bg-green-500/10 text-green-400 border border-green-500/20",
+    HADM: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    INFO: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+    LAW: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+    ORIE: "bg-pink-500/10 text-pink-400 border border-pink-500/20",
+    TECH: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+    TECHIE: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
   };
   return (
     colors[category.toUpperCase()] ||
-    "bg-gray-100 text-gray-800 hover:bg-gray-100"
+    "bg-gray-500/10 text-gray-400 border border-gray-500/20"
   );
 }
 
@@ -161,7 +161,7 @@ export default function MyReviewsPage() {
     return (
       <div className="container mx-auto pt-24 px-4 pb-4">
         <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export default function MyReviewsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">My Reviews</h1>
@@ -210,7 +210,7 @@ export default function MyReviewsPage() {
             </TabsList>
             <TabsContent value={activeTab} className="mt-6">
               {filteredReviews.length === 0 ? (
-                <div className="text-center text-gray-500">
+                <div className="text-center text-neutral-500">
                   {reviews.length === 0
                     ? "You haven't written any reviews yet."
                     : "No reviews found in this category."}
@@ -277,7 +277,7 @@ export default function MyReviewsPage() {
                                 className={`h-4 w-4 ${
                                   i < Math.round(review.rating)
                                     ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-300"
+                                    : "text-neutral-700"
                                 }`}
                               />
                             ))}
@@ -378,7 +378,7 @@ export default function MyReviewsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => setReviewToDelete(review.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-500/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -34,7 +34,7 @@ import { getForumPostsByCategory } from "../../actions";
 
 // Helper function to get category color
 function getCategoryColor(category: string): string {
-  return "bg-red-100 text-red-800 hover:bg-red-100";
+  return "bg-red-500/10 text-red-400 border border-red-500/20";
 }
 
 // Helper function to format date
@@ -168,7 +168,7 @@ export default function AcademicsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
           <p className="mt-4 text-lg">Loading academic discussions...</p>
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function AcademicsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-24 lg:pb-16">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
@@ -237,7 +237,7 @@ export default function AcademicsPage() {
                 </SelectContent>
               </Select>
               <Link href="/forum/create">
-                <Button className="gap-2 bg-black text-white hover:bg-gray-800">
+                <Button className="gap-2 bg-white text-black hover:bg-neutral-200">
                   <PlusCircle className="h-4 w-4" />
                   New Discussion
                 </Button>
@@ -319,7 +319,7 @@ export default function AcademicsPage() {
                           {thread.isNew && (
                             <Badge
                               variant="secondary"
-                              className="bg-yellow-100 text-yellow-800"
+                              className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
                             >
                               New
                             </Badge>

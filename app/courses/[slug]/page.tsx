@@ -108,32 +108,34 @@ interface Course {
 // Helper function to get category color
 function getCategoryColor(category: string): string {
   const colors: { [key: string]: string } = {
-    ceee: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-    cs: "bg-red-100 text-red-800 hover:bg-red-100",
-    ece: "bg-green-100 text-green-800 hover:bg-green-100",
-    hadm: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-    info: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-    law: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
-    orie: "bg-pink-100 text-pink-800 hover:bg-pink-100",
-    tech: "bg-orange-100 text-orange-800 hover:bg-orange-100",
-    techie: "bg-teal-100 text-teal-800 hover:bg-teal-100",
-    arch: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100",
-    cee: "bg-lime-100 text-lime-800 hover:bg-lime-100",
-    cmbp: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100",
-    cmpb: "bg-amber-100 text-amber-800 hover:bg-amber-100",
-    ctiv: "bg-rose-100 text-rose-800 hover:bg-rose-100",
-    design: "bg-violet-100 text-violet-800 hover:bg-violet-100",
-    hbds: "bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-100",
-    hinf: "bg-sky-100 text-sky-800 hover:bg-sky-100",
-    hpec: "bg-amber-100 text-amber-800 hover:bg-amber-100",
-    iamp: "bg-rose-100 text-rose-800 hover:bg-rose-100",
-    nba: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
-    nbay: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-    pbsb: "bg-green-100 text-green-800 hover:bg-green-100",
-    phar: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-    tpcm: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+    ceee: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    cs: "bg-red-500/10 text-red-400 border border-red-500/20",
+    ece: "bg-green-500/10 text-green-400 border border-green-500/20",
+    hadm: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    info: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+    law: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+    orie: "bg-pink-500/10 text-pink-400 border border-pink-500/20",
+    tech: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+    techie: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+    arch: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
+    cee: "bg-lime-500/10 text-lime-400 border border-lime-500/20",
+    cmbp: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    cmpb: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    ctiv: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+    design: "bg-violet-500/10 text-violet-400 border border-violet-500/20",
+    hbds: "bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20",
+    hinf: "bg-sky-500/10 text-sky-400 border border-sky-500/20",
+    hpec: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    iamp: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+    nba: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+    nbay: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    pbsb: "bg-green-500/10 text-green-400 border border-green-500/20",
+    phar: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+    tpcm: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
   };
-  return colors[category] || "bg-gray-100 text-gray-800 hover:bg-gray-100";
+  return (
+    colors[category] || "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+  );
 }
 
 // Add helper function for relative time
@@ -332,7 +334,7 @@ export default function CourseDetailPage() {
           className={`h-4 w-4 ${
             i <= Math.floor(rating)
               ? "fill-yellow-400 text-yellow-400"
-              : "fill-muted text-muted-foreground"
+              : "fill-muted text-neutral-700"
           }`}
         />,
       );
@@ -425,7 +427,7 @@ export default function CourseDetailPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col gap-4">
               <div className="w-full">
@@ -572,19 +574,19 @@ export default function CourseDetailPage() {
             <TabsList className="flex h-10 items-center gap-6 justify-center rounded-none border-b bg-transparent p-0 w-full">
               <TabsTrigger
                 value="reviews"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Reviews
               </TabsTrigger>
               <TabsTrigger
                 value="overview"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger
                 value="syllabus"
-                className="relative px-4 pb-2 text-base data-[state=active]:text-gray-900 data-[state=active]:font-semibold text-gray-500 hover:text-gray-700 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
+                className="relative px-4 pb-2 text-base data-[state=active]:text-neutral-200 data-[state=active]:font-semibold text-neutral-500 hover:text-neutral-200 !rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neutral-200 data-[state=active]:mb-[-1px] data-[state=active]:z-10 [&>*]:!rounded-none before:!rounded-none after:!rounded-none"
               >
                 Syllabus
               </TabsTrigger>
@@ -607,7 +609,7 @@ export default function CourseDetailPage() {
                       {/* Desktop: Full button with text */}
                       <Button
                         onClick={handleWriteReview}
-                        className="!hidden md:!flex bg-black text-white hover:bg-gray-800"
+                        className="!hidden md:!flex bg-white text-black hover:bg-neutral-200"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Write a Review
@@ -616,7 +618,7 @@ export default function CourseDetailPage() {
                       <Button
                         onClick={handleWriteReview}
                         size="icon"
-                        className="md:!hidden bg-black text-white hover:bg-gray-800 !h-8 !w-8"
+                        className="md:!hidden bg-white text-black hover:bg-neutral-200 !h-8 !w-8"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Edit, Trash2, MessageSquare, Send } from 'lucide-react';
-import { toast } from 'sonner';
-import { isFaculty, isStaff, getRoleDisplayName } from '@/lib/roles';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Edit, Trash2, MessageSquare, Send } from "lucide-react";
+import { toast } from "sonner";
+import { isFaculty, isStaff, getRoleDisplayName } from "@/lib/roles";
 
 interface Reply {
   id: string;
@@ -30,18 +30,23 @@ interface ReviewRepliesProps {
   className?: string;
 }
 
-export default function ReviewReplies({ reviewId, className = "" }: ReviewRepliesProps) {
+export default function ReviewReplies({
+  reviewId,
+  className = "",
+}: ReviewRepliesProps) {
   const { data: session } = useSession();
   const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
+  const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContent] = useState("");
 
   // Check if current user is faculty or staff
-  const canReply = session?.user?.role && (isFaculty(session.user.role) || isStaff(session.user.role));
+  const canReply =
+    session?.user?.role &&
+    (isFaculty(session.user.role) || isStaff(session.user.role));
 
   const fetchReplies = async () => {
     try {
@@ -50,10 +55,10 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
         const data = await response.json();
         setReplies(data.replies || []);
       } else {
-        console.error('Failed to fetch replies');
+        console.error("Failed to fetch replies");
       }
     } catch (error) {
-      console.error('Error fetching replies:', error);
+      console.error("Error fetching replies:", error);
     } finally {
       setLoading(false);
     }
@@ -65,16 +70,16 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) {
-      toast.error('Please enter a reply');
+      toast.error("Please enter a reply");
       return;
     }
 
     setSubmitting(true);
     try {
       const response = await fetch(`/api/courses/reviews/${reviewId}/replies`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content: replyContent }),
       });
@@ -82,16 +87,16 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
       if (response.ok) {
         const data = await response.json();
         setReplies([...replies, data.reply]);
-        setReplyContent('');
+        setReplyContent("");
         setShowReplyForm(false);
-        toast.success('Reply posted successfully');
+        toast.success("Reply posted successfully");
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to post reply');
+        toast.error(error.error || "Failed to post reply");
       }
     } catch (error) {
-      console.error('Error posting reply:', error);
-      toast.error('Failed to post reply');
+      console.error("Error posting reply:", error);
+      toast.error("Failed to post reply");
     } finally {
       setSubmitting(false);
     }
@@ -99,57 +104,57 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
 
   const handleEditReply = async (replyId: string) => {
     if (!editContent.trim()) {
-      toast.error('Please enter content');
+      toast.error("Please enter content");
       return;
     }
 
     try {
       const response = await fetch(`/api/courses/reviews/replies/${replyId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content: editContent }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setReplies(replies.map(reply => 
-          reply.id === replyId ? data.reply : reply
-        ));
+        setReplies(
+          replies.map((reply) => (reply.id === replyId ? data.reply : reply)),
+        );
         setEditingReplyId(null);
-        setEditContent('');
-        toast.success('Reply updated successfully');
+        setEditContent("");
+        toast.success("Reply updated successfully");
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to update reply');
+        toast.error(error.error || "Failed to update reply");
       }
     } catch (error) {
-      console.error('Error updating reply:', error);
-      toast.error('Failed to update reply');
+      console.error("Error updating reply:", error);
+      toast.error("Failed to update reply");
     }
   };
 
   const handleDeleteReply = async (replyId: string) => {
-    if (!confirm('Are you sure you want to delete this reply?')) {
+    if (!confirm("Are you sure you want to delete this reply?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/courses/reviews/replies/${replyId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        setReplies(replies.filter(reply => reply.id !== replyId));
-        toast.success('Reply deleted successfully');
+        setReplies(replies.filter((reply) => reply.id !== replyId));
+        toast.success("Reply deleted successfully");
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to delete reply');
+        toast.error(error.error || "Failed to delete reply");
       }
     } catch (error) {
-      console.error('Error deleting reply:', error);
-      toast.error('Failed to delete reply');
+      console.error("Error deleting reply:", error);
+      toast.error("Failed to delete reply");
     }
   };
 
@@ -160,28 +165,34 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
 
   const cancelEdit = () => {
     setEditingReplyId(null);
-    setEditContent('');
+    setEditContent("");
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getRoleBadge = (role: string) => {
     if (isFaculty(role)) {
       return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+        <Badge
+          variant="secondary"
+          className="bg-blue-500/10 text-blue-400 border-blue-500/20"
+        >
           Faculty
         </Badge>
       );
     }
     if (isStaff(role)) {
       return (
-        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+        <Badge
+          variant="secondary"
+          className="bg-green-500/10 text-green-400 border-green-500/20"
+        >
           Staff
         </Badge>
       );
@@ -190,7 +201,9 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
   };
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading replies...</div>;
+    return (
+      <div className="text-sm text-muted-foreground">Loading replies...</div>
+    );
   }
 
   return (
@@ -206,9 +219,12 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
             </h4>
             <div className="h-px bg-border flex-1" />
           </div>
-          
+
           {replies.map((reply) => (
-            <Card key={reply.id} className="bg-blue-50/30 border-blue-200/60 shadow-sm ml-4">
+            <Card
+              key={reply.id}
+              className="bg-blue-500/10 border-blue-500/20 shadow-sm ml-4"
+            >
               <CardHeader className="pb-2 pt-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
@@ -218,19 +234,17 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">
-                        {reply.users.name}
-                      </p>
+                      <p className="text-sm font-medium">{reply.users.name}</p>
                       {getRoleBadge(reply.users.role)}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">
                       {formatDate(reply.created_at)}
                       {reply.updated_at !== reply.created_at && " (edited)"}
                     </span>
-                    
+
                     {session?.user?.id === reply.users.id && (
                       <div className="flex gap-1">
                         <Button
@@ -254,7 +268,7 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="pt-0">
                 {editingReplyId === reply.id ? (
                   <div className="space-y-3">
@@ -272,11 +286,7 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
                       >
                         Save
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={cancelEdit}
-                      >
+                      <Button size="sm" variant="outline" onClick={cancelEdit}>
                         Cancel
                       </Button>
                     </div>
@@ -301,45 +311,46 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
               <div className="h-px bg-border flex-1" />
             </div>
           )}
-          
+
           {!showReplyForm ? (
             <div className="flex justify-start">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowReplyForm(true)}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors ml-4"
+                className="text-blue-400 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/30 transition-colors ml-4"
               >
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Reply as {isFaculty(session?.user?.role) ? 'Faculty' : 'Staff'}
+                Reply as {isFaculty(session?.user?.role) ? "Faculty" : "Staff"}
               </Button>
             </div>
           ) : (
             <div className="ml-4">
-              <Card className="border-blue-200/60 bg-blue-50/20 shadow-sm">
+              <Card className="border-blue-500/20 bg-blue-500/10 shadow-sm">
                 <CardContent className="px-6 py-5">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-blue-700 pt-2 pb-0">
+                    <div className="flex items-center gap-2 text-sm font-medium text-blue-400 pt-2 pb-0">
                       <MessageSquare className="h-4 w-4" />
-                      Replying as {isFaculty(session?.user?.role) ? 'Faculty' : 'Staff'}
+                      Replying as{" "}
+                      {isFaculty(session?.user?.role) ? "Faculty" : "Staff"}
                     </div>
-                    
+
                     <Textarea
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
                       placeholder="Write your faculty response to this review... Share insights about the course, address concerns, or provide additional context to help students."
-                      className="min-h-[120px] resize-none border-blue-200 focus:border-blue-400 bg-white"
+                      className="min-h-[120px] resize-none border-blue-500/20 focus:border-blue-400"
                     />
-                    
+
                     <div className="flex gap-2 justify-end">
                       <Button
                         variant="outline"
                         onClick={() => {
                           setShowReplyForm(false);
-                          setReplyContent('');
+                          setReplyContent("");
                         }}
                         size="sm"
-                        className="hover:bg-gray-100"
+                        className="hover:bg-white/[0.04]"
                       >
                         Cancel
                       </Button>
@@ -369,7 +380,6 @@ export default function ReviewReplies({ reviewId, className = "" }: ReviewReplie
           )}
         </div>
       )}
-
     </div>
   );
 }

@@ -484,7 +484,7 @@ export default function ThreadContent({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8 overflow-hidden">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
@@ -501,7 +501,7 @@ export default function ThreadContent({
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                  <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     {threadData.category}
                   </Badge>
                 </div>
@@ -678,7 +678,7 @@ export default function ThreadContent({
 
                 {isLoading ? (
                   <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                   </div>
                 ) : (
                   <div className="space-y-2">

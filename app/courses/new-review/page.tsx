@@ -283,7 +283,7 @@ export default function NewReviewPage() {
         <div className="w-full px-4 md:px-6 lg:px-8 pt-24 pb-10">
           <div className="max-w-2xl mx-auto">
             <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
               <p>Loading...</p>
             </div>
           </div>
@@ -381,12 +381,12 @@ export default function NewReviewPage() {
                         autoComplete="off"
                       />
                       {searchResults.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded-lg shadow-lg z-50">
+                        <div className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-auto bg-neutral-950 border border-white/[0.08] rounded-lg shadow-lg z-50">
                           {searchResults.map((course) => (
                             <div
                               key={course.id}
                               onClick={() => handleSelectCourse(course)}
-                              className="flex items-center p-3 hover:bg-gray-100 transition-colors cursor-pointer text-gray-900"
+                              className="flex items-center p-3 hover:bg-white/[0.04] transition-colors cursor-pointer text-neutral-200"
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium">
@@ -410,7 +410,7 @@ export default function NewReviewPage() {
                                   </Badge>
                                   <Badge
                                     variant="outline"
-                                    className="text-xs border-gray-300"
+                                    className="text-xs border-white/[0.08]"
                                   >
                                     {course.credits} credits
                                   </Badge>
@@ -706,7 +706,7 @@ export default function NewReviewPage() {
               <CardFooter>
                 <Button
                   type="submit"
-                  className="w-full bg-black text-white hover:bg-gray-800"
+                  className="w-full bg-white text-black hover:bg-neutral-200"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Review"}

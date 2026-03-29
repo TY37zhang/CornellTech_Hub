@@ -128,7 +128,7 @@ export default function SavedPostsPage() {
   if (status === "loading" || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       </div>
     );
   }
@@ -136,7 +136,7 @@ export default function SavedPostsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">
-        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12 bg-gradient-to-b from-pink-50 to-white">
+        <section className="w-full pt-24 pb-12 md:pb-16 lg:pb-12">
           <div className="w-full px-4 md:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-4xl font-bold tracking-tight">Saved Posts</h1>
@@ -191,7 +191,7 @@ export default function SavedPostsPage() {
                               showConfirmDialog(post.id, post.title, e)
                             }
                             disabled={unsavingPosts.has(post.id)}
-                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                            className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600"
                             title="Remove from saved posts"
                           >
                             {unsavingPosts.has(post.id) ? (
@@ -255,8 +255,8 @@ export default function SavedPostsPage() {
               <div>
                 Are you sure you want to remove this post from your saved posts?
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg border-l-4 border-red-200">
-                <p className="font-medium text-gray-900 text-sm leading-relaxed">
+              <div className="p-3 bg-white/[0.03] rounded-lg border-l-4 border-red-500/20">
+                <p className="font-medium text-neutral-200 text-sm leading-relaxed">
                   {confirmDialog.postTitle}
                 </p>
               </div>
