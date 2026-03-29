@@ -122,7 +122,8 @@ export function SiteHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                sideOffset={12}
+                alignOffset={-6}
+                sideOffset={8}
                 className="w-56 bg-surface border-strong shadow-[0_8px_40px_-12px_rgba(0,0,0,0.8)]"
               >
                 <div className="flex items-center gap-2 p-2">
