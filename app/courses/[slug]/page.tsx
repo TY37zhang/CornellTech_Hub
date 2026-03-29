@@ -444,7 +444,7 @@ export default function CourseDetailPage() {
               <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center">
                       {departmentBadges}
                     </div>
                     <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -463,7 +463,7 @@ export default function CourseDetailPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center">
+                      <div className="flex flex-wrap items-center">
                         <BookOpen className="h-4 w-4 mr-2" />
                         <span>
                           {course.codes && course.codes.length > 1
@@ -722,7 +722,7 @@ export default function CourseDetailPage() {
                             {review.content}
                           </p>
                         </CardContent>
-                        <CardFooter className="flex items-center justify-between pt-2">
+                        <CardFooter className="flex flex-wrap items-center justify-between gap-2 pt-2">
                           <div className="grid grid-cols-2 gap-y-1 gap-x-4 text-sm md:flex md:flex-row md:flex-wrap md:items-center md:gap-x-6 md:gap-y-1">
                             <div>
                               <span className="font-semibold">Difficulty:</span>

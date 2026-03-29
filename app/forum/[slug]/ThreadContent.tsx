@@ -664,7 +664,7 @@ export default function ThreadContent({
                         onValueChange={handleSort}
                         disabled={isLoading}
                       >
-                        <SelectTrigger className="w-[140px] sm:w-[140px] w-full min-w-0">
+                        <SelectTrigger className="w-full sm:w-[140px] min-w-0">
                           <SelectValue placeholder="Sort by..." />
                         </SelectTrigger>
                         <SelectContent align="end">

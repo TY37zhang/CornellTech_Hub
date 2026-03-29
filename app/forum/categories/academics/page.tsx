@@ -221,13 +221,13 @@ export default function AcademicsPage() {
 
         <section className="w-full py-6">
           <div className="mx-auto max-w-[980px] px-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-2xl font-bold tracking-tight">
                 Academic Discussions
               </h2>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -291,7 +291,7 @@ export default function AcademicsPage() {
                       </CardHeader>
                       <CardFooter className="p-4 pt-0">
                         <div className="flex flex-col gap-4">
-                          <div className="flex items-center gap-4">
+                          <div className="flex flex-wrap items-center gap-4">
                             {thread.tags.map((tag) => (
                               <Badge
                                 key={tag}

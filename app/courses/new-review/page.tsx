@@ -417,7 +417,7 @@ export default function NewReviewPage() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">
                           Selected Course:
                         </span>

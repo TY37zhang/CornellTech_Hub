@@ -1452,11 +1452,11 @@ export default function PlannerPage() {
         <div className="w-full bg-surface">
           <div className="mx-auto max-w-[980px] px-6">
             <div className="text-center py-12">
-              <div className="h-12 bg-surface-active w-64 mx-auto mb-4 animate-pulse"></div>
-              <div className="h-6 bg-surface-active w-96 mx-auto animate-pulse"></div>
+              <div className="h-12 bg-surface-active w-full max-w-64 mx-auto mb-4 animate-pulse"></div>
+              <div className="h-6 bg-surface-active w-full max-w-96 mx-auto animate-pulse"></div>
             </div>
             <div className="text-center mb-8">
-              <div className="h-8 bg-surface-active w-80 mx-auto animate-pulse"></div>
+              <div className="h-8 bg-surface-active w-full max-w-80 mx-auto animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -1561,7 +1561,7 @@ export default function PlannerPage() {
       />
 
       {/* Main Content */}
-      <div className="mx-auto max-w-[980px] px-6 py-12 space-y-8">
+      <div className="mx-auto max-w-[980px] px-3 sm:px-6 py-12 space-y-8">
         <HelpSection
           showHelp={showHelp}
           showHelpModal={showHelpModal}
@@ -1646,7 +1646,7 @@ export default function PlannerPage() {
               </div>
               <div
                 id="additional-questions-content"
-                className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalQuestions ? "block" : "hidden"} md:block`}
+                className={`px-4 pt-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalQuestions ? "block" : "hidden"} md:block`}
               >
                 <AdditionalQuestions
                   onEthicsCourseChange={handleEthicsCourseChange}
@@ -1709,7 +1709,7 @@ export default function PlannerPage() {
                 </div>
                 <div
                   id="additional-requirements-content"
-                  className={`px-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
+                  className={`px-4 pt-4 pb-4 transition-all duration-300 overflow-hidden ${expandedAdditionalRequirements ? "block" : "hidden"} md:block`}
                 >
                   <div className="space-y-3">
                     <ul className="text-sm text-t3 space-y-2">
@@ -1730,7 +1730,7 @@ export default function PlannerPage() {
           {/* Right Column - Course Search and Management */}
           <div className="md:col-span-8 space-y-6">
             {/* Search Section */}
-            <div className="border border-subtle p-6">
+            <div className="border border-subtle p-3 sm:p-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <Search className="h-5 w-5 text-t4" />

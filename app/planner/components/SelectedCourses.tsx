@@ -85,7 +85,7 @@ export default function SelectedCourses({
   }, [showTakenCourses, isDemoMode]);
 
   return (
-    <Card className="p-6 w-full">
+    <Card className="p-3 sm:p-6 w-full overflow-hidden">
       <div className="space-y-4">
         {/* Header Row */}
         <div className="flex items-center justify-between">

@@ -416,7 +416,7 @@ function ForumClient({
     if (!document.getElementById(id)) {
       const styleSheet = document.createElement("style");
       styleSheet.id = id;
-      styleSheet.textContent = `@media (max-width: 900px){.truncate-title{max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a3a3a3;}}`;
+      styleSheet.textContent = `@media (max-width: 900px){.truncate-title{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;color:#a3a3a3;}}`;
       document.head.appendChild(styleSheet);
     }
   }
@@ -473,7 +473,7 @@ function ForumClient({
                     {isMobile ? (
                       <div className="flex items-center">
                         <Select value={activeTab} onValueChange={setActiveTab}>
-                          <SelectTrigger className="w-[200px] rounded-none bg-surface-hover border-strong text-t2 font-mono text-sm">
+                          <SelectTrigger className="flex-1 min-w-0 rounded-none bg-surface-hover border-strong text-t2 font-mono text-sm">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent className="rounded-none bg-surface border-strong">
@@ -498,7 +498,7 @@ function ForumClient({
                         </Select>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1 overflow-x-auto">
+                      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
                         {[
                           "all",
                           "Academics",
@@ -680,7 +680,7 @@ function ForumClient({
             {totalPages > 1 && (
               <div className="w-full flex justify-center py-8 border-b border-subtle">
                 <nav
-                  className="flex items-center gap-2"
+                  className="flex flex-wrap justify-center items-center gap-2"
                   aria-label="Pagination"
                 >
                   <Button
@@ -801,7 +801,7 @@ const ForumThreadCard = memo(({ thread }: { thread: Thread }) => {
           {thread.category}
         </span>
       </div>
-      <div className="flex items-center gap-4 mt-3 font-mono text-xs text-t4">
+      <div className="flex flex-wrap items-center gap-4 mt-3 font-mono text-xs text-t4">
         <span>{thread.author.name}</span>
         <span>{thread.createdAt}</span>
         <span>{thread.replies} replies</span>
