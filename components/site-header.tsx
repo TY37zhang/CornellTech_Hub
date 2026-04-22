@@ -11,8 +11,6 @@ import {
   BookmarkPlus,
   Calendar,
   MessageCircle,
-  Shield,
-  UserCog,
   Sun,
   Moon,
 } from "lucide-react";
@@ -31,7 +29,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MobileNav } from "@/components/mobile-nav";
 import { motion } from "framer-motion";
-import { isAdmin, isMod } from "@/lib/roles";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -137,31 +134,6 @@ export function SiteHeader() {
                   </div>
                 </div>
                 <DropdownMenuSeparator className="bg-border" />
-                {isAdmin(session.user) && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin"
-                      className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
-                    >
-                      <UserCog className="mr-2 h-3.5 w-3.5" />
-                      Admin Panel
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isMod(session.user) && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin/moderation"
-                      className="flex items-center cursor-pointer text-muted-foreground hover:text-foreground font-mono text-xs"
-                    >
-                      <Shield className="mr-2 h-3.5 w-3.5" />
-                      Moderation
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {(isAdmin(session.user) || isMod(session.user)) && (
-                  <DropdownMenuSeparator className="bg-border" />
-                )}
                 <DropdownMenuItem asChild>
                   <Link
                     href="/user/posts"

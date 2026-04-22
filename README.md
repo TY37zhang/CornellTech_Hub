@@ -10,17 +10,15 @@ A student-built community platform for Cornell Tech students to collaboratively 
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
-- [Database Architecture](#database-architecture)
 - [Development Workflow](#development-workflow)
 - [Contributing](#contributing)
 
 ## Features
 
-- **🎓 Course Catalog**: Browse 500+ Cornell Tech courses with peer reviews and ratings
+- **🎓 Course Catalog**: Browse Cornell Tech courses with peer reviews and ratings
 - **📚 Academic Planner**: Program-specific course planning with requirement tracking and scheduling
-- **💬 Community Forum**: Discussion platform with 7 specialized categories and threaded comments
+- **💬 Community Forum**: Discussion platform with specialized categories and threaded comments
 - **👤 User Profiles**: Cornell email authentication with Google OAuth and profile customization
-- **🛡️ Admin Dashboard**: Comprehensive administration with moderation, security monitoring, and analytics
 
 ## Getting Started
 
@@ -56,11 +54,8 @@ Create a `.env.local` file in the project root and populate it with the variable
 # Generate Prisma client
 npx prisma generate
 
-# Run database migrations
-npx prisma migrate dev
-
-# (Optional) Seed with sample data
-npx prisma db seed
+# Apply the schema to your database
+npx prisma db push
 ```
 
 5. Run the development server:
@@ -71,75 +66,42 @@ npm run dev
 
 The application will be available at `http://localhost:3000`.
 
-### Cornell Course Data
-
-To populate the database with Cornell Tech course data:
-
-```bash
-# Navigate to the scraper directory
-cd scraper
-
-# Run the course scraper
-./run_scraper.sh
-
-# Update the database with scraped data
-python3 scripts/update_database.py cornell_courses.json
-```
-
 ## Project Structure
 
 ```
 cornell-tech-hub/
 ├── app/                    # Next.js App Router directory
-│   ├── admin/             # Comprehensive admin dashboard
-│   │   ├── database/      # Database administration with live stats
-│   │   ├── feedback/      # User feedback management system
-│   │   ├── health/        # System health and performance monitoring
-│   │   ├── moderation/    # Content moderation dashboard with audit trails
-│   │   ├── security/      # Security event monitoring and threat detection
-│   │   └── users/         # User role management and analytics
 │   ├── api/               # Full-stack API routes
-│   │   ├── admin/         # Admin-only API endpoints
 │   │   ├── auth/          # NextAuth.js authentication
 │   │   ├── courses/       # Course CRUD and search
 │   │   ├── forum/         # Forum posts and comments
 │   │   ├── planner/       # Academic planning data
-│   │   ├── security/      # Security monitoring APIs
 │   │   ├── user/          # User profile management
 │   │   └── feedback/      # Contact and feedback handling
 │   ├── auth/              # Sign-in and sign-up pages
-│   ├── components/        # App-specific shared components
 │   ├── courses/           # Course catalog and reviews
 │   ├── forum/             # Community discussion system
 │   ├── planner/           # Academic planning interface
 │   ├── user/              # User profiles and activity
 │   ├── my-reviews/        # Personal course reviews
-│   ├── animated-cards/    # UI animation showcase
 │   ├── faq/               # Help and documentation
 │   ├── feedback/          # User feedback system
 │   ├── contact/           # Contact form
-│   ├── settings/          # User preferences
-│   └── legal/             # Terms of service, privacy policy
+│   └── settings/          # User preferences
 ├── components/            # Global reusable components
-│   ├── admin/             # Admin-specific components
 │   ├── ui/                # Radix UI styled components
 │   └── providers/         # Context providers (session, theme, etc.)
 ├── hooks/                 # Custom React hooks
 ├── lib/                   # Core utilities and configurations
-│   ├── auth.ts           # NextAuth.js configuration
-│   ├── db.ts             # Database connection
-│   ├── roles.ts          # User role management system
-│   ├── error-handling.ts # Security-focused error handling
+│   ├── auth.ts            # NextAuth.js configuration
+│   ├── db.ts              # Database connection
+│   ├── roles.ts           # User role helpers
 │   ├── validations/       # Zod schemas
 │   └── services/          # Business logic
 ├── middleware/            # Request/response middleware
-│   ├── rate-limit.ts     # Campus-scale rate limiting
-│   └── validation.ts     # Request validation
-├── prisma/                # Database schema and migrations
-├── scraper/               # Cornell course data scraping tools
-│   ├── scripts/           # Python scraping utilities
-│   └── output/            # Scraped course data
-├── scripts/               # Database migration and utility scripts
+│   ├── rate-limit.ts      # Rate limiting
+│   └── validation.ts      # Request validation
+├── prisma/                # Database schema
 ├── public/                # Static assets and media
 └── styles/                # Global CSS and Tailwind config
 ```
@@ -171,56 +133,6 @@ EMAIL_DOMAIN="yourdomain.com"
 # Application Configuration
 APP_URL="http://localhost:3000"
 NODE_ENV="development"
-
-# Analytics & Monitoring (Production)
-NEXT_PUBLIC_VERCEL_ANALYTICS_ID="your-analytics-id"
-VERCEL_URL="your-production-url"
-```
-
-## Database Architecture
-
-```
-PostgreSQL Database (35+ Tables)
-│
-├── 👤 User Management
-│   ├── User (auth, profiles, roles)
-│   ├── Account (OAuth providers)
-│   ├── Session (active sessions)
-│   └── VerificationToken
-│
-├── 📚 Academic System
-│   ├── Course (catalog data)
-│   ├── CourseCategory (departments)
-│   ├── CourseReview (ratings, feedback)
-│   ├── CoursePlanner (user plans)
-│   ├── CourseSchedule (timetables)
-│   └── SpecialRequirement (program rules)
-│
-├── 💬 Community Features
-│   ├── ForumPost (discussions)
-│   ├── ForumComment (nested threads)
-│   ├── ForumCategory (topics)
-│   ├── ForumLike (engagement)
-│   ├── ForumView (analytics)
-│   └── ForumSavedPost (bookmarks)
-│
-├── 🛡️ Moderation & Security
-│   ├── ContentModeration (flags, reviews)
-│   ├── UserReport (community reports)
-│   ├── ModerationLog (audit trails)
-│   ├── SecurityEvent (monitoring)
-│   └── RateLimit (protection)
-│
-├── 📊 Analytics & Performance
-│   ├── HotPostAlgorithm (trending)
-│   ├── SearchCache (optimization)
-│   ├── UserTokenUsage (tracking)
-│   └── DatabaseMetrics (health)
-│
-└── 🔮 Future Features
-    ├── ChatMessage (AI integration)
-    ├── ChatConversation
-    └── MarketplaceItem
 ```
 
 ## Development Workflow
@@ -236,7 +148,7 @@ npm run lint               # Run ESLint
 
 # Database
 npx prisma studio          # Open Prisma Studio (database GUI)
-npx prisma migrate dev     # Create and apply migrations
+npx prisma db push         # Push schema changes to database
 npx prisma generate        # Generate Prisma client
 
 # Analytics & Optimization

@@ -10,8 +10,6 @@ import {
   MessageSquare,
   Calendar,
   MessageCircle,
-  UserCog,
-  Shield,
   BookmarkPlus,
   FileText,
   Settings,
@@ -26,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
-import { isAdmin, isMod } from "@/lib/roles";
 import { useTheme } from "next-themes";
 import { createPortal } from "react-dom";
 
@@ -174,12 +171,6 @@ export function MobileNav() {
   ];
 
   const accountLinks = [
-    ...(session && isAdmin(session.user)
-      ? [{ href: "/admin", label: "Admin Panel", icon: UserCog }]
-      : []),
-    ...(session && isMod(session.user)
-      ? [{ href: "/admin/moderation", label: "Moderation", icon: Shield }]
-      : []),
     { href: "/user/posts", label: "My Posts", icon: FileText },
     { href: "/forum/saved", label: "Saved Posts", icon: BookmarkPlus },
     { href: "/my-reviews", label: "My Reviews", icon: FileText },

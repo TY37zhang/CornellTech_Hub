@@ -71,8 +71,6 @@ export async function POST(req: Request) {
         return new NextResponse(
             JSON.stringify({
                 error: "Failed to submit feedback",
-                message:
-                    error instanceof Error ? error.message : "Unknown error",
             }),
             { status: 500 }
         );

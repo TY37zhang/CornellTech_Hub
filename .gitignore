@@ -1,5 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 .DS_Store
+
 # dependencies
 /node_modules
 
@@ -18,6 +19,7 @@ yarn-error.log*
 
 # env files
 .env*
+.env*.local
 
 # vercel
 .vercel
@@ -26,23 +28,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /lib/generated/prisma
+/prisma/generated/
+/prisma/node_modules/
 
 # database exports
 db-info/
 
-# Python virtual environments
-venv/
-env/
-ENV/
-.venv/
-.env/
-*.venv
-
-# Scraper output files
-scraper/output/
-scraper/*.json
-scraper/*.csv
-scraper/*.html
+# misc
 CLAUDE.md
 todo.md

@@ -11,7 +11,6 @@ Allow: /privacy-policy
 Allow: /terms-of-service
 Disallow: /api/*
 Disallow: /auth/*
-Disallow: /admin/*
 Disallow: /settings
 Disallow: /my-reviews
 Disallow: /user
